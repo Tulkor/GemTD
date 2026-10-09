@@ -36,6 +36,10 @@ var lives := 50
 var gold := 0
 var chance_level := 0
 var spawn_queue: Array = []
+## Länge des Bodenwegs in Feldern, und wie lang er zu Beginn der Bauphase war.
+var path_length := 0
+var round_path_start := 0
+var enemies_killed := 0
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
@@ -71,6 +75,8 @@ func _ready() -> void:
 	hud.chance_upgrade_requested.connect(_upgrade_chance)
 	hud.speed_selected.connect(func(f): Engine.time_scale = f)
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
+	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
+	hud.restart_requested.connect(func(): Session.goto(Session.GAME))
 	hud.debug_tower_changed.connect(func(k): debug_tower = k)
 	debug_tower = Session.test_tower
 	hud.setup_debug_towers(debug_tower)
@@ -121,7 +127,9 @@ func _apply_variance() -> void:
 
 func _update_paths() -> void:
 	ground_path = PackedVector2Array()
-	for c in pathfinder.compute_path():
+	var cells := pathfinder.compute_path()
+	path_length = cells.size()
+	for c in cells:
 		ground_path.append(Board3D.cell_center(c))
 	air_path = PackedVector2Array()
 	for c in map.waypoints():
@@ -223,6 +231,7 @@ func rock_remove_cost() -> int:
 func _enter_build() -> void:
 	phase = Phase.BUILD
 	round_towers.clear()
+	round_path_start = path_length
 	_refresh_hud()
 
 
@@ -563,6 +572,7 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 
 
 func on_enemy_killed(e: Enemy) -> void:
+	enemies_killed += 1
 	gold += e.bounty
 	_remove_enemy(e)
 	_refresh_hud()
@@ -585,7 +595,7 @@ func _remove_enemy(e: Enemy) -> void:
 func _finish(p: Phase) -> void:
 	phase = p
 	Engine.time_scale = 1.0
-	hud.show_message("Gewonnen!" if p == Phase.VICTORY else "Verloren – Welle %d" % (wave_index + 1))
+	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length)
 	_refresh_hud()
 
 
@@ -595,6 +605,7 @@ func _refresh_hud() -> void:
 	if hud == null:
 		return
 	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), lives, gold)
+	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
 	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]))
 
 	# Neue Gems, die eine Zutat für einen Spezial-Tower aus dieser Runde sind (lila markiert)

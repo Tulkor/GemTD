@@ -16,72 +16,131 @@ var form: VBoxContainer
 var status_label: Label
 
 
+var search: LineEdit
+var list_ids: Array = []  ## Eintrag in tower_list -> Tower-ID ("" für Überschriften)
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	theme = UiTheme.get_theme()
 	var bg := ColorRect.new()
-	bg.color = Color("14161c")
+	bg.color = UiTheme.BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	var outer := VBoxContainer.new()
+	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	outer.add_theme_constant_override("separation", 0)
+	add_child(outer)
+
+	# Leiste oben
+	var top := PanelContainer.new()
+	top.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BAR, UiTheme.BORDER, 0, 1, 10))
+	outer.add_child(top)
+	var th := HBoxContainer.new()
+	th.add_theme_constant_override("separation", 10)
+	top.add_child(th)
+	UiUtil.label("Tower-Editor", th, 20).add_theme_color_override("font_color", UiTheme.GOLD)
+	var gap := Control.new()
+	gap.custom_minimum_size.x = 12
+	th.add_child(gap)
+	UiUtil.button("+ Gem", th, func(): _new_tower("gem"))
+	UiUtil.button("+ Spezial-Tower", th, func(): _new_tower("special"))
+	UiUtil.button("Duplizieren", th, _duplicate)
+	var fill := Control.new()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	th.add_child(fill)
+	status_label = UiUtil.label("", th, 13)
+	status_label.add_theme_color_override("font_color", UiTheme.MUTED)
+	UiUtil.button("Speichern und testen", th, _test).tooltip_text = "Speichern und als nächsten Gem im Spiel setzen"
+	var save := UiUtil.button("Speichern", th, _save)
+	save.custom_minimum_size.x = 120
+	UiTheme.accent_button(save, UiTheme.GOLD, UiTheme.GOLD_DARK, Color.TRANSPARENT)
+	UiUtil.button("Zum Menü", th, func(): Session.goto(Session.MAIN_MENU))
 
 	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 16)
-	add_child(margin)
+	outer.add_child(margin)
 	var root := HBoxContainer.new()
 	root.add_theme_constant_override("separation", 16)
 	margin.add_child(root)
 
+	# Links: Liste mit Suche, gruppiert nach Art
 	var left := VBoxContainer.new()
 	left.custom_minimum_size.x = 280
+	left.add_theme_constant_override("separation", 8)
 	root.add_child(left)
-	UiUtil.label("Tower-Editor", left, 24)
+	search = LineEdit.new()
+	search.placeholder_text = "Tower suchen"
+	search.text_changed.connect(func(_t): _refresh_list(str(current.get("id", ""))))
+	left.add_child(search)
 	tower_list = ItemList.new()
 	tower_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tower_list.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER, 8, 1, 8))
+	tower_list.add_theme_stylebox_override("selected", UiTheme.box(Color("2b2412"), UiTheme.GOLD, 4))
+	tower_list.add_theme_stylebox_override("selected_focus", UiTheme.box(Color("2b2412"), UiTheme.GOLD, 4))
+	tower_list.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	tower_list.item_selected.connect(_on_tower_selected)
 	left.add_child(tower_list)
-	UiUtil.button("Neuer Gem", left, func(): _new_tower("gem"))
-	UiUtil.button("Neuer Spezial-Tower", left, func(): _new_tower("special"))
-	UiUtil.button("Duplizieren", left, _duplicate)
-	UiUtil.button("Zurück zum Menü", left, func(): Session.goto(Session.MAIN_MENU))
 
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_child(right)
+	# Rechts: Formular
 	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	right.add_child(scroll)
+	root.add_child(scroll)
 	form = VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	form.add_theme_constant_override("separation", 6)
+	form.add_theme_constant_override("separation", 14)
 	scroll.add_child(form)
-	var bottom := HBoxContainer.new()
-	right.add_child(bottom)
-	UiUtil.button("Speichern", bottom, _save)
-	UiUtil.button("Speichern und im Spiel testen", bottom, _test)
-	status_label = UiUtil.label("", bottom)
 
 	_refresh_list()
-	if not ids.is_empty():
-		tower_list.select(0)
-		_on_tower_selected(0)
+	for i in list_ids.size():
+		if list_ids[i] != "":
+			tower_list.select(i)
+			_on_tower_selected(i)
+			break
+
+
+static func _group(def: Dictionary) -> int:
+	if def.get("category", "gem") == "gem":
+		return 0
+	return 2 if def.get("kind", "tower") == "trap" else 1
 
 
 func _refresh_list(select_id := "") -> void:
 	ids = Database.tower_ids()
 	tower_list.clear()
-	for id in ids:
-		var def: Dictionary = Database.towers[id]
-		var idx := tower_list.add_item("%s  [%s]" % [def.get("name", id), id])
-		tower_list.set_item_custom_fg_color(idx, Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE))
-	var i := ids.find(select_id)
+	list_ids.clear()
+	var q := search.text.strip_edges().to_lower() if search != null else ""
+	for g in 3:
+		var header_added := false
+		for id in ids:
+			var def: Dictionary = Database.towers[id]
+			if _group(def) != g:
+				continue
+			var label := "%s  [%s]" % [def.get("name", id), id]
+			if q != "" and not q in label.to_lower():
+				continue
+			if not header_added:
+				var h := tower_list.add_item(["GEMS", "SPEZIAL-TOWER", "FALLEN"][g], null, false)
+				tower_list.set_item_custom_fg_color(h, UiTheme.MUTED)
+				tower_list.set_item_disabled(h, true)
+				list_ids.append("")
+				header_added = true
+			var idx := tower_list.add_item("   " + label)
+			tower_list.set_item_custom_fg_color(idx, Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE).lerp(Color.WHITE, 0.2))
+			list_ids.append(id)
+	var i := list_ids.find(select_id) if select_id != "" else -1
 	if i >= 0:
 		tower_list.select(i)
 
 
 func _on_tower_selected(i: int) -> void:
-	current = Database.towers[ids[i]].duplicate(true)
+	if list_ids[i] == "":
+		return
+	current = Database.towers[list_ids[i]].duplicate(true)
 	current.erase("_path")
 	_build_form()
 
@@ -124,10 +183,13 @@ func _build_form() -> void:
 	if current.is_empty():
 		return
 
-	_line_edit("ID (Dateiname)", "id")
-	_line_edit("Name", "name")
+	var title := UiUtil.label(str(current.get("name", "")), form, 26)
+	title.add_theme_color_override("font_color", Color.from_string(str(current.get("color", "#ffffff")), Color.WHITE).lerp(Color.WHITE, 0.25))
+	var general := _section("Allgemein")
+	_line_edit("ID (Dateiname)", "id", general)
+	_line_edit("Name", "name", general)
 
-	var cat_row := UiUtil.row("Kategorie", form)
+	var cat_row := UiUtil.row("Kategorie", general, 220)
 	var cat := _option(cat_row, CATEGORY_LABELS, CATEGORIES.find(current.get("category", "gem")))
 	cat.item_selected.connect(func(i):
 		current["category"] = CATEGORIES[i]
@@ -135,20 +197,20 @@ func _build_form() -> void:
 			current["recipe"] = []
 		_build_form())
 
-	var kind_row := UiUtil.row("Art", form)
+	var kind_row := UiUtil.row("Art", general, 220)
 	var kind := _option(kind_row, KIND_LABELS, KINDS.find(current.get("kind", "tower")))
 	kind.item_selected.connect(func(i): current["kind"] = KINDS[i])
 
-	var color_row := UiUtil.row("Farbe", form)
+	var color_row := UiUtil.row("Farbe", general, 220)
 	var picker := ColorPickerButton.new()
 	picker.custom_minimum_size = Vector2(96, 28)
 	picker.color = Color.from_string(str(current.get("color", "#ffffff")), Color.WHITE)
 	picker.color_changed.connect(func(c: Color): current["color"] = "#" + c.to_html(false))
 	color_row.add_child(picker)
 
-	_line_edit("Modell (optional, res://…glb)", "model")
+	_line_edit("Modell (optional, res://…glb)", "model", general)
 
-	var target_row := UiUtil.row("Ziele", form)
+	var target_row := UiUtil.row("Ziele", general, 220)
 	var tgt := _option(target_row, TARGET_LABELS, TARGETS.find(current.get("targets", "both")))
 	tgt.item_selected.connect(func(i): current["targets"] = TARGETS[i])
 
@@ -159,8 +221,8 @@ func _build_form() -> void:
 		_build_upgrades()
 
 
-func _line_edit(text: String, key: String) -> void:
-	var r := UiUtil.row(text, form)
+func _line_edit(text: String, key: String, parent: Node) -> void:
+	var r := UiUtil.row(text, parent, 220)
 	var e := LineEdit.new()
 	e.text = str(current.get(key, ""))
 	e.custom_minimum_size.x = 260
@@ -177,11 +239,20 @@ func _option(parent: Node, labels: Array, selected: int) -> OptionButton:
 	return o
 
 
+## Abschnitt als Karte. Der Titel steht fett, ein Hinweis (nach " (") darunter klein.
 func _section(title: String) -> VBoxContainer:
-	form.add_child(HSeparator.new())
-	UiUtil.label(title, form, 18)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER, 10, 1, 16))
+	form.add_child(card)
 	var box := VBoxContainer.new()
-	form.add_child(box)
+	box.add_theme_constant_override("separation", 8)
+	card.add_child(box)
+	var parts := title.split(" (", true, 1)
+	UiUtil.label(parts[0], box, 18).add_theme_color_override("font_color", UiTheme.GOLD)
+	if parts.size() > 1:
+		var hint := UiUtil.label(parts[1].trim_suffix(")"), box, 13)
+		hint.add_theme_color_override("font_color", UiTheme.MUTED)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return box
 
 
@@ -278,6 +349,7 @@ func _build_tiers() -> void:
 		if not tier.has("abilities"):
 			tier["abilities"] = []
 		var panel := PanelContainer.new()
+		panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 8, 1, 12))
 		box.add_child(panel)
 		var v := VBoxContainer.new()
 		panel.add_child(v)

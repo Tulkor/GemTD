@@ -49,6 +49,7 @@ func _ready() -> void:
 	_sync_fields()
 	_layout()
 	_on_map_changed()
+	_set_clean()
 
 
 func _layout() -> void:
@@ -57,81 +58,268 @@ func _layout() -> void:
 
 # --- Oberfläche --------------------------------------------------------------
 
+const TOOL_COLORS := {
+	Tool.BLOCKED: Color("3b3f48"),
+	Tool.WALK_ONLY: Color("a07a4a"),
+	Tool.FLOOR: Color("2d4a30"),
+	Tool.SPAWN: UiTheme.HAVE,
+	Tool.GOAL: UiTheme.MISSING,
+	Tool.CHECKPOINT: UiTheme.GOLD,
+}
+const BRUSHES := [1, 2, 4, 8]
+
+var path_label: Label
+var cell_label: Label
+var dirty_label: Label
+var brush_buttons := {}
+var dirty := false
+
+
+func _panel(parent: Node, pad := 14.0, bg := UiTheme.PANEL) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiTheme.box(bg, UiTheme.BORDER, 0, 1, pad))
+	parent.add_child(p)
+	return p
+
+
+func _field(parent: Node, text: String, control: Control) -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(v)
+	UiUtil.label(text, v, 13).add_theme_color_override("font_color", UiTheme.MUTED)
+	v.add_child(control)
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return control
+
+
+func _spin(value: float, min_v: float, max_v: float, on_changed: Callable) -> SpinBox:
+	var sp := SpinBox.new()
+	sp.min_value = min_v
+	sp.max_value = max_v
+	sp.step = 1
+	sp.allow_greater = true
+	sp.value = value
+	sp.value_changed.connect(func(v):
+		on_changed.call(v)
+		_touch())
+	return sp
+
+
 func _build_ui() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
-	var box := UiUtil.side_panel(layer, PANEL_WIDTH)
-	UiUtil.label("Map-Editor", box, 24)
+	var root := Control.new()
+	root.theme = UiTheme.get_theme()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(root)
 
-	UiUtil.label("Werkzeug (Rechtsklick radiert)", box)
-	UiUtil.wrap_label("Kamera: WASD/Pfeile, Fensterrand, rechte Maustaste ziehen, Q/E, Mausrad, mittlere Maustaste", box, PANEL_WIDTH - 40).modulate = Color(1, 1, 1, 0.6)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	box.add_child(grid)
+	# Leiste oben: Map laden, neu, testen, speichern
+	var top := _panel(root, 10, UiTheme.BAR)
+	top.anchor_right = 1.0
+	var th := HBoxContainer.new()
+	th.add_theme_constant_override("separation", 10)
+	top.add_child(th)
+	UiUtil.label("Map-Editor", th, 20).add_theme_color_override("font_color", UiTheme.GOLD)
+	th.add_child(_hgap(12))
+	load_option = OptionButton.new()
+	load_option.custom_minimum_size.x = 220
+	load_option.tooltip_text = "Gespeicherte Map zum Laden auswählen"
+	th.add_child(load_option)
+	UiUtil.button("Laden", th, _load_selected)
+	UiUtil.button("Neu", th, func(): _set_map(MapData.create_empty(int(w_spin.value), int(h_spin.value))))
+	var fill := Control.new()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	th.add_child(fill)
+	UiUtil.button("Testen (F5)", th, _test).tooltip_text = "Map sofort spielen, danach geht es hierher zurück"
+	var save := UiUtil.button("Speichern", th, _save)
+	save.custom_minimum_size.x = 120
+	UiTheme.accent_button(save, UiTheme.GOLD, UiTheme.GOLD_DARK, Color.TRANSPARENT)
+	UiUtil.button("Zum Menü", th, func(): Session.goto(Session.MAIN_MENU))
+
+	# Links: Werkzeuge
+	var left := _panel(root)
+	left.offset_top = 52
+	left.anchor_bottom = 1.0
+	left.offset_bottom = -34
+	left.custom_minimum_size.x = 210
+	var lv := VBoxContainer.new()
+	lv.add_theme_constant_override("separation", 8)
+	left.add_child(lv)
+	UiTheme.caption("Werkzeug", lv)
 	var group := ButtonGroup.new()
+	var key := 1
 	for t in TOOL_NAMES:
-		var b := UiUtil.button(TOOL_NAMES[t], grid, func(): tool = t)
+		var b := Button.new()
 		b.toggle_mode = true
 		b.button_group = group
 		b.button_pressed = t == tool
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size.y = 38
+		b.tooltip_text = "Taste %d" % key
+		b.pressed.connect(func(): tool = t)
+		lv.add_child(b)
+		var h := HBoxContainer.new()
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		h.offset_left = 10
+		h.offset_right = -10
+		h.add_theme_constant_override("separation", 10)
+		b.add_child(h)
+		var sw := ColorRect.new()
+		sw.color = TOOL_COLORS[t]
+		sw.custom_minimum_size = Vector2(14, 14)
+		sw.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		sw.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(sw)
+		var name_l := UiUtil.label(str(TOOL_NAMES[t]).split(" (")[0], h, 15)
+		name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var key_l := UiUtil.label(str(key), h, 12)
+		key_l.add_theme_color_override("font_color", UiTheme.MUTED)
+		key_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_theme_stylebox_override("pressed", UiTheme.box(Color("2b2412"), UiTheme.GOLD))
 		tool_buttons[t] = b
-	UiUtil.spin(UiUtil.row("Pinsel (Felder)", box, 120), brush, 1, 8, 1, func(v): brush = int(v))
-	UiUtil.button("Checkpoints löschen", box, func():
+		key += 1
+	lv.add_child(HSeparator.new())
+	UiTheme.caption("Pinsel (Felder)", lv)
+	var brow := HBoxContainer.new()
+	brow.add_theme_constant_override("separation", 4)
+	lv.add_child(brow)
+	var bgroup := ButtonGroup.new()
+	for n in BRUSHES:
+		var b := UiUtil.button(str(n), brow, func(): brush = n)
+		b.toggle_mode = true
+		b.button_group = bgroup
+		b.button_pressed = n == brush
+		b.focus_mode = Control.FOCUS_NONE
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.tooltip_text = "2 Felder = eine Towerbreite"
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		brush_buttons[n] = b
+	lv.add_child(HSeparator.new())
+	var clear := UiUtil.button("Checkpoints löschen", lv, func():
 		map.checkpoints.clear()
 		_on_map_changed())
+	clear.add_theme_color_override("font_color", UiTheme.MISSING)
+	var lfill := Control.new()
+	lfill.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lv.add_child(lfill)
+	var help := UiUtil.wrap_label("Linksklick malt, Rechtsklick radiert.\nKamera: WASD/Pfeile, Fensterrand, rechte Maustaste ziehen, Q/E, Mausrad.", lv, 180)
+	help.add_theme_font_size_override("font_size", 12)
+	help.add_theme_color_override("font_color", UiTheme.MUTED)
 
-	box.add_child(HSeparator.new())
-	id_edit = LineEdit.new()
-	id_edit.text_changed.connect(func(s): map.id = s)
-	UiUtil.row("ID (Dateiname)", box, 120).add_child(id_edit)
-	id_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_edit = LineEdit.new()
-	name_edit.text_changed.connect(func(s): map.name = s)
-	UiUtil.row("Name", box, 120).add_child(name_edit)
-	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Rechts: Eigenschaften in Tabs
+	var right := _panel(root)
+	right.anchor_left = 1.0
+	right.anchor_right = 1.0
+	right.anchor_bottom = 1.0
+	right.offset_left = -PANEL_WIDTH
+	right.offset_top = 52
+	right.offset_bottom = -34
+	var tabs := TabContainer.new()
+	tabs.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	tabs.add_theme_stylebox_override("tab_selected", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4, 0, 14))
+	tabs.add_theme_stylebox_override("tab_unselected", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 4, 0, 14))
+	tabs.add_theme_stylebox_override("tab_hovered", UiTheme.box(Color("232836"), Color.TRANSPARENT, 4, 0, 14))
+	tabs.add_theme_color_override("font_selected_color", UiTheme.GOLD_DARK)
+	tabs.add_theme_color_override("font_unselected_color", UiTheme.TEXT)
+	tabs.add_theme_color_override("font_hovered_color", UiTheme.TEXT)
+	right.add_child(tabs)
 
-	var size_row := UiUtil.row("Größe B×H", box, 120)
-	w_spin = UiUtil.spin(size_row, 60, 10, 400, 1, func(_v): pass)
-	h_spin = UiUtil.spin(size_row, 60, 10, 400, 1, func(_v): pass)
-	UiUtil.button("Größe übernehmen", box, func():
+	var map_tab := VBoxContainer.new()
+	map_tab.name = "Map"
+	map_tab.add_theme_constant_override("separation", 12)
+	tabs.add_child(map_tab)
+	map_tab.add_child(_vgap(4))
+	name_edit = _field(map_tab, "Name", LineEdit.new())
+	name_edit.text_changed.connect(func(s):
+		map.name = s
+		_touch())
+	id_edit = _field(map_tab, "ID (Dateiname: Kleinbuchstaben, Ziffern, _)", LineEdit.new())
+	id_edit.text_changed.connect(func(s):
+		map.id = s
+		_touch())
+	var size_row := HBoxContainer.new()
+	size_row.add_theme_constant_override("separation", 8)
+	map_tab.add_child(size_row)
+	w_spin = _field(size_row, "Breite", _spin(60, 10, 400, func(_v): pass))
+	h_spin = _field(size_row, "Höhe", _spin(60, 10, 400, func(_v): pass))
+	UiUtil.button("Größe übernehmen", map_tab, func():
 		map.resize(int(w_spin.value), int(h_spin.value))
 		_layout()
 		_on_map_changed())
-
 	wave_option = OptionButton.new()
 	wave_ids = Database.wave_sets.keys()
 	for wid in wave_ids:
 		wave_option.add_item(str(Database.wave_sets[wid].get("name", wid)))
-	wave_option.item_selected.connect(func(i): map.wave_set = wave_ids[i])
-	UiUtil.row("Wellen", box, 120).add_child(wave_option)
-	lives_spin = UiUtil.spin(UiUtil.row("Leben", box, 120), 50, 1, 1000, 1, func(v): map.lives = int(v))
-	gold_spin = UiUtil.spin(UiUtil.row("Startgold", box, 120), 0, 0, 100000, 1, func(v): map.start_gold = int(v))
-	radius_spin = UiUtil.spin(UiUtil.row("Sperrzone um Punkte", box, 120), 3, 0, 10, 1, func(v):
+	wave_option.item_selected.connect(func(i):
+		map.wave_set = wave_ids[i]
+		_touch())
+	_field(map_tab, "Wellen", wave_option)
+	var lg := HBoxContainer.new()
+	lg.add_theme_constant_override("separation", 8)
+	map_tab.add_child(lg)
+	lives_spin = _field(lg, "Leben", _spin(50, 1, 1000, func(v): map.lives = int(v)))
+	gold_spin = _field(lg, "Startgold", _spin(0, 0, 100000, func(v): map.start_gold = int(v)))
+	radius_spin = _field(map_tab, "Sperrzone um Spawn, Ziel, Checkpoints", _spin(3, 0, 10, func(v):
 		map.marker_radius = int(v)
-		_on_map_changed())
+		_on_map_changed()))
 
-	UiUtil.label("Varianz", box)
-	rocks_spin = UiUtil.spin(UiUtil.row("Zufällige Steine", box, 120), 0, 0, 500, 1, func(v): map.variance["random_rocks"] = int(v))
-	seed_spin = UiUtil.spin(UiUtil.row("Seed (−1 = zufällig)", box, 120), -1, -1, 999999, 1, func(v): map.variance["seed"] = int(v))
+	var var_tab := VBoxContainer.new()
+	var_tab.name = "Varianz"
+	var_tab.add_theme_constant_override("separation", 12)
+	tabs.add_child(var_tab)
+	var_tab.add_child(_vgap(4))
+	rocks_spin = _field(var_tab, "Zufällige Steine zu Spielbeginn", _spin(0, 0, 500, func(v): map.variance["random_rocks"] = int(v)))
+	seed_spin = _field(var_tab, "Seed (−1 = jedes Mal zufällig)", _spin(-1, -1, 999999, func(v): map.variance["seed"] = int(v)))
+	var vh := UiUtil.wrap_label("Mit einem festen Seed liegen die Steine in jedem Spiel gleich.", var_tab, PANEL_WIDTH - 40)
+	vh.add_theme_font_size_override("font_size", 13)
+	vh.add_theme_color_override("font_color", UiTheme.MUTED)
 
-	box.add_child(HSeparator.new())
-	status_label = UiUtil.wrap_label("", box, PANEL_WIDTH - 40)
-	var actions := HBoxContainer.new()
-	box.add_child(actions)
-	UiUtil.button("Speichern", actions, _save)
-	UiUtil.button("Testen", actions, _test)
-	UiUtil.button("Neu", actions, func(): _set_map(MapData.create_empty(int(w_spin.value), int(h_spin.value))))
-
-	var load_row := HBoxContainer.new()
-	box.add_child(load_row)
-	load_option = OptionButton.new()
-	load_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	load_row.add_child(load_option)
-	UiUtil.button("Laden", load_row, _load_selected)
+	# Statuszeile unten
+	var bar := _panel(root, 8, UiTheme.BAR)
+	bar.anchor_top = 1.0
+	bar.anchor_right = 1.0
+	bar.anchor_bottom = 1.0
+	bar.offset_top = -34
+	var bh := HBoxContainer.new()
+	bh.add_theme_constant_override("separation", 24)
+	bar.add_child(bh)
+	path_label = UiUtil.label("", bh, 13)
+	cell_label = UiUtil.label("", bh, 13)
+	cell_label.add_theme_color_override("font_color", UiTheme.MUTED)
+	dirty_label = UiUtil.label("", bh, 13)
+	dirty_label.add_theme_color_override("font_color", UiTheme.GOLD)
+	status_label = UiUtil.label("", bh, 13)
+	status_label.add_theme_color_override("font_color", UiTheme.MUTED)
 	_refresh_load_list()
 
-	UiUtil.button("Zurück zum Menü", box, func(): Session.goto(Session.MAIN_MENU))
+
+func _hgap(w: float) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size.x = w
+	return c
+
+
+func _vgap(h: float) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size.y = h
+	return c
+
+
+## Merkt sich ungespeicherte Änderungen für die Statuszeile.
+func _touch() -> void:
+	dirty = true
+	if dirty_label != null:
+		dirty_label.text = "● Ungespeicherte Änderungen"
+
+
+func _set_clean() -> void:
+	dirty = false
+	dirty_label.text = ""
 
 
 func _sync_fields() -> void:
@@ -153,6 +341,7 @@ func _set_map(m: MapData) -> void:
 	_sync_fields()
 	_layout()
 	_on_map_changed()
+	_set_clean()
 
 
 func _refresh_load_list() -> void:
@@ -168,6 +357,7 @@ func _load_selected() -> void:
 	var m := MapData.load_file(map_entries[load_option.selected].path)
 	if m != null:
 		_set_map(m)
+		status_label.text = "Geladen: " + m.name
 
 
 func _save() -> void:
@@ -178,11 +368,12 @@ func _save() -> void:
 	if map.save_file(path):
 		status_label.text = "Gespeichert: " + path
 		_refresh_load_list()
+		_set_clean()
 
 
 func _test() -> void:
 	if pathfinder_path().is_empty():
-		status_label.text = "Kein gültiger Weg – so kann nicht getestet werden."
+		status_label.text = "Kein gültiger Weg, so kann nicht getestet werden."
 		return
 	Session.editor_map = map.duplicate_map()
 	Session.map_override = map.duplicate_map()
@@ -206,12 +397,20 @@ func _process(_delta: float) -> void:
 	var size := 1 if _is_point_tool() else brush
 	var a := board.mouse_cell(camera_rig.camera) if size == 1 else board.mouse_anchor(camera_rig.camera, size)
 	if a != board.hover_cell or size != board.hover_size:
+		cell_label.text = "Feld %d, %d" % [a.x, a.y] if map.in_bounds(a) else ""
 		board.hover_cell = a
 		board.hover_size = size
 		board.refresh_hover()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode >= KEY_1 and event.keycode <= KEY_6:
+			tool = TOOL_NAMES.keys()[event.keycode - KEY_1]
+			tool_buttons[tool].button_pressed = true
+		elif event.keycode == KEY_F5:
+			_test()
+		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -289,7 +488,10 @@ func _on_map_changed() -> void:
 	board.path_points = pts
 	board.path_color = Color(0.3, 1, 0.3, 0.8)
 	if cells.is_empty():
-		status_label.text = "Kein gültiger Weg! Spawn, Checkpoints und Ziel müssen verbunden sein."
+		path_label.text = "✗ Kein gültiger Weg: Spawn, Checkpoints und Ziel müssen verbunden sein"
+		path_label.add_theme_color_override("font_color", UiTheme.MISSING)
 	else:
-		status_label.text = "Weglänge ohne Labyrinth: %d Felder, %d Checkpoints" % [cells.size(), map.checkpoints.size()]
+		path_label.text = "✓ Weg gültig · %d Felder ohne Labyrinth · %d Checkpoints" % [cells.size(), map.checkpoints.size()]
+		path_label.add_theme_color_override("font_color", UiTheme.HAVE)
+	_touch()
 	board.rebuild()

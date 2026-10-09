@@ -209,6 +209,11 @@ func _ready() -> void:
 	check(topaz.tower_id == "silver" and game.phase == game.Phase.WAVE, "One-Shot gebaut, Welle startet")
 	check(game.rocks.size() == rocks_before + 2, "die anderen beiden Gems sind Steine")
 
+	# Weglänge in der Leiste und Menü am Spielende
+	check(game.path_length > 0 and str(game.path_length) in game.hud.path_value.text, "Weglänge angezeigt: " + game.hud.path_value.text)
+	game._finish(game.Phase.GAME_OVER)
+	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
+
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
 		var def: Dictionary = Database.towers[id]

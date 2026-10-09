@@ -8,6 +8,8 @@ signal round_gem_selected(index: int)
 signal chance_upgrade_requested
 signal speed_selected(factor: float)
 signal menu_requested
+signal main_menu_requested
+signal restart_requested
 signal debug_tower_changed(key: String)
 
 const SPEEDS := [1.0, 2.0, 4.0]
@@ -16,6 +18,11 @@ var root: Control
 var wave_value: Label
 var lives_value: Label
 var gold_value: Label
+var path_value: Label
+var game_over: Control
+var game_over_title: Label
+var game_over_stats: Label
+var editor_button: Button
 var chance_value: Label
 var chance_button: Button
 var speed_buttons: Array[Button] = []
@@ -82,6 +89,7 @@ func _ready() -> void:
 
 	recipe_book = RecipeBook.new()
 	root.add_child(recipe_book)
+	_build_game_over()
 	recipe_book.pins_changed.connect(_refresh_pinned)
 	_refresh_pinned()
 
@@ -95,6 +103,8 @@ func _process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if game_over != null and game_over.visible:
 		return
 	match event.keycode:
 		KEY_R:
@@ -125,7 +135,7 @@ func _button(text: String, parent: Node, on_pressed: Callable) -> Button:
 
 func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 6, 0, 12))
+	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 6, 0, 10))
 	parent.add_child(p)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 6)
@@ -151,14 +161,16 @@ func _build_top_bar() -> void:
 	bar.custom_minimum_size.y = 52
 	root.add_child(bar)
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 10)
+	h.add_theme_constant_override("separation", 8)
 	bar.add_child(h)
 	var title := UiUtil.label("GemTD", h, 22)
 	title.add_theme_color_override("font_color", UiTheme.GOLD)
-	h.add_child(_spacer(12))
+	h.add_child(_spacer(4))
 	wave_value = _chip("Welle", h)
 	lives_value = _chip("Leben", h, UiTheme.MISSING)
 	gold_value = _chip("Gold", h, UiTheme.GOLD)
+	path_value = _chip("Weg", h)
+	path_value.get_parent().get_parent().tooltip_text = "Länge des Laufwegs der Bodengegner in Feldern (ein Tower ist 2 Felder breit).\nIn Klammern: wie viel länger der Weg in dieser Bauphase geworden ist."
 	chance_value = _chip("Chance", h)
 	chance_button = _button("", h, func(): chance_upgrade_requested.emit())
 	chance_button.tooltip_text = "Bessere Gems: höhere Chance-Stufe gegen Gold"
@@ -182,7 +194,7 @@ func _build_top_bar() -> void:
 
 	debug_option = OptionButton.new()
 	debug_option.fit_to_longest_item = false
-	debug_option.custom_minimum_size.x = 190
+	debug_option.custom_minimum_size.x = 150
 	debug_option.focus_mode = Control.FOCUS_NONE
 	debug_option.tooltip_text = "Debug: welcher Gem als nächstes gesetzt wird"
 	h.add_child(debug_option)
@@ -293,6 +305,9 @@ func _build_bottom() -> void:
 	actions_col.custom_minimum_size.x = 260
 	actions_col.add_theme_constant_override("separation", 8)
 	h.add_child(actions_col)
+	for c in [strip_col, info_col, used_col, actions_col]:
+		c.visible = false
+	_update_layout()
 
 
 func _build_help() -> void:
@@ -468,6 +483,62 @@ func set_options_enabled(enabled: bool) -> void:
 
 func show_message(text: String) -> void:
 	message_label.text = text
+
+
+## delta: wie viel länger der Weg seit Beginn der Bauphase ist (0 = nicht anzeigen).
+func set_path_length(cells: int, delta: int) -> void:
+	path_value.text = "%d Felder" % cells
+	if delta != 0:
+		path_value.text += " (%+d)" % delta
+	path_value.add_theme_color_override("font_color", UiTheme.HAVE if delta > 0 else (UiTheme.MISSING if delta < 0 else UiTheme.TEXT))
+
+
+func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int, path_cells: int) -> void:
+	recipe_book.hide()
+	help_panel.hide()
+	game_over_title.text = "Gewonnen!" if victory else "Verloren"
+	game_over_title.add_theme_color_override("font_color", UiTheme.GOLD if victory else UiTheme.MISSING)
+	game_over_stats.text = "Welle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder" % [wave, waves, lives, kills, path_cells]
+	editor_button.visible = Session.return_scene != Session.MAIN_MENU
+	editor_button.text = "Zurück zum Map-Editor" if Session.return_scene == Session.MAP_EDITOR else "Zurück zum Tower-Editor"
+	game_over.show()
+
+
+func _build_game_over() -> void:
+	game_over = Control.new()
+	game_over.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(game_over)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over.add_child(center)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.custom_minimum_size.x = 380
+	center.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	panel.add_child(v)
+	game_over_title = UiUtil.label("", v, 40)
+	game_over_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_over_stats = UiUtil.label("", v, 15)
+	game_over_stats.add_theme_color_override("font_color", UiTheme.DIM)
+	game_over_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_spacer(0))
+	var again := _button("Nochmal spielen", v, func(): restart_requested.emit())
+	again.tooltip_text = "Dieselbe Map mit denselben Einstellungen neu starten"
+	again.custom_minimum_size.y = 52
+	again.add_theme_font_size_override("font_size", 18)
+	UiTheme.accent_button(again, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	editor_button = _button("", v, func(): menu_requested.emit())
+	editor_button.custom_minimum_size.y = 44
+	var menu := _button("Hauptmenü", v, func(): main_menu_requested.emit())
+	menu.custom_minimum_size.y = 44
+	game_over.hide()
 
 
 func toggle_recipe_book() -> void:
