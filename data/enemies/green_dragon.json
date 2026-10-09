@@ -2,7 +2,7 @@
 	"id": "green_dragon",
 	"name": "Green Dragon",
 	"hp": 540,
-	"speed": 1.95,
+	"speed": 1.56,
 	"armor": 13,
 	"armor_type": "unarmored",
 	"bounty": 4,
