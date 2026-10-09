@@ -294,18 +294,18 @@ func tower_options(t: Tower) -> Array:
 		return []
 	if t.is_new:
 		return choice_options(t)
-	if phase == Phase.WAVE:
-		return []
 	var opts := []
 	var field := towers.values().filter(func(o): return o != t and not o.is_new)
-	for sid in Database.special_ids():
-		var def: Dictionary = Database.towers[sid]
-		if def.get("recipe_same_round", false):
-			continue
-		var consume = _match_recipe(def.get("recipe", []), t, field)
-		if consume != null:
-			opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "action": "combine",
-					"id": sid, "tier": 0, "consume": consume, "cost": 0})
+	# Fertige Tower auf dem Feld kombinieren geht nur außerhalb der Bauphase (One-Shots siehe choice_options)
+	if phase != Phase.BUILD:
+		for sid in Database.special_ids():
+			var def: Dictionary = Database.towers[sid]
+			if def.get("recipe_same_round", false):
+				continue
+			var consume = _match_recipe(def.get("recipe", []), t, field)
+			if consume != null:
+				opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "action": "combine",
+						"id": sid, "tier": 0, "consume": consume, "cost": 0})
 	opts.append_array(upgrade_options(t))
 	return opts
 

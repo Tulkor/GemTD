@@ -37,7 +37,8 @@ Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen
 3. Die Welle startet. Gegner laufen Spawn (S) → Checkpoints 1…5 → Ziel (Z). Flieger fliegen direkt.
 
 Weitere Regeln:
-- **Spezial-Tower:** Zutaten aus den Gems dieser Runde *oder* fertige Tower auf dem Feld.
+- **Spezial-Tower:** Zutaten aus den Gems dieser Runde *oder* fertige Tower auf dem Feld. Fertige Tower
+  untereinander kombinieren geht nur außerhalb der Bauphase (in der Auswahlphase und während der Welle).
   Verbrauchte Tower vom Feld werden zu Steinen. Upgrades (z. B. Silber → Sterlingsilber → Silberritter) kosten Gold.
 - **Fallen (Platten):** Normaler Gem + einer der passenden fehlerhaften Gems in derselben Runde.
   Gegner laufen über Fallen. Zwei Fallen auf dem Feld ergeben eine kombinierte Falle

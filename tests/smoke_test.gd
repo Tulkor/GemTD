@@ -170,18 +170,24 @@ func _ready() -> void:
 		game._turn_into_rock(t)
 	game.round_towers.clear()
 	game.phase = game.Phase.BUILD
-	# Ein fertiger Saphir auf dem Feld zählt für One-Shots nicht mit
-	var field_sapphire = null
+	# Fertiger Saphir, Topas und Diamant auf dem Feld: zählen für One-Shots nicht mit,
+	# und kombinieren lassen sie sich erst außerhalb der Bauphase
+	var field_plan := ["sapphire:0", "topaz:0", "diamond:0"]
+	var field_gems := []
 	tries2 = 0
-	while field_sapphire == null and tries2 < 5000:
+	while field_gems.size() < field_plan.size() and tries2 < 5000:
 		tries2 += 1
 		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
 		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 		if game.can_place(c):
-			game.debug_tower = "sapphire:0"
-			field_sapphire = game.place_gem(c)
-	field_sapphire.is_new = false
-	game.round_towers.erase(field_sapphire)
+			game.debug_tower = field_plan[field_gems.size()]
+			var g = game.place_gem(c)
+			g.is_new = false
+			game.round_towers.erase(g)
+			field_gems.append(g)
+	var field_sapphire = field_gems[0]
+	var field_labels: Array = game.tower_options(field_sapphire).map(func(o): return o.label)
+	check(not field_labels.any(func(l): return "Kombinieren" in l), "kein Kombinieren in der Bauphase: %s" % [field_labels])
 	var shot_plan := ["topaz:0", "diamond:0", "sapphire:0"]
 	tries2 = 0
 	while game.round_towers.size() < shot_plan.size() and tries2 < 5000:
@@ -222,6 +228,11 @@ func _ready() -> void:
 	game._on_option_chosen(0)
 	check(topaz.tower_id == "silver" and game.phase == game.Phase.WAVE, "One-Shot gebaut, Welle startet")
 	check(game.rocks.size() == rocks_before + 2, "die anderen beiden Gems sind Steine")
+	field_labels = game.tower_options(field_sapphire).map(func(o): return o.label)
+	check(field_labels.has("Kombinieren → Silber"), "Kombinieren während der Welle: %s" % [field_labels])
+	game._select(field_sapphire)
+	game._on_option_chosen(field_labels.find("Kombinieren → Silber"))
+	check(field_sapphire.tower_id == "silver" and game.phase == game.Phase.WAVE and not game.ground_path.is_empty(), "während der Welle kombiniert, Welle läuft weiter")
 
 	# Wellenvorschau links
 	var preview: Array = game._upcoming_waves(4)
