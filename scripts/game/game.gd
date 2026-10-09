@@ -296,8 +296,9 @@ func tower_options(t: Tower) -> Array:
 		return choice_options(t)
 	var opts := []
 	var field := towers.values().filter(func(o): return o != t and not o.is_new)
-	# Fertige Tower auf dem Feld kombinieren geht nur außerhalb der Bauphase (One-Shots siehe choice_options)
-	if phase != Phase.BUILD:
+	# Fertige Tower auf dem Feld kombinieren geht nur während der Welle, nicht beim Setzen und Auswählen
+	# der neuen Gems (deren Rezepte siehe choice_options)
+	if phase == Phase.WAVE:
 		for sid in Database.special_ids():
 			var def: Dictionary = Database.towers[sid]
 			if def.get("recipe_same_round", false):
@@ -311,8 +312,9 @@ func tower_options(t: Tower) -> Array:
 
 
 ## In der Auswahlphase: behalten, 2/4 gleiche, Rezepte.
-## Schon in der Bauphase (One-Shot): nur Rezepte, die allein mit den in dieser Runde gesetzten
-## Gems erfüllt sind, fertige Tower auf dem Feld zählen nicht. Wer das nimmt, beendet die Runde sofort.
+## Schon in der Bauphase (One-Shot): nur Rezepte, wer das nimmt, beendet die Runde sofort.
+## Rezepte gelten in beiden Fällen nur mit den in dieser Runde gesetzten Gems, fertige Tower auf dem
+## Feld zählen nicht (die lassen sich während der Welle kombinieren, siehe tower_options).
 func choice_options(t: Tower) -> Array:
 	var one_shot := phase == Phase.BUILD
 	if (phase != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
@@ -333,15 +335,11 @@ func choice_options(t: Tower) -> Array:
 					opts.append(_keep_option("%d gleiche → %s" % [n, Database.tower_label(overflow, 0)], overflow, 0))
 				break
 	var others := round_towers.filter(func(o): return o != t)
-	var field := towers.values().filter(func(o): return not o.is_new)
 	for sid in Database.special_ids():
 		var def: Dictionary = Database.towers[sid]
-		var pool: Array = others if one_shot or def.get("recipe_same_round", false) else others + field
-		var consume = _match_recipe(def.get("recipe", []), t, pool)
-		if consume != null:
-			var o := _keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0)
-			o.consume = consume.filter(func(c): return not c.is_new)
-			opts.append(o)
+		# Zutaten sind alle aus dieser Runde und werden ohnehin mit dem Rest zu Steinen
+		if _match_recipe(def.get("recipe", []), t, others) != null:
+			opts.append(_keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0))
 	return opts
 
 

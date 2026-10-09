@@ -234,6 +234,32 @@ func _ready() -> void:
 	game._on_option_chosen(field_labels.find("Kombinieren → Silber"))
 	check(field_sapphire.tower_id == "silver" and game.phase == game.Phase.WAVE and not game.ground_path.is_empty(), "während der Welle kombiniert, Welle läuft weiter")
 
+	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
+	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle
+	game.round_towers.clear()
+	game.phase = game.Phase.BUILD
+	var star_plan := ["ruby:1", "amethyst:0", "ruby:0", "topaz:0", "topaz:0", "topaz:0"]
+	var star := []
+	var star_name := Database.tower_label("star_ruby", 0)
+	tries2 = 0
+	while game.phase == game.Phase.BUILD and tries2 < 5000:
+		tries2 += 1
+		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
+		if game.can_place(c):
+			game.debug_tower = star_plan[star.size()]
+			var g = game.place_gem(c)
+			if star.is_empty():
+				g.is_new = false
+				game.round_towers.erase(g)
+			star.append(g)
+			if star.size() == 3:
+				check(not game.one_shot_hints().any(func(h): return star_name in h), "kein One-Shot %s mit altem Rubin: %s" % [star_name, game.one_shot_hints()])
+	labels = game.choice_options(star[1]).map(func(o): return o.label)
+	check(game.phase == game.Phase.CHOOSE and not labels.any(func(l): return star_name in l), "Auswahlphase: kein %s mit altem Rubin: %s" % [star_name, labels])
+	labels = game.tower_options(star[0]).map(func(o): return o.label)
+	check(not labels.any(func(l): return "Kombinieren" in l), "alter Rubin kombiniert in der Auswahlphase nicht: %s" % [labels])
+
 	# Wellenvorschau links
 	var preview: Array = game._upcoming_waves(4)
 	check(preview.size() == 4 and preview[0].number == game.wave_index + 1, "Vorschau zeigt die nächsten 4 Wellen ab Welle %d" % (game.wave_index + 1))

@@ -38,11 +38,12 @@ Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen
 
 Weitere Regeln:
 - **Spezial-Tower:** Zutaten aus den Gems dieser Runde *oder* fertige Tower auf dem Feld. Fertige Tower
-  untereinander kombinieren geht nur außerhalb der Bauphase (in der Auswahlphase und während der Welle).
+  untereinander kombinieren geht nur während der Welle. Beim Setzen und Auswählen der neuen Gems zählen
+  für Rezepte nur die Gems dieser Runde.
   Verbrauchte Tower vom Feld werden zu Steinen. Upgrades (z. B. Silber → Sterlingsilber → Silberritter) kosten Gold.
 - **Fallen (Platten):** Normaler Gem + einer der passenden fehlerhaften Gems in derselben Runde.
   Gegner laufen über Fallen. Zwei Fallen auf dem Feld ergeben eine kombinierte Falle
-  (z. B. Halteplatte + Luftplatte → Uralte Platte): eine Falle anklicken, dann „Kombinieren“.
+  (z. B. Halteplatte + Luftplatte → Uralte Platte): während der Welle eine Falle anklicken, dann „Kombinieren“.
 - **Steine** in der Bauphase anklicken und kostenlos entfernen.
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
