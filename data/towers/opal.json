@@ -3,80 +3,97 @@
 	"name": "Opal",
 	"category": "gem",
 	"color": "#f5cba7",
+	"model": "res://assets/models/crystals/crystal_01.glb",
+	"damage_type": "magic",
 	"targets": "both",
 	"tiers": [
 		{
 			"damage": [
-				3,
+				5,
 				5
 			],
-			"range": 3.0,
-			"cooldown": 1.0,
+			"range": 4.69,
+			"cooldown": 0.8,
 			"abilities": [
 				{
 					"type": "speed_aura",
-					"radius": 3.0,
+					"radius": 4.69,
 					"bonus": 0.1
 				}
 			]
 		},
 		{
 			"damage": [
-				7,
-				11
+				10,
+				10
 			],
-			"range": 3.25,
+			"range": 5.47,
 			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "speed_aura",
-					"radius": 3.0,
+					"radius": 5.47,
 					"bonus": 0.15
 				}
 			]
 		},
 		{
 			"damage": [
-				14,
-				24
+				20,
+				20
 			],
-			"range": 3.5,
+			"range": 6.25,
 			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "speed_aura",
-					"radius": 3.0,
+					"radius": 6.25,
 					"bonus": 0.2
 				}
 			]
 		},
 		{
 			"damage": [
-				30,
-				50
+				40,
+				40
 			],
-			"range": 3.75,
+			"range": 7.03,
 			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "speed_aura",
-					"radius": 3.0,
+					"radius": 7.03,
 					"bonus": 0.25
 				}
 			]
 		},
 		{
 			"damage": [
-				66,
-				110
+				85,
+				85
 			],
-			"range": 4.0,
+			"range": 7.81,
 			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "speed_aura",
-					"radius": 3.0,
-					"bonus": 0.3
+					"radius": 7.81,
+					"bonus": 0.35
+				}
+			]
+		},
+		{
+			"damage": [
+				180,
+				180
+			],
+			"range": 11.72,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 11.72,
+					"bonus": 0.5
 				}
 			]
 		}

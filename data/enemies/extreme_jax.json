@@ -1,0 +1,13 @@
+{
+	"id": "extreme_jax",
+	"name": "Extreme Jax",
+	"hp": 52800,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "medium",
+	"bounty": 18,
+	"damage": 18,
+	"flying": false,
+	"color": "#27ae60",
+	"size": 1.0
+}

@@ -1,0 +1,13 @@
+{
+	"id": "giant_slug",
+	"name": "Giant Slug",
+	"hp": 490,
+	"speed": 2.23,
+	"armor": 15,
+	"armor_type": "fortified",
+	"bounty": 3,
+	"damage": 3,
+	"flying": false,
+	"color": "#a0522d",
+	"size": 1.0
+}

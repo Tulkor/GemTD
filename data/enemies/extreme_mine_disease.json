@@ -1,0 +1,13 @@
+{
+	"id": "extreme_mine_disease",
+	"name": "Extreme Mine Disease",
+	"hp": 5250,
+	"speed": 3.4,
+	"armor": 19,
+	"armor_type": "small",
+	"bounty": 7,
+	"damage": 7,
+	"flying": false,
+	"color": "#95a5a6",
+	"size": 1.0
+}

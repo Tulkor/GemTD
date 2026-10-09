@@ -1,0 +1,13 @@
+{
+	"id": "extreme_melee_ranger",
+	"name": "Extreme Melee Ranger",
+	"hp": 19000,
+	"speed": 3.71,
+	"armor": 23,
+	"armor_type": "hero",
+	"bounty": 9,
+	"damage": 9,
+	"flying": false,
+	"color": "#95a5a6",
+	"size": 1.0
+}

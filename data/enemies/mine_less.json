@@ -1,0 +1,13 @@
+{
+	"id": "mine_less",
+	"name": "Mine Less",
+	"hp": 55,
+	"speed": 2.07,
+	"armor": 12,
+	"armor_type": "large",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"color": "#6c3483",
+	"size": 1.0
+}

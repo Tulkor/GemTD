@@ -3,52 +3,69 @@
 	"name": "Amethyst",
 	"category": "gem",
 	"color": "#9b59d0",
+	"model": "res://assets/models/crystals/crystal_00.glb",
+	"damage_type": "pierce",
 	"targets": "air",
 	"tiers": [
 		{
 			"damage": [
-				18,
-				26
+				10,
+				15
 			],
-			"range": 4.5,
+			"range": 7.81,
+			"cooldown": 0.8,
+			"abilities": []
+		},
+		{
+			"damage": [
+				20,
+				27
+			],
+			"range": 9.38,
 			"cooldown": 1.0,
 			"abilities": []
 		},
 		{
 			"damage": [
-				40,
-				57
+				30,
+				45
 			],
-			"range": 4.75,
+			"range": 10.16,
 			"cooldown": 1.0,
 			"abilities": []
 		},
 		{
 			"damage": [
-				86,
-				125
+				60,
+				80
 			],
-			"range": 5.0,
+			"range": 10.55,
 			"cooldown": 1.0,
 			"abilities": []
 		},
 		{
 			"damage": [
-				180,
-				260
+				140,
+				170
 			],
-			"range": 5.25,
+			"range": 12.5,
 			"cooldown": 1.0,
 			"abilities": []
 		},
 		{
 			"damage": [
-				396,
-				572
+				350,
+				400
 			],
-			"range": 5.5,
+			"range": 12.89,
 			"cooldown": 1.0,
-			"abilities": []
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 7.81,
+					"amount": 3.0
+				}
+			]
 		}
 	]
 }

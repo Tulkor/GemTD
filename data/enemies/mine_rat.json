@@ -1,0 +1,13 @@
+{
+	"id": "mine_rat",
+	"name": "Mine Rat",
+	"hp": 10,
+	"speed": 2.07,
+	"armor": 12,
+	"armor_type": "normal",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"color": "#a0522d",
+	"size": 1.0
+}

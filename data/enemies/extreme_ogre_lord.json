@@ -1,0 +1,13 @@
+{
+	"id": "extreme_ogre_lord",
+	"name": "Extreme Ogre Lord",
+	"hp": 11000,
+	"speed": 3.55,
+	"armor": 23,
+	"armor_type": "fortified",
+	"bounty": 8,
+	"damage": 8,
+	"flying": false,
+	"color": "#d35400",
+	"size": 1.0
+}

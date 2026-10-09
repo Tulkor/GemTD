@@ -1,0 +1,52 @@
+{
+	"id": "slow_slate",
+	"name": "Verlangsamungsplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#6fa8ff",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "pierce",
+	"targets": "ground",
+	"recipe": [
+		{
+			"tower": "sapphire",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "diamond",
+					"tier": 1
+				},
+				{
+					"tower": "emerald",
+					"tier": 1
+				},
+				{
+					"tower": "aquamarine",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Verlangsamungsplatte",
+			"damage": [
+				100,
+				100
+			],
+			"range": 1.02,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.15,
+					"duration": 3600.0
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

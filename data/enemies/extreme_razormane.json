@@ -1,0 +1,13 @@
+{
+	"id": "extreme_razormane",
+	"name": "Extreme Razormane",
+	"hp": 1850,
+	"speed": 2.54,
+	"armor": 15,
+	"armor_type": "unarmored",
+	"bounty": 5,
+	"damage": 5,
+	"flying": false,
+	"color": "#2c3e50",
+	"size": 1.0
+}

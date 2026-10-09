@@ -3,43 +3,17 @@
 	"name": "Topas",
 	"category": "gem",
 	"color": "#f1c40f",
+	"model": "res://assets/models/crystals/crystal_05.glb",
+	"damage_type": "chaos",
 	"targets": "both",
 	"tiers": [
 		{
 			"damage": [
 				4,
-				6
+				4
 			],
-			"range": 3.0,
-			"cooldown": 0.9,
-			"abilities": [
-				{
-					"type": "multishot",
-					"targets": 2
-				}
-			]
-		},
-		{
-			"damage": [
-				9,
-				13
-			],
-			"range": 3.25,
-			"cooldown": 0.9,
-			"abilities": [
-				{
-					"type": "multishot",
-					"targets": 2
-				}
-			]
-		},
-		{
-			"damage": [
-				19,
-				29
-			],
-			"range": 3.5,
-			"cooldown": 0.9,
+			"range": 3.91,
+			"cooldown": 0.8,
 			"abilities": [
 				{
 					"type": "multishot",
@@ -49,29 +23,71 @@
 		},
 		{
 			"damage": [
-				40,
-				60
+				8,
+				8
 			],
-			"range": 3.75,
-			"cooldown": 0.9,
-			"abilities": [
-				{
-					"type": "multishot",
-					"targets": 3
-				}
-			]
-		},
-		{
-			"damage": [
-				88,
-				132
-			],
-			"range": 4.0,
-			"cooldown": 0.9,
+			"range": 3.91,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "multishot",
 					"targets": 4
+				}
+			]
+		},
+		{
+			"damage": [
+				14,
+				14
+			],
+			"range": 3.91,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 5
+				}
+			]
+		},
+		{
+			"damage": [
+				25,
+				25
+			],
+			"range": 3.91,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 6
+				}
+			]
+		},
+		{
+			"damage": [
+				75,
+				75
+			],
+			"range": 4.69,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 9
+				}
+			]
+		},
+		{
+			"damage": [
+				250,
+				250
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 9
 				}
 			]
 		}

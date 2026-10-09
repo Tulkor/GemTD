@@ -1,0 +1,14 @@
+{
+	"id": "extreme_bryvx_boss",
+	"name": "Extreme BRYVX",
+	"hp": 85000,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "divine",
+	"bounty": 20,
+	"damage": 20,
+	"flying": false,
+	"color": "#d35400",
+	"boss": true,
+	"size": 1.4
+}

@@ -1,0 +1,13 @@
+{
+	"id": "hoodsmen",
+	"name": "Hoodsmen",
+	"hp": 300,
+	"speed": 2.23,
+	"armor": 12,
+	"armor_type": "large",
+	"bounty": 3,
+	"damage": 3,
+	"flying": false,
+	"color": "#c0392b",
+	"size": 1.0
+}

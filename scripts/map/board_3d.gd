@@ -13,6 +13,15 @@ const COL_WALL := Color("2a2b31")
 const COL_ROCK := Color("5c5c63")
 const WALL_HEIGHT := 0.8
 const ROCK_HEIGHT := 0.55
+## Modelle für Steine (werden reihum verteilt). Fehlen sie, werden einfache Blöcke gezeichnet.
+const ROCK_MODELS := [
+	"res://assets/models/rocks/rock_b.glb",
+	"res://assets/models/rocks/rock_c.glb",
+	"res://assets/models/rocks/rock_large_a.glb",
+	"res://assets/models/rocks/rock_large_b.glb",
+	"res://assets/models/rocks/rock_large_c.glb",
+]
+const ROCK_SIZE := 0.95
 
 var map: MapData
 var rocks: Dictionary = {}
@@ -23,7 +32,8 @@ var hover_ok := true
 
 var _ground: MultiMeshInstance3D
 var _walls: MultiMeshInstance3D
-var _rocks: MultiMeshInstance3D
+var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
+var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
 var _path: MultiMeshInstance3D
 var _markers: Node3D
 var _hover: MeshInstance3D
@@ -51,7 +61,17 @@ static func make_material(col: Color, unshaded := false, transparent := false) -
 func _ready() -> void:
 	_ground = _multimesh(_box(Vector3(1, 0.1, 1)), true)
 	_walls = _multimesh(_box(Vector3(1, WALL_HEIGHT, 1)), false, COL_WALL)
-	_rocks = _multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK)
+	for path in ROCK_MODELS:
+		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE)
+		if m.is_empty():
+			continue
+		var mmi := _multimesh(m[0], false)
+		mmi.material_override = null
+		_rocks.append(mmi)
+		_rock_fits.append(m[1])
+	if _rocks.is_empty():
+		_rocks.append(_multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK))
+		_rock_fits.append(Transform3D(Basis(), Vector3(0, ROCK_HEIGHT / 2.0, 0)))
 	var dot := CylinderMesh.new()
 	dot.top_radius = 0.12
 	dot.bottom_radius = 0.12
@@ -126,16 +146,22 @@ func rebuild() -> void:
 
 
 func refresh_rocks() -> void:
-	if _rocks == null:
+	if _rocks.is_empty():
 		return
-	var mm := _rocks.multimesh
-	var cells := rocks.keys()
-	mm.instance_count = cells.size()
-	for i in cells.size():
-		var c: Vector2i = cells[i]
-		# leicht gedreht, damit Steine nicht wie Kisten aussehen
-		var basis := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 10) * 0.08)
-		mm.set_instance_transform(i, Transform3D(basis, to_3d(cell_center(c), ROCK_HEIGHT / 2.0)))
+	var buckets := []
+	for i in _rocks.size():
+		buckets.append([])
+	for c in rocks.keys():
+		buckets[absi(c.x * 7 + c.y * 13) % _rocks.size()].append(c)
+	for i in _rocks.size():
+		var mm: MultiMesh = _rocks[i].multimesh
+		mm.instance_count = buckets[i].size()
+		for j in buckets[i].size():
+			var c: Vector2i = buckets[i][j]
+			# leicht gedreht, damit nicht alle Steine gleich aussehen
+			var turn := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 12) * 0.52)
+			var place := Transform3D(turn, to_3d(cell_center(c)))
+			mm.set_instance_transform(j, place * _rock_fits[i])
 
 
 func refresh_path() -> void:

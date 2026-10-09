@@ -1,0 +1,13 @@
+{
+	"id": "black_dragon",
+	"name": "Black Dragon",
+	"hp": 7440,
+	"speed": 2.5,
+	"armor": 14,
+	"armor_type": "unarmored",
+	"bounty": 9,
+	"damage": 9,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

@@ -1,0 +1,13 @@
+{
+	"id": "extreme_prisoner",
+	"name": "Extreme Prisoner",
+	"hp": 25000,
+	"speed": 3.83,
+	"armor": 23,
+	"armor_type": "large",
+	"bounty": 10,
+	"damage": 10,
+	"flying": false,
+	"color": "#c0392b",
+	"size": 1.0
+}

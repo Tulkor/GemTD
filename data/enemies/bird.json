@@ -1,0 +1,13 @@
+{
+	"id": "bird",
+	"name": "Bird",
+	"hp": 870,
+	"speed": 1.95,
+	"armor": 13,
+	"armor_type": "unarmored",
+	"bounty": 5,
+	"damage": 5,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

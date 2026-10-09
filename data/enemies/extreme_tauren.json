@@ -1,0 +1,13 @@
+{
+	"id": "extreme_tauren",
+	"name": "Extreme Tauren",
+	"hp": 21000,
+	"speed": 3.75,
+	"armor": 23,
+	"armor_type": "normal",
+	"bounty": 10,
+	"damage": 10,
+	"flying": false,
+	"color": "#8e44ad",
+	"size": 1.0
+}

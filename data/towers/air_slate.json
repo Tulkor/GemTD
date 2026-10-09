@@ -1,0 +1,53 @@
+{
+	"id": "air_slate",
+	"name": "Luftplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#b48cf0",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "pierce",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "amethyst",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "emerald",
+					"tier": 1
+				},
+				{
+					"tower": "opal",
+					"tier": 1
+				},
+				{
+					"tower": "ruby",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Luftplatte",
+			"damage": [
+				40,
+				40
+			],
+			"range": 1.02,
+			"range_air": 6.64,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.78,
+					"factor": 1.0
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

@@ -1,359 +1,454 @@
 {
 	"id": "classic",
-	"name": "Klassisch (30 Wellen)",
+	"name": "Gem TD+ (50 Level)",
 	"waves": [
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "mine_rat",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 12,
-					"bounty": 1
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 11,
-					"bounty": 1
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "armored",
+					"enemy": "mine_gekko",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 26,
-					"armor": 4,
-					"bounty": 1
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "flyer",
+					"enemy": "mine_less",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 17,
-					"bounty": 1
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 19,
-					"bounty": 2
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "grunt",
+					"enemy": "bat",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 30,
-					"bounty": 2
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "armored",
+					"enemy": "rockmen",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 54,
-					"armor": 5,
-					"bounty": 2
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 32,
-					"bounty": 2
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "flyer",
+					"enemy": "bigger_rockmen",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 43,
-					"bounty": 2
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "boss",
-					"count": 1,
-					"interval": 1.0,
-					"hp": 774,
-					"bounty": 30
-				},
-				{
-					"enemy": "grunt",
-					"count": 6,
-					"interval": 0.8,
-					"hp": 62,
-					"bounty": 3
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 56,
-					"bounty": 3
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "grunt",
+					"enemy": "greeny",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 89,
-					"bounty": 3
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "flying_gem_thief",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 107,
-					"bounty": 3
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "flyer",
+					"enemy": "hoodsmen",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 107,
-					"bounty": 3
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "armored",
+					"enemy": "merc",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 231,
-					"armor": 6,
-					"bounty": 4
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "giant_slug",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 185,
-					"bounty": 4
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 166,
-					"bounty": 4
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "grunt",
+					"enemy": "green_dragon",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 266,
-					"bounty": 4
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "flyer",
+					"enemy": "long_spider",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 266,
-					"bounty": 4
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "boss",
-					"count": 1,
-					"interval": 1.0,
-					"hp": 4792,
-					"bounty": 40
-				},
-				{
-					"enemy": "grunt",
-					"count": 6,
-					"interval": 0.8,
-					"hp": 383,
-					"bounty": 5
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "grunt",
+					"enemy": "ogre",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 460,
-					"bounty": 5
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "demon",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 552,
-					"bounty": 5
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 497,
-					"bounty": 5
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "flyer",
+					"enemy": "bird",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 662,
-					"bounty": 5
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "extreme_raider",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 954,
-					"bounty": 6
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "runner",
-					"count": 12,
-					"interval": 0.6,
-					"hp": 859,
-					"bounty": 6
-				}
-			]
-		},
-		{
-			"groups": [
-				{
-					"enemy": "armored",
+					"enemy": "extreme_razormane",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 2061,
-					"armor": 8,
-					"bounty": 6
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "grunt",
+					"enemy": "extreme_water",
 					"count": 10,
-					"interval": 0.8,
-					"hp": 1648,
-					"bounty": 6
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "flyer",
+					"enemy": "tamed_bird",
 					"count": 10,
-					"interval": 0.9,
-					"hp": 1648,
-					"bounty": 6
+					"interval": 1.61
 				}
 			]
 		},
 		{
 			"groups": [
 				{
-					"enemy": "boss",
-					"count": 1,
-					"interval": 1.0,
-					"hp": 29672,
-					"bounty": 50
-				},
+					"enemy": "extreme_swamp_lord",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
 				{
-					"enemy": "grunt",
-					"count": 6,
-					"interval": 0.8,
-					"hp": 2374,
-					"bounty": 7
+					"enemy": "extreme_mine_cart",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_dead_miner",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "ghost_bird",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_mine_disease",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_sb",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_kitty",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "owl",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_turtle",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_ogre_lord",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_red_panda",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "black_dragon",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_warlock_orc",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_succubus",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_melee_ranger",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "red_dragon",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_tauren",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_tauren_chief",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_prisoner",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "spirit_bird",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_kon",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_bryvx",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_mingo",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "wisp",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_tiger_bear",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_jax",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_pickled_lobster",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "phoenix",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_roller",
+					"count": 10,
+					"interval": 1.61
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "extreme_bryvx_boss",
+					"count": 10,
+					"interval": 1.61
 				}
 			]
 		}

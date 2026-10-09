@@ -1,0 +1,68 @@
+{
+	"id": "dark_emerald",
+	"name": "Dunkler Smaragd",
+	"category": "special",
+	"color": "#0f6b3c",
+	"model": "res://assets/models/crystals/crystal_12.glb",
+	"damage_type": "siege",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Dunkler Smaragd",
+			"damage": [
+				90,
+				150
+			],
+			"range": 4.3,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.125,
+					"duration": 1.5
+				}
+			]
+		},
+		{
+			"name": "Verzauberter Smaragd",
+			"damage": [
+				100,
+				200
+			],
+			"range": 5.47,
+			"cooldown": 0.7,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.125,
+					"duration": 1.5
+				},
+				{
+					"type": "crit",
+					"chance": 0.15,
+					"multiplier": 4.0
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "emerald",
+			"tier": 4
+		},
+		{
+			"tower": "sapphire",
+			"tier": 3
+		},
+		{
+			"tower": "topaz",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 225,
+			"recipe": []
+		}
+	]
+}

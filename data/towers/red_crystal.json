@@ -1,0 +1,88 @@
+{
+	"id": "red_crystal",
+	"name": "Roter Kristall",
+	"category": "special",
+	"color": "#d6304f",
+	"model": "res://assets/models/crystals/crystal_20.glb",
+	"damage_type": "pierce",
+	"targets": "air",
+	"tiers": [
+		{
+			"name": "Roter Kristall",
+			"damage": [
+				50,
+				75
+			],
+			"range": 10.16,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 10.16,
+					"amount": 4.0
+				}
+			]
+		},
+		{
+			"name": "Rote Facette",
+			"damage": [
+				75,
+				100
+			],
+			"range": 10.94,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 10.94,
+					"amount": 5.0
+				}
+			]
+		},
+		{
+			"name": "Rosenquarz-Kristall",
+			"damage": [
+				100,
+				125
+			],
+			"range": 11.72,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 11.72,
+					"amount": 6.0
+				},
+				{
+					"type": "burn_aura",
+					"radius": 11.72,
+					"dps": 50.0
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "emerald",
+			"tier": 3
+		},
+		{
+			"tower": "ruby",
+			"tier": 2
+		},
+		{
+			"tower": "amethyst",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 100,
+			"recipe": []
+		},
+		{
+			"cost": 150,
+			"recipe": []
+		}
+	]
+}

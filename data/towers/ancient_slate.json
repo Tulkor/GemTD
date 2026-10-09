@@ -1,0 +1,48 @@
+{
+	"id": "ancient_slate",
+	"name": "Uralte Platte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#c8a46e",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "pierce",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "hold_slate",
+			"tier": 0
+		},
+		{
+			"tower": "air_slate",
+			"tier": 0
+		}
+	],
+	"description": "Entsteht aus zwei Fallen auf dem Feld.",
+	"tiers": [
+		{
+			"name": "Uralte Platte",
+			"damage": [
+				50,
+				50
+			],
+			"range": 1.02,
+			"cooldown": 2.5,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 1.0,
+					"duration": 2.5
+				},
+				{
+					"type": "armor_reduce",
+					"amount": 12.0,
+					"duration": 2.5
+				},
+				{
+					"type": "wave_damage",
+					"per_wave": 50.0
+				}
+			]
+		}
+	]
+}

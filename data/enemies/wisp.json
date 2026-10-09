@@ -1,0 +1,13 @@
+{
+	"id": "wisp",
+	"name": "Wisp",
+	"hp": 15600,
+	"speed": 2.89,
+	"armor": 14,
+	"armor_type": "unarmored",
+	"bounty": 16,
+	"damage": 16,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

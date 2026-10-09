@@ -104,6 +104,63 @@ func _ready() -> void:
 	labels = game.choice_options(game.round_towers[2]).map(func(o): return o.label)
 	check(labels.any(func(l): return "Silber" in l), "Topas: Rezept Silber angeboten: %s" % [labels])
 
+	# Falle aus derselben Runde: normaler Amethyst + fehlerhafter Smaragd -> Luftplatte (begehbar)
+	game.round_towers.clear()
+	for t in game.towers.values().filter(func(o): return o.is_new):
+		game._turn_into_rock(t)
+	game.phase = game.Phase.BUILD
+	var plan := ["amethyst:2", "emerald:1", "ruby:4", "ruby:4", "ruby:4"]
+	var placed_cells := []
+	tries2 = 0
+	while game.phase == game.Phase.BUILD and tries2 < 5000:
+		tries2 += 1
+		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+		var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+		if game.can_place(c):
+			game.debug_tower = plan[game.round_towers.size()]
+			game.place_gem(c)
+	var amethyst = game.round_towers[0]
+	labels = game.choice_options(amethyst).map(func(o): return o.label)
+	check(labels.any(func(l): return "Luftplatte" in l), "Amethyst: Luftplatte angeboten: %s" % [labels])
+	labels = game.choice_options(game.round_towers[2]).map(func(o): return o.label)
+	check(labels.any(func(l): return "Großartiger Rubin" in l), "2 perfekte Rubine → Großartig: %s" % [labels])
+	game._select(amethyst)
+	var opts: Array = game.choice_options(amethyst)
+	var slate_index := opts.map(func(o): return o.label).find(opts.filter(func(o): return "Luftplatte" in o.label)[0].label)
+	game._on_option_chosen(slate_index)
+	check(amethyst.tower_id == "air_slate" and amethyst.is_trap(), "Luftplatte gesetzt")
+	check(not game.pathfinder.astar.is_point_solid(amethyst.cell), "Falle blockiert den Weg nicht")
+	var dmg_before: float = amethyst.total_damage
+	var frames2 := 0
+	while game.phase == game.Phase.WAVE and frames2 < 20000:
+		await get_tree().process_frame
+		frames2 += 1
+	print("  Luftplatte Schaden: ", int(amethyst.total_damage - dmg_before))
+
+	# Stein von Bryvx: 4 gleiche perfekte Gems
+	tries2 = 0
+	while game.phase == game.Phase.BUILD and tries2 < 5000:
+		tries2 += 1
+		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+		var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+		if game.can_place(c):
+			game.debug_tower = "topaz:4"
+			game.place_gem(c)
+	labels = game.choice_options(game.round_towers[0]).map(func(o): return o.label)
+	check(labels.any(func(l): return "Bryvx" in l), "4 perfekte → Stein von Bryvx: %s" % [labels])
+
+	# Alle Tower-Dateien gültig
+	for id in Database.tower_ids():
+		var def: Dictionary = Database.towers[id]
+		check(not (def.get("tiers", []) as Array).is_empty(), "Tower %s hat Stufen" % id)
+		for ing in def.get("recipe", []):
+			var alts: Array = ing.get("any_of", [ing])
+			for a in alts:
+				check(Database.towers.has(str(a.get("tower", ""))), "Rezept von %s: Zutat %s existiert" % [id, a.get("tower", "")])
+	for w in Database.wave_sets.get("classic", {}).get("waves", []):
+		for g in w.groups:
+			check(Database.enemies.has(g.enemy), "Gegner %s existiert" % g.enemy)
+
 	Engine.time_scale = 1.0
 	print("FERTIG, Fehler: ", failures)
 	get_tree().quit(1 if failures > 0 else 0)

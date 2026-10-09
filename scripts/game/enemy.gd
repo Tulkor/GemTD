@@ -15,6 +15,7 @@ var armor := 0.0
 var bounty := 1
 var damage := 1      ## Leben, die der Spieler verliert, wenn der Gegner durchkommt
 var flying := false
+var armor_type := ""
 var size := 1.0
 var color := Color.GRAY
 
@@ -31,7 +32,11 @@ var poison_time := 0.0
 var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
+var stacks := 0.0
+var stack_time := 0.0
 
+var shape_name := ""
+var boss := false
 var def_model := ""
 var def_model_scale := 1.0
 var _body_mat: StandardMaterial3D
@@ -49,10 +54,13 @@ func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 	bounty = int(o.get("bounty", def.get("bounty", 1)))
 	damage = int(o.get("damage", def.get("damage", 1)))
 	flying = bool(def.get("flying", false))
+	armor_type = str(o.get("armor_type", def.get("armor_type", "")))
 	size = float(def.get("size", 1.0))
 	color = Color.from_string(str(def.get("color", "#cccccc")), Color.GRAY)
 	def_model = str(def.get("model", ""))
 	def_model_scale = float(def.get("model_scale", 1.0))
+	shape_name = str(def.get("shape", ""))
+	boss = bool(def.get("boss", false))
 	path = p
 	if not path.is_empty():
 		pos = path[0]
@@ -76,7 +84,13 @@ func _process(delta: float) -> void:
 		take_raw_damage(poison_dps * delta)
 		if dead:
 			return
-	var move := speed * (1.0 - slow_factor) * delta
+	if stack_time > 0.0:
+		stack_time -= delta
+		if stack_time <= 0.0:
+			stacks = 0.0
+	# Verlangsamung drückt nicht unter die Mindestgeschwindigkeit (WC3: 220)
+	var min_speed := minf(speed, float(Database.balance.get("min_slowed_speed", 0.0)))
+	var move := maxf(speed * (1.0 - slow_factor), min_speed) * delta
 	if stun_time > 0.0:
 		stun_time -= delta
 		move = 0.0
@@ -110,13 +124,14 @@ func effective_armor() -> float:
 
 
 ## Rüstung wie in Warcraft 3: 6 % weniger Schaden pro Punkt, abnehmend; negative Rüstung erhöht Schaden.
-func take_damage(amount: float) -> float:
+## Dazu der Faktor aus Schadensart gegen Rüstungsart (balance.json → damage_table).
+func take_damage(amount: float, damage_type := "") -> float:
 	var a := effective_armor()
-	var factor := 1.0
+	var factor := Database.damage_factor(damage_type, armor_type)
 	if a > 0.0:
-		factor = 1.0 - 0.06 * a / (1.0 + 0.06 * a)
+		factor *= 1.0 - 0.06 * a / (1.0 + 0.06 * a)
 	elif a < 0.0:
-		factor = 2.0 - pow(0.94, -a)
+		factor *= 2.0 - pow(0.94, -a)
 	return take_raw_damage(amount * factor)
 
 
@@ -151,7 +166,24 @@ func apply_stun(duration: float) -> void:
 	stun_time = maxf(stun_time, duration)
 
 
+## Steigender Zusatzschaden pro Treffer (Geisterplatte). Gibt den Bonus dieses Treffers zurück.
+func add_stack(per_hit: float, duration: float) -> float:
+	stacks += per_hit
+	stack_time = duration
+	return stacks
+
+
 # --- Darstellung -------------------------------------------------------------
+
+func shape() -> String:
+	if shape_name != "":
+		return shape_name
+	if flying:
+		return "sphere"
+	if boss:
+		return "boss"
+	return "cube"
+
 
 func _build_visual() -> void:
 	_body_mat = StandardMaterial3D.new()
@@ -163,11 +195,33 @@ func _build_visual() -> void:
 	if model != null:
 		add_child(model)
 		_body.visible = false
+	# Platzhalterformen: Würfel = Boden, Pyramide = Massenwelle, großer Quader = Boss, Kugel = Flieger.
+	# In der Gegner-Datei mit "shape" wählbar, sonst aus flying/boss abgeleitet.
+	var height := 0.0
+	match shape():
+		"sphere":
+			var sphere := SphereMesh.new()
+			sphere.radius = r
+			sphere.height = r * 2.0
+			_body.mesh = sphere
+			height = r * 2.0
+		"pyramid":
+			var prism := PrismMesh.new()
+			prism.size = Vector3(r * 2.0, r * 2.2, r * 2.0)
+			_body.mesh = prism
+			height = r * 2.2
+		"boss":
+			var big := BoxMesh.new()
+			big.size = Vector3(r * 2.2, r * 3.2, r * 2.2)
+			_body.mesh = big
+			height = r * 3.2
+		_:
+			var cube := BoxMesh.new()
+			cube.size = Vector3.ONE * r * 2.0
+			_body.mesh = cube
+			height = r * 2.0
+	_body.position.y = height / 2.0 - (r if flying else 0.0)
 	if flying:
-		var prism := PrismMesh.new()
-		prism.size = Vector3(r * 2.4, r * 0.5, r * 2.2)
-		_body.mesh = prism
-		_body.rotation.x = deg_to_rad(-90)
 		var shadow := MeshInstance3D.new()
 		var disc := CylinderMesh.new()
 		disc.top_radius = r
@@ -177,16 +231,10 @@ func _build_visual() -> void:
 		shadow.material_override = Board3D.make_material(Color(0, 0, 0, 0.35), true)
 		shadow.position.y = -FLY_HEIGHT + 0.03
 		add_child(shadow)
-	else:
-		var capsule := CapsuleMesh.new()
-		capsule.radius = r
-		capsule.height = r * 3.0
-		_body.mesh = capsule
-		_body.position.y = r * 1.5
 	_body.material_override = _body_mat
 	add_child(_body)
 
-	var bar_y := (r * 3.0 if not flying else r) + 0.35
+	var bar_y := _body.position.y + height / 2.0 + 0.25
 	var bg := _bar(Color(0, 0, 0, 0.8), 0)
 	bg.position.y = bar_y
 	_bar_fg = _bar(Color("e74c3c"), 1)

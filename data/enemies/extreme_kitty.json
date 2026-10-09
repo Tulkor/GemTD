@@ -1,0 +1,13 @@
+{
+	"id": "extreme_kitty",
+	"name": "Extreme Kitty",
+	"hp": 7900,
+	"speed": 3.48,
+	"armor": 19,
+	"armor_type": "hero",
+	"bounty": 7,
+	"damage": 7,
+	"flying": false,
+	"color": "#8e44ad",
+	"size": 1.0
+}

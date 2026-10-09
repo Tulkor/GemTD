@@ -1,0 +1,13 @@
+{
+	"id": "extreme_raider",
+	"name": "Extreme Raider",
+	"hp": 1450,
+	"speed": 2.54,
+	"armor": 15,
+	"armor_type": "small",
+	"bounty": 5,
+	"damage": 5,
+	"flying": false,
+	"color": "#8e44ad",
+	"size": 1.0
+}

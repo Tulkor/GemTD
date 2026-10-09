@@ -1,0 +1,52 @@
+{
+	"id": "damage_slate",
+	"name": "Schadensplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#dfe6f5",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "pierce",
+	"targets": "ground",
+	"recipe": [
+		{
+			"tower": "diamond",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "sapphire",
+					"tier": 1
+				},
+				{
+					"tower": "opal",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Schadensplatte",
+			"damage": [
+				0,
+				0
+			],
+			"range": 1.02,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "wave_damage",
+					"per_wave": 20.0
+				},
+				{
+					"type": "damage_aura",
+					"radius": 1.95,
+					"bonus": 0.1
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

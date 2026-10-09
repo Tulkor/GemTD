@@ -1,0 +1,13 @@
+{
+	"id": "phoenix",
+	"name": "Phoenix",
+	"hp": 18000,
+	"speed": 2.97,
+	"armor": 15,
+	"armor_type": "unarmored",
+	"bounty": 20,
+	"damage": 20,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

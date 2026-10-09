@@ -3,34 +3,51 @@
 	"name": "Rubin",
 	"category": "gem",
 	"color": "#e0303a",
+	"model": "res://assets/models/crystals/crystal_16.glb",
+	"damage_type": "hero",
 	"targets": "both",
 	"tiers": [
 		{
 			"damage": [
 				8,
-				11
+				9
 			],
-			"range": 3.0,
-			"cooldown": 0.8,
+			"range": 6.25,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "splash",
-					"radius": 1.0,
+					"radius": 1.37,
 					"factor": 0.5
 				}
 			]
 		},
 		{
 			"damage": [
-				18,
-				24
+				13,
+				16
 			],
-			"range": 3.25,
-			"cooldown": 0.8,
+			"range": 6.25,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "splash",
-					"radius": 1.0,
+					"radius": 1.37,
+					"factor": 0.5
+				}
+			]
+		},
+		{
+			"damage": [
+				20,
+				25
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.76,
 					"factor": 0.5
 				}
 			]
@@ -38,14 +55,14 @@
 		{
 			"damage": [
 				38,
-				53
+				45
 			],
-			"range": 3.5,
-			"cooldown": 0.8,
+			"range": 6.25,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "splash",
-					"radius": 1.0,
+					"radius": 1.37,
 					"factor": 0.5
 				}
 			]
@@ -53,30 +70,29 @@
 		{
 			"damage": [
 				80,
-				110
+				100
 			],
-			"range": 3.75,
-			"cooldown": 0.8,
+			"range": 7.03,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "splash",
-					"radius": 1.0,
+					"radius": 1.72,
 					"factor": 0.5
 				}
 			]
 		},
 		{
 			"damage": [
-				176,
-				242
+				140,
+				140
 			],
-			"range": 4.0,
-			"cooldown": 0.8,
+			"range": 7.03,
+			"cooldown": 0.5,
 			"abilities": [
 				{
-					"type": "splash",
-					"radius": 1.0,
-					"factor": 0.5
+					"type": "multishot",
+					"targets": 3
 				}
 			]
 		}

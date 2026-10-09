@@ -1,0 +1,13 @@
+{
+	"id": "ghost_bird",
+	"name": "Ghost Bird",
+	"hp": 3000,
+	"speed": 2.19,
+	"armor": 13,
+	"armor_type": "unarmored",
+	"bounty": 7,
+	"damage": 7,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

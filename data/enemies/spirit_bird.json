@@ -1,0 +1,13 @@
+{
+	"id": "spirit_bird",
+	"name": "Spirit Bird",
+	"hp": 12600,
+	"speed": 2.58,
+	"armor": 14,
+	"armor_type": "unarmored",
+	"bounty": 11,
+	"damage": 11,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

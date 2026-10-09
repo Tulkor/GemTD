@@ -1,0 +1,13 @@
+{
+	"id": "extreme_tiger_bear",
+	"name": "Extreme Tiger Bear",
+	"hp": 48000,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "hero",
+	"bounty": 18,
+	"damage": 18,
+	"flying": false,
+	"color": "#95a5a6",
+	"size": 1.0
+}

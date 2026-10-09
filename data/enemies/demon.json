@@ -1,0 +1,13 @@
+{
+	"id": "demon",
+	"name": "Demon",
+	"hp": 1000,
+	"speed": 2.3,
+	"armor": 15,
+	"armor_type": "small",
+	"bounty": 4,
+	"damage": 4,
+	"flying": false,
+	"color": "#95a5a6",
+	"size": 1.0
+}

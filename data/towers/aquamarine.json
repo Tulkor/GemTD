@@ -3,52 +3,69 @@
 	"name": "Aquamarin",
 	"category": "gem",
 	"color": "#5fd3d6",
+	"model": "res://assets/models/crystals/crystal_02.glb",
+	"damage_type": "magic",
 	"targets": "both",
 	"tiers": [
 		{
 			"damage": [
-				5,
-				7
+				6,
+				8
 			],
-			"range": 2.5,
-			"cooldown": 0.4,
+			"range": 2.73,
+			"cooldown": 0.5,
 			"abilities": []
 		},
 		{
 			"damage": [
-				11,
+				12,
 				15
 			],
-			"range": 2.75,
-			"cooldown": 0.4,
+			"range": 2.85,
+			"cooldown": 0.5,
 			"abilities": []
 		},
 		{
 			"damage": [
 				24,
-				34
+				30
 			],
-			"range": 3.0,
-			"cooldown": 0.4,
+			"range": 2.97,
+			"cooldown": 0.5,
 			"abilities": []
 		},
 		{
 			"damage": [
-				50,
-				70
+				48,
+				55
 			],
-			"range": 3.25,
-			"cooldown": 0.4,
+			"range": 3.12,
+			"cooldown": 0.5,
 			"abilities": []
 		},
 		{
 			"damage": [
-				110,
-				154
+				100,
+				120
 			],
-			"range": 3.5,
-			"cooldown": 0.4,
+			"range": 4.3,
+			"cooldown": 0.5,
 			"abilities": []
+		},
+		{
+			"damage": [
+				280,
+				280
+			],
+			"range": 4.69,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 11.72,
+					"bonus": 0.1
+				}
+			]
 		}
 	]
 }

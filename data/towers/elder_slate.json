@@ -1,0 +1,82 @@
+{
+	"id": "elder_slate",
+	"name": "Aeltestenplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#8e7cc3",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "spells",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "spell_slate",
+			"tier": 0
+		},
+		{
+			"tower": "poison_slate",
+			"tier": 0
+		}
+	],
+	"description": "Entsteht aus zwei Fallen auf dem Feld.",
+	"tiers": [
+		{
+			"name": "Aeltestenplatte",
+			"damage": [
+				100,
+				100
+			],
+			"range": 0.9,
+			"cooldown": 0.33,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 300.0,
+					"radius": 1.95,
+					"slow": 0.2
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 150.0,
+					"radius": 1.95
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 150.0,
+					"radius": 2.34
+				},
+				{
+					"type": "armor_reduce",
+					"chance": 0.07,
+					"amount": 7.0,
+					"duration": 25.0
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 200.0,
+					"radius": 2.34
+				},
+				{
+					"type": "gold_on_hit",
+					"chance": 0.05,
+					"gold": 5
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 200.0,
+					"radius": 1.17
+				},
+				{
+					"type": "poison",
+					"chance": 0.08,
+					"dps": 20.0,
+					"duration": 2.0
+				}
+			]
+		}
+	]
+}

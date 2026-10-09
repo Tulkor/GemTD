@@ -3,80 +3,127 @@
 	"name": "Smaragd",
 	"category": "gem",
 	"color": "#2ecc71",
+	"model": "res://assets/models/crystals/crystal_10.glb",
+	"damage_type": "siege",
 	"targets": "both",
 	"tiers": [
 		{
 			"damage": [
-				5,
-				8
+				4,
+				7
 			],
-			"range": 3.0,
-			"cooldown": 0.9,
+			"range": 3.91,
+			"cooldown": 0.8,
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 3,
+					"dps": 2.0,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.15,
 					"duration": 3.0
 				}
 			]
 		},
 		{
 			"damage": [
-				11,
-				18
+				10,
+				13
 			],
-			"range": 3.25,
-			"cooldown": 0.9,
+			"range": 4.3,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 6.6,
-					"duration": 3.0
+					"dps": 3.0,
+					"duration": 4.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 4.0
 				}
 			]
 		},
 		{
 			"damage": [
-				24,
-				38
+				15,
+				25
 			],
-			"range": 3.5,
-			"cooldown": 0.9,
+			"range": 4.69,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 14.4,
-					"duration": 3.0
+					"dps": 5.0,
+					"duration": 5.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 5.0
 				}
 			]
 		},
 		{
 			"damage": [
-				50,
-				80
+				30,
+				37
 			],
-			"range": 3.75,
-			"cooldown": 0.9,
+			"range": 5.47,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 30,
-					"duration": 3.0
+					"dps": 8.0,
+					"duration": 6.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.3,
+					"duration": 6.0
 				}
 			]
 		},
 		{
 			"damage": [
-				110,
-				176
+				80,
+				95
 			],
-			"range": 4.0,
-			"cooldown": 0.9,
+			"range": 7.03,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 66,
-					"duration": 3.0
+					"dps": 16.0,
+					"duration": 8.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 8.0
+				}
+			]
+		},
+		{
+			"damage": [
+				275,
+				275
+			],
+			"range": 7.03,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 50.0,
+					"duration": 3600.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 3600.0
 				}
 			]
 		}

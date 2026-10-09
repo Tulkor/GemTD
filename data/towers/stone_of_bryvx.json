@@ -1,0 +1,28 @@
+{
+	"id": "stone_of_bryvx",
+	"name": "Stein von Bryvx",
+	"category": "special",
+	"color": "#b98cff",
+	"model": "res://assets/models/crystals/quaternius_big_crystal.glb",
+	"damage_type": "siege",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Stein von Bryvx",
+			"damage": [
+				500,
+				500
+			],
+			"range": 6.64,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "damage_aura",
+					"radius": 11.72,
+					"bonus": 0.5
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn man über Großartig hinaus kombiniert (4 gleiche Perfekte)."
+}

@@ -1,0 +1,13 @@
+{
+	"id": "tamed_bird",
+	"name": "Tamed Bird",
+	"hp": 1620,
+	"speed": 2.19,
+	"armor": 13,
+	"armor_type": "unarmored",
+	"bounty": 6,
+	"damage": 6,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

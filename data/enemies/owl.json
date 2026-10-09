@@ -1,0 +1,13 @@
+{
+	"id": "owl",
+	"name": "Owl",
+	"hp": 4980,
+	"speed": 2.15,
+	"armor": 14,
+	"armor_type": "unarmored",
+	"bounty": 8,
+	"damage": 8,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

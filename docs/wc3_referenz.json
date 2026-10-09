@@ -1,0 +1,5335 @@
+{
+ "sources": [
+  "https://github.com/nvs/gem (Gem TD+ source; contains [BK's] Gem TD v3.1 base map at commit e879810 and its war3map.j at commit da039f8)",
+  "https://github.com/nvs/gem/releases/tag/v1.6.14 (Gem.TD.Plus.1.6.14.w3x, parsed war3map.w3u/w3a/w3q)",
+  "https://github.com/petarpetrovt/gemtd-helper (data/v1.5.4/data.json recipes for Gem TD+ 1.5.4)",
+  "https://petarpetrovt.github.io/gemtd-helper/",
+  "https://gemtd.top/ (Gem TD+ helper; names only in fetched text)",
+  "https://gaming-tools.com/warcraft-3/gem-td/ (names only)",
+  "https://wc3maps.com/map/207379 ([BK's] Gem TD v7.9 listing, not parsed)"
+ ],
+ "rules": {
+  "versions": {
+   "bk31": "[BK's] Gem Tower Defense v3.1 by Bryvx (last official Bryvx version; values extracted from the map file's object data and script)",
+   "gemtd_plus_1_6_14": "Gem TD+ 1.6.14 by NVS (2023, continuation of Bryvx map; values extracted from the released map). gemtd.top / gemtd-helper are based on Gem TD+."
+  },
+  "placement": "Each round the builder (Miner) places 5 random gems (\"Random Gem\", costs 1 lumber each; you get 5 lumber per round). After the 5th gem you choose ONE to keep (Keep). All other placed gems of that round turn into Mazing Rocks (walls). Gems are 2x2 structures that block pathing; creeps must path through your maze from spawn via checkpoints to your mine.",
+  "combining_same_gems": "Among the 5 gems of the current round: 2 identical gems (same type & quality) -> Combine x2 = +1 quality; Gem TD+ also 3 (x3) or 4 (x4) identical = +2 qualities (BK v3.1: \"4 Perfect of the same\" combine). Going beyond Great creates the Stone of Bryvx. The combined gem is the one kept.",
+  "downgrade": "After placing, a non-Chipped gem may be downgraded one quality (Downgrade button, BK since v2.2).",
+  "special_combination": "Special recipe: all ingredient gems must be owned at the same time, either all within this round's 5 placed gems (\"one-hit\": one of them can be turned into the special directly) OR spread over kept gems from previous rounds anywhere on your field plus this round. A \"Combine Special\" button appears on the ingredient; the special is created at that ingredient's position, the other ingredients turn into rocks (slates are just removed). Kills of all ingredients are summed into the special.",
+  "special_upgrades": "Specials are upgraded like WC3 buildings for gold (no extra gems needed). Upgrade cost = gold cost of the target tower (see recipe.gold_cost_*). Upgrade refunds 100% if cancelled (Gem TD+).",
+  "rocks": "Unchosen gems become Mazing Rocks (10 HP structures, gold value 3). Each rock has a free \"Remove Rock\" ability (no gold cost, no mana) usable at any time; no wave/round restriction found in script. Combining specials leaves rocks where the ingredients stood.",
+  "slates": "Basic slates only from the round placement (Normal + Flawed recipe) or Extra Chance (Slate). Slates do not block creeps (creeps walk over them). BK: each slate can teleport once anywhere within 2000 range. Gem TD+: base slates may stack on other base slates of a different type.",
+  "gem_quality_upgrade": {
+   "name": "Increase Gem Quality (research on the Mine), 8 levels",
+   "gold_costs": [
+    20,
+    50,
+    80,
+    110,
+    140,
+    170,
+    200,
+    230
+   ],
+   "chances_percent_by_level": {
+    "0 (start)": {
+     "Chipped": 100,
+     "Flawed": 0,
+     "Normal": 0,
+     "Flawless": 0,
+     "Perfect": 0
+    },
+    "1": {
+     "Chipped": 70,
+     "Flawed": 30,
+     "Normal": 0,
+     "Flawless": 0,
+     "Perfect": 0
+    },
+    "2": {
+     "Chipped": 60,
+     "Flawed": 30,
+     "Normal": 10,
+     "Flawless": 0,
+     "Perfect": 0
+    },
+    "3": {
+     "Chipped": 50,
+     "Flawed": 30,
+     "Normal": 20,
+     "Flawless": 0,
+     "Perfect": 0
+    },
+    "4": {
+     "Chipped": 40,
+     "Flawed": 30,
+     "Normal": 20,
+     "Flawless": 10,
+     "Perfect": 0
+    },
+    "5": {
+     "Chipped": 30,
+     "Flawed": 30,
+     "Normal": 30,
+     "Flawless": 10,
+     "Perfect": 0
+    },
+    "6": {
+     "Chipped": 20,
+     "Flawed": 30,
+     "Normal": 30,
+     "Flawless": 20,
+     "Perfect": 0
+    },
+    "7": {
+     "Chipped": 10,
+     "Flawed": 30,
+     "Normal": 30,
+     "Flawless": 30,
+     "Perfect": 0
+    },
+    "8 (max)": {
+     "Chipped": 0,
+     "Flawed": 30,
+     "Normal": 30,
+     "Flawless": 30,
+     "Perfect": 10
+    }
+   },
+   "type_distribution": "All 8 gem types equally likely (12.5% each); quality rolled by the table above. Great gems cannot be rolled, only combined."
+  },
+  "extra_chance": {
+   "bk31": "Extra Chance (175 gold): choose a Perfect gem type; next round each of the 5 placed gems has a higher chance to become it. Extra Chance Slate (125 gold): same for a chosen slate. Once per round. Normal chance ~1.25%/gem; with Extra Chance 5.95%/gem (v2.2); \"Increase Extra Chances\" research (5 levels, from 50 gold) raises it 3/83 ... 8/88 per gem placed. Requires max Gem Quality? (not verified for BK).",
+   "gemtd_plus": "Gem TD+: Extra Chance (175 gold for a Perfect type, 125 for a slate) only available after Gem Quality level 8; active for the whole placement round; bonus multiplier grows (up to 10x) when used repeatedly in the same class; weights: total 80, slate initial 18.75, type initial 25."
+  },
+  "waves": {
+   "bk31_classic": "42 levels in Classic mode; damage tests (bosses) at levels 14, 28 (150,000 HP) and 42 (final, 700,000 HP). Race mode: 50 levels, level 25 \"ReRunner\" boss, final damage test 1.5 M HP.",
+   "gemtd_plus": "50 levels; 10 creeps per level spawned every 1.61 s; level 50: 10 minions (85,000 HP) + boss \"Damage Test\" 500,000 HP.",
+   "air_levels": "Every 4th level is air: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48 (Gem TD+ list; BK classic same up to 40)."
+  },
+  "lives": {
+   "bk31": "Mine has 50 max HP = lives; game starts with 15 lives (30%). A leaking creep removes as many lives as its gold bounty. Buy Life at the mine: 10 gold per life, max 50.",
+   "gemtd_plus": "Max lives reduced to 30 in 1.5.4; lives removed entirely in 1.6.0 (leaks only cost time/gold)."
+  },
+  "economy": {
+   "start": "BK v3.1: 10 gold, 5 lumber at start.",
+   "bounty": "Each creep gives gold = level-dependent bounty (Gem TD+ list: level 1-3: 1 gold, rising to 20 gold at levels 48-50).",
+   "swap": "BK: Black Opal / Mystic Black Opal / Rose Quartz have Swap (200 gold) to exchange positions with another gem or rock. Gem TD+ 1.6: Swap is a builder ability costing 10 mana (builder 10 max mana, +1 per level)."
+  },
+  "kill_ranks": "Every tower gains +10% damage per 10 kills (Valued 10, Prized 20, Meaningful 30, Adored 40, Recognized 50, Cherished 60, Honored 70 ... Worshipped 120+: +120%). Immolation/spell levels of Star Ruby line, Uranium, Viper/Elder/Poison slates grow 1 level per 10 kills (Gem TD+: +10% per 10 kills, cap 100 kills).",
+  "armor_damage_table": {
+   "note": "WC3 Gameplay constants (identical in BK v3.1 and Gem TD+). Columns: small, medium, large, fortified, normal, hero, divine, unarmored.",
+   "chaos (Topaz)": [
+    0.5,
+    1.0,
+    0.6,
+    0.7,
+    1.6,
+    1.0,
+    0.75,
+    1.2
+   ],
+   "hero (Ruby)": [
+    1.8,
+    0.8,
+    1.0,
+    0.5,
+    1.0,
+    1.0,
+    0.75,
+    0.8
+   ],
+   "magic (Aquamarine/Opal)": [
+    1.0,
+    1.9,
+    0.8,
+    0.7,
+    1.0,
+    0.4,
+    0.75,
+    1.0
+   ],
+   "normal (Diamond)": [
+    1.2,
+    1.0,
+    1.6,
+    1.0,
+    0.6,
+    1.0,
+    0.75,
+    0.2
+   ],
+   "pierce (Amethyst)": [
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.75,
+    1.75
+   ],
+   "siege (Emerald)": [
+    0.7,
+    0.7,
+    0.7,
+    1.7,
+    0.7,
+    0.7,
+    0.75,
+    1.5
+   ],
+   "spells (Sapphire)": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.75,
+    0.75,
+    1.0
+   ]
+  },
+  "misc": "Frost slow 20% (global constant). Minimum unit speed 220, max 522. Sapphire/Silver/Yellow Sapphire slows do not stack (same buff).",
+  "creeps_gemtd_plus": [
+   {
+    "level": 1,
+    "name": "Mine Rat",
+    "hp": 10,
+    "armor": 12,
+    "armor_type": "normal",
+    "move_speed": 265,
+    "air": false,
+    "gold_bounty": 1
+   },
+   {
+    "level": 2,
+    "name": "Mine Gekko",
+    "hp": 30,
+    "armor": 12,
+    "armor_type": "medium",
+    "move_speed": 265,
+    "air": false,
+    "gold_bounty": 1
+   },
+   {
+    "level": 3,
+    "name": "Mine Less",
+    "hp": 55,
+    "armor": 12,
+    "armor_type": "large(default)",
+    "move_speed": 265,
+    "air": false,
+    "gold_bounty": 1
+   },
+   {
+    "level": 4,
+    "name": "Bat",
+    "hp": 84,
+    "armor": 12,
+    "armor_type": "none",
+    "move_speed": 230,
+    "air": true,
+    "gold_bounty": 2
+   },
+   {
+    "level": 5,
+    "name": "Rockmen",
+    "hp": 90,
+    "armor": 12,
+    "armor_type": "fort",
+    "move_speed": 275,
+    "air": false,
+    "gold_bounty": 2
+   },
+   {
+    "level": 6,
+    "name": "Bigger Rockmen",
+    "hp": 120,
+    "armor": 12,
+    "armor_type": "fort",
+    "move_speed": 275,
+    "air": false,
+    "gold_bounty": 2
+   },
+   {
+    "level": 7,
+    "name": "Greeny",
+    "hp": 178,
+    "armor": 12,
+    "armor_type": "none",
+    "move_speed": 285,
+    "air": false,
+    "gold_bounty": 2
+   },
+   {
+    "level": 8,
+    "name": "Flying Gem Thief",
+    "hp": 288,
+    "armor": 12,
+    "armor_type": "none",
+    "move_speed": 230,
+    "air": true,
+    "gold_bounty": 3
+   },
+   {
+    "level": 9,
+    "name": "Hoodsmen",
+    "hp": 300,
+    "armor": 12,
+    "armor_type": "large(default)",
+    "move_speed": 285,
+    "air": false,
+    "gold_bounty": 3
+   },
+   {
+    "level": 10,
+    "name": "Merc",
+    "hp": 470,
+    "armor": 15,
+    "armor_type": "hero",
+    "move_speed": 285,
+    "air": false,
+    "gold_bounty": 3
+   },
+   {
+    "level": 11,
+    "name": "Giant Slug",
+    "hp": 490,
+    "armor": 15,
+    "armor_type": "fort",
+    "move_speed": 285,
+    "air": false,
+    "gold_bounty": 3
+   },
+   {
+    "level": 12,
+    "name": "Green Dragon",
+    "hp": 540,
+    "armor": 13,
+    "armor_type": "none",
+    "move_speed": 250,
+    "air": true,
+    "gold_bounty": 4
+   },
+   {
+    "level": 13,
+    "name": "Long spider",
+    "hp": 570,
+    "armor": 15,
+    "armor_type": "normal",
+    "move_speed": 295,
+    "air": false,
+    "gold_bounty": 4
+   },
+   {
+    "level": 14,
+    "name": "Ogre",
+    "hp": 650,
+    "armor": 15,
+    "armor_type": "medium",
+    "move_speed": 295,
+    "air": false,
+    "gold_bounty": 4
+   },
+   {
+    "level": 15,
+    "name": "Demon",
+    "hp": 1000,
+    "armor": 15,
+    "armor_type": "small",
+    "move_speed": 295,
+    "air": false,
+    "gold_bounty": 4
+   },
+   {
+    "level": 16,
+    "name": "Bird",
+    "hp": 870,
+    "armor": 13,
+    "armor_type": "none",
+    "move_speed": 250,
+    "air": true,
+    "gold_bounty": 5
+   },
+   {
+    "level": 17,
+    "name": "Extreme Raider",
+    "hp": 1450,
+    "armor": 15,
+    "armor_type": "small",
+    "move_speed": 325,
+    "air": false,
+    "gold_bounty": 5
+   },
+   {
+    "level": 18,
+    "name": "Extreme Razormane",
+    "hp": 1850,
+    "armor": 15,
+    "armor_type": "none",
+    "move_speed": 325,
+    "air": false,
+    "gold_bounty": 5
+   },
+   {
+    "level": 19,
+    "name": "Extreme Water",
+    "hp": 2350,
+    "armor": 15,
+    "armor_type": "hero",
+    "move_speed": 350,
+    "air": false,
+    "gold_bounty": 5
+   },
+   {
+    "level": 20,
+    "name": "Tamed Bird",
+    "hp": 1620,
+    "armor": 13,
+    "armor_type": "none",
+    "move_speed": 280,
+    "air": true,
+    "gold_bounty": 6
+   },
+   {
+    "level": 21,
+    "name": "Extreme Swamp Lord",
+    "hp": 3150,
+    "armor": 19,
+    "armor_type": "large(default)",
+    "move_speed": 400,
+    "air": false,
+    "gold_bounty": 6
+   },
+   {
+    "level": 22,
+    "name": "Extreme Mine Cart",
+    "hp": 3500,
+    "armor": 19,
+    "armor_type": "fort",
+    "move_speed": 420,
+    "air": false,
+    "gold_bounty": 6
+   },
+   {
+    "level": 23,
+    "name": "Extreme Dead Miner",
+    "hp": 4300,
+    "armor": 19,
+    "armor_type": "small",
+    "move_speed": 440,
+    "air": false,
+    "gold_bounty": 6
+   },
+   {
+    "level": 24,
+    "name": "Ghost Bird",
+    "hp": 3000,
+    "armor": 13,
+    "armor_type": "none",
+    "move_speed": 280,
+    "air": true,
+    "gold_bounty": 7
+   },
+   {
+    "level": 25,
+    "name": "Extreme Mine Disease",
+    "hp": 5250,
+    "armor": 19,
+    "armor_type": "small",
+    "move_speed": 435,
+    "air": false,
+    "gold_bounty": 7
+   },
+   {
+    "level": 26,
+    "name": "Extreme Sb",
+    "hp": 6300,
+    "armor": 19,
+    "armor_type": "fort",
+    "move_speed": 440,
+    "air": false,
+    "gold_bounty": 7
+   },
+   {
+    "level": 27,
+    "name": "Extreme Kitty",
+    "hp": 7900,
+    "armor": 19,
+    "armor_type": "hero",
+    "move_speed": 445,
+    "air": false,
+    "gold_bounty": 7
+   },
+   {
+    "level": 28,
+    "name": "Owl",
+    "hp": 4980,
+    "armor": 14,
+    "armor_type": "none",
+    "move_speed": 275,
+    "air": true,
+    "gold_bounty": 8
+   },
+   {
+    "level": 29,
+    "name": "Extreme Turtle",
+    "hp": 9000,
+    "armor": 19,
+    "armor_type": "large(default)",
+    "move_speed": 450,
+    "air": false,
+    "gold_bounty": 8
+   },
+   {
+    "level": 30,
+    "name": "Extreme Ogre Lord",
+    "hp": 11000,
+    "armor": 23,
+    "armor_type": "fort",
+    "move_speed": 455,
+    "air": false,
+    "gold_bounty": 8
+   },
+   {
+    "level": 31,
+    "name": "Extreme Red Panda",
+    "hp": 12750,
+    "armor": 23,
+    "armor_type": "medium",
+    "move_speed": 460,
+    "air": false,
+    "gold_bounty": 8
+   },
+   {
+    "level": 32,
+    "name": "Black Dragon",
+    "hp": 7440,
+    "armor": 14,
+    "armor_type": "none",
+    "move_speed": 320,
+    "air": true,
+    "gold_bounty": 9
+   },
+   {
+    "level": 33,
+    "name": "Extreme Warlock Orc",
+    "hp": 14500,
+    "armor": 23,
+    "armor_type": "small",
+    "move_speed": 465,
+    "air": false,
+    "gold_bounty": 9
+   },
+   {
+    "level": 34,
+    "name": "Extreme Succubus",
+    "hp": 16500,
+    "armor": 23,
+    "armor_type": "normal",
+    "move_speed": 470,
+    "air": false,
+    "gold_bounty": 9
+   },
+   {
+    "level": 35,
+    "name": "Extreme Melee Ranger",
+    "hp": 19000,
+    "armor": 23,
+    "armor_type": "hero",
+    "move_speed": 475,
+    "air": false,
+    "gold_bounty": 9
+   },
+   {
+    "level": 36,
+    "name": "Red Dragon",
+    "hp": 10200,
+    "armor": 14,
+    "armor_type": "none",
+    "move_speed": 320,
+    "air": true,
+    "gold_bounty": 10
+   },
+   {
+    "level": 37,
+    "name": "Extreme Tauren",
+    "hp": 21000,
+    "armor": 23,
+    "armor_type": "normal",
+    "move_speed": 480,
+    "air": false,
+    "gold_bounty": 10
+   },
+   {
+    "level": 38,
+    "name": "Extreme Tauren Chief",
+    "hp": 23000,
+    "armor": 23,
+    "armor_type": "small",
+    "move_speed": 485,
+    "air": false,
+    "gold_bounty": 10
+   },
+   {
+    "level": 39,
+    "name": "Extreme Prisoner",
+    "hp": 25000,
+    "armor": 23,
+    "armor_type": "large(default)",
+    "move_speed": 490,
+    "air": false,
+    "gold_bounty": 10
+   },
+   {
+    "level": 40,
+    "name": "Spirit Bird",
+    "hp": 12600,
+    "armor": 14,
+    "armor_type": "none",
+    "move_speed": 330,
+    "air": true,
+    "gold_bounty": 11
+   },
+   {
+    "level": 41,
+    "name": "Extreme Kon",
+    "hp": 34800,
+    "armor": 30,
+    "armor_type": "fort",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 11
+   },
+   {
+    "level": 42,
+    "name": "Extreme Bryvx",
+    "hp": 40200,
+    "armor": 34,
+    "armor_type": "divine",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 16
+   },
+   {
+    "level": 43,
+    "name": "Extreme Mingo",
+    "hp": 45000,
+    "armor": 35,
+    "armor_type": "none",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 16
+   },
+   {
+    "level": 44,
+    "name": "Wisp",
+    "hp": 15600,
+    "armor": 14,
+    "armor_type": "none",
+    "move_speed": 370,
+    "air": true,
+    "gold_bounty": 16
+   },
+   {
+    "level": 45,
+    "name": "Extreme Tiger Bear",
+    "hp": 48000,
+    "armor": 35,
+    "armor_type": "hero",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 18
+   },
+   {
+    "level": 46,
+    "name": "Extreme Jax",
+    "hp": 52800,
+    "armor": 35,
+    "armor_type": "medium",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 18
+   },
+   {
+    "level": 47,
+    "name": "Extreme Pickled Lobster",
+    "hp": 56400,
+    "armor": 35,
+    "armor_type": "large(default)",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 18
+   },
+   {
+    "level": 48,
+    "name": "Phoenix",
+    "hp": 18000,
+    "armor": 15,
+    "armor_type": "none",
+    "move_speed": 380,
+    "air": true,
+    "gold_bounty": 20
+   },
+   {
+    "level": 49,
+    "name": "Extreme Roller",
+    "hp": 60000,
+    "armor": 35,
+    "armor_type": "small",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 20
+   },
+   {
+    "level": 50,
+    "name": "Extreme BRYVX",
+    "hp": 85000,
+    "armor": 35,
+    "armor_type": "divine",
+    "move_speed": 522,
+    "air": false,
+    "gold_bounty": 20
+   }
+  ]
+ },
+ "gems": [
+  {
+   "gem": "Amethyst",
+   "name_de": "Amethyst",
+   "damage_type": "pierce",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Amethyst",
+     "name_de": "Amethyst (Angeschlagen)",
+     "damage": [
+      10,
+      15
+     ],
+     "cooldown": 0.8,
+     "range": 1000,
+     "targets": "air",
+     "abilities": [
+      "Attacks AIR units only. Long range, high damage. No special ability (Chipped-Perfect)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         15
+        ],
+        "cooldown": 0.8,
+        "range": 1000,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         15
+        ],
+        "cooldown": 0.8,
+        "range": 1000,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Amethyst",
+     "name_de": "Amethyst (Fehlerhaft)",
+     "damage": [
+      20,
+      27
+     ],
+     "cooldown": 1.0,
+     "range": 1200,
+     "targets": "air",
+     "abilities": [
+      "Attacks AIR units only. Long range, high damage. No special ability (Chipped-Perfect)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         27
+        ],
+        "cooldown": 1.0,
+        "range": 1200,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         27
+        ],
+        "cooldown": 1.0,
+        "range": 1200,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Amethyst",
+     "name_de": "Amethyst (Normal)",
+     "damage": [
+      30,
+      45
+     ],
+     "cooldown": 1.0,
+     "range": 1300,
+     "targets": "air",
+     "abilities": [
+      "Attacks AIR units only. Long range, high damage. No special ability (Chipped-Perfect)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         45
+        ],
+        "cooldown": 1.0,
+        "range": 1300,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         45
+        ],
+        "cooldown": 1.0,
+        "range": 1300,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Amethyst",
+     "name_de": "Amethyst (Lupenrein)",
+     "damage": [
+      60,
+      80
+     ],
+     "cooldown": 1.0,
+     "range": 1350,
+     "targets": "air",
+     "abilities": [
+      "Attacks AIR units only. Long range, high damage. No special ability (Chipped-Perfect)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         60,
+         80
+        ],
+        "cooldown": 1.0,
+        "range": 1350,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         60,
+         80
+        ],
+        "cooldown": 1.0,
+        "range": 1350,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Amethyst",
+     "name_de": "Amethyst (Perfekt)",
+     "damage": [
+      140,
+      170
+     ],
+     "cooldown": 1.0,
+     "range": 1600,
+     "targets": "air",
+     "abilities": [
+      "Attacks AIR units only. Long range, high damage. No special ability (Chipped-Perfect)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         140,
+         170
+        ],
+        "cooldown": 1.0,
+        "range": 1600,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         140,
+         170
+        ],
+        "cooldown": 1.0,
+        "range": 1600,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Amethyst",
+     "name_de": "Amethyst (Gross (Great))",
+     "damage": [
+      350,
+      400
+     ],
+     "cooldown": 1.0,
+     "range": 1650,
+     "targets": "air",
+     "abilities": [
+      "Great Amethyst \"Master of Air\": -3 armor aura, 1000 range (BK v3.1 text: all units; Gem TD+: enemy units)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         350,
+         400
+        ],
+        "cooldown": 1.0,
+        "range": 1650,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         350,
+         400
+        ],
+        "cooldown": 1.0,
+        "range": 1650,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Aquamarine",
+   "name_de": "Aquamarin",
+   "damage_type": "magic",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Aquamarine",
+     "name_de": "Aquamarin (Angeschlagen)",
+     "damage": [
+      6,
+      8
+     ],
+     "cooldown": 0.5,
+     "range": 350,
+     "targets": "air+ground",
+     "abilities": [
+      "Fast attack (0.5 s cooldown), short range. No special ability (Chipped-Perfect). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         6,
+         8
+        ],
+        "cooldown": 0.5,
+        "range": 350,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         6,
+         8
+        ],
+        "cooldown": 0.5,
+        "range": 350,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Aquamarine",
+     "name_de": "Aquamarin (Fehlerhaft)",
+     "damage": [
+      12,
+      15
+     ],
+     "cooldown": 0.5,
+     "range": 365,
+     "targets": "air+ground",
+     "abilities": [
+      "Fast attack (0.5 s cooldown), short range. No special ability (Chipped-Perfect). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         12,
+         15
+        ],
+        "cooldown": 0.5,
+        "range": 365,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         12,
+         15
+        ],
+        "cooldown": 0.5,
+        "range": 365,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Aquamarine",
+     "name_de": "Aquamarin (Normal)",
+     "damage": [
+      24,
+      30
+     ],
+     "cooldown": 0.5,
+     "range": 380,
+     "targets": "air+ground",
+     "abilities": [
+      "Fast attack (0.5 s cooldown), short range. No special ability (Chipped-Perfect). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         24,
+         30
+        ],
+        "cooldown": 0.5,
+        "range": 380,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         24,
+         30
+        ],
+        "cooldown": 0.5,
+        "range": 380,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Aquamarine",
+     "name_de": "Aquamarin (Lupenrein)",
+     "damage": [
+      48,
+      55
+     ],
+     "cooldown": 0.5,
+     "range": 400,
+     "targets": "air+ground",
+     "abilities": [
+      "Fast attack (0.5 s cooldown), short range. No special ability (Chipped-Perfect). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         48,
+         55
+        ],
+        "cooldown": 0.5,
+        "range": 400,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         48,
+         55
+        ],
+        "cooldown": 0.5,
+        "range": 400,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Aquamarine",
+     "name_de": "Aquamarin (Perfekt)",
+     "damage": [
+      100,
+      120
+     ],
+     "cooldown": 0.5,
+     "range": 550,
+     "targets": "air+ground",
+     "abilities": [
+      "Fast attack (0.5 s cooldown), short range. No special ability (Chipped-Perfect). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         100,
+         120
+        ],
+        "cooldown": 0.5,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         100,
+         120
+        ],
+        "cooldown": 0.5,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Aquamarine",
+     "name_de": "Aquamarin (Gross (Great))",
+     "damage": 280,
+     "cooldown": 0.5,
+     "range": 600,
+     "targets": "air+ground",
+     "abilities": [
+      "Great Aquamarine \"Vitality\": +10% attack speed aura to friendly towers within 1500 range (stacks with Opal)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 280,
+        "cooldown": 0.5,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 280,
+        "cooldown": 0.5,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Diamond",
+   "name_de": "Diamant",
+   "damage_type": "normal",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Diamond",
+     "name_de": "Diamant (Angeschlagen)",
+     "damage": [
+      8,
+      12
+     ],
+     "cooldown": 0.8,
+     "range": 500,
+     "targets": "ground",
+     "abilities": [
+      "Attacks GROUND units only. Critical strike: 25% chance for 2x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         8,
+         12
+        ],
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         8,
+         12
+        ],
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Diamond",
+     "name_de": "Diamant (Fehlerhaft)",
+     "damage": [
+      16,
+      18
+     ],
+     "cooldown": 1.0,
+     "range": 550,
+     "targets": "ground",
+     "abilities": [
+      "Attacks GROUND units only. Critical strike: 25% chance for 2x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         16,
+         18
+        ],
+        "cooldown": 1.0,
+        "range": 550,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         16,
+         18
+        ],
+        "cooldown": 1.0,
+        "range": 550,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Diamond",
+     "name_de": "Diamant (Normal)",
+     "damage": [
+      30,
+      37
+     ],
+     "cooldown": 1.0,
+     "range": 600,
+     "targets": "ground",
+     "abilities": [
+      "Attacks GROUND units only. Critical strike: 25% chance for 2x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         37
+        ],
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         37
+        ],
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Diamond",
+     "name_de": "Diamant (Lupenrein)",
+     "damage": [
+      58,
+      65
+     ],
+     "cooldown": 1.0,
+     "range": 650,
+     "targets": "ground",
+     "abilities": [
+      "Attacks GROUND units only. Critical strike: 25% chance for 2x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         58,
+         65
+        ],
+        "cooldown": 1.0,
+        "range": 650,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         58,
+         65
+        ],
+        "cooldown": 1.0,
+        "range": 650,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Diamond",
+     "name_de": "Diamant (Perfekt)",
+     "damage": [
+      140,
+      150
+     ],
+     "cooldown": 1.0,
+     "range": 750,
+     "targets": "ground",
+     "abilities": [
+      "Attacks GROUND units only. Critical strike: 25% chance for 2x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         140,
+         150
+        ],
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         140,
+         150
+        ],
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Diamond",
+     "name_de": "Diamant (Gross (Great))",
+     "damage": [
+      300,
+      350
+     ],
+     "cooldown": 1.0,
+     "range": 850,
+     "targets": "ground",
+     "abilities": [
+      "Great Diamond: 25% chance for 5x damage. Ground only."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         300,
+         350
+        ],
+        "cooldown": 1.0,
+        "range": 850,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         300,
+         350
+        ],
+        "cooldown": 1.0,
+        "range": 850,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Emerald",
+   "name_de": "Smaragd",
+   "damage_type": "siege",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Emerald",
+     "name_de": "Smaragd (Angeschlagen)",
+     "damage": [
+      4,
+      7
+     ],
+     "cooldown": 0.8,
+     "range": 500,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 2 dps poison, 15% slow, 3 s. Gem TD+ 1.6: 2 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         4,
+         7
+        ],
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         4,
+         7
+        ],
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Emerald",
+     "name_de": "Smaragd (Fehlerhaft)",
+     "damage": [
+      10,
+      13
+     ],
+     "cooldown": 1.0,
+     "range": 550,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 3 dps, 20% slow, 4 s. Gem TD+ 1.6: 4 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         13
+        ],
+        "cooldown": 1.0,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         13
+        ],
+        "cooldown": 1.0,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Emerald",
+     "name_de": "Smaragd (Normal)",
+     "damage": [
+      15,
+      25
+     ],
+     "cooldown": 1.0,
+     "range": 600,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 5 dps, 25% slow, 5 s. Gem TD+ 1.6: 8 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         15,
+         25
+        ],
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         15,
+         25
+        ],
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Emerald",
+     "name_de": "Smaragd (Lupenrein)",
+     "damage": [
+      30,
+      37
+     ],
+     "cooldown": 1.0,
+     "range": 700,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 8 dps, 30% slow, 6 s. Gem TD+ 1.6: 16 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         37
+        ],
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         37
+        ],
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Emerald",
+     "name_de": "Smaragd (Perfekt)",
+     "damage": [
+      80,
+      95
+     ],
+     "cooldown": 1.0,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 16 dps, 50% slow, 8 s. Gem TD+ 1.6: 40 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         80,
+         95
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         80,
+         95
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Emerald",
+     "name_de": "Smaragd (Gross (Great))",
+     "damage": 275,
+     "cooldown": 1.0,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison+slow on attack. BK v3.1: 50 dps, 50% slow, permanent (3600 s). Gem TD+ 1.6: 100 spell dps, 20% slow, 6 s (poison can kill; stacks per source)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 275,
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 275,
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Opal",
+   "name_de": "Opal",
+   "damage_type": "magic",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Opal",
+     "name_de": "Opal (Angeschlagen)",
+     "damage": 5,
+     "cooldown": 0.8,
+     "range": 600,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +10% attack speed, 600 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 5,
+        "cooldown": 0.8,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 5,
+        "cooldown": 0.8,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Opal",
+     "name_de": "Opal (Fehlerhaft)",
+     "damage": 10,
+     "cooldown": 1.0,
+     "range": 700,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +15% attack speed, 700 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 10,
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 10,
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Opal",
+     "name_de": "Opal (Normal)",
+     "damage": 20,
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +20% attack speed, 800 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 20,
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 20,
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Opal",
+     "name_de": "Opal (Lupenrein)",
+     "damage": 40,
+     "cooldown": 1.0,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +25% attack speed, 900 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 40,
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 40,
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Opal",
+     "name_de": "Opal (Perfekt)",
+     "damage": 85,
+     "cooldown": 1.0,
+     "range": 1000,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +35% attack speed, 1000 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 85,
+        "cooldown": 1.0,
+        "range": 1000,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 85,
+        "cooldown": 1.0,
+        "range": 1000,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Opal",
+     "name_de": "Opal (Gross (Great))",
+     "damage": 180,
+     "cooldown": 1.0,
+     "range": 1500,
+     "targets": "air+ground",
+     "abilities": [
+      "Attack-speed aura (\"Speed\"/\"Haste\") for friendly towers: Chipped +10%/600, Flawed +15%/700, Normal +20%/800, Flawless +25%/900, Perfect +35%/1000, Great +50%/1500 (bonus/radius). Same-named aura does not stack; highest level wins.",
+      "This quality: +50% attack speed, 1500 range."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 180,
+        "cooldown": 1.0,
+        "range": 1500,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 180,
+        "cooldown": 1.0,
+        "range": 1500,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Ruby",
+   "name_de": "Rubin",
+   "damage_type": "hero",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Ruby",
+     "name_de": "Rubin (Angeschlagen)",
+     "damage": [
+      8,
+      9
+     ],
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash damage (ground targets). Attacks air+ground.",
+      "Splash radii (full/medium/small) BK v3.1: 150/175/200; Gem TD+: 200 full / 240 partial."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         8,
+         9
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         8,
+         9
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Ruby",
+     "name_de": "Rubin (Fehlerhaft)",
+     "damage": [
+      13,
+      16
+     ],
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash damage (ground targets). Attacks air+ground.",
+      "Splash radii (full/medium/small) BK v3.1: 150/175/200; Gem TD+: 200 full / 240 partial."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         13,
+         16
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         13,
+         16
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Ruby",
+     "name_de": "Rubin (Normal)",
+     "damage": [
+      20,
+      25
+     ],
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash damage (ground targets). Attacks air+ground.",
+      "Splash radii (full/medium/small) BK v3.1: 200/225/230; Gem TD+: 200 full / 240 partial."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         25
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         25
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Ruby",
+     "name_de": "Rubin (Lupenrein)",
+     "damage": [
+      38,
+      45
+     ],
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash damage (ground targets). Attacks air+ground.",
+      "Splash radii (full/medium/small) BK v3.1: 160/175/200; Gem TD+: 200 full / 240 partial."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         38,
+         45
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         38,
+         45
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Ruby",
+     "name_de": "Rubin (Perfekt)",
+     "damage": [
+      80,
+      100
+     ],
+     "cooldown": 1.0,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash damage (ground targets). Attacks air+ground.",
+      "Splash radii (full/medium/small) BK v3.1: 200/220/240; Gem TD+: 200 full / 240 partial."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         80,
+         100
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         80,
+         100
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Ruby",
+     "name_de": "Rubin (Gross (Great))",
+     "damage": 140,
+     "cooldown": 0.5,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Great Ruby: no splash; multishot - hits 3 targets every 0.5 s at 900 range (140 dmg each)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 140,
+        "cooldown": 0.5,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 140,
+        "cooldown": 0.5,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Sapphire",
+   "name_de": "Saphir",
+   "damage_type": "spells",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Sapphire",
+     "name_de": "Saphir (Angeschlagen)",
+     "damage": [
+      5,
+      8
+     ],
+     "cooldown": 0.8,
+     "range": 550,
+     "targets": "air+ground",
+     "abilities": [
+      "Frost attack (\"Chill\"): target loses 20% movement speed for 5 s (WC3 Frost Attack; FrostMoveSpeedDecrease=0.2). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         5,
+         8
+        ],
+        "cooldown": 0.8,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         5,
+         8
+        ],
+        "cooldown": 0.8,
+        "range": 550,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Sapphire",
+     "name_de": "Saphir (Fehlerhaft)",
+     "damage": [
+      10,
+      14
+     ],
+     "cooldown": 1.0,
+     "range": 750,
+     "targets": "air+ground",
+     "abilities": [
+      "Frost attack (\"Chill\"): target loses 20% movement speed for 5 s (WC3 Frost Attack; FrostMoveSpeedDecrease=0.2). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         14
+        ],
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         10,
+         14
+        ],
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Sapphire",
+     "name_de": "Saphir (Normal)",
+     "damage": [
+      16,
+      22
+     ],
+     "cooldown": 1.0,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Frost attack (\"Chill\"): target loses 20% movement speed for 5 s (WC3 Frost Attack; FrostMoveSpeedDecrease=0.2). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         16,
+         22
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         16,
+         22
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Sapphire",
+     "name_de": "Saphir (Lupenrein)",
+     "damage": [
+      30,
+      40
+     ],
+     "cooldown": 1.0,
+     "range": 850,
+     "targets": "air+ground",
+     "abilities": [
+      "Frost attack (\"Chill\"): target loses 20% movement speed for 5 s (WC3 Frost Attack; FrostMoveSpeedDecrease=0.2). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         40
+        ],
+        "cooldown": 1.0,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         40
+        ],
+        "cooldown": 1.0,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Sapphire",
+     "name_de": "Saphir (Perfekt)",
+     "damage": [
+      60,
+      80
+     ],
+     "cooldown": 1.0,
+     "range": 1400,
+     "targets": "air+ground",
+     "abilities": [
+      "Frost attack (\"Chill\"): target loses 20% movement speed for 5 s (WC3 Frost Attack; FrostMoveSpeedDecrease=0.2). Attacks air+ground."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         60,
+         80
+        ],
+        "cooldown": 1.0,
+        "range": 1400,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         60,
+         80
+        ],
+        "cooldown": 1.0,
+        "range": 1400,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Sapphire",
+     "name_de": "Saphir (Gross (Great))",
+     "damage": [
+      200,
+      250
+     ],
+     "cooldown": 1.0,
+     "range": 2000,
+     "targets": "air+ground",
+     "abilities": [
+      "Great Sapphire: same 20%/5 s slow, extreme range 2000."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         200,
+         250
+        ],
+        "cooldown": 1.0,
+        "range": 2000,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         200,
+         250
+        ],
+        "cooldown": 1.0,
+        "range": 2000,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "gem": "Topaz",
+   "name_de": "Topas",
+   "damage_type": "chaos",
+   "qualities": [
+    {
+     "quality": "Chipped",
+     "name_en": "Chipped Topaz",
+     "name_de": "Topas (Angeschlagen)",
+     "damage": 4,
+     "cooldown": 0.8,
+     "range": 500,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 3 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 4,
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 4,
+        "cooldown": 0.8,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawed",
+     "name_en": "Flawed Topaz",
+     "name_de": "Topas (Fehlerhaft)",
+     "damage": 8,
+     "cooldown": 1.0,
+     "range": 500,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 4 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 8,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 8,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Normal",
+     "name_en": "Topaz",
+     "name_de": "Topas (Normal)",
+     "damage": 14,
+     "cooldown": 1.0,
+     "range": 500,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 5 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 14,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 14,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Flawless",
+     "name_en": "Flawless Topaz",
+     "name_de": "Topas (Lupenrein)",
+     "damage": 25,
+     "cooldown": 1.0,
+     "range": 500,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 6 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 25,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 25,
+        "cooldown": 1.0,
+        "range": 500,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Perfect",
+     "name_en": "Perfect Topaz",
+     "name_de": "Topas (Perfekt)",
+     "damage": 75,
+     "cooldown": 1.0,
+     "range": 600,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 9 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 75,
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 75,
+        "cooldown": 1.0,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "quality": "Great",
+     "name_en": "Great Topaz",
+     "name_de": "Topas (Gross (Great))",
+     "damage": 250,
+     "cooldown": 1.0,
+     "range": 700,
+     "targets": "air+ground",
+     "abilities": [
+      "Multishot (Barrage): each attack splits and hits N units in range. Chipped 3, Flawed 4, Normal 5, Flawless 6, Perfect 9, Great 9 targets.",
+      "This quality: hits 9 targets."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 250,
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 250,
+        "cooldown": 1.0,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "specials": [
+  {
+   "name_en": "Silver",
+   "name_de": "Silber",
+   "recipe": [
+    {
+     "gem": "Diamond",
+     "quality": "Chipped"
+    },
+    {
+     "gem": "Sapphire",
+     "quality": "Chipped"
+    },
+    {
+     "gem": "Topaz",
+     "quality": "Chipped"
+    }
+   ],
+   "damage": [
+    20,
+    21
+   ],
+   "cooldown": 1.0,
+   "range": 550,
+   "targets": "air+ground",
+   "abilities": [
+    "Splash damage with frost slow (20%/5 s), splash radius ~250 (BK v3.1). Attacks air+ground (splash only vs ground)."
+   ],
+   "abilities_gemtd_plus": [
+    "Splash: full damage within 350 vs ground; Chill 20% slow 5 s. Damage 26-27 (buffed vs BK 20-21)."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       20,
+       21
+      ],
+      "cooldown": 1.0,
+      "range": 550,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       26,
+       27
+      ],
+      "cooldown": 1.0,
+      "range": 550,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Sterling Silver",
+     "name_de": "Sterlingsilber",
+     "recipe": [
+      {
+       "upgrade_from": "Silver",
+       "gold_cost_bk31": 25,
+       "gold_cost_gemtd_plus": 25
+      }
+     ],
+     "damage": 40,
+     "cooldown": 1.0,
+     "range": 650,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash ~250 + frost slow. 40 dmg, 1 s, 650 range."
+     ],
+     "abilities_gemtd_plus": [
+      "Splash 350 + Chill 20%/5 s. 51 dmg."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 40,
+        "cooldown": 1.0,
+        "range": 650,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 25
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 51,
+        "cooldown": 1.0,
+        "range": 650,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 25
+     }
+    },
+    {
+     "name_en": "Silver Knight",
+     "name_de": "Silberritter",
+     "recipe": [
+      {
+       "upgrade_from": "Sterling Silver",
+       "gold_cost_bk31": 290,
+       "gold_cost_gemtd_plus": 190
+      }
+     ],
+     "damage": 150,
+     "cooldown": 1.0,
+     "range": 750,
+     "targets": "air+ground",
+     "abilities": [
+      "Splash ~250 + frost slow. 150 dmg, 1 s, 750 range."
+     ],
+     "abilities_gemtd_plus": [
+      "Splash 350 + Chill 20%/5 s. 188 dmg."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 150,
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 290
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 188,
+        "cooldown": 1.0,
+        "range": 750,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 190
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Malachite",
+   "name_de": "Malachit",
+   "recipe": [
+    {
+     "gem": "Aquamarine",
+     "quality": "Chipped"
+    },
+    {
+     "gem": "Emerald",
+     "quality": "Chipped"
+    },
+    {
+     "gem": "Opal",
+     "quality": "Chipped"
+    }
+   ],
+   "damage": 6,
+   "cooldown": 0.5,
+   "range": 750,
+   "targets": "air+ground",
+   "abilities": [
+    "Multishot: hits 3 targets, 750 range (BK v3.1). 6 dmg, 0.5 s."
+   ],
+   "abilities_gemtd_plus": [
+    "Multishot: hits ALL units in range (800), 0.45 s."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 6,
+      "cooldown": 0.5,
+      "range": 750,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 6,
+      "cooldown": 0.45,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Vivid Malachite",
+     "name_de": "Leuchtender Malachit",
+     "recipe": [
+      {
+       "upgrade_from": "Malachite",
+       "gold_cost_bk31": 25,
+       "gold_cost_gemtd_plus": 25
+      }
+     ],
+     "damage": 11,
+     "cooldown": 0.5,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Hits 4 targets within 800 range. 11 dmg, 0.5 s."
+     ],
+     "abilities_gemtd_plus": [
+      "Hits all units in range, 11 dmg, 0.45 s."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 11,
+        "cooldown": 0.5,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 25
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 11,
+        "cooldown": 0.45,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 25
+     }
+    },
+    {
+     "name_en": "Mighty Malachite",
+     "name_de": "Maechtiger Malachit",
+     "recipe": [
+      {
+       "upgrade_from": "Vivid Malachite",
+       "gold_cost_bk31": 280,
+       "gold_cost_gemtd_plus": 180
+      }
+     ],
+     "damage": 45,
+     "cooldown": 0.55,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Hits all targets within 800 range. 45 dmg, 0.55 s."
+     ],
+     "abilities_gemtd_plus": [
+      "Hits all units in range, 45 dmg, 0.45 s."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 45,
+        "cooldown": 0.55,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 280
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 45,
+        "cooldown": 0.45,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 180
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Star Ruby",
+   "name_de": "Sternrubin",
+   "recipe": [
+    {
+     "gem": "Ruby",
+     "quality": "Flawed"
+    },
+    {
+     "gem": "Amethyst",
+     "quality": "Chipped"
+    },
+    {
+     "gem": "Ruby",
+     "quality": "Chipped"
+    }
+   ],
+   "damage": null,
+   "cooldown": null,
+   "range": null,
+   "targets": "none (aura/immolation only)",
+   "abilities": [
+    "No attack. Burn (permanent immolation): 40 dmg/s to enemies within 265 range (BK v3.1). Scales with kills (+10% per 10 kills, ability level 1-11)."
+   ],
+   "abilities_gemtd_plus": [
+    "No attack. Burn: 30 spell dmg/s within 265 range, +10% per 10 kills (max +100% at 100 kills)."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       38,
+       43
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "normal",
+      "enabled": false
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       38,
+       43
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "normal",
+      "enabled": false
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Blood Star",
+     "name_de": "Blutstern",
+     "recipe": [
+      {
+       "upgrade_from": "Star Ruby",
+       "gold_cost_bk31": 30,
+       "gold_cost_gemtd_plus": 30
+      }
+     ],
+     "damage": null,
+     "cooldown": null,
+     "range": null,
+     "targets": "none (immolation only)",
+     "abilities": [
+      "No attack. Burn 50 dmg/s within 500 range, scales with kills."
+     ],
+     "abilities_gemtd_plus": [
+      "No attack. Burn 40 spell dmg/s within 500, +10% per 10 kills."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         38,
+         43
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "normal",
+        "enabled": false
+       }
+      ],
+      "upgrade_gold_cost": 30
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         38,
+         43
+        ],
+        "cooldown": 1.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "normal",
+        "enabled": false
+       }
+      ],
+      "upgrade_gold_cost": 30
+     }
+    },
+    {
+     "name_en": "Fire Star",
+     "name_de": "Feuerstern",
+     "recipe": [
+      {
+       "upgrade_from": "Blood Star",
+       "gold_cost_bk31": 290,
+       "gold_cost_gemtd_plus": 190
+      }
+     ],
+     "damage": 65,
+     "cooldown": 0.5,
+     "range": 600,
+     "targets": "air+ground",
+     "abilities": [
+      "Attacks ALL enemies within 600 range: 65 dmg every 0.5 s (BK v3.1)."
+     ],
+     "abilities_gemtd_plus": [
+      "Cooldown 2 s, range 600. Wildfire: marks target; target and enemies within 192 take 60 spell dmg/s for 6 s (stacks per source), scales with kills."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 65,
+        "cooldown": 0.5,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 290
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 1,
+        "cooldown": 2.0,
+        "range": 600,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 190
+     },
+     "note": "Gem TD+ Fire Star attack is 1-1 dummy (cooldown 2 s) that applies Wildfire; damage via debuff."
+    }
+   ]
+  },
+  {
+   "name_en": "Jade",
+   "name_de": "Jade",
+   "recipe": [
+    {
+     "gem": "Emerald",
+     "quality": "Normal"
+    },
+    {
+     "gem": "Opal",
+     "quality": "Normal"
+    },
+    {
+     "gem": "Sapphire",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": [
+    30,
+    35
+   ],
+   "cooldown": 0.5,
+   "range": 800,
+   "targets": "air+ground",
+   "abilities": [
+    "Stacking poison 5 dmg/s + 50% slow for 2 s."
+   ],
+   "abilities_gemtd_plus": [
+    "Poison 15 spell dmg/s for 4 s (stacks per source) + 20% slow 4 s."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       30,
+       35
+      ],
+      "cooldown": 0.5,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       30,
+       35
+      ],
+      "cooldown": 0.5,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "China Jade",
+     "name_de": "China-Jade",
+     "recipe": [
+      {
+       "upgrade_from": "Jade",
+       "gold_cost_bk31": 45,
+       "gold_cost_gemtd_plus": 45
+      }
+     ],
+     "damage": 50,
+     "cooldown": 0.5,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison 10 dmg/s + 50% slow for 3 s."
+     ],
+     "abilities_gemtd_plus": [
+      "Poison 30 dps 4 s + 20% slow 4 s."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 50,
+        "cooldown": 0.5,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 45
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 50,
+        "cooldown": 0.5,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 45
+     }
+    },
+    {
+     "name_en": "Lucky China Jade",
+     "name_de": "Gluecks-China-Jade",
+     "recipe": [
+      {
+       "upgrade_from": "China Jade",
+       "gold_cost_bk31": 250,
+       "gold_cost_gemtd_plus": 250
+      }
+     ],
+     "damage": 55,
+     "cooldown": 0.35,
+     "range": 850,
+     "targets": "air+ground",
+     "abilities": [
+      "Poison 10 dmg/s + 50% slow 4 s. Lucky charm: 1% chance per attack to give gold = half the current level number; 1% chance to stun 2 s; 5% chance for 4x damage."
+     ],
+     "abilities_gemtd_plus": [
+      "Poison 60 dps 4 s + 20% slow 4 s; 5% crit x4; Lucky Charm: 2% chance on attack to either stun 2 s or reward half the current level progress in gold."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 55,
+        "cooldown": 0.35,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 250
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 55,
+        "cooldown": 0.35,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 250
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Red Crystal",
+   "name_de": "Roter Kristall",
+   "recipe": [
+    {
+     "gem": "Emerald",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Ruby",
+     "quality": "Normal"
+    },
+    {
+     "gem": "Amethyst",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": [
+    50,
+    75
+   ],
+   "cooldown": 0.8,
+   "range": 1300,
+   "targets": "air",
+   "abilities": [
+    "Air only. Aura: -4 armor to enemy air units within 1300 range (stacks with Red Facet/Rose Quartz)."
+   ],
+   "abilities_gemtd_plus": [
+    "Air only. Control: -4 armor to enemy air units within 1300."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       50,
+       75
+      ],
+      "cooldown": 0.8,
+      "range": 1300,
+      "targets": "air",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       50,
+       75
+      ],
+      "cooldown": 0.8,
+      "range": 1300,
+      "targets": "air",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Red Facet",
+     "name_de": "Rote Facette",
+     "recipe": [
+      {
+       "upgrade_from": "Red Crystal",
+       "gold_cost_bk31": 100,
+       "gold_cost_gemtd_plus": 100
+      }
+     ],
+     "damage": [
+      75,
+      100
+     ],
+     "cooldown": 0.8,
+     "range": 1400,
+     "targets": "air",
+     "abilities": [
+      "Air only. -5 armor aura to air units within 1400."
+     ],
+     "abilities_gemtd_plus": [
+      "Superiority: -5 armor to air units within 1400."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         75,
+         100
+        ],
+        "cooldown": 0.8,
+        "range": 1400,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 100
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         75,
+         100
+        ],
+        "cooldown": 0.8,
+        "range": 1400,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 100
+     }
+    },
+    {
+     "name_en": "Rose Quartz Crystal",
+     "name_de": "Rosenquarz-Kristall",
+     "recipe": [
+      {
+       "upgrade_from": "Red Facet",
+       "gold_cost_bk31": 150,
+       "gold_cost_gemtd_plus": 150
+      }
+     ],
+     "damage": [
+      100,
+      125
+     ],
+     "cooldown": 0.8,
+     "range": 1500,
+     "targets": "air",
+     "abilities": [
+      "Air only. -6 armor aura to air within 1500; immolation 50 dmg/s within 1500 range."
+     ],
+     "abilities_gemtd_plus": [
+      "Glow: 50 spell dmg/s within 1500 (+10%/10 kills); Supremacy: -6 armor to air within 1500."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         100,
+         125
+        ],
+        "cooldown": 0.8,
+        "range": 1500,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 150
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         100,
+         125
+        ],
+        "cooldown": 0.8,
+        "range": 1500,
+        "targets": "air",
+        "attack_type": "pierce",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 150
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Dark Emerald",
+   "name_de": "Dunkler Smaragd",
+   "recipe": [
+    {
+     "gem": "Emerald",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Sapphire",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Topaz",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": [
+    90,
+    150
+   ],
+   "cooldown": 0.8,
+   "range": 550,
+   "targets": "air+ground",
+   "abilities": [
+    "12.5% chance per attack to stun 1.5 s."
+   ],
+   "abilities_gemtd_plus": [
+    "Despair: 12.5% chance to stun 1.5 s; stunned target takes +20% damage during stun. Chain: attack bounces to 1 extra nearby enemy at full damage; +1 bounce per additional Dark/Enchanted Emerald you own (research GDEB, max 10)."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       90,
+       150
+      ],
+      "cooldown": 0.8,
+      "range": 550,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       90,
+       150
+      ],
+      "cooldown": 0.8,
+      "range": 550,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Enchanted Emerald",
+     "name_de": "Verzauberter Smaragd",
+     "recipe": [
+      {
+       "upgrade_from": "Dark Emerald",
+       "gold_cost_bk31": 225,
+       "gold_cost_gemtd_plus": 185
+      }
+     ],
+     "damage": [
+      100,
+      200
+     ],
+     "cooldown": 0.7,
+     "range": 700,
+     "targets": "air+ground",
+     "abilities": [
+      "12.5% stun 1.5 s; 15% chance for 4x damage. Dmg 100-200."
+     ],
+     "abilities_gemtd_plus": [
+      "Same as Dark Emerald (Despair + Chain), dmg 168-268, no crit."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         100,
+         200
+        ],
+        "cooldown": 0.7,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 225
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         168,
+         268
+        ],
+        "cooldown": 0.7,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "siege",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 185
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Gold",
+   "name_de": "Gold",
+   "recipe": [
+    {
+     "gem": "Amethyst",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Amethyst",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Diamond",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": [
+    160,
+    190
+   ],
+   "cooldown": 1.0,
+   "range": 800,
+   "targets": "air+ground",
+   "abilities": [
+    "25% chance for 2x damage; attacked units lose 5 armor (Desolate/Corruption)."
+   ],
+   "abilities_gemtd_plus": [
+    "Crit 25% x2; Desolate -5 armor for 5 s."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       160,
+       190
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "pierce",
+      "enabled": true
+     },
+     {
+      "damage": 0,
+      "cooldown": 0.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "unknown",
+      "enabled": false
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       160,
+       190
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "pierce",
+      "enabled": true
+     },
+     {
+      "damage": 0,
+      "cooldown": 0.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "unknown",
+      "enabled": false
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Egyptian Gold",
+     "name_de": "Aegyptisches Gold",
+     "recipe": [
+      {
+       "upgrade_from": "Gold",
+       "gold_cost_bk31": 205,
+       "gold_cost_gemtd_plus": 205
+      }
+     ],
+     "damage": [
+      160,
+      200
+     ],
+     "cooldown": 0.75,
+     "range": 800,
+     "targets": "air+ground",
+     "abilities": [
+      "30% chance 2x damage; -8 armor on attacked units."
+     ],
+     "abilities_gemtd_plus": [
+      "Crit 30% x2; Desolate -8 armor for 5 s."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         160,
+         200
+        ],
+        "cooldown": 0.75,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "pierce",
+        "enabled": true
+       },
+       {
+        "damage": 0,
+        "cooldown": 0.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "unknown",
+        "enabled": false
+       }
+      ],
+      "upgrade_gold_cost": 205
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         160,
+         200
+        ],
+        "cooldown": 0.75,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "pierce",
+        "enabled": true
+       },
+       {
+        "damage": 0,
+        "cooldown": 0.0,
+        "range": 800,
+        "targets": "air+ground",
+        "attack_type": "unknown",
+        "enabled": false
+       }
+      ],
+      "upgrade_gold_cost": 205
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Uranium 238",
+   "name_de": "Uran 238",
+   "recipe": [
+    {
+     "gem": "Topaz",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Sapphire",
+     "quality": "Normal"
+    },
+    {
+     "gem": "Opal",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": null,
+   "cooldown": null,
+   "range": null,
+   "targets": "none (aura/immolation only)",
+   "abilities": [
+    "No attack. Burns 200 dmg/s within 500 range; slows units within 500 by 50% (object data -75%, tooltip 50%)."
+   ],
+   "abilities_gemtd_plus": [
+    "No attack. Decay: 20*(level+9) spell dps within 500 (=200 at 0 kills, +10%/10 kills); Irradiate: -50% move speed within 500."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       20,
+       30
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "ground",
+      "attack_type": "magic",
+      "enabled": false
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       20,
+       30
+      ],
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "ground",
+      "attack_type": "magic",
+      "enabled": false
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Uranium 235",
+     "name_de": "Uran 235",
+     "recipe": [
+      {
+       "upgrade_from": "Uranium 238",
+       "gold_cost_bk31": 190,
+       "gold_cost_gemtd_plus": 190
+      }
+     ],
+     "damage": 14,
+     "cooldown": 0.2,
+     "range": 900,
+     "targets": "air+ground",
+     "abilities": [
+      "Adds gamma rays: 14 dmg every 0.2 s to all enemies within 900 (=70 dps) + 200 dps burn 500 + 50% slow 500."
+     ],
+     "abilities_gemtd_plus": [
+      "Gamma Rays: 20 dmg every 0.2 s, hits all units in 900 range; Decay 200 dps 500; Irradiate -50% speed 500."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         30
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "ground",
+        "attack_type": "magic",
+        "enabled": false
+       },
+       {
+        "damage": 14,
+        "cooldown": 0.2,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 190
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         20,
+         30
+        ],
+        "cooldown": 1.0,
+        "range": 900,
+        "targets": "ground",
+        "attack_type": "magic",
+        "enabled": false
+       },
+       {
+        "damage": 20,
+        "cooldown": 0.2,
+        "range": 900,
+        "targets": "air+ground",
+        "attack_type": "chaos",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 190
+     },
+     "note": "BK: attack 1 (20-30) disabled, attack 2 gamma 14 dmg/0.2 s hits all in 900; Gem TD+: 20 dmg/0.2 s."
+    }
+   ]
+  },
+  {
+   "name_en": "Pink Diamond",
+   "name_de": "Rosa Diamant",
+   "recipe": [
+    {
+     "gem": "Diamond",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Diamond",
+     "quality": "Normal"
+    },
+    {
+     "gem": "Topaz",
+     "quality": "Normal"
+    }
+   ],
+   "damage": [
+    150,
+    175
+   ],
+   "cooldown": 0.75,
+   "range": 800,
+   "targets": "ground",
+   "abilities": [
+    "Ground only. 10% chance for 5x damage."
+   ],
+   "abilities_gemtd_plus": [
+    "Ground only. 10% chance for 9x damage."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       150,
+       175
+      ],
+      "cooldown": 0.75,
+      "range": 800,
+      "targets": "ground",
+      "attack_type": "normal",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       150,
+       175
+      ],
+      "cooldown": 0.75,
+      "range": 800,
+      "targets": "ground",
+      "attack_type": "normal",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Great Pink Diamond",
+     "name_de": "Grosser Rosa Diamant",
+     "recipe": [
+      {
+       "upgrade_from": "Pink Diamond",
+       "gold_cost_bk31": 175,
+       "gold_cost_gemtd_plus": 175
+      }
+     ],
+     "damage": [
+      175,
+      225
+     ],
+     "cooldown": 0.65,
+     "range": 850,
+     "targets": "ground",
+     "abilities": [
+      "Ground only. 10% chance for 8x damage."
+     ],
+     "abilities_gemtd_plus": [
+      "Ground only. 10% chance for 15x damage."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         175,
+         225
+        ],
+        "cooldown": 0.65,
+        "range": 850,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 175
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         175,
+         225
+        ],
+        "cooldown": 0.65,
+        "range": 850,
+        "targets": "ground",
+        "attack_type": "normal",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 175
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Paraiba Tourmaline",
+   "name_de": "Paraiba-Turmalin",
+   "recipe": [
+    {
+     "gem": "Aquamarine",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Opal",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Aquamarine",
+     "quality": "Flawed"
+    },
+    {
+     "gem": "Emerald",
+     "quality": "Flawed"
+    }
+   ],
+   "damage": [
+    10,
+    400
+   ],
+   "cooldown": 0.75,
+   "range": 850,
+   "targets": "air+ground",
+   "abilities": [
+    "-4 armor aura to ground units within 600; 20% chance per attack to cast a 250-damage Frost Nova (costs 5 mana). Dmg 10-400."
+   ],
+   "abilities_gemtd_plus": [
+    "Frost Nova 20%: 250 to target + 125 to others within 200, 20% slow 5 s; Weaken -4 armor to ground within 600."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       10,
+       400
+      ],
+      "cooldown": 0.75,
+      "range": 850,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       10,
+       400
+      ],
+      "cooldown": 0.75,
+      "range": 850,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Paraiba Tourmaline Facet",
+     "name_de": "Paraiba-Turmalin-Facette",
+     "recipe": [
+      {
+       "upgrade_from": "Paraiba Tourmaline",
+       "gold_cost_bk31": 275,
+       "gold_cost_gemtd_plus": 275
+      }
+     ],
+     "damage": [
+      30,
+      420
+     ],
+     "cooldown": 0.75,
+     "range": 875,
+     "targets": "air+ground",
+     "abilities": [
+      "-6 armor to ground within 650; 20% chance 350-damage Frost Nova. Dmg 30-420."
+     ],
+     "abilities_gemtd_plus": [
+      "Frost Nova 20%: 350 to target + 150 splash 200; Weaken -6 armor ground 650."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         420
+        ],
+        "cooldown": 0.75,
+        "range": 875,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 275
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         30,
+         420
+        ],
+        "cooldown": 0.75,
+        "range": 875,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 275
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Black Opal",
+   "name_de": "Schwarzer Opal",
+   "recipe": [
+    {
+     "gem": "Opal",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Diamond",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Aquamarine",
+     "quality": "Normal"
+    }
+   ],
+   "damage": 25,
+   "cooldown": 1.0,
+   "range": 800,
+   "targets": "air+ground",
+   "abilities": [
+    "+30% damage aura to towers within 1000 range. Has \"Swap\" (200 gold: swap position with another gem or rock)."
+   ],
+   "abilities_gemtd_plus": [
+    "Strength: +30% physical damage to friendly towers within 1000."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 25,
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 25,
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Mystic Black Opal",
+     "name_de": "Mystischer Schwarzer Opal",
+     "recipe": [
+      {
+       "upgrade_from": "Black Opal",
+       "gold_cost_bk31": 275,
+       "gold_cost_gemtd_plus": 275
+      }
+     ],
+     "damage": 50,
+     "cooldown": 1.0,
+     "range": 1000,
+     "targets": "air+ground",
+     "abilities": [
+      "+40% damage aura within 1200 (stacks with Black Opal). Swap."
+     ],
+     "abilities_gemtd_plus": [
+      "Great Strength: +40% dmg within 1200 (stacks with Black Opal Strength)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 50,
+        "cooldown": 1.0,
+        "range": 1000,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 275
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 50,
+        "cooldown": 1.0,
+        "range": 1000,
+        "targets": "air+ground",
+        "attack_type": "magic",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 275
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Blood Stone",
+   "name_de": "Blutstein",
+   "recipe": [
+    {
+     "gem": "Ruby",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Aquamarine",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Amethyst",
+     "quality": "Normal"
+    }
+   ],
+   "damage": 115,
+   "cooldown": 1.5,
+   "range": 700,
+   "targets": "air+ground",
+   "abilities": [
+    "400 splash attack; immolation 60 dmg/s to enemies within 500. 115 dmg, 1.5 s."
+   ],
+   "abilities_gemtd_plus": [
+    "115 dmg, 0.8 s. Blood Lightning: 24% chance to fire a 180 spell-damage cone; +12% chance per additional Blood Stone/Ancient Blood Stone."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 115,
+      "cooldown": 1.5,
+      "range": 700,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 115,
+      "cooldown": 0.8,
+      "range": 700,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Ancient Blood Stone",
+     "name_de": "Uralter Blutstein",
+     "recipe": [
+      {
+       "upgrade_from": "Blood Stone",
+       "gold_cost_bk31": 225,
+       "gold_cost_gemtd_plus": 225
+      }
+     ],
+     "damage": [
+      160,
+      240
+     ],
+     "cooldown": 0.8,
+     "range": 700,
+     "targets": "air+ground",
+     "abilities": [
+      "10% chance 3x damage (crit multiplier grows 3.0-5.5 with kill level); 10% chance to cast 350-damage Blood Lightning (5 mana). 160-240 dmg."
+     ],
+     "abilities_gemtd_plus": [
+      "Crit 10% x3; Blood Lightning 350 spell dmg 24% (+12% per extra Blood Stone)."
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": [
+         160,
+         240
+        ],
+        "cooldown": 0.8,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 225
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": [
+         160,
+         240
+        ],
+        "cooldown": 0.8,
+        "range": 700,
+        "targets": "air+ground",
+        "attack_type": "hero",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 225
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Yellow Sapphire",
+   "name_de": "Gelber Saphir",
+   "recipe": [
+    {
+     "gem": "Sapphire",
+     "quality": "Perfect"
+    },
+    {
+     "gem": "Ruby",
+     "quality": "Flawless"
+    },
+    {
+     "gem": "Topaz",
+     "quality": "Flawless"
+    }
+   ],
+   "damage": 100,
+   "cooldown": 1.0,
+   "range": 800,
+   "targets": "air+ground",
+   "abilities": [
+    "Splash 400 radius with frost slow. 100 dmg, 1.0 s."
+   ],
+   "abilities_gemtd_plus": [
+    "Splash full damage 500 radius vs ground; Chill 20% 5 s. 0.8 s."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 1.0,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 0.8,
+      "range": 800,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": [
+    {
+     "name_en": "Star Yellow Sapphire",
+     "name_de": "Stern-Gelbsaphir",
+     "recipe": [
+      {
+       "upgrade_from": "Yellow Sapphire",
+       "gold_cost_bk31": 180,
+       "gold_cost_gemtd_plus": 180
+      }
+     ],
+     "damage": 180,
+     "cooldown": 0.8,
+     "range": 850,
+     "targets": "air+ground",
+     "abilities": [
+      "400 splash slow; +5% damage aura to towers within 1200. 180 dmg."
+     ],
+     "abilities_gemtd_plus": [
+      "Splash 500 + Chill. 220 dmg. (Damage aura removed in Gem TD+.)"
+     ],
+     "bk31": {
+      "attacks": [
+       {
+        "damage": 180,
+        "cooldown": 0.8,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 180
+     },
+     "gemtd_plus_1_6_14": {
+      "attacks": [
+       {
+        "damage": 220,
+        "cooldown": 0.8,
+        "range": 850,
+        "targets": "air+ground",
+        "attack_type": "spells",
+        "enabled": true
+       }
+      ],
+      "upgrade_gold_cost": 180
+     }
+    }
+   ]
+  },
+  {
+   "name_en": "Stone of Bryvx",
+   "name_de": "Stein von Bryvx",
+   "recipe": [
+    {
+     "rule": "Combine past Great quality in one placement round. In TD+ (from code), 2 identical Great gems (x2), or 3-4 identical Perfect gems (x3/x4 = +2 qualities), of any type give the Stone of Bryvx. BK v3.1 changelog (v2.4): '4 Perfect of the same will combine to something other than a Great gem'."
+    }
+   ],
+   "damage": 500,
+   "cooldown": 0.8,
+   "range": 850,
+   "targets": "air+ground",
+   "abilities": [
+    "+50% damage aura to towers within 1500 (BK v3.1, stacks with Black Opal)."
+   ],
+   "abilities_gemtd_plus": [
+    "Inspiration: +30% physical damage within 1500."
+   ],
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 500,
+      "cooldown": 0.8,
+      "range": 850,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 500,
+      "cooldown": 0.8,
+      "range": 850,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  }
+ ],
+ "slates": [
+  {
+   "name_en": "Air Slate",
+   "name_de": "Luftplatte",
+   "recipe": [
+    {
+     "gem": "Amethyst",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Emerald",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Opal",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Ruby",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": 40,
+   "cooldown": 0.5,
+   "range": "130 melee vs ground + 850 vs air (BK); 850 air only (Gem TD+)",
+   "targets": "air+ground (BK) / air (Gem TD+)",
+   "abilities": [
+    "BK v3.1: 40 dmg every 0.5 s to ground units stepping on/next to it (melee 130, small splash 100) AND ranged air attack 40 dmg / 0.5 s at 850 range."
+   ],
+   "abilities_gemtd_plus": [
+    "Gem TD+: air attack only: 40 dmg, 0.5 s, 850 range."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 40,
+      "cooldown": 0.5,
+      "range": 130,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": true
+     },
+     {
+      "damage": 40,
+      "cooldown": 0.5,
+      "range": 850,
+      "targets": "air",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 40,
+      "cooldown": 0.5,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": false
+     },
+     {
+      "damage": 40,
+      "cooldown": 0.5,
+      "range": 850,
+      "targets": "air",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Hold Slate",
+   "name_de": "Halteplatte",
+   "recipe": [
+    {
+     "gem": "Topaz",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Amethyst",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Sapphire",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": "special (trigger-based, see abilities)",
+   "cooldown": 0.05,
+   "range": "melee (~100-130)",
+   "targets": "ground",
+   "abilities": [
+    "Grabs a ground enemy that walks over it, stuns 1.5 s; deals 160 + 20 x kills damage; 2 s cooldown after a hold."
+   ],
+   "abilities_gemtd_plus": [
+    "Hold: stun 1.5 s, slate disarmed 3.5 s, 160 + 20 x kills physical damage. Taunt: friendly towers within 600 attack the held target."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 115,
+      "targets": "ground",
+      "attack_type": "chaos",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "chaos",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Ancient Slate",
+   "name_de": "Uralte Platte",
+   "recipe": [
+    {
+     "slate": "Hold Slate"
+    },
+    {
+     "slate": "Air Slate"
+    }
+   ],
+   "how_to_obtain": "Special slate: combine the two basic slates (both owned on the field -> \"Combine special\" button), or one-hit in a single round when both basic slate requirements appear together (Combine Slate button).",
+   "damage": "special (trigger-based, see abilities)",
+   "cooldown": 0.05,
+   "range": "melee (~100-130)",
+   "targets": "air+ground",
+   "abilities": [
+    "Grabs ground OR air enemy for 2.5 s, -12 armor on grabbed unit, damage [(kills x 5..120) + (level x 50)]; 2.5 s cooldown."
+   ],
+   "abilities_gemtd_plus": [
+    "Seize: stun 3-7 s, disarm 5 s, 640 + 20 x kills dmg; -6 armor (ground)/-3 (air), +3/+1 per additional Ancient Slate. Taunt 600."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 130,
+      "targets": "air+ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 128,
+      "targets": "air+ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Slow Slate",
+   "name_de": "Verlangsamungsplatte",
+   "recipe": [
+    {
+     "gem": "Sapphire",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Diamond",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Emerald",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Aquamarine",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": 100,
+   "cooldown": 0.5,
+   "range": 130,
+   "targets": "ground",
+   "abilities": [
+    "100 dmg / 0.5 s to ground units on/next to it; attacked units permanently lose 15% base move speed (not damage tests)."
+   ],
+   "abilities_gemtd_plus": [
+    "100 dmg 0.5 s melee ground; permanent -15% move speed."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 0.5,
+      "range": 130,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 0.5,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Opal Vein Slate",
+   "name_de": "Opalader-Platte",
+   "recipe": [
+    {
+     "gem": "Opal",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Topaz",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Ruby",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": 80,
+   "cooldown": 0.5,
+   "range": 130,
+   "targets": "ground",
+   "abilities": [
+    "80 dmg / 0.5 s melee ground; +10% attack speed aura within 700 (stacks with Opals)."
+   ],
+   "abilities_gemtd_plus": [
+    "Same: 80 dmg 0.5 s; Boost +10% atk speed 700."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 80,
+      "cooldown": 0.5,
+      "range": 130,
+      "targets": "ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 80,
+      "cooldown": 0.5,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Wraith Slate",
+   "name_de": "Geisterplatte",
+   "recipe": [
+    {
+     "slate": "Opal Vein Slate"
+    },
+    {
+     "slate": "Slow Slate"
+    }
+   ],
+   "how_to_obtain": "Special slate: combine the two basic slates (both owned on the field -> \"Combine special\" button), or one-hit in a single round when both basic slate requirements appear together (Combine Slate button).",
+   "damage": 200,
+   "cooldown": 0.3,
+   "range": 130,
+   "targets": "ground",
+   "abilities": [
+    "200 dmg / 0.3 s melee ground; +10% attack speed aura 1000 (not stacking with Opal Vein); Incinerate: +35 stacking dmg per hit (35, 70, 105 ...), unit dying under effect explodes for 500 within 750; lasts 5 s."
+   ],
+   "abilities_gemtd_plus": [
+    "200 dmg 0.3 s; Boost 10%/1000; Incinerate: dying target explodes 500 within 250, 250 up to 750 range."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 200,
+      "cooldown": 0.3,
+      "range": 130,
+      "targets": "ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 200,
+      "cooldown": 0.3,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Spell Slate",
+   "name_de": "Zauberplatte",
+   "recipe": [
+    {
+     "gem": "Aquamarine",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Diamond",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Amethyst",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": [
+    30,
+    40
+   ],
+   "cooldown": 0.5,
+   "range": 110,
+   "targets": "air+ground",
+   "abilities": [
+    "30-40 dmg 0.5 s melee (air+ground). Per attack: 5% Frost Nova (100), 5% Fan of Knives (80), 5% Lightning (85), 5% Carrion Swarm (125), 5% -5 armor (15 s), 5% +3 gold."
+   ],
+   "abilities_gemtd_plus": [
+    "25% chance per attack (5 mana) to cast one of: Carrion Swarm 75, Fan of Knives 80 (500 radius), Lightning 85."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": [
+       30,
+       40
+      ],
+      "cooldown": 0.5,
+      "range": 110,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": [
+       30,
+       40
+      ],
+      "cooldown": 0.5,
+      "range": 128,
+      "targets": "air+ground",
+      "attack_type": "magic",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Poison Slate",
+   "name_de": "Giftplatte",
+   "recipe": [
+    {
+     "gem": "Emerald",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Topaz",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Opal",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Aquamarine",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": "special (trigger-based, see abilities)",
+   "cooldown": 0.05,
+   "range": "melee (~100-130)",
+   "targets": "air+ground",
+   "abilities": [
+    "Poison: 20 dmg every 2 s for 20 s, 25% slow; does not stack; hits air+ground. Scales with kills (20->40 dmg, 20->40 s)."
+   ],
+   "abilities_gemtd_plus": [
+    "Toxin (5 mana): 20 spell dmg every 2 s, -25% speed, 20.1 s; scales with kill level."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 100,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 128,
+      "targets": "air+ground",
+      "attack_type": "siege",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Elder Slate",
+   "name_de": "Aeltestenplatte",
+   "recipe": [
+    {
+     "slate": "Spell Slate"
+    },
+    {
+     "slate": "Poison Slate"
+    }
+   ],
+   "how_to_obtain": "Special slate: combine the two basic slates (both owned on the field -> \"Combine special\" button), or one-hit in a single round when both basic slate requirements appear together (Combine Slate button).",
+   "damage": 100,
+   "cooldown": 0.33,
+   "range": 115,
+   "targets": "air+ground",
+   "abilities": [
+    "100 dmg 0.33 s. Per attack (level 1): 5% Frost Nova 300, 5% Thunder Clap 150, 5% Fan of Knives 150, 7% -7 armor 25 s, 5% Shockwave 200, 5% gold shot (5 + kills/10 gold), 5% Forked Lightning 200, 8% Poison shot 40/2 s. Grows per 10 kills up to level 11 (FN 600, TC 300, FoK 300, -27 armor 35 s, SW 700, FL 400, poison 80)."
+   ],
+   "abilities_gemtd_plus": [
+    "35% chance (5 mana): Vulnerability -7 armor 25 s, Fan of Knives 150/500, Lightning 200, Thunder Clap 150 within 350 + 50% slow 5 s (values grow with kill level)."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 0.33,
+      "range": 115,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 100,
+      "cooldown": 0.33,
+      "range": 128,
+      "targets": "air+ground",
+      "attack_type": "spells",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Range Slate",
+   "name_de": "Reichweitenplatte",
+   "recipe": [
+    {
+     "gem": "Ruby",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Topaz",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Amethyst",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Ruby",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": 15,
+   "cooldown": 0.5,
+   "range": 600,
+   "targets": "air+ground",
+   "abilities": [
+    "15 dmg 0.5 s, hits ALL targets within 600 (air+ground)."
+   ],
+   "abilities_gemtd_plus": [
+    "Multishot: all units in range, 15 dmg, 0.5 s, 600."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 15,
+      "cooldown": 0.5,
+      "range": 600,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 15,
+      "cooldown": 0.5,
+      "range": 600,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Damage Slate",
+   "name_de": "Schadensplatte",
+   "recipe": [
+    {
+     "gem": "Diamond",
+     "quality": "Normal"
+    },
+    {
+     "one_of": [
+      {
+       "gem": "Sapphire",
+       "quality": "Flawed"
+      },
+      {
+       "gem": "Opal",
+       "quality": "Flawed"
+      }
+     ]
+    }
+   ],
+   "how_to_obtain": "Basic slate: in the SAME placement round, place the Normal gem plus at least one of the listed Flawed gems; the Normal gem then gets a \"Keep as Slate\" button and turns into the slate (other gems become rocks as usual). Also obtainable via Extra Chance (Slate).",
+   "damage": "special (trigger-based, see abilities)",
+   "cooldown": 0.05,
+   "range": "melee (~100-130)",
+   "targets": "ground",
+   "abilities": [
+    "Deals (kills x 10 + level x 20) dmg every 1 s to a close ground unit; +10% damage aura within 250 (stacks with Black Opal)."
+   ],
+   "abilities_gemtd_plus": [
+    "Wound: 256 + 10 x kills physical dmg, then disarmed 1 s; Enhance +10% dmg within 250."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 120,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 1,
+      "cooldown": 0.05,
+      "range": 128,
+      "targets": "ground",
+      "attack_type": "pierce",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  },
+  {
+   "name_en": "Viper Slate",
+   "name_de": "Viperplatte",
+   "recipe": [
+    {
+     "slate": "Damage Slate"
+    },
+    {
+     "slate": "Range Slate"
+    }
+   ],
+   "how_to_obtain": "Special slate: combine the two basic slates (both owned on the field -> \"Combine special\" button), or one-hit in a single round when both basic slate requirements appear together (Combine Slate button).",
+   "damage": 30,
+   "cooldown": 0.5,
+   "range": 750,
+   "targets": "air+ground",
+   "abilities": [
+    "30 dmg 0.5 s hits all targets within 750; burn 50 dmg/s within 400; +10% damage aura within 400 (+5% per 10 kills up to 60%; not stacking with Damage Slate)."
+   ],
+   "abilities_gemtd_plus": [
+    "Multishot all in 750, 30 dmg 0.5 s; Burn 50 dps 400 (+10%/10 kills); Enhance +10% dmg 400 (+3% per kill level, max 40%)."
+   ],
+   "blocks_path": false,
+   "path_note": "Creeps walk over slates (no pathing footprint, collision 32). Slates can be placed on the maze path; they do not act as walls.",
+   "bk31": {
+    "attacks": [
+     {
+      "damage": 30,
+      "cooldown": 0.5,
+      "range": 750,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "gemtd_plus_1_6_14": {
+    "attacks": [
+     {
+      "damage": 30,
+      "cooldown": 0.5,
+      "range": 750,
+      "targets": "air+ground",
+      "attack_type": "hero",
+      "enabled": true
+     }
+    ]
+   },
+   "upgrades": []
+  }
+ ],
+ "uncertain": [
+  "Primary damage/cooldown/range values are from [BK's] Gem TD v3.1 object data (exact); \"gemtd_plus_1_6_14\" sub-objects hold the Gem TD+ values (exact). Earlier Bryvx versions (v1.x-v2.x, the very first \"Gem TD\" by Bryvx) may differ and were not checked.",
+  "Damage ranges computed as base+dice .. base+dice*sides using WC3 defaults of the base unit (Guard Tower/Cannon Tower/Ancient Protector) where a field was not overridden; this matches the Gem TD+ in-game tooltips.",
+  "Sapphire/Silver/Yellow Sapphire slow duration 5 s and amount 20% come from the WC3 Frost Attack default + map constant FrostMoveSpeedDecrease=0.2 (Gem TD+ tooltip confirms 20%/5 s; for BK assumed identical since constant is the same).",
+  "BK v3.1 Emerald Normal duration (5 s) and Perfect/Great slow (50%) partly from WC3 Slow Poison defaults/tooltips, not explicit fields.",
+  "BK Uranium 238 slow: object data says -75% but in-game tooltip says 50%; actual in-game value capped by minimum speed 220.",
+  "BK Ancient Slate damage formula \"(kills x 5-120) + (level x 50)\" is quoted from the in-game tooltip; exact trigger formula not verified.",
+  "Ruby splash: WC3 splash uses full/medium/small radii with damage factors (default 100%/50%/25%); factors not extracted.",
+  "Rock removal: no cost found in either version (ability without gold/mana cost). Some other Gem TD variants (e.g. Dota 2 Gem TD) charge gold for rock removal - not WC3.",
+  "Extra Chance for BK: whether it needs max Gem Quality is not verified (Gem TD+ requires level 8).",
+  "German names (name_de) are my own translations, not official.",
+  "Dota 2 Gem TD uses different names (Asian Jade, Lucky Asian Jade, Uranium 238->235 etc.) and different numbers; not used except for name mapping.",
+  "Gem TD+ 1.6.x removed lives and some BK features (race mode, gamble machines, classic mode); rule text above notes this.",
+  "Stone of Bryvx in BK v3.1: confirmed via 4 identical Perfects; whether 2 Greats also work in BK is not verified (it does in TD+). The gemtd-helper data for TD+ 1.5.4 lists 'one Perfect of each of the 8 gem types' as its recipe, which conflicts with the TD+ 1.6 code.",
+  "Creep HP list (rules.creeps_gemtd_plus) is TD+ base object data. TD+ scales HP by difficulty and changelog adjustments (+20% air and levels 41-49), and BK classic values differ."
+ ]
+}

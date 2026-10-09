@@ -1,0 +1,13 @@
+{
+	"id": "extreme_kon",
+	"name": "Extreme Kon",
+	"hp": 34800,
+	"speed": 4.08,
+	"armor": 30,
+	"armor_type": "fortified",
+	"bounty": 11,
+	"damage": 11,
+	"flying": false,
+	"color": "#a0522d",
+	"size": 1.0
+}

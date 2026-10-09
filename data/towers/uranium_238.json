@@ -1,0 +1,78 @@
+{
+	"id": "uranium_238",
+	"name": "Uran 238",
+	"category": "special",
+	"color": "#9be22d",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Uran 238",
+			"damage": [
+				0,
+				0
+			],
+			"range": 0.0,
+			"cooldown": 0.0,
+			"abilities": [
+				{
+					"type": "burn_aura",
+					"radius": 3.91,
+					"dps": 200.0
+				},
+				{
+					"type": "slow_aura",
+					"radius": 3.91,
+					"factor": 0.5
+				}
+			],
+			"targets": "both"
+		},
+		{
+			"name": "Uran 235",
+			"damage": [
+				14,
+				14
+			],
+			"range": 7.03,
+			"cooldown": 0.2,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "burn_aura",
+					"radius": 3.91,
+					"dps": 200.0
+				},
+				{
+					"type": "slow_aura",
+					"radius": 3.91,
+					"factor": 0.5
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "topaz",
+			"tier": 4
+		},
+		{
+			"tower": "sapphire",
+			"tier": 2
+		},
+		{
+			"tower": "opal",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 190,
+			"recipe": []
+		}
+	]
+}

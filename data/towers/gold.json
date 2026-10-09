@@ -1,0 +1,73 @@
+{
+	"id": "gold",
+	"name": "Gold",
+	"category": "special",
+	"color": "#e6b422",
+	"model": "res://assets/models/crystals/crystal_06.glb",
+	"damage_type": "pierce",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Gold",
+			"damage": [
+				160,
+				190
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.0
+				},
+				{
+					"type": "armor_reduce",
+					"amount": 5.0,
+					"duration": 5.0
+				}
+			]
+		},
+		{
+			"name": "Ägyptisches Gold",
+			"damage": [
+				160,
+				200
+			],
+			"range": 6.25,
+			"cooldown": 0.75,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.3,
+					"multiplier": 2.0
+				},
+				{
+					"type": "armor_reduce",
+					"amount": 8.0,
+					"duration": 5.0
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "amethyst",
+			"tier": 4
+		},
+		{
+			"tower": "amethyst",
+			"tier": 3
+		},
+		{
+			"tower": "diamond",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 205,
+			"recipe": []
+		}
+	]
+}

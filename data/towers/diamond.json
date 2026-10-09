@@ -2,16 +2,18 @@
 	"id": "diamond",
 	"name": "Diamant",
 	"category": "gem",
-	"color": "#f2f4ff",
+	"color": "#eef2ff",
+	"model": "res://assets/models/crystals/crystal_07.glb",
+	"damage_type": "normal",
 	"targets": "ground",
 	"tiers": [
 		{
 			"damage": [
-				12,
-				16
+				8,
+				12
 			],
-			"range": 3.0,
-			"cooldown": 0.9,
+			"range": 3.91,
+			"cooldown": 0.8,
 			"abilities": [
 				{
 					"type": "crit",
@@ -22,61 +24,76 @@
 		},
 		{
 			"damage": [
-				26,
-				35
+				16,
+				18
 			],
-			"range": 3.25,
-			"cooldown": 0.9,
+			"range": 4.3,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "crit",
 					"chance": 0.25,
-					"multiplier": 2.25
+					"multiplier": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				30,
+				37
+			],
+			"range": 4.69,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.0
 				}
 			]
 		},
 		{
 			"damage": [
 				58,
-				77
+				65
 			],
-			"range": 3.5,
-			"cooldown": 0.9,
+			"range": 5.08,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "crit",
 					"chance": 0.25,
-					"multiplier": 2.5
+					"multiplier": 2.0
 				}
 			]
 		},
 		{
 			"damage": [
-				120,
-				160
+				140,
+				150
 			],
-			"range": 3.75,
-			"cooldown": 0.9,
+			"range": 5.86,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "crit",
 					"chance": 0.25,
-					"multiplier": 2.75
+					"multiplier": 2.0
 				}
 			]
 		},
 		{
 			"damage": [
-				264,
-				352
+				300,
+				350
 			],
-			"range": 4.0,
-			"cooldown": 0.9,
+			"range": 6.64,
+			"cooldown": 1.0,
 			"abilities": [
 				{
 					"type": "crit",
 					"chance": 0.25,
-					"multiplier": 3.0
+					"multiplier": 5.0
 				}
 			]
 		}

@@ -1,0 +1,13 @@
+{
+	"id": "extreme_pickled_lobster",
+	"name": "Extreme Pickled Lobster",
+	"hp": 56400,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "large",
+	"bounty": 18,
+	"damage": 18,
+	"flying": false,
+	"color": "#8e44ad",
+	"size": 1.0
+}

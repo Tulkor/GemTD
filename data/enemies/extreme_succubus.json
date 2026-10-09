@@ -1,0 +1,13 @@
+{
+	"id": "extreme_succubus",
+	"name": "Extreme Succubus",
+	"hp": 16500,
+	"speed": 3.67,
+	"armor": 23,
+	"armor_type": "normal",
+	"bounty": 9,
+	"damage": 9,
+	"flying": false,
+	"color": "#7f8c8d",
+	"size": 1.0
+}

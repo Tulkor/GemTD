@@ -1,0 +1,13 @@
+{
+	"id": "mine_gekko",
+	"name": "Mine Gekko",
+	"hp": 30,
+	"speed": 2.07,
+	"armor": 12,
+	"armor_type": "medium",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"color": "#8e8e8e",
+	"size": 1.0
+}

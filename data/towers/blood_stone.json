@@ -1,0 +1,84 @@
+{
+	"id": "blood_stone",
+	"name": "Blutstein",
+	"category": "special",
+	"color": "#8b0f1f",
+	"model": "res://assets/models/crystals/crystal_24.glb",
+	"damage_type": "hero",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Blutstein",
+			"damage": [
+				115,
+				115
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 3.12,
+					"factor": 0.5
+				},
+				{
+					"type": "burn_aura",
+					"radius": 3.91,
+					"dps": 60.0
+				}
+			]
+		},
+		{
+			"name": "Uralter Blutstein",
+			"damage": [
+				160,
+				240
+			],
+			"range": 5.47,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 3.12,
+					"factor": 0.5
+				},
+				{
+					"type": "burn_aura",
+					"radius": 3.91,
+					"dps": 60.0
+				},
+				{
+					"type": "crit",
+					"chance": 0.1,
+					"multiplier": 3.0
+				},
+				{
+					"type": "nova",
+					"chance": 0.1,
+					"damage": 350.0,
+					"radius": 0.78
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "ruby",
+			"tier": 4
+		},
+		{
+			"tower": "aquamarine",
+			"tier": 3
+		},
+		{
+			"tower": "amethyst",
+			"tier": 2
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 225,
+			"recipe": []
+		}
+	]
+}

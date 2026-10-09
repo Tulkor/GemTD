@@ -1,0 +1,63 @@
+{
+	"id": "pink_diamond",
+	"name": "Rosa Diamant",
+	"category": "special",
+	"color": "#ff9ad5",
+	"model": "res://assets/models/crystals/crystal_04.glb",
+	"damage_type": "normal",
+	"targets": "ground",
+	"tiers": [
+		{
+			"name": "Rosa Diamant",
+			"damage": [
+				150,
+				175
+			],
+			"range": 6.25,
+			"cooldown": 0.75,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.1,
+					"multiplier": 5.0
+				}
+			]
+		},
+		{
+			"name": "Großer Rosa Diamant",
+			"damage": [
+				175,
+				225
+			],
+			"range": 6.64,
+			"cooldown": 0.65,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.1,
+					"multiplier": 8.0
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "diamond",
+			"tier": 4
+		},
+		{
+			"tower": "diamond",
+			"tier": 2
+		},
+		{
+			"tower": "topaz",
+			"tier": 2
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 175,
+			"recipe": []
+		}
+	]
+}

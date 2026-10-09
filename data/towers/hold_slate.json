@@ -1,0 +1,48 @@
+{
+	"id": "hold_slate",
+	"name": "Halteplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#f0c94a",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "chaos",
+	"targets": "ground",
+	"recipe": [
+		{
+			"tower": "topaz",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "amethyst",
+					"tier": 1
+				},
+				{
+					"tower": "sapphire",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Halteplatte",
+			"damage": [
+				160,
+				160
+			],
+			"range": 1.02,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 1.0,
+					"duration": 1.5
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

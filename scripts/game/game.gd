@@ -253,64 +253,119 @@ func remove_rock(c: Vector2i) -> bool:
 	return true
 
 
-## Was man mit dem ausgewählten Gem dieser Runde machen kann.
-## Rückgabe: [{label, id, tier}]
-func choice_options(t: Tower) -> Array:
-	if phase != Phase.CHOOSE or t == null or not round_towers.has(t):
+## Was man mit dem ausgewählten Tower machen kann.
+## Rückgabe: [{label, action, id, tier, consume: [Tower], cost}]
+##   action "keep":    Runde abschließen, ausgewählter Gem wird zu id/tier, Rest der Runde wird zu Steinen
+##   action "combine": Kombination aus fertigen Towern auf dem Feld, ohne die Runde zu beenden
+##   action "upgrade": Spezial-Tower gegen Gold aufwerten
+func tower_options(t: Tower) -> Array:
+	if t == null or not is_instance_valid(t) or phase >= Phase.GAME_OVER:
 		return []
-	var opts := [{"label": "Behalten: " + t.label(), "id": t.tower_id, "tier": t.tier}]
-	var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
-	var max_tier := Database.tier_count(t.tower_id) - 1
-	if t.def.get("category", "gem") == "gem":
-		if same >= 2 and t.tier + 1 <= max_tier:
-			opts.append({"label": "2 gleiche → " + Database.tower_label(t.tower_id, t.tier + 1), "id": t.tower_id, "tier": t.tier + 1})
-		if same >= 4 and t.tier + 2 <= max_tier:
-			opts.append({"label": "4 gleiche → " + Database.tower_label(t.tower_id, t.tier + 2), "id": t.tower_id, "tier": t.tier + 2})
+	if t.is_new:
+		return choice_options(t)
+	if phase == Phase.WAVE:
+		return []
+	var opts := []
+	var field := towers.values().filter(func(o): return o != t and not o.is_new)
 	for sid in Database.special_ids():
-		var recipe: Array = Database.towers[sid].get("recipe", [])
-		if not recipe.is_empty() and _recipe_satisfied(recipe, t):
-			opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "id": sid, "tier": 0})
+		var def: Dictionary = Database.towers[sid]
+		if def.get("recipe_same_round", false):
+			continue
+		var consume = _match_recipe(def.get("recipe", []), t, field)
+		if consume != null:
+			opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "action": "combine",
+					"id": sid, "tier": 0, "consume": consume, "cost": 0})
+	opts.append_array(upgrade_options(t))
 	return opts
 
 
-## Alle Zutaten müssen unter den Gems dieser Runde sein, der ausgewählte muss dabei sein.
-func _recipe_satisfied(recipe: Array, t: Tower) -> bool:
-	var pool := round_towers.filter(func(o): return o != t)
-	var used_selected := false
-	for ing in recipe:
-		var want_id := str(ing.get("tower", ""))
-		var want_tier := int(ing.get("tier", 0))
-		if not used_selected and t.tower_id == want_id and t.tier == want_tier:
-			used_selected = true
-			continue
-		var found = null
-		for o in pool:
-			if o.tower_id == want_id and o.tier == want_tier:
-				found = o
+func choice_options(t: Tower) -> Array:
+	if phase != Phase.CHOOSE or t == null or not round_towers.has(t):
+		return []
+	var opts := [_keep_option("Behalten: " + t.label(), t.tower_id, t.tier)]
+	if t.def.get("category", "gem") == "gem":
+		var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
+		var max_tier := Database.tier_count(t.tower_id) - 1
+		for n in [2, 4]:
+			if same < n:
+				continue
+			var steps := 1 if n == 2 else 2
+			if t.tier + steps <= max_tier:
+				opts.append(_keep_option("%d gleiche → %s" % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps))
+			else:
+				var overflow := str(Database.balance.get("overflow_tower", ""))
+				if Database.towers.has(overflow):
+					opts.append(_keep_option("%d gleiche → %s" % [n, Database.tower_label(overflow, 0)], overflow, 0))
 				break
-		if found == null:
-			return false
-		pool.erase(found)
-	return used_selected
+	var others := round_towers.filter(func(o): return o != t)
+	var field := towers.values().filter(func(o): return not o.is_new)
+	for sid in Database.special_ids():
+		var def: Dictionary = Database.towers[sid]
+		var pool: Array = others if def.get("recipe_same_round", false) else others + field
+		var consume = _match_recipe(def.get("recipe", []), t, pool)
+		if consume != null:
+			var o := _keep_option("Kombinieren → " + Database.tower_label(sid, 0), sid, 0)
+			o.consume = consume.filter(func(c): return not c.is_new)
+			opts.append(o)
+	return opts
 
 
-## Upgrades fertiger Spezial-Tower (Feld "upgrades" in der Tower-Datei), außerhalb der Welle.
-## Rückgabe: [{label, tier, consume: [Tower], cost}]
+func _keep_option(label: String, id: String, tier: int) -> Dictionary:
+	return {"label": label, "action": "keep", "id": id, "tier": tier, "consume": [], "cost": 0}
+
+
+func _ingredient_matches(ing: Dictionary, o: Tower) -> bool:
+	if ing.has("any_of"):
+		for alt in ing.any_of:
+			if _ingredient_matches(alt, o):
+				return true
+		return false
+	return o.tower_id == str(ing.get("tower", "")) and o.tier == int(ing.get("tier", 0))
+
+
+## Prüft ein Rezept. Der ausgewählte Tower t muss eine Zutat sein, die übrigen kommen aus pool.
+## Rückgabe: die verbrauchten Tower aus pool, oder null wenn das Rezept nicht erfüllt ist.
+func _match_recipe(recipe: Array, t: Tower, pool: Array):
+	if recipe.is_empty():
+		return null
+	for i in recipe.size():
+		if not _ingredient_matches(recipe[i], t):
+			continue
+		var rest := pool.duplicate()
+		var used := []
+		var ok := true
+		for j in recipe.size():
+			if j == i:
+				continue
+			var found = null
+			for o in rest:
+				if _ingredient_matches(recipe[j], o):
+					found = o
+					break
+			if found == null:
+				ok = false
+				break
+			rest.erase(found)
+			used.append(found)
+		if ok:
+			return used
+	return null
+
+
+## Upgrades fertiger Spezial-Tower (Feld "upgrades" in der Tower-Datei): Gold, optional weitere Zutaten.
 func upgrade_options(t: Tower) -> Array:
 	if t == null or t.is_new or phase == Phase.WAVE or phase >= Phase.GAME_OVER:
 		return []
 	var ups: Array = t.def.get("upgrades", [])
-	if t.tier >= ups.size():
+	if t.tier >= ups.size() or t.tier + 1 >= Database.tier_count(t.tower_id):
 		return []
 	var up: Dictionary = ups[t.tier]
-	if t.tier + 1 >= Database.tier_count(t.tower_id):
-		return []
 	var consume := []
 	var pool := towers.values().filter(func(o): return o != t and not o.is_new)
 	for ing in up.get("recipe", []):
 		var found = null
 		for o in pool:
-			if o.tower_id == str(ing.get("tower", "")) and o.tier == int(ing.get("tier", 0)):
+			if _ingredient_matches(ing, o):
 				found = o
 				break
 		if found == null:
@@ -319,34 +374,50 @@ func upgrade_options(t: Tower) -> Array:
 		consume.append(found)
 	var cost := int(up.get("cost", 0))
 	return [{"label": "Aufwerten → %s%s" % [Database.tower_label(t.tower_id, t.tier + 1), " (%d Gold)" % cost if cost > 0 else ""],
-			"tier": t.tier + 1, "consume": consume, "cost": cost}]
+			"action": "upgrade", "id": t.tower_id, "tier": t.tier + 1, "consume": consume, "cost": cost}]
 
 
 func _on_option_chosen(index: int) -> void:
 	if selected_rock != NO_CELL:
 		remove_rock(selected_rock)
 		return
-	if phase != Phase.CHOOSE:
-		var ups := upgrade_options(selected)
-		if index < ups.size():
-			_apply_upgrade(selected, ups[index])
-		return
-	var opts := choice_options(selected)
+	var opts := tower_options(selected)
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
-	for t in round_towers:
-		if t == selected:
-			t.is_new = false
-			t.set_tower(o.id, o.tier)
-			pathfinder.set_solid(t.cell, not t.is_trap())
-		else:
-			_turn_into_rock(t)
-	round_towers.clear()
+	if gold < int(o.cost):
+		return
+	gold -= int(o.cost)
+	for c in o.consume:
+		_consume(c)
+	var t := selected
+	if o.action == "keep":
+		for r in round_towers:
+			if r != t and is_instance_valid(r):
+				_turn_into_rock(r)
+		round_towers.clear()
+		t.is_new = false
+	t.kills += o.consume.reduce(func(acc, c): return acc + c.kills, 0)
+	t.set_tower(o.id, o.tier)
+	t.set_selected(true)
+	pathfinder.set_solid(t.cell, not t.is_trap())
 	_update_paths()
 	board.refresh_rocks()
 	_update_auras()
-	_start_wave()
+	if o.action == "keep":
+		_start_wave()
+	else:
+		_refresh_hud()
+
+
+## Verbrauchte Zutat: Tower werden zu Steinen, Fallen verschwinden.
+func _consume(t: Tower) -> void:
+	if t.is_trap():
+		towers.erase(t.cell)
+		pathfinder.set_solid(t.cell, false)
+		t.queue_free()
+	else:
+		_turn_into_rock(t)
 
 
 func _turn_into_rock(t: Tower) -> void:
@@ -354,21 +425,6 @@ func _turn_into_rock(t: Tower) -> void:
 	rocks[t.cell] = true
 	pathfinder.set_solid(t.cell, true)
 	t.queue_free()
-
-
-## Zutaten eines Upgrades werden zu Steinen (wie beim Kombinieren in GemTD).
-func _apply_upgrade(t: Tower, up: Dictionary) -> void:
-	if gold < int(up.cost):
-		return
-	gold -= int(up.cost)
-	for o in up.consume:
-		_turn_into_rock(o)
-	t.set_tower(t.tower_id, int(up.tier))
-	t.set_selected(true)
-	_update_paths()
-	board.refresh_rocks()
-	_update_auras()
-	_refresh_hud()
 
 
 func _upgrade_chance() -> void:
@@ -381,6 +437,10 @@ func _upgrade_chance() -> void:
 	gold -= cost
 	chance_level += 1
 	_refresh_hud()
+
+
+func current_wave() -> int:
+	return wave_index + 1
 
 
 func add_gold(amount: int) -> void:
@@ -454,8 +514,7 @@ func _spawn_enemy(g: Dictionary) -> void:
 
 
 func find_targets(t: Tower, count: int) -> Array:
-	var r := t.range_cells()
-	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_to(t.pos) <= r)
+	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_to(t.pos) <= t.range_for(e))
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
@@ -526,9 +585,6 @@ func _refresh_hud() -> void:
 		hud.set_options_enabled(can_remove_rock(selected_rock))
 		hud.set_tower_info("Stein" + ("" if phase == Phase.BUILD else "\nKann nur in der Bauphase entfernt werden."))
 		return
-	var labels: Array = choice_options(selected).map(func(o): return o.label)
-	if labels.is_empty():
-		labels = upgrade_options(selected).map(func(o): return o.label)
-	hud.set_options(labels)
+	hud.set_options(tower_options(selected).map(func(o): return o.label))
 	hud.set_options_enabled(true)
 	hud.set_tower_info(selected.info_text() if selected != null and is_instance_valid(selected) else "")

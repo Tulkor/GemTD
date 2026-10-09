@@ -1,0 +1,44 @@
+{
+	"id": "wraith_slate",
+	"name": "Geisterplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#7d8fa8",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "hero",
+	"targets": "ground",
+	"recipe": [
+		{
+			"tower": "opal_vein_slate",
+			"tier": 0
+		},
+		{
+			"tower": "slow_slate",
+			"tier": 0
+		}
+	],
+	"description": "Entsteht aus zwei Fallen auf dem Feld.",
+	"tiers": [
+		{
+			"name": "Geisterplatte",
+			"damage": [
+				200,
+				200
+			],
+			"range": 1.02,
+			"cooldown": 0.3,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 7.81,
+					"bonus": 0.1
+				},
+				{
+					"type": "stacking_damage",
+					"per_hit": 35.0,
+					"duration": 5.0
+				}
+			]
+		}
+	]
+}

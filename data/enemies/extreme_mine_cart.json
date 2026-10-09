@@ -1,0 +1,13 @@
+{
+	"id": "extreme_mine_cart",
+	"name": "Extreme Mine Cart",
+	"hp": 3500,
+	"speed": 3.28,
+	"armor": 19,
+	"armor_type": "fortified",
+	"bounty": 6,
+	"damage": 6,
+	"flying": false,
+	"color": "#8e8e8e",
+	"size": 1.0
+}

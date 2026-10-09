@@ -1,0 +1,13 @@
+{
+	"id": "bigger_rockmen",
+	"name": "Bigger Rockmen",
+	"hp": 120,
+	"speed": 2.15,
+	"armor": 12,
+	"armor_type": "fortified",
+	"bounty": 2,
+	"damage": 2,
+	"flying": false,
+	"color": "#27ae60",
+	"size": 1.0
+}

@@ -1,0 +1,63 @@
+{
+	"id": "black_opal",
+	"name": "Schwarzer Opal",
+	"category": "special",
+	"color": "#2d2440",
+	"model": "res://assets/models/crystals/crystal_26.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Schwarzer Opal",
+			"damage": [
+				25,
+				25
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "damage_aura",
+					"radius": 7.81,
+					"bonus": 0.3
+				}
+			]
+		},
+		{
+			"name": "Mystischer Schwarzer Opal",
+			"damage": [
+				50,
+				50
+			],
+			"range": 7.81,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "damage_aura",
+					"radius": 9.38,
+					"bonus": 0.4
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "opal",
+			"tier": 4
+		},
+		{
+			"tower": "diamond",
+			"tier": 3
+		},
+		{
+			"tower": "aquamarine",
+			"tier": 2
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 275,
+			"recipe": []
+		}
+	]
+}

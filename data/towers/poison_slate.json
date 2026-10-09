@@ -1,0 +1,57 @@
+{
+	"id": "poison_slate",
+	"name": "Giftplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#5cc26b",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "siege",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "emerald",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "topaz",
+					"tier": 1
+				},
+				{
+					"tower": "opal",
+					"tier": 1
+				},
+				{
+					"tower": "aquamarine",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Giftplatte",
+			"damage": [
+				1,
+				1
+			],
+			"range": 1.02,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 10.0,
+					"duration": 20.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 20.0
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

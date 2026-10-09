@@ -1,0 +1,78 @@
+{
+	"id": "yellow_sapphire",
+	"name": "Gelber Saphir",
+	"category": "special",
+	"color": "#ffd84a",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "spells",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Gelber Saphir",
+			"damage": [
+				100,
+				100
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 3.12,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 5.0
+				}
+			]
+		},
+		{
+			"name": "Stern-Gelbsaphir",
+			"damage": [
+				180,
+				180
+			],
+			"range": 6.64,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 3.12,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 5.0
+				},
+				{
+					"type": "damage_aura",
+					"radius": 9.38,
+					"bonus": 0.05
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "sapphire",
+			"tier": 4
+		},
+		{
+			"tower": "ruby",
+			"tier": 3
+		},
+		{
+			"tower": "topaz",
+			"tier": 3
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 180,
+			"recipe": []
+		}
+	]
+}

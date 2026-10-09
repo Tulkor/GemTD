@@ -1,0 +1,13 @@
+{
+	"id": "red_dragon",
+	"name": "Red Dragon",
+	"hp": 10200,
+	"speed": 2.5,
+	"armor": 14,
+	"armor_type": "unarmored",
+	"bounty": 10,
+	"damage": 10,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

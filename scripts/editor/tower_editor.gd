@@ -186,9 +186,14 @@ func _section(title: String) -> VBoxContainer:
 
 
 func _build_recipe() -> void:
-	var box := _section("Rezept (alle Zutaten müssen in derselben Runde gesetzt werden)")
+	var box := _section("Rezept (der ausgewählte Gem muss eine Zutat sein; die anderen werden zu Steinen)")
 	if not current.has("recipe"):
 		current["recipe"] = []
+	var same := CheckBox.new()
+	same.text = "Nur aus Gems derselben Runde (sonst auch fertige Tower auf dem Feld)"
+	same.button_pressed = bool(current.get("recipe_same_round", false))
+	same.toggled.connect(func(on): current["recipe_same_round"] = on)
+	box.add_child(same)
 	_ingredient_list(box, current["recipe"])
 
 
@@ -197,6 +202,16 @@ func _ingredient_list(box: Node, recipe: Array) -> void:
 	var ids := Database.tower_ids()
 	for k in recipe.size():
 		var ing: Dictionary = recipe[k]
+		if ing.has("any_of"):
+			var r0 := HBoxContainer.new()
+			box.add_child(r0)
+			var names: Array = ing.any_of.map(func(a): return Database.tower_label(str(a.get("tower", "")), int(a.get("tier", 0))))
+			UiUtil.label("Einer von: " + ", ".join(names), r0)
+			_any_of_row(box, ing.any_of)
+			UiUtil.button("Entfernen", r0, func():
+				recipe.remove_at(k)
+				_build_form())
+			continue
 		if str(ing.get("tower", "")) == "" and not ids.is_empty():
 			ing["tower"] = ids[0]
 		var r := HBoxContainer.new()
@@ -212,9 +227,24 @@ func _ingredient_list(box: Node, recipe: Array) -> void:
 		UiUtil.button("Entfernen", r, func():
 			recipe.remove_at(k)
 			_build_form())
-	UiUtil.button("+ Zutat", box, func():
+	var add_row := HBoxContainer.new()
+	box.add_child(add_row)
+	UiUtil.button("+ Zutat", add_row, func():
 		recipe.append({"tower": Database.gem_ids()[0] if not Database.gem_ids().is_empty() else "", "tier": 0})
 		_build_form())
+	UiUtil.button("+ Zutat „einer von …“", add_row, func():
+		recipe.append({"any_of": []})
+		_build_form())
+
+
+## Alternativen einer „einer von“-Zutat, eingerückt.
+func _any_of_row(box: Node, alts: Array) -> void:
+	var inner := MarginContainer.new()
+	inner.add_theme_constant_override("margin_left", 40)
+	box.add_child(inner)
+	var v := VBoxContainer.new()
+	inner.add_child(v)
+	_ingredient_list(v, alts)
 
 
 ## Upgrade von Stufe i auf i+1: Zutaten müssen als fertige Tower auf dem Feld stehen und werden zu Steinen.
@@ -222,7 +252,7 @@ func _build_upgrades() -> void:
 	var tiers: Array = current.get("tiers", [])
 	if tiers.size() < 2:
 		return
-	var box := _section("Upgrades (Zutaten stehen fertig auf dem Feld und werden zu Steinen)")
+	var box := _section("Upgrades (Goldkosten; optionale Zutaten müssen fertig auf dem Feld stehen und werden zu Steinen)")
 	if not current.has("upgrades"):
 		current["upgrades"] = []
 	var ups: Array = current["upgrades"]

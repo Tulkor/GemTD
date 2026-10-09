@@ -21,7 +21,7 @@ var kills := 0
 var total_damage := 0.0
 
 var _visual: Node3D
-var _gem: MeshInstance3D
+var _gem: Node3D
 var _new_ring: MeshInstance3D
 var _select_ring: MeshInstance3D
 var _range_ring: MeshInstance3D
@@ -85,7 +85,27 @@ func can_target(e) -> bool:
 
 func can_attack() -> bool:
 	var dmg: Array = stats.get("damage", [0, 0])
-	return float(stats.get("cooldown", 0)) > 0.0 and float(dmg[1]) > 0.0
+	return float(stats.get("cooldown", 0)) > 0.0 and (float(dmg[1]) > 0.0 or not ability("wave_damage").is_empty())
+
+
+## Reichweite gegen ein bestimmtes Ziel (manche Fallen haben gegen Flieger mehr Reichweite).
+func range_for(e) -> float:
+	if e.flying and stats.has("range_air"):
+		return float(stats.range_air)
+	return range_cells()
+
+
+func damage_type() -> String:
+	return str(stats.get("damage_type", def.get("damage_type", "")))
+
+
+## Kill-Ränge wie in WC3: +10 % Schaden pro 10 Kills (Werte in balance.json).
+func kill_bonus() -> float:
+	var kr: Dictionary = Database.balance.get("kill_rank", {})
+	if kr.is_empty():
+		return 0.0
+	var ranks := floori(kills / float(kr.get("kills_per_rank", 10)))
+	return minf(ranks * float(kr.get("bonus_per_rank", 0.1)), float(kr.get("max_bonus", 1.2)))
 
 
 func cooldown() -> float:
@@ -122,8 +142,9 @@ func _apply_enemy_auras(delta: float) -> void:
 		var type := str(ab.get("type", ""))
 		if not type in ["burn_aura", "slow_aura", "armor_aura"]:
 			continue
+		var mode := str(ab.get("targets", target_mode()))
 		for e in game.enemies_in_radius(pos, float(ab.radius)):
-			if not can_target(e):
+			if (mode == "air" and not e.flying) or (mode == "ground" and e.flying):
 				continue
 			match type:
 				"burn_aura":
@@ -138,7 +159,11 @@ func _apply_enemy_auras(delta: float) -> void:
 
 func _roll_damage() -> float:
 	var dmg: Array = stats.get("damage", [1, 1])
-	return randf_range(float(dmg[0]), float(dmg[1])) * (1.0 + damage_bonus)
+	var base := randf_range(float(dmg[0]), float(dmg[1]))
+	var wd := ability("wave_damage")
+	if not wd.is_empty():
+		base += float(wd.per_wave) * game.current_wave()
+	return base * (1.0 + damage_bonus + kill_bonus())
 
 
 func _attack(e) -> void:
@@ -176,6 +201,7 @@ func _attack(e) -> void:
 			current = next
 
 
+## Treffer-Effekte. Jede Fähigkeit mit "chance" löst nur mit dieser Wahrscheinlichkeit aus.
 func _hit(e, dmg: float) -> void:
 	if e.dead:
 		return
@@ -183,24 +209,47 @@ func _hit(e, dmg: float) -> void:
 		var ab := ability("air_bonus")
 		if not ab.is_empty():
 			dmg *= float(ab.multiplier)
-	var slow := ability("slow")
-	if not slow.is_empty():
-		e.apply_slow(float(slow.factor), float(slow.duration))
-	var poison := ability("poison")
-	if not poison.is_empty():
-		e.apply_poison(float(poison.dps), float(poison.duration))
-	var armor := ability("armor_reduce")
-	if not armor.is_empty():
-		e.apply_armor_reduction(float(armor.amount), float(armor.duration))
-	var stun := ability("stun")
-	if not stun.is_empty() and randf() < float(stun.chance):
-		e.apply_stun(float(stun.duration))
-	var gold := ability("gold_on_hit")
-	if not gold.is_empty() and randf() < float(gold.chance):
-		game.add_gold(int(gold.gold))
-	total_damage += e.take_damage(dmg)
+	for ab in abilities():
+		var type := str(ab.get("type", ""))
+		if not type in ON_HIT:
+			continue
+		if ab.has("chance") and randf() >= float(ab.chance):
+			continue
+		match type:
+			"slow":
+				e.apply_slow(float(ab.factor), float(ab.duration))
+			"poison":
+				e.apply_poison(float(ab.dps), float(ab.duration))
+			"armor_reduce":
+				e.apply_armor_reduction(float(ab.amount), float(ab.duration))
+			"stun":
+				e.apply_stun(float(ab.duration))
+			"gold_on_hit":
+				game.add_gold(int(ab.get("gold", 0)) + floori(float(ab.get("gold_per_wave", 0)) * game.current_wave()))
+			"stacking_damage":
+				dmg += e.add_stack(float(ab.per_hit), float(ab.duration))
+			"nova":
+				_nova(e, ab)
+	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
 		kills += 1
+
+
+const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
+
+
+## Zauber um das Ziel herum (Frostnova, Blitz, Messerfächer …).
+func _nova(target, ab: Dictionary) -> void:
+	var center: Vector2 = target.pos
+	for other in game.enemies_in_radius(center, float(ab.get("radius", 2.0))):
+		if not can_target(other):
+			continue
+		if ab.has("slow"):
+			other.apply_slow(float(ab.slow), 3.0)
+		total_damage += other.take_damage(float(ab.damage) * (1.0 + kill_bonus()), "spells")
+		if other.dead:
+			kills += 1
+	game.add_beam(Board3D.to_3d(center, 0.1), Board3D.to_3d(center, 1.5), Color.WHITE)
 
 
 func info_text() -> String:
@@ -209,10 +258,12 @@ func info_text() -> String:
 		lines.append("Falle – Gegner laufen darüber")
 	if can_attack():
 		var dmg: Array = stats.get("damage", [0, 0])
-		var bonus := "  (+%d%% Aura)" % int(damage_bonus * 100) if damage_bonus > 0 else ""
+		var bonus := "  (+%d%% Aura/Rang)" % int((damage_bonus + kill_bonus()) * 100) if damage_bonus + kill_bonus() > 0 else ""
 		lines.append("Schaden: %d–%d%s" % [int(dmg[0]), int(dmg[1]), bonus])
 		lines.append("Abklingzeit: %.2fs%s" % [cooldown(), "  (+%d%% Aura)" % int(speed_bonus * 100) if speed_bonus > 0 else ""])
-		lines.append("Reichweite: %.1f Felder" % range_cells())
+		lines.append("Reichweite: %.1f Felder%s" % [range_cells(), " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
+		if damage_type() != "":
+			lines.append("Schadensart: " + Database.DAMAGE_TYPE_NAMES.get(damage_type(), damage_type()))
 	match target_mode():
 		"air":
 			lines.append("Wirkt nur gegen Luft")
@@ -259,10 +310,8 @@ func _build_visual() -> void:
 
 	var category := str(def.get("category", "gem"))
 	_gem = null
-	var model := ModelLoader.instantiate(str(stats.get("model", def.get("model", ""))), float(stats.get("model_scale", def.get("model_scale", 1.0))))
-	if model != null:
-		_visual.add_child(model)
-	elif is_trap():
+	var model_path := str(stats.get("model", def.get("model", "")))
+	if is_trap():
 		var plate := MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
 		cyl.top_radius = 0.42
@@ -273,31 +322,49 @@ func _build_visual() -> void:
 		plate.material_override = mat
 		plate.position.y = 0.04
 		_visual.add_child(plate)
+		if model_path != "":
+			_gem = ModelLoader.instantiate(model_path, float(stats.get("model_scale", def.get("model_scale", 0.35))), mat)
+			if _gem:
+				_gem.position.y = 0.08
+				_visual.add_child(_gem)
+		_finish_visual()
+		return
+	var base := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.radial_segments = 6
+	if category == "special":
+		cyl.top_radius = 0.34
+		cyl.bottom_radius = 0.42
+		cyl.height = 0.35
 	else:
-		var base := MeshInstance3D.new()
-		var cyl := CylinderMesh.new()
-		cyl.radial_segments = 6
-		if category == "special":
-			cyl.top_radius = 0.3
-			cyl.bottom_radius = 0.4
-			cyl.height = 0.7
-			base.material_override = mat
-		else:
-			cyl.top_radius = 0.25
-			cyl.bottom_radius = 0.35
-			cyl.height = 0.3
-			base.material_override = Board3D.make_material(Color("4a4a52"))
-		base.mesh = cyl
-		base.position.y = cyl.height / 2.0
-		_visual.add_child(base)
-		_gem = MeshInstance3D.new()
-		_gem.mesh = _gem_mesh()
-		_gem.material_override = mat
-		var s := 0.3 + 0.04 * tier
-		_gem.scale = Vector3(s, s * 1.4, s)
-		_gem.position.y = cyl.height + s * 1.4 + 0.05
+		cyl.top_radius = 0.28
+		cyl.bottom_radius = 0.36
+		cyl.height = 0.2
+	base.material_override = Board3D.make_material(Color("4a4a52"))
+	base.mesh = cyl
+	base.position.y = cyl.height / 2.0
+	_visual.add_child(base)
+	var default_size := (0.75 + 0.05 * tier) if category == "special" else (0.5 + 0.06 * tier)
+	var size := float(stats.get("model_scale", def.get("model_scale", default_size)))
+	if model_path != "":
+		_gem = ModelLoader.instantiate(model_path, size, mat)
+		if _gem:
+			_gem.position.y = cyl.height
+			_visual.add_child(_gem)
+	if _gem == null:
+		var oct := MeshInstance3D.new()
+		oct.mesh = _gem_mesh()
+		oct.material_override = mat
+		var s := size * 0.45
+		oct.scale = Vector3(s, s * 1.4, s)
+		oct.position.y = cyl.height + s * 1.4 + 0.05
+		_gem = Node3D.new()
+		_gem.add_child(oct)
 		_visual.add_child(_gem)
+	_finish_visual()
 
+
+func _finish_visual() -> void:
 	_new_ring = _ring(0.48, 0.05, Color(1, 1, 1, 0.9))
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)
@@ -323,7 +390,7 @@ func _ring(radius: float, thickness: float, col: Color) -> MeshInstance3D:
 func _animate(delta: float) -> void:
 	_time += delta
 	if _gem:
-		_gem.rotation.y += delta * 0.8
+		_gem.rotation.y += delta * 0.5
 	if _new_ring:
 		_new_ring.visible = is_new
 		if is_new:

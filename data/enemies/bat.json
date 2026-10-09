@@ -1,0 +1,13 @@
+{
+	"id": "bat",
+	"name": "Bat",
+	"hp": 84,
+	"speed": 1.8,
+	"armor": 12,
+	"armor_type": "unarmored",
+	"bounty": 2,
+	"damage": 2,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

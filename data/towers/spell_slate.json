@@ -1,0 +1,79 @@
+{
+	"id": "spell_slate",
+	"name": "Zauberplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#7fe0e8",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "aquamarine",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "diamond",
+					"tier": 1
+				},
+				{
+					"tower": "amethyst",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Zauberplatte",
+			"damage": [
+				30,
+				40
+			],
+			"range": 0.86,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 100.0,
+					"radius": 1.95,
+					"slow": 0.2
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 80.0,
+					"radius": 2.34
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 85.0,
+					"radius": 0.78
+				},
+				{
+					"type": "nova",
+					"chance": 0.05,
+					"damage": 125.0,
+					"radius": 2.34
+				},
+				{
+					"type": "armor_reduce",
+					"chance": 0.05,
+					"amount": 5.0,
+					"duration": 15.0
+				},
+				{
+					"type": "gold_on_hit",
+					"chance": 0.05,
+					"gold": 3
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

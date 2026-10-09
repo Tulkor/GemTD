@@ -1,0 +1,13 @@
+{
+	"id": "extreme_red_panda",
+	"name": "Extreme Red Panda",
+	"hp": 12750,
+	"speed": 3.59,
+	"armor": 23,
+	"armor_type": "medium",
+	"bounty": 8,
+	"damage": 8,
+	"flying": false,
+	"color": "#a0522d",
+	"size": 1.0
+}

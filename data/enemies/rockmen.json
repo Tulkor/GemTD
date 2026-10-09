@@ -1,0 +1,13 @@
+{
+	"id": "rockmen",
+	"name": "Rockmen",
+	"hp": 90,
+	"speed": 2.15,
+	"armor": 12,
+	"armor_type": "fortified",
+	"bounty": 2,
+	"damage": 2,
+	"flying": false,
+	"color": "#95a5a6",
+	"size": 1.0
+}

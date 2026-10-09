@@ -1,0 +1,13 @@
+{
+	"id": "extreme_dead_miner",
+	"name": "Extreme Dead Miner",
+	"hp": 4300,
+	"speed": 3.44,
+	"armor": 19,
+	"armor_type": "small",
+	"bounty": 6,
+	"damage": 6,
+	"flying": false,
+	"color": "#6c3483",
+	"size": 1.0
+}

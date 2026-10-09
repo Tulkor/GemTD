@@ -1,0 +1,48 @@
+{
+	"id": "viper_slate",
+	"name": "Viperplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#4caf50",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "hero",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "damage_slate",
+			"tier": 0
+		},
+		{
+			"tower": "range_slate",
+			"tier": 0
+		}
+	],
+	"description": "Entsteht aus zwei Fallen auf dem Feld.",
+	"tiers": [
+		{
+			"name": "Viperplatte",
+			"damage": [
+				30,
+				30
+			],
+			"range": 5.86,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "burn_aura",
+					"radius": 3.12,
+					"dps": 50.0
+				},
+				{
+					"type": "damage_aura",
+					"radius": 3.12,
+					"bonus": 0.1
+				}
+			]
+		}
+	]
+}

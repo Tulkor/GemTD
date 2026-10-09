@@ -1,0 +1,13 @@
+{
+	"id": "extreme_swamp_lord",
+	"name": "Extreme Swamp Lord",
+	"hp": 3150,
+	"speed": 3.12,
+	"armor": 19,
+	"armor_type": "large",
+	"bounty": 6,
+	"damage": 6,
+	"flying": false,
+	"color": "#a0522d",
+	"size": 1.0
+}

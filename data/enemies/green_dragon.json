@@ -1,0 +1,13 @@
+{
+	"id": "green_dragon",
+	"name": "Green Dragon",
+	"hp": 540,
+	"speed": 1.95,
+	"armor": 13,
+	"armor_type": "unarmored",
+	"bounty": 4,
+	"damage": 4,
+	"flying": true,
+	"color": "#a569bd",
+	"size": 1.0
+}

@@ -1,0 +1,51 @@
+{
+	"id": "range_slate",
+	"name": "Reichweitenplatte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#ff7a59",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "hero",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "ruby",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "topaz",
+					"tier": 1
+				},
+				{
+					"tower": "amethyst",
+					"tier": 1
+				},
+				{
+					"tower": "ruby",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Reichweitenplatte",
+			"damage": [
+				15,
+				15
+			],
+			"range": 4.69,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

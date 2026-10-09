@@ -1,0 +1,84 @@
+{
+	"id": "star_ruby",
+	"name": "Sternrubin",
+	"category": "special",
+	"color": "#ff4f6d",
+	"model": "res://assets/models/crystals/crystal_15.glb",
+	"damage_type": "hero",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Sternrubin",
+			"damage": [
+				0,
+				0
+			],
+			"range": 0.0,
+			"cooldown": 0.0,
+			"abilities": [
+				{
+					"type": "burn_aura",
+					"radius": 2.07,
+					"dps": 40.0
+				}
+			],
+			"targets": "both"
+		},
+		{
+			"name": "Blutstern",
+			"damage": [
+				0,
+				0
+			],
+			"range": 0.0,
+			"cooldown": 0.0,
+			"abilities": [
+				{
+					"type": "burn_aura",
+					"radius": 3.91,
+					"dps": 50.0
+				}
+			],
+			"targets": "both"
+		},
+		{
+			"name": "Feuerstern",
+			"damage": [
+				65,
+				65
+			],
+			"range": 4.69,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "ruby",
+			"tier": 1
+		},
+		{
+			"tower": "amethyst",
+			"tier": 0
+		},
+		{
+			"tower": "ruby",
+			"tier": 0
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 30,
+			"recipe": []
+		},
+		{
+			"cost": 290,
+			"recipe": []
+		}
+	]
+}

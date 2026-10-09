@@ -1,0 +1,48 @@
+{
+	"id": "opal_vein_slate",
+	"name": "Opalader-Platte",
+	"category": "special",
+	"kind": "trap",
+	"color": "#f7d9bd",
+	"model": "res://assets/models/crystals/crystal_03.glb",
+	"damage_type": "magic",
+	"targets": "ground",
+	"recipe": [
+		{
+			"tower": "opal",
+			"tier": 2
+		},
+		{
+			"any_of": [
+				{
+					"tower": "topaz",
+					"tier": 1
+				},
+				{
+					"tower": "ruby",
+					"tier": 1
+				}
+			]
+		}
+	],
+	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
+	"tiers": [
+		{
+			"name": "Opalader-Platte",
+			"damage": [
+				80,
+				80
+			],
+			"range": 1.02,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 5.47,
+					"bonus": 0.1
+				}
+			]
+		}
+	],
+	"recipe_same_round": true
+}

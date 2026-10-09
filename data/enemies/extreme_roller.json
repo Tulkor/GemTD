@@ -1,0 +1,13 @@
+{
+	"id": "extreme_roller",
+	"name": "Extreme Roller",
+	"hp": 60000,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "small",
+	"bounty": 20,
+	"damage": 20,
+	"flying": false,
+	"color": "#c0392b",
+	"size": 1.0
+}

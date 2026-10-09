@@ -1,0 +1,13 @@
+{
+	"id": "extreme_mingo",
+	"name": "Extreme Mingo",
+	"hp": 45000,
+	"speed": 4.08,
+	"armor": 35,
+	"armor_type": "unarmored",
+	"bounty": 16,
+	"damage": 16,
+	"flying": false,
+	"color": "#6c3483",
+	"size": 1.0
+}

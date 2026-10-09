@@ -1,0 +1,13 @@
+{
+	"id": "extreme_warlock_orc",
+	"name": "Extreme Warlock Orc",
+	"hp": 14500,
+	"speed": 3.63,
+	"armor": 23,
+	"armor_type": "small",
+	"bounty": 9,
+	"damage": 9,
+	"flying": false,
+	"color": "#6c3483",
+	"size": 1.0
+}

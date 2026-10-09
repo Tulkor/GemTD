@@ -1,0 +1,13 @@
+{
+	"id": "greeny",
+	"name": "Greeny",
+	"hp": 178,
+	"speed": 2.23,
+	"armor": 12,
+	"armor_type": "unarmored",
+	"bounty": 2,
+	"damage": 2,
+	"flying": false,
+	"color": "#8e44ad",
+	"size": 1.0
+}

@@ -1,0 +1,13 @@
+{
+	"id": "long_spider",
+	"name": "Long spider",
+	"hp": 570,
+	"speed": 2.3,
+	"armor": 15,
+	"armor_type": "normal",
+	"bounty": 4,
+	"damage": 4,
+	"flying": false,
+	"color": "#6c3483",
+	"size": 1.0
+}

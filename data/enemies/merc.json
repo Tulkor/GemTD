@@ -1,0 +1,13 @@
+{
+	"id": "merc",
+	"name": "Merc",
+	"hp": 470,
+	"speed": 2.23,
+	"armor": 15,
+	"armor_type": "hero",
+	"bounty": 3,
+	"damage": 3,
+	"flying": false,
+	"color": "#d35400",
+	"size": 1.0
+}

@@ -3,12 +3,75 @@
 	"name": "Silber",
 	"category": "special",
 	"color": "#c8d0d8",
+	"model": "res://assets/models/crystals/crystal_09.glb",
+	"damage_type": "spells",
 	"targets": "both",
-	"recipe": [
+	"tiers": [
 		{
-			"tower": "topaz",
-			"tier": 0
+			"name": "Silber",
+			"damage": [
+				20,
+				21
+			],
+			"range": 4.3,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.95,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 5.0
+				}
+			]
 		},
+		{
+			"name": "Sterlingsilber",
+			"damage": [
+				40,
+				40
+			],
+			"range": 5.08,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.95,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 5.0
+				}
+			]
+		},
+		{
+			"name": "Silberritter",
+			"damage": [
+				150,
+				150
+			],
+			"range": 5.86,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.95,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.2,
+					"duration": 5.0
+				}
+			]
+		}
+	],
+	"recipe": [
 		{
 			"tower": "diamond",
 			"tier": 0
@@ -16,28 +79,20 @@
 		{
 			"tower": "sapphire",
 			"tier": 0
+		},
+		{
+			"tower": "topaz",
+			"tier": 0
 		}
 	],
-	"tiers": [
+	"upgrades": [
 		{
-			"damage": [
-				20,
-				30
-			],
-			"range": 3.5,
-			"cooldown": 0.8,
-			"abilities": [
-				{
-					"type": "splash",
-					"radius": 1.0,
-					"factor": 0.5
-				},
-				{
-					"type": "slow",
-					"factor": 0.3,
-					"duration": 2.0
-				}
-			]
+			"cost": 25,
+			"recipe": []
+		},
+		{
+			"cost": 290,
+			"recipe": []
 		}
 	]
 }

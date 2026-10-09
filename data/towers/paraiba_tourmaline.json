@@ -1,0 +1,83 @@
+{
+	"id": "paraiba_tourmaline",
+	"name": "Paraiba-Turmalin",
+	"category": "special",
+	"color": "#22d3ee",
+	"model": "res://assets/models/crystals/crystal_21.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Paraiba-Turmalin",
+			"damage": [
+				10,
+				400
+			],
+			"range": 6.64,
+			"cooldown": 0.75,
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 4.69,
+					"amount": 4.0,
+					"targets": "ground"
+				},
+				{
+					"type": "nova",
+					"chance": 0.2,
+					"damage": 250.0,
+					"radius": 1.95,
+					"slow": 0.2
+				}
+			]
+		},
+		{
+			"name": "Paraiba-Turmalin-Facette",
+			"damage": [
+				30,
+				420
+			],
+			"range": 6.84,
+			"cooldown": 0.75,
+			"abilities": [
+				{
+					"type": "armor_aura",
+					"radius": 5.08,
+					"amount": 6.0,
+					"targets": "ground"
+				},
+				{
+					"type": "nova",
+					"chance": 0.2,
+					"damage": 350.0,
+					"radius": 1.95,
+					"slow": 0.2
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "aquamarine",
+			"tier": 4
+		},
+		{
+			"tower": "opal",
+			"tier": 3
+		},
+		{
+			"tower": "aquamarine",
+			"tier": 1
+		},
+		{
+			"tower": "emerald",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 275,
+			"recipe": []
+		}
+	]
+}

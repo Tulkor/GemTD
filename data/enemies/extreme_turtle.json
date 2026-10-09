@@ -1,0 +1,13 @@
+{
+	"id": "extreme_turtle",
+	"name": "Extreme Turtle",
+	"hp": 9000,
+	"speed": 3.52,
+	"armor": 19,
+	"armor_type": "large",
+	"bounty": 8,
+	"damage": 8,
+	"flying": false,
+	"color": "#c0392b",
+	"size": 1.0
+}

@@ -1,0 +1,13 @@
+{
+	"id": "extreme_tauren_chief",
+	"name": "Extreme Tauren Chief",
+	"hp": 23000,
+	"speed": 3.79,
+	"armor": 23,
+	"armor_type": "small",
+	"bounty": 10,
+	"damage": 10,
+	"flying": false,
+	"color": "#2c3e50",
+	"size": 1.0
+}

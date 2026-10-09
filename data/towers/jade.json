@@ -1,0 +1,114 @@
+{
+	"id": "jade",
+	"name": "Jade",
+	"category": "special",
+	"color": "#3fae6a",
+	"model": "res://assets/models/crystals/crystal_17.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"tiers": [
+		{
+			"name": "Jade",
+			"damage": [
+				30,
+				35
+			],
+			"range": 6.25,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 5.0,
+					"duration": 2.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 2.0
+				}
+			]
+		},
+		{
+			"name": "China-Jade",
+			"damage": [
+				50,
+				50
+			],
+			"range": 6.25,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 10.0,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 3.0
+				}
+			]
+		},
+		{
+			"name": "Glücks-China-Jade",
+			"damage": [
+				55,
+				55
+			],
+			"range": 6.64,
+			"cooldown": 0.35,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 10.0,
+					"duration": 4.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 4.0
+				},
+				{
+					"type": "gold_on_hit",
+					"chance": 0.01,
+					"gold": 0,
+					"gold_per_wave": 0.5
+				},
+				{
+					"type": "stun",
+					"chance": 0.01,
+					"duration": 2.0
+				},
+				{
+					"type": "crit",
+					"chance": 0.05,
+					"multiplier": 4.0
+				}
+			]
+		}
+	],
+	"recipe": [
+		{
+			"tower": "emerald",
+			"tier": 2
+		},
+		{
+			"tower": "opal",
+			"tier": 2
+		},
+		{
+			"tower": "sapphire",
+			"tier": 1
+		}
+	],
+	"upgrades": [
+		{
+			"cost": 45,
+			"recipe": []
+		},
+		{
+			"cost": 250,
+			"recipe": []
+		}
+	]
+}

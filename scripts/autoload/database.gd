@@ -8,7 +8,9 @@ extends Node
 
 const RES_DATA := "res://data/"
 const USER_DATA := "user://data/"
-const TIER_NAMES := ["Splitter", "Fehlerhafter", "Normaler", "Makelloser", "Perfekter", "Großer"]
+const TIER_NAMES := ["Splitter", "Fehlerhafter", "Normaler", "Makelloser", "Perfekter", "Großartiger"]
+const DAMAGE_TYPE_NAMES := {"pierce": "Durchbohrend", "magic": "Magie", "normal": "Normal", "siege": "Belagerung",
+		"hero": "Held", "spells": "Zauber", "chaos": "Chaos"}
 
 var towers: Dictionary = {}
 var enemies: Dictionary = {}
@@ -96,6 +98,13 @@ func list_maps() -> Array:
 	var list := by_id.values()
 	list.sort_custom(func(a, b): return a.name < b.name)
 	return list
+
+
+## Schadensfaktor Schadensart gegen Rüstungsart, 1.0 wenn nichts eingetragen ist.
+func damage_factor(damage_type: String, armor_type: String) -> float:
+	if damage_type == "" or armor_type == "":
+		return 1.0
+	return float(balance.get("damage_table", {}).get(damage_type, {}).get(armor_type, 1.0))
 
 
 # --- Tower -------------------------------------------------------------------

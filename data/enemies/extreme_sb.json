@@ -1,0 +1,13 @@
+{
+	"id": "extreme_sb",
+	"name": "Extreme Sb",
+	"hp": 6300,
+	"speed": 3.44,
+	"armor": 19,
+	"armor_type": "fortified",
+	"bounty": 7,
+	"damage": 7,
+	"flying": false,
+	"color": "#27ae60",
+	"size": 1.0
+}
