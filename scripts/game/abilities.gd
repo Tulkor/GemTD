@@ -24,7 +24,7 @@ const SCHEMA := {
 }
 
 const PARAM_LABELS := {
-	"radius": "Radius (Felder)",
+	"radius": "Radius (Towerbreiten)",
 	"factor": "Faktor",
 	"duration": "Dauer (s)",
 	"dps": "Schaden/s",

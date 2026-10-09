@@ -2,6 +2,10 @@ class_name MapData
 extends RefCounted
 ## Datenmodell einer Map, gespeichert als JSON (siehe data/maps/).
 ##
+## Ein Feld ist eine halbe Towerbreite (Board3D.CELL), ein Tower belegt 2×2 Felder.
+## Dadurch lassen sich Tower um eine halbe Breite versetzen und Gegner passen durch Lücken von einem Feld.
+## Maps im alten Format (format 1, ein Feld = ein Tower) werden beim Laden verdoppelt.
+##
 ## Kacheln (eine Zeile pro String in "tiles"):
 ##   "."  Boden: begehbar und bebaubar
 ##   "#"  blockiert: weder begehbar noch bebaubar
@@ -12,6 +16,7 @@ extends RefCounted
 const FLOOR := "."
 const BLOCKED := "#"
 const WALK_ONLY := "_"
+const FORMAT := 2
 
 var id := "neue_map"
 var name := "Neue Map"
@@ -21,7 +26,7 @@ var rows := PackedStringArray()
 var spawn := Vector2i(1, 1)
 var goal := Vector2i(2, 2)
 var checkpoints: Array[Vector2i] = []
-var marker_radius := 1
+var marker_radius := 3
 var wave_set := "classic"
 var lives := 50
 var start_gold := 0
@@ -35,8 +40,8 @@ static func create_empty(w: int, h: int) -> MapData:
 	m.height = h
 	for y in h:
 		m.rows.append(FLOOR.repeat(w))
-	m.spawn = Vector2i(2, 2)
-	m.goal = Vector2i(w - 3, h - 3)
+	m.spawn = Vector2i(4, 4)
+	m.goal = Vector2i(w - 5, h - 5)
 	return m
 
 
@@ -66,7 +71,28 @@ static func from_dict(d: Dictionary) -> MapData:
 	m.lives = int(d.get("lives", 50))
 	m.start_gold = int(d.get("start_gold", 0))
 	m.variance = d.get("variance", {"random_rocks": 0, "seed": -1})
+	if int(d.get("format", 1)) < FORMAT:
+		m._upscale()
 	return m
+
+
+## Altes Format: jedes Feld wird zu 2×2 Feldern, Sperrzonen wachsen mit.
+func _upscale() -> void:
+	var new_rows := PackedStringArray()
+	for row in rows:
+		var wide := ""
+		for ch in row:
+			wide += ch + ch
+		new_rows.append(wide)
+		new_rows.append(wide)
+	rows = new_rows
+	width *= 2
+	height *= 2
+	spawn *= 2
+	goal *= 2
+	for i in checkpoints.size():
+		checkpoints[i] *= 2
+	marker_radius = marker_radius * 2 + 1
 
 
 func to_dict() -> Dictionary:
@@ -74,6 +100,7 @@ func to_dict() -> Dictionary:
 	for c in checkpoints:
 		cps.append([c.x, c.y])
 	return {
+		"format": FORMAT,
 		"id": id,
 		"name": name,
 		"width": width,

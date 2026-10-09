@@ -26,6 +26,11 @@ func set_solid(c: Vector2i, solid: bool) -> void:
 	astar.set_point_solid(c, solid or not map.is_walkable(c))
 
 
+func set_solid_cells(cells: Array[Vector2i], solid: bool) -> void:
+	for c in cells:
+		set_solid(c, solid)
+
+
 ## Kompletter Weg als Liste von Feldern. Leer, wenn irgendein Abschnitt blockiert ist.
 func compute_path() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
@@ -49,9 +54,20 @@ func compute_path() -> Array[Vector2i]:
 
 ## Würde ein Hindernis auf c den Weg komplett versperren?
 func would_block(c: Vector2i) -> bool:
-	if astar.is_point_solid(c):
+	var cells: Array[Vector2i] = [c]
+	return would_block_cells(cells)
+
+
+## Würden Hindernisse auf allen diesen Feldern (z. B. ein 2×2-Tower) den Weg versperren?
+func would_block_cells(cells: Array[Vector2i]) -> bool:
+	var changed: Array[Vector2i] = []
+	for c in cells:
+		if astar.is_in_boundsv(c) and not astar.is_point_solid(c):
+			astar.set_point_solid(c, true)
+			changed.append(c)
+	if changed.is_empty():
 		return false
-	astar.set_point_solid(c, true)
 	var blocked := compute_path().is_empty()
-	astar.set_point_solid(c, false)
+	for c in changed:
+		astar.set_point_solid(c, false)
 	return blocked

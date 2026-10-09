@@ -17,6 +17,8 @@ Kamera: WASD/Pfeile verschieben, Q/E oder mittlere Maustaste drehen, Mausrad zoo
 
 **Spielablauf wie in Gem TD:**
 1. Bauphase: 5 zufällige Gems setzen. Der Weg kann nie ganz blockiert werden.
+   Das Raster ist halb so groß wie ein Tower: Tower belegen 2×2 Felder, lassen sich also um eine
+   halbe Breite versetzen, und Gegner passen durch Lücken von einem Feld (wie in WC3).
 2. Einen der 5 neuen Gems anklicken und rechts wählen: behalten, 2 gleiche → +1 Qualität,
    4 gleiche → +2 Qualitäten (über „Großartig“ hinaus entsteht der Stein von Bryvx),
    oder ein Spezial-Rezept. Die anderen 4 werden zu Steinen.
@@ -44,7 +46,7 @@ Unter „Debug: nächster Gem“ lässt sich jeder Tower in jeder Stufe direkt s
 Vereinfachungen gegenüber WC3 (stehen auch in den Tower-Dateien als Fähigkeiten):
 Zauber wie Frostnova, Blitz oder Messerfächer sind als „nova“ (Flächenschaden mit Chance) umgesetzt;
 die Teleport-Fähigkeit der Platten, das „Swap“ des Schwarzen Opals und Extra Chance fehlen noch;
-Gems belegen 1 Feld (in WC3 2×2 Kacheln, deshalb gilt: 128 WC3-Einheiten = 1 Feld).
+Ein Tower ist 128 WC3-Einheiten breit und belegt 2×2 Felder; ein Feld sind 64 WC3-Einheiten.
 
 ## Ordnerstruktur
 
@@ -73,17 +75,19 @@ Dateien unter `user://data/<typ>/` werden zusätzlich geladen und überschreiben
 
 ```json
 {
-  "id": "classic", "name": "Klassisch", "width": 37, "height": 37,
+  "format": 2, "id": "classic", "name": "Klassisch", "width": 74, "height": 74,
   "tiles": ["#####…", "#....…", …],
-  "spawn": [4, 4], "goal": [32, 32], "checkpoints": [[4, 18], [32, 18], …],
-  "marker_radius": 1, "waves": "classic", "lives": 50, "start_gold": 0,
+  "spawn": [8, 8], "goal": [65, 65], "checkpoints": [[8, 36], [65, 36], …],
+  "marker_radius": 3, "waves": "classic", "lives": 50, "start_gold": 0,
   "variance": {"random_rocks": 25, "seed": -1}
 }
 ```
+Alle Angaben in Feldern (halbe Towerbreite). Maps ohne `"format": 2` stammen aus der Zeit, als ein Feld
+ein Tower war, und werden beim Laden automatisch verdoppelt.
 Kacheln: `.` Boden (bebaubar), `#` blockiert, `_` nur Weg. Um Spawn, Ziel und Checkpoints ist im Umkreis
 `marker_radius` nicht bebaubar. `variance.random_rocks` setzt bei jedem Start zufällig Steine.
 
-**Map-Editor:** Kacheln malen (Linksklick, ziehen), Rechtsklick radiert. Spawn/Ziel/Checkpoints per Werkzeug.
+**Map-Editor:** Kacheln malen (Linksklick, ziehen, Pinselgröße einstellbar), Rechtsklick radiert. Spawn/Ziel/Checkpoints per Werkzeug.
 Der Weg wird live angezeigt, *Testen* startet das Spiel mit der Map.
 
 ## Tower-Format (`data/towers/*.json`)
@@ -106,7 +110,7 @@ Der Weg wird live angezeigt, *Testen* startet das Spiel mit der Map.
   ]
 }
 ```
-Reichweite/Radien in Feldern, Abklingzeit in Sekunden. Optional pro Stufe: `range_air`, `model`, `model_scale`.
+Reichweite/Radien in Towerbreiten (1 = 128 WC3-Einheiten), Abklingzeit in Sekunden. Optional pro Stufe: `range_air`, `model`, `model_scale`.
 Fähigkeiten (`scripts/game/abilities.gd`): splash, slow, poison, crit, multishot, bounce, armor_reduce, stun,
 air_bonus, gold_on_hit, nova, stacking_damage, wave_damage, speed_aura, damage_aura, burn_aura, slow_aura, armor_aura.
 Jede Treffer-Fähigkeit kann `"chance"` haben.
@@ -116,7 +120,7 @@ Jede Treffer-Fähigkeit kann `"chance"` haben.
 
 ## Gegner
 
-`data/enemies/*.json`: `hp`, `speed` (Felder/s), `armor`, `armor_type`, `bounty`, `damage` (Leben bei Durchbruch),
+`data/enemies/*.json`: `hp`, `speed` (Towerbreiten/s), `armor`, `armor_type`, `bounty`, `damage` (Leben bei Durchbruch),
 `flying`, `boss`, `color`, `size`, optional `shape` und `model`.
 Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyramide = Massenwelle (`"shape": "pyramid"`).
 

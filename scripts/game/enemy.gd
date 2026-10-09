@@ -2,7 +2,7 @@ class_name Enemy
 extends Node3D
 ## Ein Gegner. Grundwerte aus data/enemies/<id>.json, eine Welle kann sie überschreiben
 ## (hp, speed, armor, bounty, damage).
-## Logische Position `pos` in Feldern (Vector2), die 3D-Position folgt daraus.
+## Logische Position `pos` in Einheiten (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
 const FLY_HEIGHT := 1.4
 
@@ -10,7 +10,7 @@ var game  # game.gd
 var enemy_id := ""
 var max_hp := 10.0
 var hp := 10.0
-var speed := 2.0     ## Felder pro Sekunde
+var speed := 2.0     ## Towerbreiten pro Sekunde
 var armor := 0.0
 var bounty := 1
 var damage := 1      ## Leben, die der Spieler verliert, wenn der Gegner durchkommt
@@ -190,7 +190,8 @@ func _build_visual() -> void:
 	_body_mat.albedo_color = color
 	_body_mat.roughness = 0.6
 	_body = MeshInstance3D.new()
-	var r := 0.26 * size
+	# schmal genug für Lücken von einer halben Towerbreite
+	var r := 0.2 * size
 	var model := ModelLoader.instantiate(str(def_model), def_model_scale * size)
 	if model != null:
 		add_child(model)

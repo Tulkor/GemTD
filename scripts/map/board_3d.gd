@@ -3,7 +3,9 @@ extends Node3D
 ## 3D-Darstellung einer Map: Boden, Mauern, Steine, Wegpunkte, Weg und Hover-Markierung.
 ## Wird vom Spiel und vom Map-Editor benutzt. Tower und Gegner hängen als Kinder darunter.
 ##
-## Koordinaten: 1 Feld = 1 Einheit. Feld (x, y) liegt bei X = x..x+1, Z = y..y+1, Boden bei Y = 0.
+## Koordinaten: 1 Einheit = 1 Towerbreite (128 WC3-Einheiten). Das Raster ist halb so fein:
+## Feld (x, y) liegt bei X = x*CELL..(x+1)*CELL, Z entsprechend, Boden bei Y = 0.
+## Tower und Steine belegen TOWER_CELLS × TOWER_CELLS Felder, angegeben über das Feld oben links (Anker).
 
 const COL_FLOOR_A := Color("2f4a29")
 const COL_FLOOR_B := Color("2a4325")
@@ -22,12 +24,17 @@ const ROCK_MODELS := [
 	"res://assets/models/rocks/rock_large_c.glb",
 ]
 const ROCK_SIZE := 0.95
+## Kantenlänge eines Rasterfelds in Einheiten.
+const CELL := 0.5
+## Ein Tower ist so viele Felder breit und tief.
+const TOWER_CELLS := 2
 
 var map: MapData
 var rocks: Dictionary = {}
 var path_points := PackedVector2Array()
 var path_color := Color(1, 1, 1, 0.6)
-var hover_cell := Vector2i(-1, -1)
+var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
+var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
 var hover_ok := true
 
 var _ground: MultiMeshInstance3D
@@ -41,7 +48,21 @@ var _hover_mat: StandardMaterial3D
 
 
 static func cell_center(c: Vector2i) -> Vector2:
-	return Vector2(c) + Vector2(0.5, 0.5)
+	return (Vector2(c) + Vector2(0.5, 0.5)) * CELL
+
+
+## Mitte eines Towers/Steins mit Anker a.
+static func footprint_center(a: Vector2i, size := TOWER_CELLS) -> Vector2:
+	return (Vector2(a) + Vector2.ONE * size / 2.0) * CELL
+
+
+## Alle Felder, die ein Tower/Stein mit Anker a belegt.
+static func footprint(a: Vector2i, size := TOWER_CELLS) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for dy in size:
+		for dx in size:
+			cells.append(a + Vector2i(dx, dy))
+	return cells
 
 
 static func to_3d(p: Vector2, height := 0.0) -> Vector3:
@@ -59,8 +80,8 @@ static func make_material(col: Color, unshaded := false, transparent := false) -
 
 
 func _ready() -> void:
-	_ground = _multimesh(_box(Vector3(1, 0.1, 1)), true)
-	_walls = _multimesh(_box(Vector3(1, WALL_HEIGHT, 1)), false, COL_WALL)
+	_ground = _multimesh(_box(Vector3(CELL, 0.1, CELL)), true)
+	_walls = _multimesh(_box(Vector3(CELL, WALL_HEIGHT, CELL)), false, COL_WALL)
 	for path in ROCK_MODELS:
 		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE)
 		if m.is_empty():
@@ -73,15 +94,15 @@ func _ready() -> void:
 		_rocks.append(_multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK))
 		_rock_fits.append(Transform3D(Basis(), Vector3(0, ROCK_HEIGHT / 2.0, 0)))
 	var dot := CylinderMesh.new()
-	dot.top_radius = 0.12
-	dot.bottom_radius = 0.12
+	dot.top_radius = 0.08
+	dot.bottom_radius = 0.08
 	dot.height = 0.02
 	dot.radial_segments = 8
 	_path = _multimesh(dot, false, path_color, true)
 	_markers = Node3D.new()
 	add_child(_markers)
 	_hover = MeshInstance3D.new()
-	_hover.mesh = _box(Vector3(1, 0.12, 1))
+	_hover.mesh = _box(Vector3(CELL, 0.12, CELL))
 	_hover_mat = make_material(Color(0, 1, 0, 0.35), true)
 	_hover.material_override = _hover_mat
 	_hover.visible = false
@@ -160,7 +181,7 @@ func refresh_rocks() -> void:
 			var c: Vector2i = buckets[i][j]
 			# leicht gedreht, damit nicht alle Steine gleich aussehen
 			var turn := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 12) * 0.52)
-			var place := Transform3D(turn, to_3d(cell_center(c)))
+			var place := Transform3D(turn, to_3d(footprint_center(c)))
 			mm.set_instance_transform(j, place * _rock_fits[i])
 
 
@@ -179,7 +200,8 @@ func refresh_hover() -> void:
 		return
 	_hover.visible = map != null and map.in_bounds(hover_cell)
 	if _hover.visible:
-		_hover.position = to_3d(cell_center(hover_cell), 0.0)
+		_hover.position = to_3d(footprint_center(hover_cell, hover_size), 0.0)
+		_hover.scale = Vector3(hover_size, 1, hover_size)
 		_hover_mat.albedo_color = Color(0.2, 1, 0.2, 0.4) if hover_ok else Color(1, 0.2, 0.2, 0.4)
 
 
@@ -215,15 +237,31 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 
 ## Feld unter dem Mauszeiger (Strahl von der Kamera auf die Bodenebene).
 func mouse_cell(camera: Camera3D) -> Vector2i:
-	if camera == null:
+	var hit = _mouse_ground(camera)
+	if hit == null:
 		return Vector2i(-1, -1)
+	return Vector2i(floori(hit.x / CELL), floori(hit.y / CELL))
+
+
+## Anker für etwas mit size × size Feldern, dessen Mitte möglichst nah am Mauszeiger liegt.
+func mouse_anchor(camera: Camera3D, size := TOWER_CELLS) -> Vector2i:
+	var hit = _mouse_ground(camera)
+	if hit == null:
+		return Vector2i(-1, -1)
+	return Vector2i(roundi(hit.x / CELL - size / 2.0), roundi(hit.y / CELL - size / 2.0))
+
+
+## Schnittpunkt des Mausstrahls mit dem Boden als Vector2 (X, Z) oder null.
+func _mouse_ground(camera: Camera3D):
+	if camera == null:
+		return null
 	var mp := get_viewport().get_mouse_position()
 	var from := camera.project_ray_origin(mp)
 	var dir := camera.project_ray_normal(mp)
 	if absf(dir.y) < 0.0001:
-		return Vector2i(-1, -1)
+		return null
 	var t := -from.y / dir.y
 	if t < 0.0:
-		return Vector2i(-1, -1)
+		return null
 	var hit := from + dir * t
-	return Vector2i(floori(hit.x), floori(hit.z))
+	return Vector2(hit.x, hit.z)

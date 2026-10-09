@@ -21,8 +21,10 @@ var camera_rig: CameraRig
 var effects: Effects
 var hud: Hud
 
-var towers: Dictionary = {}  ## Vector2i -> Tower (auch Fallen)
-var rocks: Dictionary = {}   ## Vector2i -> true
+## Tower und Steine belegen 2×2 Felder und sind über ihr Feld oben links (Anker) gespeichert.
+var towers: Dictionary = {}    ## Anker -> Tower (auch Fallen)
+var rocks: Dictionary = {}     ## Anker -> true
+var occupied: Dictionary = {}  ## jedes belegte Feld -> Anker
 var enemies: Array = []
 var round_towers: Array = []
 var selected: Tower = null
@@ -60,7 +62,7 @@ func _ready() -> void:
 	board.add_child(effects)
 	camera_rig = CameraRig.new()
 	add_child(camera_rig)
-	camera_rig.frame_map(map.width, map.height)
+	camera_rig.frame_map(map.width * Board3D.CELL, map.height * Board3D.CELL)
 
 	hud = Hud.new()
 	add_child(hud)
@@ -109,10 +111,10 @@ func _apply_variance() -> void:
 	for attempt in count * 30:
 		if placed >= count:
 			break
-		var c := Vector2i(vr.randi_range(0, map.width - 1), vr.randi_range(0, map.height - 1))
+		var c := Vector2i(vr.randi_range(0, map.width - 2), vr.randi_range(0, map.height - 2))
 		if can_place(c):
 			rocks[c] = true
-			pathfinder.set_solid(c, true)
+			_occupy(c, true, true)
 			placed += 1
 
 
@@ -136,9 +138,9 @@ func _process(delta: float) -> void:
 
 
 func _update_hover() -> void:
-	var c := board.mouse_cell(camera_rig.camera) if phase == Phase.BUILD else NO_CELL
-	if towers.has(c) or rocks.has(c):
-		c = NO_CELL
+	var c := NO_CELL
+	if phase == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
+		c = board.mouse_anchor(camera_rig.camera)
 	if c != board.hover_cell:
 		board.hover_cell = c
 		board.hover_ok = can_place(c)
@@ -148,7 +150,7 @@ func _update_hover() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_on_click(board.mouse_cell(camera_rig.camera))
+			_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera))
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_select(null)
 	elif event is InputEventKey and event.pressed:
@@ -163,19 +165,37 @@ func _unhandled_input(event: InputEvent) -> void:
 				Engine.time_scale = 4.0
 
 
-func _on_click(c: Vector2i) -> void:
-	if towers.has(c):
-		_select(towers[c])
-	elif rocks.has(c):
-		_select(null, c)
-	elif phase == Phase.BUILD and can_place(c):
-		place_gem(c)
+## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme.
+func _on_click(c: Vector2i, anchor: Vector2i) -> void:
+	var a: Vector2i = occupied.get(c, NO_CELL)
+	if towers.has(a):
+		_select(towers[a])
+	elif rocks.has(a):
+		_select(null, a)
+	elif phase == Phase.BUILD and can_place(anchor):
+		place_gem(anchor)
 	else:
 		_select(null)
 
 
-func can_place(c: Vector2i) -> bool:
-	return map.is_buildable(c) and not towers.has(c) and not rocks.has(c) and not pathfinder.would_block(c)
+## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren?
+func can_place(a: Vector2i) -> bool:
+	var cells := Board3D.footprint(a)
+	for c in cells:
+		if not map.is_buildable(c) or occupied.has(c):
+			return false
+	return not pathfinder.would_block_cells(cells)
+
+
+## Belegt oder räumt die Felder eines Towers/Steins. solid: blockiert er Gegner?
+func _occupy(a: Vector2i, on: bool, solid: bool) -> void:
+	var cells := Board3D.footprint(a)
+	for c in cells:
+		if on:
+			occupied[c] = a
+		else:
+			occupied.erase(c)
+	pathfinder.set_solid_cells(cells, on and solid)
 
 
 func _select(t: Tower, rock := NO_CELL) -> void:
@@ -224,7 +244,7 @@ func place_gem(c: Vector2i) -> Tower:
 	t.setup(self, c, id, tier)
 	towers[c] = t
 	round_towers.append(t)
-	pathfinder.set_solid(c, not t.is_trap())
+	_occupy(c, true, not t.is_trap())
 	_update_paths()
 	_update_auras()
 	board.hover_ok = false
@@ -246,7 +266,7 @@ func remove_rock(c: Vector2i) -> bool:
 		return false
 	gold -= rock_remove_cost()
 	rocks.erase(c)
-	pathfinder.set_solid(c, false)
+	_occupy(c, false, false)
 	_update_paths()
 	board.refresh_rocks()
 	_select(null)
@@ -400,7 +420,7 @@ func _on_option_chosen(index: int) -> void:
 	t.kills += o.consume.reduce(func(acc, c): return acc + c.kills, 0)
 	t.set_tower(o.id, o.tier)
 	t.set_selected(true)
-	pathfinder.set_solid(t.cell, not t.is_trap())
+	pathfinder.set_solid_cells(Board3D.footprint(t.cell), not t.is_trap())
 	_update_paths()
 	board.refresh_rocks()
 	_update_auras()
@@ -414,7 +434,7 @@ func _on_option_chosen(index: int) -> void:
 func _consume(t: Tower) -> void:
 	if t.is_trap():
 		towers.erase(t.cell)
-		pathfinder.set_solid(t.cell, false)
+		_occupy(t.cell, false, false)
 		t.queue_free()
 	else:
 		_turn_into_rock(t)
@@ -423,7 +443,7 @@ func _consume(t: Tower) -> void:
 func _turn_into_rock(t: Tower) -> void:
 	towers.erase(t.cell)
 	rocks[t.cell] = true
-	pathfinder.set_solid(t.cell, true)
+	_occupy(t.cell, true, true)
 	t.queue_free()
 
 

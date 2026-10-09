@@ -1,7 +1,7 @@
 class_name ModelLoader
 extends RefCounted
 ## Lädt optionale 3D-Modelle für Tower, Gegner und Steine.
-## In den JSON-Daten: "model": "res://assets/models/….glb" und optional "model_scale" (Größe in Feldern).
+## In den JSON-Daten: "model": "res://assets/models/….glb" und optional "model_scale" (Größe in Towerbreiten).
 ## Modelle werden automatisch auf die Größe gebracht (längste Kante = model_scale),
 ## mittig auf den Boden gestellt und können eingefärbt werden.
 ## Fehlt das Modell, zeichnet das Spiel eine eingebaute einfache Form.
@@ -20,7 +20,7 @@ static func _load(path: String) -> PackedScene:
 	return _cache[path]
 
 
-## Modell als Knoten, normalisiert auf `size` Felder. tint != null färbt alle Flächen ein.
+## Modell als Knoten, normalisiert auf `size` Towerbreiten. tint != null färbt alle Flächen ein.
 static func instantiate(path: String, size := 1.0, tint: Material = null) -> Node3D:
 	var scene := _load(path)
 	if scene == null:

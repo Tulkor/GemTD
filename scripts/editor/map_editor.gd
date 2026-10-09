@@ -18,6 +18,7 @@ var board: Board3D
 var camera_rig: CameraRig
 var tool := Tool.BLOCKED
 var painting := 0  ## 0 = nein, 1 = links (Werkzeug), 2 = rechts (Radierer)
+var brush := 2     ## Pinselgröße in Feldern (2 = eine Towerbreite)
 
 var tool_buttons := {}
 var id_edit: LineEdit
@@ -37,7 +38,7 @@ var status_label: Label
 
 
 func _ready() -> void:
-	map = Session.editor_map.duplicate_map() if Session.editor_map != null else MapData.create_empty(30, 30)
+	map = Session.editor_map.duplicate_map() if Session.editor_map != null else MapData.create_empty(60, 60)
 	CameraRig.add_environment(self)
 	board = Board3D.new()
 	board.map = map
@@ -51,7 +52,7 @@ func _ready() -> void:
 
 
 func _layout() -> void:
-	camera_rig.frame_map(map.width, map.height)
+	camera_rig.frame_map(map.width * Board3D.CELL, map.height * Board3D.CELL)
 
 
 # --- Oberfläche --------------------------------------------------------------
@@ -75,6 +76,7 @@ func _build_ui() -> void:
 		b.button_pressed = t == tool
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tool_buttons[t] = b
+	UiUtil.spin(UiUtil.row("Pinsel (Felder)", box, 120), brush, 1, 8, 1, func(v): brush = int(v))
 	UiUtil.button("Checkpoints löschen", box, func():
 		map.checkpoints.clear()
 		_on_map_changed())
@@ -90,8 +92,8 @@ func _build_ui() -> void:
 	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var size_row := UiUtil.row("Größe B×H", box, 120)
-	w_spin = UiUtil.spin(size_row, 30, 5, 200, 1, func(_v): pass)
-	h_spin = UiUtil.spin(size_row, 30, 5, 200, 1, func(_v): pass)
+	w_spin = UiUtil.spin(size_row, 60, 10, 400, 1, func(_v): pass)
+	h_spin = UiUtil.spin(size_row, 60, 10, 400, 1, func(_v): pass)
 	UiUtil.button("Größe übernehmen", box, func():
 		map.resize(int(w_spin.value), int(h_spin.value))
 		_layout()
@@ -105,7 +107,7 @@ func _build_ui() -> void:
 	UiUtil.row("Wellen", box, 120).add_child(wave_option)
 	lives_spin = UiUtil.spin(UiUtil.row("Leben", box, 120), 50, 1, 1000, 1, func(v): map.lives = int(v))
 	gold_spin = UiUtil.spin(UiUtil.row("Startgold", box, 120), 0, 0, 100000, 1, func(v): map.start_gold = int(v))
-	radius_spin = UiUtil.spin(UiUtil.row("Sperrzone um Punkte", box, 120), 1, 0, 5, 1, func(v):
+	radius_spin = UiUtil.spin(UiUtil.row("Sperrzone um Punkte", box, 120), 3, 0, 10, 1, func(v):
 		map.marker_radius = int(v)
 		_on_map_changed())
 
@@ -196,38 +198,49 @@ static func _valid_id(s: String) -> bool:
 
 # --- Malen -------------------------------------------------------------------
 
+func _is_point_tool() -> bool:
+	return tool == Tool.SPAWN or tool == Tool.GOAL or tool == Tool.CHECKPOINT
+
+
+func _process(_delta: float) -> void:
+	var size := 1 if _is_point_tool() else brush
+	var a := board.mouse_cell(camera_rig.camera) if size == 1 else board.mouse_anchor(camera_rig.camera, size)
+	if a != board.hover_cell or size != board.hover_size:
+		board.hover_cell = a
+		board.hover_size = size
+		board.refresh_hover()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed:
 				painting = 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
-				_apply(board.mouse_cell(camera_rig.camera), true)
+				_apply(true)
 			else:
 				painting = 0
 	elif event is InputEventMouseMotion and painting != 0:
-		_apply(board.mouse_cell(camera_rig.camera), false)
+		_apply(false)
 
 
-func _apply(c: Vector2i, is_click: bool) -> void:
-	if not map.in_bounds(c):
-		return
+func _apply(is_click: bool) -> void:
+	var c := board.mouse_cell(camera_rig.camera)
 	if painting == 2:
 		var idx := map.checkpoints.find(c)
 		if idx >= 0 and is_click:
 			map.checkpoints.remove_at(idx)
-		elif map.get_tile(c) != MapData.FLOOR:
-			map.set_tile(c, MapData.FLOOR)
-		else:
+		elif not _paint(MapData.FLOOR):
 			return
 		_on_map_changed()
 		return
 	match tool:
 		Tool.BLOCKED, Tool.WALK_ONLY, Tool.FLOOR:
 			var t: String = [MapData.BLOCKED, MapData.WALK_ONLY, MapData.FLOOR][tool]
-			if map.get_tile(c) == t or c in map.waypoints():
+			if not _paint(t):
 				return
-			map.set_tile(c, t)
 		Tool.SPAWN, Tool.GOAL, Tool.CHECKPOINT:
+			if not map.in_bounds(c):
+				return
 			if not is_click:
 				return
 			if map.get_tile(c) == MapData.BLOCKED:
@@ -243,6 +256,20 @@ func _apply(c: Vector2i, is_click: bool) -> void:
 				else:
 					map.checkpoints.append(c)
 	_on_map_changed()
+
+
+## Malt die Kachel t mit dem Pinsel unter der Maus. Gibt zurück, ob sich etwas geändert hat.
+func _paint(t: String) -> bool:
+	var a := board.mouse_cell(camera_rig.camera) if brush == 1 else board.mouse_anchor(camera_rig.camera, brush)
+	var changed := false
+	for c in Board3D.footprint(a, brush):
+		if not map.in_bounds(c) or map.get_tile(c) == t:
+			continue
+		if t == MapData.BLOCKED and c in map.waypoints():
+			continue
+		map.set_tile(c, t)
+		changed = true
+	return changed
 
 
 func pathfinder_path() -> Array[Vector2i]:

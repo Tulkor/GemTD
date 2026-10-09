@@ -37,6 +37,18 @@ func _ready() -> void:
 	check(pf2.would_block(Vector2i(0, 1)), "letzter Ausgang wird als blockierend erkannt")
 	check(not pf2.would_block(Vector2i(4, 4)), "normales Feld blockiert nicht")
 
+	# Halbes Raster: eine Mauer aus 2×2-Towern mit einer Lücke von einem Feld bleibt passierbar
+	var gap := MapData.create_empty(12, 11)
+	gap.spawn = Vector2i(0, 0)
+	gap.goal = Vector2i(11, 0)
+	gap.marker_radius = 0
+	var pf3 := Pathfinder.new(gap)
+	for y in [0, 2, 4, 7, 9]:
+		pf3.set_solid_cells(Board3D.footprint(Vector2i(5, y)), true)
+	var gap_path := pf3.compute_path()
+	check(not gap_path.is_empty() and Vector2i(5, 6) in gap_path, "Gegner passen durch eine Lücke von einer halben Towerbreite")
+	check(pf3.would_block_cells(Board3D.footprint(Vector2i(4, 5))), "Tower in der Lücke würde blockieren")
+
 	# Editoren laden
 	for scene in [Session.MAP_EDITOR, Session.TOWER_EDITOR, Session.MAIN_MENU]:
 		var inst: Node = load(scene).instantiate()
@@ -60,7 +72,7 @@ func _ready() -> void:
 			tries += 1
 			# nahe am aktuellen Weg bauen, wie ein Spieler
 			var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
-			var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+			var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 			if game.can_place(c):
 				game.place_gem(c)
 				placed += 1
@@ -71,6 +83,7 @@ func _ready() -> void:
 		game._on_option_chosen(0)
 		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
 		check(game.towers.size() == round_i + 1, "nur ein Tower behalten, Rest sind Steine (%d Steine)" % game.rocks.size())
+		check(game.occupied.size() == 4 * (game.towers.size() + game.rocks.size()), "jeder Tower und Stein belegt 2×2 Felder")
 		check(not game.ground_path.is_empty(), "Weg ist noch offen")
 		Engine.time_scale = 8.0
 		var frames := 0
@@ -99,6 +112,8 @@ func _ready() -> void:
 			if game.round_towers.size() == 3: game.debug_tower = "diamond:0"
 			if game.round_towers.size() == 4: game.debug_tower = "sapphire:0"
 			game.place_gem(c)
+			if game.round_towers.size() == 1:
+				check(not game.can_place(c + Vector2i(1, 0)) and not game.can_place(c + Vector2i(1, 1)), "Tower überlappen sich nicht")
 	var labels: Array = game.choice_options(game.round_towers[0]).map(func(o): return o.label)
 	check(labels.size() == 2, "Rubin: Behalten + 2er-Kombination: %s" % [labels])
 	labels = game.choice_options(game.round_towers[2]).map(func(o): return o.label)
@@ -115,7 +130,7 @@ func _ready() -> void:
 	while game.phase == game.Phase.BUILD and tries2 < 5000:
 		tries2 += 1
 		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
-		var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 		if game.can_place(c):
 			game.debug_tower = plan[game.round_towers.size()]
 			game.place_gem(c)
@@ -142,7 +157,7 @@ func _ready() -> void:
 	while game.phase == game.Phase.BUILD and tries2 < 5000:
 		tries2 += 1
 		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
-		var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 		if game.can_place(c):
 			game.debug_tower = "topaz:4"
 			game.place_gem(c)

@@ -1,7 +1,8 @@
 class_name Tower
 extends Node3D
 ## Ein Tower (oder eine Falle) auf dem Feld. Alle Werte kommen aus data/towers/<id>.json.
-## Logische Position `pos` in Feldern (Vector2), die 3D-Position folgt daraus.
+## cell ist das Feld oben links der 2×2 belegten Felder. Logische Position `pos` in Einheiten
+## (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
 var game  # game.gd
 var cell := Vector2i.ZERO
@@ -33,7 +34,7 @@ static var _octahedron: ArrayMesh
 func setup(g, c: Vector2i, id: String, t: int) -> void:
 	game = g
 	cell = c
-	pos = Board3D.cell_center(c)
+	pos = Board3D.footprint_center(c)
 	position = Board3D.to_3d(pos)
 	set_tower(id, t)
 
@@ -261,7 +262,7 @@ func info_text() -> String:
 		var bonus := "  (+%d%% Aura/Rang)" % int((damage_bonus + kill_bonus()) * 100) if damage_bonus + kill_bonus() > 0 else ""
 		lines.append("Schaden: %d–%d%s" % [int(dmg[0]), int(dmg[1]), bonus])
 		lines.append("Abklingzeit: %.2fs%s" % [cooldown(), "  (+%d%% Aura)" % int(speed_bonus * 100) if speed_bonus > 0 else ""])
-		lines.append("Reichweite: %.1f Felder%s" % [range_cells(), " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
+		lines.append("Reichweite: %.1f Towerbreiten%s" % [range_cells(), " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
 		if damage_type() != "":
 			lines.append("Schadensart: " + Database.DAMAGE_TYPE_NAMES.get(damage_type(), damage_type()))
 	match target_mode():

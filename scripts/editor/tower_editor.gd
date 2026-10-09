@@ -296,7 +296,7 @@ func _build_tiers() -> void:
 		var dr := UiUtil.row("Schaden min / max", v)
 		UiUtil.spin(dr, float(dmg[0]), 0, 100000, 1, func(x): dmg[0] = int(x))
 		UiUtil.spin(dr, float(dmg[1]), 0, 100000, 1, func(x): dmg[1] = int(x))
-		UiUtil.spin(UiUtil.row("Reichweite (Felder)", v), float(tier.get("range", 3.0)), 0.5, 30, 0.25, func(x): tier["range"] = x)
+		UiUtil.spin(UiUtil.row("Reichweite (Towerbreiten)", v), float(tier.get("range", 3.0)), 0.5, 30, 0.25, func(x): tier["range"] = x)
 		UiUtil.spin(UiUtil.row("Abklingzeit (s)", v), float(tier.get("cooldown", 1.0)), 0.05, 10, 0.05, func(x): tier["cooldown"] = x)
 
 		var abilities: Array = tier.abilities

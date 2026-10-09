@@ -26,8 +26,8 @@ func _ready() -> void:
 	_apply()
 
 
-## Kamera auf die ganze Map ausrichten.
-func frame_map(width: int, height: int) -> void:
+## Kamera auf die ganze Map ausrichten (Größe in Einheiten, nicht in Feldern).
+func frame_map(width: float, height: float) -> void:
 	bounds = Rect2(0, 0, width, height)
 	target = Vector3(width / 2.0, 0, height / 2.0 + height * 0.04)
 	distance = clampf(maxf(width, height) * 1.05, MIN_DISTANCE, MAX_DISTANCE)
