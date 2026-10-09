@@ -1,8 +1,8 @@
 {
 	"id": "ghost_bird",
 	"name": "Ghost Bird",
-	"hp": 3000,
-	"speed": 2.19,
+	"hp": 2865,
+	"speed": 2.09,
 	"armor": 13,
 	"armor_type": "unarmored",
 	"bounty": 7,

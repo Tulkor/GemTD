@@ -1,8 +1,8 @@
 {
 	"id": "owl",
 	"name": "Owl",
-	"hp": 4980,
-	"speed": 2.15,
+	"hp": 4880,
+	"speed": 2.11,
 	"armor": 14,
 	"armor_type": "unarmored",
 	"bounty": 8,
