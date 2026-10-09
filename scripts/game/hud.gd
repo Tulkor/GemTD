@@ -12,6 +12,9 @@ signal main_menu_requested
 signal restart_requested
 signal debug_tower_changed(key: String)
 
+const BANNER_TOP := 64.0
+const LEFT_TOP := 120.0
+const BUBBLE_SHIFT := 48.0
 const SPEEDS := [1.0, 2.0, 4.0]
 
 var root: Control
@@ -25,6 +28,10 @@ var game_over_stats: Label
 var editor_button: Button
 var chance_value: Label
 var chance_button: Button
+var chance_bubble: SpeechBubble
+var left_col: VBoxContainer
+var _chance_level := -1
+var _bubble_dismissed_level := -1
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_keys: Array[String] = []
@@ -95,6 +102,16 @@ func _ready() -> void:
 	message_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	message_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	root.add_child(message_label)
+
+	# Erinnerung, sobald das Gold für die nächste Chance-Stufe reicht
+	chance_bubble = SpeechBubble.new()
+	chance_bubble.target = chance_button
+	chance_bubble.hide()
+	root.add_child(chance_bubble)
+	chance_bubble.pressed.connect(func(): chance_upgrade_requested.emit())
+	chance_bubble.dismissed.connect(func():
+		_bubble_dismissed_level = _chance_level
+		_show_chance_bubble(false))
 
 	recipe_book = RecipeBook.new()
 	root.add_child(recipe_book)
@@ -226,7 +243,7 @@ func _build_banner() -> void:
 	banner.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.92), UiTheme.BORDER_2, 20, 1, 18))
 	banner.anchor_left = 0.5
 	banner.anchor_right = 0.5
-	banner.offset_top = 64
+	banner.offset_top = BANNER_TOP
 	banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	root.add_child(banner)
 	var h := HBoxContainer.new()
@@ -247,8 +264,9 @@ func _build_banner() -> void:
 func _build_pinned() -> void:
 	# Linke Spalte: nächste Wellen, darunter die angepinnten Rezepte
 	var left := VBoxContainer.new()
+	left_col = left
 	left.offset_left = 16
-	left.offset_top = 120
+	left.offset_top = LEFT_TOP
 	left.custom_minimum_size.x = 280
 	left.add_theme_constant_override("separation", 12)
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -375,6 +393,26 @@ func set_chance(level: int, cost: int, enabled: bool) -> void:
 	chance_button.visible = cost >= 0
 	chance_button.text = "Stufe %d · %d Gold" % [level + 1, cost]
 	chance_button.disabled = not enabled
+	_chance_level = level
+	if enabled:
+		UiTheme.accent_button(chance_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	else:
+		for k in ["normal", "hover", "pressed", "disabled"]:
+			chance_button.remove_theme_stylebox_override(k)
+		for k in ["font_color", "font_hover_color", "font_pressed_color"]:
+			chance_button.remove_theme_color_override(k)
+	chance_bubble.set_text("Genug Gold: Chance auf Stufe %d verbessern!" % (level + 1))
+	_show_chance_bubble(enabled and _bubble_dismissed_level != level)
+
+
+func _show_chance_bubble(on: bool) -> void:
+	if chance_bubble.visible == on:
+		return
+	chance_bubble.visible = on
+	# Banner und linke Spalte rutschen unter die Sprechblase, damit sie nichts verdeckt
+	banner.offset_top = BANNER_TOP + (BUBBLE_SHIFT if on else 0.0)
+	left_col.offset_top = LEFT_TOP + (BUBBLE_SHIFT if on else 0.0)
+	_recenter.call_deferred()
 
 
 ## oneshot: Text für die lila Markierung, leer = keine.

@@ -281,6 +281,24 @@ func _ready() -> void:
 	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
 	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
 
+	# Sprechblase, wenn das Gold für die nächste Chance-Stufe reicht
+	var old_gold: int = game.gold
+	var old_level: int = game.chance_level
+	game.gold = 0
+	game._refresh_hud()
+	check(not game.hud.chance_bubble.visible, "Keine Chance-Sprechblase ohne Gold")
+	game.gold = 100000
+	game._refresh_hud()
+	check(game.hud.chance_bubble.visible and game.hud.banner.offset_top > game.hud.BANNER_TOP, "Chance-Sprechblase erscheint, Banner rutscht darunter")
+	game.hud.chance_bubble.dismissed.emit()
+	game._refresh_hud()
+	check(not game.hud.chance_bubble.visible and game.hud.banner.offset_top == game.hud.BANNER_TOP, "Sprechblase lässt sich für diese Stufe wegklicken")
+	game.hud.chance_bubble.pressed.emit()
+	check(game.chance_level == old_level + 1 and game.hud.chance_bubble.visible, "Klick auf Sprechblase verbessert die Chance, nächste Stufe wird wieder angezeigt")
+	game.gold = old_gold
+	game.chance_level = old_level
+	game._refresh_hud()
+
 	# Weglänge in der Leiste und Menü am Spielende
 	check(game.path_length > 0 and str(game.path_length) in game.hud.path_value.text, "Weglänge angezeigt: " + game.hud.path_value.text)
 	game._finish(game.Phase.GAME_OVER)
