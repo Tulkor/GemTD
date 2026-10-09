@@ -161,7 +161,7 @@ func _draw() -> void:
 		pts.append(pts[0])
 		draw_polyline(pts, color.darkened(0.5), 2.0)
 	else:
-		var s := r * (0.7 + 0.075 * tier)
+		var s := r * (0.85 + 0.05 * tier)
 		var pts := PackedVector2Array([Vector2(0, -s), Vector2(s, 0), Vector2(0, s), Vector2(-s, 0)])
 		draw_colored_polygon(pts, color)
 		pts.append(pts[0])
