@@ -10,8 +10,8 @@
 		{
 			"name": "Dunkler Smaragd",
 			"damage": [
-				90,
-				150
+				180,
+				300
 			],
 			"range": 4.3,
 			"cooldown": 0.8,
@@ -26,8 +26,8 @@
 		{
 			"name": "Verzauberter Smaragd",
 			"damage": [
-				100,
-				200
+				200,
+				400
 			],
 			"range": 5.47,
 			"cooldown": 0.7,

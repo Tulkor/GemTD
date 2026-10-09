@@ -17,7 +17,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 2.0
 				}
 			]
@@ -32,7 +32,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 2.0
 				}
 			]
@@ -47,7 +47,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 2.0
 				}
 			]
@@ -62,7 +62,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 2.0
 				}
 			]
@@ -77,7 +77,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 2.0
 				}
 			]
@@ -92,7 +92,7 @@
 			"abilities": [
 				{
 					"type": "crit",
-					"chance": 0.25,
+					"chance": 0.35,
 					"multiplier": 5.0
 				}
 			]

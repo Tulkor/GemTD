@@ -117,13 +117,13 @@
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 50.0,
-					"duration": 3600.0
+					"dps": 42.0,
+					"duration": 15.0
 				},
 				{
 					"type": "slow",
 					"factor": 0.5,
-					"duration": 3600.0
+					"duration": 15.0
 				}
 			]
 		}

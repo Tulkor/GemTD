@@ -222,7 +222,7 @@ func _hit(e, dmg: float) -> void:
 			"slow":
 				e.apply_slow(float(ab.factor), float(ab.duration))
 			"poison":
-				e.apply_poison(float(ab.dps), float(ab.duration))
+				e.apply_poison(float(ab.dps), float(ab.duration), self)
 			"armor_reduce":
 				e.apply_armor_reduction(float(ab.amount), float(ab.duration))
 			"stun":

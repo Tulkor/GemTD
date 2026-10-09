@@ -44,8 +44,8 @@
 		{
 			"name": "Feuerstern",
 			"damage": [
-				65,
-				65
+				130,
+				130
 			],
 			"range": 4.69,
 			"cooldown": 0.5,

@@ -19,7 +19,7 @@
 				{
 					"type": "burn_aura",
 					"radius": 3.91,
-					"dps": 200.0
+					"dps": 80.0
 				},
 				{
 					"type": "slow_aura",
@@ -45,7 +45,7 @@
 				{
 					"type": "burn_aura",
 					"radius": 3.91,
-					"dps": 200.0
+					"dps": 80.0
 				},
 				{
 					"type": "slow_aura",
