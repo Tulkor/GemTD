@@ -117,7 +117,7 @@
 			"abilities": [
 				{
 					"type": "poison",
-					"dps": 50.0,
+					"dps": 42.0,
 					"duration": 15.0
 				},
 				{
