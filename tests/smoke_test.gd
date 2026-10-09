@@ -170,6 +170,18 @@ func _ready() -> void:
 		game._turn_into_rock(t)
 	game.round_towers.clear()
 	game.phase = game.Phase.BUILD
+	# Ein fertiger Saphir auf dem Feld zählt für One-Shots nicht mit
+	var field_sapphire = null
+	tries2 = 0
+	while field_sapphire == null and tries2 < 5000:
+		tries2 += 1
+		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
+		if game.can_place(c):
+			game.debug_tower = "sapphire:0"
+			field_sapphire = game.place_gem(c)
+	field_sapphire.is_new = false
+	game.round_towers.erase(field_sapphire)
 	var shot_plan := ["topaz:0", "diamond:0", "sapphire:0"]
 	tries2 = 0
 	while game.round_towers.size() < shot_plan.size() and tries2 < 5000:
@@ -177,6 +189,8 @@ func _ready() -> void:
 		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
 		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 		if game.can_place(c):
+			if game.round_towers.size() == 2:
+				check(game.one_shot_hints().is_empty(), "One-Shot ignoriert Tower auf dem Feld: %s" % [game.one_shot_hints()])
 			game.debug_tower = shot_plan[game.round_towers.size()]
 			game.place_gem(c)
 	check(game.phase == game.Phase.BUILD, "nach 3 Gems noch Bauphase")

@@ -26,7 +26,7 @@ var rows := PackedStringArray()
 var spawn := Vector2i(1, 1)
 var goal := Vector2i(2, 2)
 var checkpoints: Array[Vector2i] = []
-var marker_radius := 3
+var marker_radius := 1
 var wave_set := "classic"
 var lives := 50
 var start_gold := 0
@@ -92,7 +92,7 @@ func _upscale() -> void:
 	goal *= 2
 	for i in checkpoints.size():
 		checkpoints[i] *= 2
-	marker_radius = marker_radius * 2 + 1
+	marker_radius = maxi(marker_radius * 2 - 1, 0)
 
 
 func to_dict() -> Dictionary:

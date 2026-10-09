@@ -311,8 +311,8 @@ func tower_options(t: Tower) -> Array:
 
 
 ## In der Auswahlphase: behalten, 2/4 gleiche, Rezepte.
-## Schon in der Bauphase (One-Shot): nur Rezepte, die mit den bisher gesetzten Gems und den
-## Towern auf dem Feld erfüllt sind. Wer das nimmt, beendet die Runde sofort.
+## Schon in der Bauphase (One-Shot): nur Rezepte, die allein mit den in dieser Runde gesetzten
+## Gems erfüllt sind, fertige Tower auf dem Feld zählen nicht. Wer das nimmt, beendet die Runde sofort.
 func choice_options(t: Tower) -> Array:
 	var one_shot := phase == Phase.BUILD
 	if (phase != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
@@ -336,7 +336,7 @@ func choice_options(t: Tower) -> Array:
 	var field := towers.values().filter(func(o): return not o.is_new)
 	for sid in Database.special_ids():
 		var def: Dictionary = Database.towers[sid]
-		var pool: Array = others if def.get("recipe_same_round", false) else others + field
+		var pool: Array = others if one_shot or def.get("recipe_same_round", false) else others + field
 		var consume = _match_recipe(def.get("recipe", []), t, pool)
 		if consume != null:
 			var o := _keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0)

@@ -110,7 +110,7 @@
 			65
 		]
 	],
-	"marker_radius": 3,
+	"marker_radius": 1,
 	"waves": "classic",
 	"lives": 50,
 	"start_gold": 0,

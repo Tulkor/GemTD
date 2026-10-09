@@ -264,7 +264,7 @@ func _build_ui() -> void:
 	map_tab.add_child(lg)
 	lives_spin = _field(lg, "Leben", _spin(50, 1, 1000, func(v): map.lives = int(v)))
 	gold_spin = _field(lg, "Startgold", _spin(0, 0, 100000, func(v): map.start_gold = int(v)))
-	radius_spin = _field(map_tab, "Sperrzone um Spawn, Ziel, Checkpoints", _spin(3, 0, 10, func(v):
+	radius_spin = _field(map_tab, "Sperrzone um Spawn, Ziel, Checkpoints", _spin(1, 0, 10, func(v):
 		map.marker_radius = int(v)
 		_on_map_changed()))
 

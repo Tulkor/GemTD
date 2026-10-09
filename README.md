@@ -32,7 +32,7 @@ Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen
    4 gleiche → +2 Qualitäten (über „Großartig“ hinaus entsteht der Stein von Bryvx),
    oder ein Spezial-Rezept. Die anderen 4 werden zu Steinen.
    **One-Shot:** Sind schon während der Bauphase alle Zutaten eines Spezial-Rezepts da (gesetzte Gems
-   dieser Runde plus fertige Tower auf dem Feld), zeigt das Spiel das an. Gem anklicken und „One-Shot“
+   dieser Runde; fertige Tower auf dem Feld zählen dafür nicht), zeigt das Spiel das an. Gem anklicken und „One-Shot“
    wählen baut den Spezial-Tower sofort; die restlichen Gems der Runde entfallen.
 3. Die Welle startet. Gegner laufen Spawn (S) → Checkpoints 1…5 → Ziel (Z). Flieger fliegen direkt.
 
@@ -90,7 +90,7 @@ Dateien unter `user://data/<typ>/` werden zusätzlich geladen und überschreiben
   "format": 2, "id": "classic", "name": "Klassisch", "width": 74, "height": 74,
   "tiles": ["#####…", "#....…", …],
   "spawn": [8, 8], "goal": [65, 65], "checkpoints": [[8, 36], [65, 36], …],
-  "marker_radius": 3, "waves": "classic", "lives": 50, "start_gold": 0,
+  "marker_radius": 1, "waves": "classic", "lives": 50, "start_gold": 0,
   "variance": {"random_rocks": 25, "seed": -1}
 }
 ```
