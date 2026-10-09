@@ -10,8 +10,8 @@
 		{
 			"name": "Gold",
 			"damage": [
-				160,
-				190
+				280,
+				330
 			],
 			"range": 6.25,
 			"cooldown": 1.0,
@@ -31,8 +31,8 @@
 		{
 			"name": "Ägyptisches Gold",
 			"damage": [
-				160,
-				200
+				290,
+				360
 			],
 			"range": 6.25,
 			"cooldown": 0.75,
