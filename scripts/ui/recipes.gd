@@ -13,45 +13,52 @@ static func ingredient_label(ing: Dictionary) -> String:
 	return Database.tower_label(str(ing.get("tower", "")), int(ing.get("tier", 0)))
 
 
-static func _take(pool: Array, ing: Dictionary) -> bool:
+## Nimmt eine passende Zutat aus dem Pool und gibt sie zurück (oder null).
+static func _take(pool: Array, ing: Dictionary) -> Variant:
 	for i in pool.size():
 		if pool[i][0] == str(ing.get("tower", "")) and int(pool[i][1]) == int(ing.get("tier", 0)):
-			pool.remove_at(i)
-			return true
-	return false
+			return pool.pop_at(i)
+	return null
 
 
-## Rückgabe: {"lines": [{"text", "have", "indent"}], "missing": int}.
-## have ist null für Zwischenzeilen wie "einer von:".
+static func _is_new(entry: Variant) -> bool:
+	return entry != null and entry.size() > 2 and bool(entry[2])
+
+
+## Rückgabe: {"lines": [{"text", "have", "new", "indent"}], "missing": int}.
+## have ist null für Zwischenzeilen wie "einer von:". new: die Zutat ist ein neuer Gem dieser Runde,
+## noch nicht fixiert (owned-Einträge dürfen dafür als drittes Feld true tragen).
 static func status(id: String, owned: Array) -> Dictionary:
 	var recipe: Array = Database.towers.get(id, {}).get("recipe", [])
-	var pool := owned.duplicate()
-	var have := []
-	have.resize(recipe.size())
+	# Fixierte Tower zuerst, damit sie vor den neuen Gems als Zutat zählen
+	var pool := owned.filter(func(o): return not _is_new(o)) + owned.filter(func(o): return _is_new(o))
+	var taken := []
+	taken.resize(recipe.size())
 	# Erst die festen Zutaten, dann die Auswahl-Zutaten, damit "einer von" keine feste Zutat wegnimmt.
 	for i in recipe.size():
 		if not recipe[i].has("any_of"):
-			have[i] = _take(pool, recipe[i])
+			taken[i] = _take(pool, recipe[i])
 	var lines := []
 	var missing := 0
 	for i in recipe.size():
 		var ing: Dictionary = recipe[i]
 		if ing.has("any_of"):
-			lines.append({"text": "einer von:", "have": null, "indent": 0})
-			var any := false
+			lines.append({"text": "einer von:", "have": null, "new": false, "indent": 0})
+			var got: Variant = null
 			for alt in ing.any_of:
-				var h := pool.any(func(o): return o[0] == str(alt.get("tower", "")) and int(o[1]) == int(alt.get("tier", 0)))
-				lines.append({"text": ingredient_label(alt), "have": h, "indent": 1})
-				any = any or h
-			if any:
-				for alt in ing.any_of:
-					if _take(pool, alt):
-						break
-			else:
+				got = _take(pool, alt)
+				if got != null:
+					break
+			for alt in ing.any_of:
+				var match_got: bool = got != null and got[0] == str(alt.get("tower", "")) and int(got[1]) == int(alt.get("tier", 0))
+				var h := match_got or pool.any(func(o): return o[0] == str(alt.get("tower", "")) and int(o[1]) == int(alt.get("tier", 0)))
+				var n := _is_new(got) if match_got else false
+				lines.append({"text": ingredient_label(alt), "have": h, "new": n, "indent": 1})
+			if got == null:
 				missing += 1
 		else:
-			lines.append({"text": ingredient_label(ing), "have": have[i], "indent": 0})
-			if not have[i]:
+			lines.append({"text": ingredient_label(ing), "have": taken[i] != null, "new": _is_new(taken[i]), "indent": 0})
+			if taken[i] == null:
 				missing += 1
 	return {"lines": lines, "missing": missing}
 

@@ -85,6 +85,8 @@ static func card(id: String, have: Array, on_pin: Callable, compact := false, no
 		if line.have != null:
 			text = ("✓ " if line.have else "✗ ") + text
 			col = UiTheme.HAVE if line.have else UiTheme.MISSING
+			if line.have and line.get("new", false):
+				col = UiTheme.PURPLE_LIGHT
 		var l := UiUtil.label(("    " if line.indent > 0 else "") + text, v, 13 if not compact else 12)
 		l.add_theme_color_override("font_color", col)
 	p.set_meta("missing", st.missing)
@@ -141,7 +143,7 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	for leg in [["✓ hast du", UiTheme.HAVE], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
+	for leg in [["✓ fixiert", UiTheme.HAVE], ["✓ neu in dieser Runde", UiTheme.PURPLE_LIGHT], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
 		UiUtil.label(leg[0], head, 13).add_theme_color_override("font_color", leg[1])
 	var close_b := UiUtil.button("Schließen (R)", head, close)
 	close_b.focus_mode = Control.FOCUS_NONE
@@ -157,7 +159,7 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	scroll.add_child(grid)
 
-	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Grün/rot zählt alle Tower auf dem Feld und die neuen Gems. Baubar ist ein Rezept aber nur so: beim Setzen und Auswählen aus den Gems dieser Runde, während der Welle aus fertigen Towern auf dem Feld.", v, 13)
+	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Grün sind fixierte Tower aus früheren Runden, violett die neuen Gems dieser Runde, rot fehlt noch. Baubar ist ein Rezept aber nur so: beim Setzen und Auswählen aus den Gems dieser Runde, während der Welle aus fertigen Towern auf dem Feld.", v, 13)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hide()

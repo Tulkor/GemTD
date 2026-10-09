@@ -610,7 +610,7 @@ func _refresh_hud() -> void:
 	hud.set_waves(_upcoming_waves(4))
 	# Baubar: in der Welle aus fertigen Towern, beim Setzen und Auswählen nur aus den Gems der Runde
 	var now_pool: Array = towers.values().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
-	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]),
+	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier, t.is_new]),
 			{"pool": now_pool.map(func(t): return [t.tower_id, t.tier]), "wave": phase == Phase.WAVE})
 
 	# Neue Gems, die eine Zutat für einen Spezial-Tower aus dieser Runde sind (lila markiert)

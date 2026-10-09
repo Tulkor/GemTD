@@ -51,6 +51,11 @@ var info_swatch: ColorRect
 var info_body: Label
 var used_col: VBoxContainer
 var used_row: HBoxContainer
+var used_prev: Button
+var used_next: Button
+var used_page_label: Label
+var used_page := 0
+var _used_ids: Variant = null
 var actions_col: VBoxContainer
 var separators: Array[Control] = []
 
@@ -306,14 +311,22 @@ func _build_bottom() -> void:
 
 	used_col = VBoxContainer.new()
 	h.add_child(used_col)
-	UiTheme.caption("Wird gebraucht für", used_col)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(400, 150)
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	used_col.add_child(scroll)
+	# Kopfzeile mit Pfeilen zum Weiterklicken, darunter genau ein Rezept
+	var used_head := HBoxContainer.new()
+	used_head.add_theme_constant_override("separation", 6)
+	used_col.add_child(used_head)
+	UiTheme.caption("Wird gebraucht für", used_head).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	used_prev = UiUtil.button("‹", used_head, func(): _turn_used_page(-1))
+	used_page_label = UiUtil.label("", used_head, 12)
+	used_page_label.add_theme_color_override("font_color", UiTheme.MUTED)
+	used_next = UiUtil.button("›", used_head, func(): _turn_used_page(1))
+	for b in [used_prev, used_next]:
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(30, 24)
+		b.add_theme_font_size_override("font_size", 16)
 	used_row = HBoxContainer.new()
-	used_row.add_theme_constant_override("separation", 10)
-	scroll.add_child(used_row)
+	used_row.custom_minimum_size = Vector2(320, 0)
+	used_col.add_child(used_row)
 	_vsep(h)
 
 	actions_col = VBoxContainer.new()
@@ -607,25 +620,41 @@ func toggle_recipe_book() -> void:
 # --- intern ------------------------------------------------------------------
 
 func _refresh_used_in() -> void:
-	var key := [_selection.get("used_in", null), Session.pinned_recipes.duplicate(), owned_now]
+	var ids = _selection.get("used_in", null)
+	if ids != _used_ids:
+		_used_ids = ids
+		used_page = 0
+	var key := [ids, Session.pinned_recipes.duplicate(), owned, owned_now, used_page]
 	if key == _used_key:
 		return
 	_used_key = key
 	for c in used_row.get_children():
 		used_row.remove_child(c)
 		c.queue_free()
-	var ids = _selection.get("used_in", null)
 	used_col.visible = ids != null
 	if ids == null:
 		return
-	if (ids as Array).is_empty():
+	var count := (ids as Array).size()
+	used_prev.visible = count > 1
+	used_next.visible = count > 1
+	used_page_label.visible = count > 1
+	used_page_label.text = "%d / %d" % [used_page + 1, count]
+	if count == 0:
 		UiUtil.label("Keine Rezepte brauchen diesen Tower.", used_row, 13).add_theme_color_override("font_color", UiTheme.MUTED)
 		return
-	for id in ids:
-		var c := RecipeBook.card(id, owned, _on_pins_changed, true, owned_now)
-		c.custom_minimum_size.x = 245
-		c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		used_row.add_child(c)
+	var c := RecipeBook.card(ids[used_page], owned, _on_pins_changed, true, owned_now)
+	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	used_row.add_child(c)
+	_recenter.call_deferred()
+
+
+func _turn_used_page(step: int) -> void:
+	var count := (_used_ids as Array).size() if _used_ids != null else 0
+	if count == 0:
+		return
+	used_page = posmod(used_page + step, count)
+	_refresh_used_in()
 
 
 func _on_pins_changed() -> void:
