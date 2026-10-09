@@ -1,55 +1,74 @@
 class_name Hud
 extends CanvasLayer
-## Seitenpanel im Spiel.
+## Oberfläche im Spiel: Leiste oben, Phasenbanner, angepinnte Rezepte links,
+## Auswahlkarte unten (neue Gems, Werte, "Wird gebraucht für", Aktionen) und Rezeptbuch.
 
 signal option_chosen(index: int)
+signal round_gem_selected(index: int)
 signal chance_upgrade_requested
 signal speed_selected(factor: float)
 signal menu_requested
 signal debug_tower_changed(key: String)
 
-const WIDTH := 330.0
+const SPEEDS := [1.0, 2.0, 4.0]
 
-var stats_label: Label
-var phase_label: Label
+var root: Control
+var wave_value: Label
+var lives_value: Label
+var gold_value: Label
+var chance_value: Label
 var chance_button: Button
-var options_box: VBoxContainer
-var tower_label: Label
+var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_keys: Array[String] = []
+
+var banner: PanelContainer
+var phase_title: Label
+var phase_label: Label
+var oneshot_pill: PanelContainer
+var oneshot_label: Label
+
+var pinned_panel: PanelContainer
+var pinned_box: VBoxContainer
+
+var bottom: PanelContainer
+var strip_col: VBoxContainer
+var strip_row: HBoxContainer
+var strip_hint: Label
+var info_col: VBoxContainer
+var info_title: Label
+var info_swatch: ColorRect
+var info_body: Label
+var used_col: VBoxContainer
+var used_row: HBoxContainer
+var actions_col: VBoxContainer
+var separators: Array[Control] = []
+
+var help_panel: PanelContainer
 var message_label: Label
+var recipe_book: RecipeBook
+
+var owned: Array = []
+var _options: Array = []
+var _main_index := -1
+var _main_button: Button
+var _gems: Array = []
+var _used_key := []
+var _selection: Dictionary = {}
+var _speed := -1.0
 
 
 func _ready() -> void:
-	var box := UiUtil.side_panel(self, WIDTH)
-	var inner := WIDTH - 40
-	UiUtil.label("GemTD", box, 24)
-	stats_label = UiUtil.label("", box)
-	phase_label = UiUtil.wrap_label("", box, inner)
-	phase_label.add_theme_color_override("font_color", Color("f1c40f"))
-	chance_button = UiUtil.button("", box, func(): chance_upgrade_requested.emit())
-	box.add_child(HSeparator.new())
-	options_box = VBoxContainer.new()
-	box.add_child(options_box)
-	tower_label = UiUtil.wrap_label("", box, inner)
-	box.add_child(HSeparator.new())
-
-	UiUtil.label("Tempo", box)
-	var speed_row := HBoxContainer.new()
-	box.add_child(speed_row)
-	for f in [1.0, 2.0, 4.0]:
-		UiUtil.button("%dx" % int(f), speed_row, func(): speed_selected.emit(f))
-
-	UiUtil.label("Debug: nächster Gem", box)
-	debug_option = OptionButton.new()
-	debug_option.fit_to_longest_item = false
-	debug_option.custom_minimum_size.x = inner
-	box.add_child(debug_option)
-	debug_option.item_selected.connect(func(i): debug_tower_changed.emit(debug_keys[i]))
-
-	box.add_child(HSeparator.new())
-	UiUtil.button("Zurück", box, func(): menu_requested.emit())
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nWASD/Pfeile, Fensterrand oder rechte Maustaste ziehen: Kamera bewegen, Q/E oder mittlere Maustaste: drehen, Mausrad: zoomen\nTasten 1, 2, 3: Tempo", box, inner).modulate = Color(1, 1, 1, 0.6)
+	root = Control.new()
+	root.theme = UiTheme.get_theme()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+	_build_top_bar()
+	_build_banner()
+	_build_pinned()
+	_build_bottom()
+	_build_help()
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -59,13 +78,241 @@ func _ready() -> void:
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	message_label.grow_vertical = Control.GROW_DIRECTION_BOTH
-	add_child(message_label)
+	root.add_child(message_label)
 
+	recipe_book = RecipeBook.new()
+	root.add_child(recipe_book)
+	recipe_book.pins_changed.connect(_refresh_pinned)
+	_refresh_pinned()
+
+
+func _process(_delta: float) -> void:
+	if Engine.time_scale != _speed:
+		_speed = Engine.time_scale
+		for i in SPEEDS.size():
+			speed_buttons[i].set_pressed_no_signal(is_equal_approx(SPEEDS[i], _speed))
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	match event.keycode:
+		KEY_R:
+			toggle_recipe_book()
+		KEY_ESCAPE:
+			if recipe_book.visible:
+				recipe_book.close()
+			elif help_panel.visible:
+				help_panel.hide()
+			else:
+				return
+		KEY_SPACE:
+			if recipe_book.visible or _main_button == null or _main_button.disabled:
+				return
+			option_chosen.emit(_main_index)
+		_:
+			return
+	get_viewport().set_input_as_handled()
+
+
+# --- Aufbau ------------------------------------------------------------------
+
+func _button(text: String, parent: Node, on_pressed: Callable) -> Button:
+	var b := UiUtil.button(text, parent, on_pressed)
+	b.focus_mode = Control.FOCUS_NONE
+	return b
+
+
+func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 6, 0, 12))
+	parent.add_child(p)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	p.add_child(h)
+	UiUtil.label(caption, h, 12).add_theme_color_override("font_color", UiTheme.MUTED)
+	var v := UiUtil.label("", h, 16)
+	v.add_theme_color_override("font_color", color)
+	return v
+
+
+func _vsep(parent: Node) -> void:
+	var s := ColorRect.new()
+	s.color = UiTheme.BORDER
+	s.custom_minimum_size.x = 1
+	parent.add_child(s)
+	separators.append(s)
+
+
+func _build_top_bar() -> void:
+	var bar := PanelContainer.new()
+	bar.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BAR, Color.TRANSPARENT, 0, 0, 14))
+	bar.anchor_right = 1.0
+	bar.custom_minimum_size.y = 52
+	root.add_child(bar)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	bar.add_child(h)
+	var title := UiUtil.label("GemTD", h, 22)
+	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	h.add_child(_spacer(12))
+	wave_value = _chip("Welle", h)
+	lives_value = _chip("Leben", h, UiTheme.MISSING)
+	gold_value = _chip("Gold", h, UiTheme.GOLD)
+	chance_value = _chip("Chance", h)
+	chance_button = _button("", h, func(): chance_upgrade_requested.emit())
+	chance_button.tooltip_text = "Bessere Gems: höhere Chance-Stufe gegen Gold"
+	var fill := Control.new()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(fill)
+
+	var speed_row := HBoxContainer.new()
+	speed_row.add_theme_constant_override("separation", 0)
+	h.add_child(speed_row)
+	var group := ButtonGroup.new()
+	for f in SPEEDS:
+		var b := _button("%dx" % int(f), speed_row, func(): speed_selected.emit(f))
+		b.toggle_mode = true
+		b.button_group = group
+		b.tooltip_text = "Tempo (Tasten 1, 2, 3)"
+		b.custom_minimum_size.x = 44
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		speed_buttons.append(b)
+
+	debug_option = OptionButton.new()
+	debug_option.fit_to_longest_item = false
+	debug_option.custom_minimum_size.x = 190
+	debug_option.focus_mode = Control.FOCUS_NONE
+	debug_option.tooltip_text = "Debug: welcher Gem als nächstes gesetzt wird"
+	h.add_child(debug_option)
+	debug_option.item_selected.connect(func(i): debug_tower_changed.emit(debug_keys[i]))
+
+	_button("Rezepte (R)", h, toggle_recipe_book)
+	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
+	_button("Menü", h, func(): menu_requested.emit())
+
+
+func _spacer(w: float) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size.x = w
+	return c
+
+
+func _build_banner() -> void:
+	banner = PanelContainer.new()
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.92), UiTheme.BORDER_2, 20, 1, 18))
+	banner.anchor_left = 0.5
+	banner.anchor_right = 0.5
+	banner.offset_top = 64
+	banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	root.add_child(banner)
+	var h := HBoxContainer.new()
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_theme_constant_override("separation", 12)
+	banner.add_child(h)
+	phase_title = UiUtil.label("", h, 15)
+	phase_title.add_theme_color_override("font_color", UiTheme.GOLD)
+	phase_label = UiUtil.label("", h, 15)
+	oneshot_pill = PanelContainer.new()
+	oneshot_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	oneshot_pill.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PURPLE, Color.TRANSPARENT, 12, 0, 10))
+	h.add_child(oneshot_pill)
+	oneshot_label = UiUtil.label("", oneshot_pill, 13)
+	oneshot_label.add_theme_color_override("font_color", Color.WHITE)
+
+
+func _build_pinned() -> void:
+	pinned_panel = PanelContainer.new()
+	pinned_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
+	pinned_panel.offset_left = 16
+	pinned_panel.offset_top = 120
+	pinned_panel.custom_minimum_size.x = 280
+	root.add_child(pinned_panel)
+	pinned_box = VBoxContainer.new()
+	pinned_box.add_theme_constant_override("separation", 10)
+	pinned_panel.add_child(pinned_box)
+
+
+func _build_bottom() -> void:
+	bottom = PanelContainer.new()
+	bottom.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.96), UiTheme.BORDER, 10, 1, 14))
+	bottom.anchor_left = 0.5
+	bottom.anchor_right = 0.5
+	bottom.anchor_top = 1.0
+	bottom.anchor_bottom = 1.0
+	bottom.offset_bottom = -16
+	bottom.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	root.add_child(bottom)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 16)
+	bottom.add_child(h)
+
+	strip_col = VBoxContainer.new()
+	h.add_child(strip_col)
+	UiTheme.caption("Neue Gems dieser Runde", strip_col)
+	strip_row = HBoxContainer.new()
+	strip_row.add_theme_constant_override("separation", 8)
+	strip_col.add_child(strip_row)
+	strip_hint = UiUtil.label("", strip_col, 12)
+	strip_hint.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	_vsep(h)
+
+	info_col = VBoxContainer.new()
+	info_col.custom_minimum_size.x = 250
+	info_col.add_theme_constant_override("separation", 4)
+	h.add_child(info_col)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	info_col.add_child(head)
+	info_swatch = ColorRect.new()
+	info_swatch.custom_minimum_size = Vector2(26, 26)
+	info_swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(info_swatch)
+	info_title = UiUtil.label("", head, 20)
+	info_body = UiUtil.wrap_label("", info_col, 250)
+	info_body.add_theme_font_size_override("font_size", 13)
+	info_body.add_theme_color_override("font_color", UiTheme.DIM)
+	_vsep(h)
+
+	used_col = VBoxContainer.new()
+	h.add_child(used_col)
+	UiTheme.caption("Wird gebraucht für", used_col)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(400, 150)
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	used_col.add_child(scroll)
+	used_row = HBoxContainer.new()
+	used_row.add_theme_constant_override("separation", 10)
+	scroll.add_child(used_row)
+	_vsep(h)
+
+	actions_col = VBoxContainer.new()
+	actions_col.custom_minimum_size.x = 260
+	actions_col.add_theme_constant_override("separation", 8)
+	h.add_child(actions_col)
+
+
+func _build_help() -> void:
+	help_panel = PanelContainer.new()
+	help_panel.anchor_left = 1.0
+	help_panel.anchor_right = 1.0
+	help_panel.offset_top = 64
+	help_panel.offset_right = -16
+	help_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	root.add_child(help_panel)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
+	help_panel.hide()
+
+
+# --- Schnittstelle für game.gd -------------------------------------------------
 
 func setup_debug_towers(preselect: String) -> void:
 	debug_option.clear()
 	debug_keys = [""]
-	debug_option.add_item("Zufällig (normal)")
+	debug_option.add_item("Debug: zufälliger Gem")
 	for id in Database.tower_ids():
 		for t in Database.tier_count(id):
 			debug_keys.append("%s:%d" % [id, t])
@@ -73,37 +320,229 @@ func setup_debug_towers(preselect: String) -> void:
 	debug_option.select(maxi(debug_keys.find(preselect), 0))
 
 
-func set_stats(text: String) -> void:
-	stats_label.text = text
+func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:
+	wave_value.text = "%d / %d" % [wave, waves]
+	lives_value.text = str(lives)
+	gold_value.text = str(gold)
 
 
-func set_phase(text: String) -> void:
-	phase_label.text = text
-
-
-func set_tower_info(text: String) -> void:
-	tower_label.text = text
-
-
-func set_chance(text: String, enabled: bool) -> void:
-	chance_button.text = text
+## level: aktuelle Chance-Stufe, cost: Kosten der nächsten (-1 = schon maximal).
+func set_chance(level: int, cost: int, enabled: bool) -> void:
+	chance_value.text = "Stufe %d" % level
+	chance_button.visible = cost >= 0
+	chance_button.text = "Stufe %d · %d Gold" % [level + 1, cost]
 	chance_button.disabled = not enabled
 
 
-func set_options(labels: Array) -> void:
-	for c in options_box.get_children():
-		options_box.remove_child(c)
+## oneshot: Text für die lila Markierung, leer = keine.
+func set_phase(title: String, text: String, oneshot := "") -> void:
+	phase_title.text = title
+	phase_label.text = text
+	phase_label.visible = text != ""
+	oneshot_pill.visible = oneshot != ""
+	oneshot_label.text = oneshot
+	var border := UiTheme.PURPLE_LIGHT if oneshot != "" else UiTheme.BORDER_2
+	(banner.get_theme_stylebox("panel") as StyleBoxFlat).border_color = border
+	_recenter.call_deferred()
+
+
+## Tower auf dem Feld plus neue Gems, als [id, stufe] – für die Rezeptanzeige.
+func set_owned(list: Array) -> void:
+	if list == owned:
+		return
+	owned = list
+	_used_key = []
+	_refresh_used_in()
+	_refresh_pinned()
+	if recipe_book.visible:
+		recipe_book.open(owned)
+
+
+## gems: [{label, color, selected, oneshot}] – die neuen Gems der Runde.
+func set_round_gems(gems: Array, hint := "") -> void:
+	strip_hint.text = hint
+	if gems == _gems:
+		return
+	_gems = gems
+	for c in strip_row.get_children():
+		strip_row.remove_child(c)
 		c.queue_free()
-	for i in labels.size():
-		var b := UiUtil.button(labels[i], options_box, func(): option_chosen.emit(i))
+	for i in gems.size():
+		var g: Dictionary = gems[i]
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(50, 50)
+		b.focus_mode = Control.FOCUS_NONE
+		b.tooltip_text = g.label
+		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
+		var bg := Color("241a38") if g.oneshot else (Color("2b2412") if g.selected else UiTheme.PANEL_2)
+		var st := UiTheme.box(bg, border, 6, 2, 0)
+		b.add_theme_stylebox_override("normal", st)
+		var hover := st.duplicate() as StyleBoxFlat
+		hover.border_color = UiTheme.GOLD
+		b.add_theme_stylebox_override("hover", hover)
+		b.add_theme_stylebox_override("pressed", hover)
+		var sw := ColorRect.new()
+		sw.color = g.color
+		sw.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sw.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		sw.custom_minimum_size = Vector2(26, 26)
+		sw.offset_left = -13
+		sw.offset_top = -13
+		sw.offset_right = 13
+		sw.offset_bottom = 13
+		b.add_child(sw)
+		b.pressed.connect(func(): round_gem_selected.emit(i))
+		strip_row.add_child(b)
+	strip_col.visible = not gems.is_empty()
+	_update_layout()
+
+
+## info: {title, color, body, used_in (Array von Rezept-IDs, null = Abschnitt ausblenden)} oder {} für nichts.
+func set_selection(info: Dictionary) -> void:
+	_selection = info
+	info_col.visible = not info.is_empty()
+	if info.is_empty():
+		_update_layout()
+		return
+	info_title.text = info.title
+	info_title.add_theme_color_override("font_color", (info.color as Color).lerp(Color.WHITE, 0.25))
+	info_swatch.color = info.color
+	info_body.text = info.body
+	_refresh_used_in()
+	_update_layout()
+
+
+## options: [{label, style}] mit style "oneshot" (lila), "primary" (gold) oder "normal".
+## Der erste One-Shot, sonst die erste Hauptaktion, wird zum großen Button (Leertaste).
+func set_options(options: Array) -> void:
+	if options == _options:
+		return
+	_options = options
+	_main_button = null
+	for c in actions_col.get_children():
+		actions_col.remove_child(c)
+		c.queue_free()
+	_main_index = -1
+	for style in ["oneshot", "primary"]:
+		if _main_index < 0:
+			for i in options.size():
+				if options[i].get("style", "normal") == style:
+					_main_index = i
+					break
+	if not options.is_empty():
+		UiTheme.caption("Aktionen", actions_col)
+	if _main_index >= 0:
+		var o: Dictionary = options[_main_index]
+		var main := _main_index
+		var big := _button(o.label, actions_col, func(): option_chosen.emit(main))
+		_main_button = big
+		big.tooltip_text = o.label + " (Leertaste)"
+		big.clip_text = true
+		big.custom_minimum_size = Vector2(260, 56)
+		big.add_theme_font_size_override("font_size", 18)
+		if o.style == "oneshot":
+			UiTheme.accent_button(big, UiTheme.PURPLE, Color.WHITE, Color(UiTheme.PURPLE_LIGHT, 0.55))
+		else:
+			UiTheme.accent_button(big, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.45))
+		var hint: String = "Leertaste" + (" · " + str(o.hint) if o.has("hint") else "")
+		UiUtil.wrap_label(hint, actions_col, 260).add_theme_color_override("font_color", UiTheme.MUTED)
+	for i in options.size():
+		if i == _main_index:
+			continue
+		var o: Dictionary = options[i]
+		var b := _button(o.label, actions_col, func(): option_chosen.emit(i))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
+		b.custom_minimum_size = Vector2(260, 40)
+		if o.get("style", "normal") == "oneshot":
+			b.add_theme_stylebox_override("normal", UiTheme.box(Color("241a38"), UiTheme.PURPLE_LIGHT))
+	actions_col.visible = not options.is_empty()
+	_update_layout()
 
 
 func set_options_enabled(enabled: bool) -> void:
-	for b in options_box.get_children():
-		(b as Button).disabled = not enabled
+	for b in actions_col.get_children():
+		if b is Button:
+			(b as Button).disabled = not enabled
 
 
 func show_message(text: String) -> void:
 	message_label.text = text
+
+
+func toggle_recipe_book() -> void:
+	if recipe_book.visible:
+		recipe_book.close()
+	else:
+		recipe_book.open(owned)
+
+
+# --- intern ------------------------------------------------------------------
+
+func _refresh_used_in() -> void:
+	var key := [_selection.get("used_in", null), Session.pinned_recipes.duplicate()]
+	if key == _used_key:
+		return
+	_used_key = key
+	for c in used_row.get_children():
+		used_row.remove_child(c)
+		c.queue_free()
+	var ids = _selection.get("used_in", null)
+	used_col.visible = ids != null
+	if ids == null:
+		return
+	if (ids as Array).is_empty():
+		UiUtil.label("Keine Rezepte brauchen diesen Tower.", used_row, 13).add_theme_color_override("font_color", UiTheme.MUTED)
+		return
+	for id in ids:
+		var c := RecipeBook.card(id, owned, _on_pins_changed, true)
+		c.custom_minimum_size.x = 245
+		c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		used_row.add_child(c)
+
+
+func _on_pins_changed() -> void:
+	_refresh_pinned.call_deferred()
+	_refresh_used_in.call_deferred()
+
+
+func _refresh_pinned() -> void:
+	if pinned_box == null:
+		return
+	for c in pinned_box.get_children():
+		pinned_box.remove_child(c)
+		c.queue_free()
+	var head := HBoxContainer.new()
+	pinned_box.add_child(head)
+	var t := UiUtil.label("Angepinnt", head, 15)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UiUtil.label("%d" % Session.pinned_recipes.size(), head, 12).add_theme_color_override("font_color", UiTheme.MUTED)
+	for id in Session.pinned_recipes:
+		if Database.towers.has(id):
+			pinned_box.add_child(RecipeBook.card(id, owned, _on_pins_changed, true))
+	pinned_panel.visible = not Session.pinned_recipes.is_empty()
+
+
+func _update_layout() -> void:
+	# Trennlinien nur zwischen sichtbaren Spalten
+	var cols: Array[Control] = [strip_col, info_col, used_col, actions_col]
+	var any_before := false
+	for i in cols.size():
+		if i > 0:
+			separators[i - 1].visible = any_before and cols[i].visible
+		any_before = any_before or cols[i].visible
+	bottom.visible = any_before
+	_recenter.call_deferred()
+
+
+## Banner und Auswahlkarte bleiben mittig und passen sich dem Inhalt an (auch beim Schrumpfen).
+func _recenter() -> void:
+	for c in [banner, bottom]:
+		var s: Vector2 = c.get_combined_minimum_size()
+		c.offset_left = -s.x / 2.0
+		c.offset_right = s.x / 2.0
+		if c == bottom:
+			c.offset_top = -16 - s.y
+			c.offset_bottom = -16
+		else:
+			c.offset_bottom = c.offset_top + s.y

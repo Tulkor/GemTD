@@ -80,6 +80,7 @@ func _ready() -> void:
 		var t = game.round_towers[0]
 		game._select(t)
 		check(not game.choice_options(t).is_empty(), "Auswahloptionen vorhanden")
+		check(game.hud._options[0].style == "primary" and game.hud._main_button != null, "Behalten ist die große Hauptaktion")
 		game._on_option_chosen(0)
 		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
 		check(game.towers.size() == round_i + 1, "nur ein Tower behalten, Rest sind Steine (%d Steine)" % game.rocks.size())
@@ -185,6 +186,24 @@ func _ready() -> void:
 	opts = game.choice_options(topaz)
 	labels = opts.map(func(o): return o.label)
 	check(labels == ["One-Shot → Silber"], "Bauphase bietet nur das Rezept an: %s" % [labels])
+	game._refresh_hud()
+	check(game.hud._options.size() == 1 and game.hud._options[0].style == "oneshot", "One-Shot-Button ist lila: %s" % [game.hud._options])
+	check(game.hud.oneshot_pill.visible and "Silber" in game.hud.oneshot_label.text, "Banner zeigt One-Shot: " + game.hud.oneshot_label.text)
+	check(game.hud._gems.all(func(g): return g.oneshot), "alle drei Zutaten lila markiert")
+	game.hud.toggle_recipe_book()
+	await get_tree().process_frame
+	check(game.hud.recipe_book.visible and game.hud.recipe_book.grid.get_child_count() > 10, "Rezeptbuch zeigt %d Rezepte" % game.hud.recipe_book.grid.get_child_count())
+	game.hud.toggle_recipe_book()
+	var st := Recipes.status("silver", [["diamond", 0], ["sapphire", 0]])
+	check(st.missing == 1 and st.lines[2].have == false, "Rezeptstatus Silber: Topas fehlt")
+	st = Recipes.status("poison_slate", [["emerald", 2], ["opal", 1]])
+	check(st.missing == 0, "Rezeptstatus Giftplatte mit 'einer von' erfüllt")
+	check(Recipes.used_in("emerald", 2).has("jade") and Recipes.used_in("emerald", 2).has("poison_slate"), "Normaler Smaragd wird für Jade und Giftplatte gebraucht")
+	Session.pinned_recipes = ["jade"]
+	game._refresh_hud()
+	game.hud._refresh_pinned()
+	check(game.hud.pinned_panel.visible, "angepinntes Rezept wird angezeigt")
+	Session.pinned_recipes = []
 	var rocks_before: int = game.rocks.size()
 	game._on_option_chosen(0)
 	check(topaz.tower_id == "silver" and game.phase == game.Phase.WAVE, "One-Shot gebaut, Welle startet")
