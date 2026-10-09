@@ -1,0 +1,102 @@
+extends Node
+## Automatischer Rauchtest: startet .../godot --headless --path . res://tests/smoke_test.tscn
+## Lädt alle Szenen, spielt ein paar Runden automatisch und beendet sich mit Exit-Code 0/1.
+
+var failures := 0
+
+
+func check(cond: bool, msg: String) -> void:
+	if cond:
+		print("OK   ", msg)
+	else:
+		failures += 1
+		printerr("FAIL ", msg)
+
+
+func _ready() -> void:
+	await get_tree().process_frame
+	check(Database.towers.size() >= 8, "Tower geladen: %d" % Database.towers.size())
+	check(Database.enemies.size() >= 1, "Gegner geladen: %d" % Database.enemies.size())
+	check(not Database.list_maps().is_empty(), "Maps gefunden")
+
+	for m in Database.list_maps():
+		var md := MapData.load_file(m.path)
+		var pf := Pathfinder.new(md)
+		check(not pf.compute_path().is_empty(), "Weg vorhanden auf Map %s" % m.id)
+		# Rundreise JSON
+		check(MapData.from_dict(md.to_dict()).to_dict() == md.to_dict(), "Map %s speichern/laden verlustfrei" % m.id)
+
+	# Blockieren wird verhindert: Spawn einmauern
+	var small := MapData.create_empty(9, 9)
+	small.spawn = Vector2i(0, 0)
+	small.goal = Vector2i(8, 8)
+	small.marker_radius = 0
+	var pf2 := Pathfinder.new(small)
+	pf2.set_solid(Vector2i(1, 0), true)
+	pf2.set_solid(Vector2i(1, 1), true)
+	check(pf2.would_block(Vector2i(0, 1)), "letzter Ausgang wird als blockierend erkannt")
+	check(not pf2.would_block(Vector2i(4, 4)), "normales Feld blockiert nicht")
+
+	# Editoren laden
+	for scene in [Session.MAP_EDITOR, Session.TOWER_EDITOR, Session.MAIN_MENU]:
+		var inst: Node = load(scene).instantiate()
+		add_child(inst)
+		await get_tree().process_frame
+		check(is_instance_valid(inst), "Szene lädt: " + scene)
+		inst.queue_free()
+		await get_tree().process_frame
+
+	# Spiel automatisch spielen
+	Session.map_path = Database.list_maps()[0].path
+	var game: Node = load(Session.GAME).instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	for round_i in 3:
+		var placed := 0
+		var tries := 0
+		while game.phase == game.Phase.BUILD and tries < 5000:
+			tries += 1
+			# nahe am aktuellen Weg bauen, wie ein Spieler
+			var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+			var c := Vector2i(p / MapView.CELL) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+			if game.can_place(c):
+				game.place_gem(c)
+				placed += 1
+		check(game.phase == game.Phase.CHOOSE, "Runde %d: %d Gems gesetzt, Auswahlphase" % [round_i + 1, placed])
+		var t = game.round_towers[0]
+		game._select(t)
+		check(not game.choice_options(t).is_empty(), "Auswahloptionen vorhanden")
+		game._on_option_chosen(0)
+		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
+		check(game.towers.size() == round_i + 1, "nur ein Tower behalten, Rest sind Steine (%d Steine)" % game.rocks.size())
+		check(not game.ground_path.is_empty(), "Weg ist noch offen")
+		Engine.time_scale = 8.0
+		var frames := 0
+		while game.phase == game.Phase.WAVE and frames < 20000:
+			await get_tree().process_frame
+			frames += 1
+		print("  Tower-Schaden: ", game.towers.values().map(func(t): return [t.tower_id, t.cell, int(t.total_damage)]))
+		check(game.phase == game.Phase.BUILD, "Welle %d beendet (Leben %d, Gold %d)" % [round_i + 1, game.lives, game.gold])
+
+	# Kombinieren: zwei gleiche Gems -> nächste Stufe, Rezept -> Silber
+	game.debug_tower = "ruby:0"
+	var cells := []
+	var tries2 := 0
+	while game.phase == game.Phase.BUILD and tries2 < 5000:
+		tries2 += 1
+		var c := Vector2i(rng.randi_range(0, game.map.width - 1), rng.randi_range(0, game.map.height - 1))
+		if game.can_place(c):
+			if game.round_towers.size() == 2: game.debug_tower = "topaz:0"
+			if game.round_towers.size() == 3: game.debug_tower = "diamond:0"
+			if game.round_towers.size() == 4: game.debug_tower = "sapphire:0"
+			game.place_gem(c)
+	var labels: Array = game.choice_options(game.round_towers[0]).map(func(o): return o.label)
+	check(labels.size() == 2, "Rubin: Behalten + 2er-Kombination: %s" % [labels])
+	labels = game.choice_options(game.round_towers[2]).map(func(o): return o.label)
+	check(labels.any(func(l): return "Silber" in l), "Topas: Rezept Silber angeboten: %s" % [labels])
+
+	Engine.time_scale = 1.0
+	print("FERTIG, Fehler: ", failures)
+	get_tree().quit(1 if failures > 0 else 0)
