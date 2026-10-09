@@ -24,6 +24,7 @@ var lives_value: Label
 var gold_value: Label
 var path_value: Label
 var game_over: Control
+var leave_confirm: Control
 var game_over_title: Label
 var game_over_stats: Label
 var editor_button: Button
@@ -84,6 +85,8 @@ var _speed := -1.0
 
 
 func _ready() -> void:
+	# Läuft auch bei pausiertem Spiel weiter, damit die Rückfrage beim Verlassen bedienbar bleibt
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	root = Control.new()
 	root.theme = UiTheme.get_theme()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -118,6 +121,7 @@ func _ready() -> void:
 	recipe_book = RecipeBook.new()
 	root.add_child(recipe_book)
 	_build_game_over()
+	_build_leave_confirm()
 	recipe_book.pins_changed.connect(_refresh_pinned)
 	_refresh_pinned()
 
@@ -133,6 +137,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	if game_over != null and game_over.visible:
+		return
+	if leave_confirm != null and leave_confirm.visible:
+		if event.keycode == KEY_ESCAPE:
+			close_leave_confirm()
+		get_viewport().set_input_as_handled()
 		return
 	match event.keycode:
 		KEY_R:
@@ -189,7 +198,7 @@ func _build_top_bar() -> void:
 	bar.custom_minimum_size.y = 52
 	root.add_child(bar)
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 8)
+	h.add_theme_constant_override("separation", 5)
 	bar.add_child(h)
 	var title := UiUtil.label("GemTD", h, 22)
 	title.add_theme_color_override("font_color", UiTheme.GOLD)
@@ -222,7 +231,8 @@ func _build_top_bar() -> void:
 
 	debug_option = OptionButton.new()
 	debug_option.fit_to_longest_item = false
-	debug_option.custom_minimum_size.x = 150
+	debug_option.clip_text = true
+	debug_option.custom_minimum_size.x = 130
 	debug_option.focus_mode = Control.FOCUS_NONE
 	debug_option.tooltip_text = "Debug: welcher Gem als nächstes gesetzt wird"
 	h.add_child(debug_option)
@@ -233,9 +243,9 @@ func _build_top_bar() -> void:
 	immortal_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
 	immortal_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 
-	_button("Rezepte (R)", h, toggle_recipe_book)
+	_button("Rezepte", h, toggle_recipe_book).tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
-	_button("Menü", h, func(): menu_requested.emit())
+	_button("Menü", h, open_leave_confirm)
 
 
 func _spacer(w: float) -> Control:
@@ -653,6 +663,58 @@ func _build_game_over() -> void:
 	var menu := _button("Hauptmenü", v, func(): main_menu_requested.emit())
 	menu.custom_minimum_size.y = 44
 	game_over.hide()
+
+
+## Rückfrage, bevor der Menü-Knopf die laufende Partie verlässt. Das Spiel ist solange pausiert.
+func _build_leave_confirm() -> void:
+	leave_confirm = Control.new()
+	leave_confirm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	leave_confirm.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(leave_confirm)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	leave_confirm.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	leave_confirm.add_child(center)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.custom_minimum_size.x = 380
+	center.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	panel.add_child(v)
+	var title := UiUtil.label("Spiel verlassen?", v, 28)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var text := UiUtil.label("Die laufende Partie geht dabei verloren.", v, 15)
+	text.add_theme_color_override("font_color", UiTheme.DIM)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_spacer(0))
+	var stay := _button("Weiterspielen", v, close_leave_confirm)
+	stay.custom_minimum_size.y = 52
+	stay.add_theme_font_size_override("font_size", 18)
+	UiTheme.accent_button(stay, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	var leave := _button("Verlassen", v, func():
+		leave_confirm.hide()
+		menu_requested.emit())
+	leave.custom_minimum_size.y = 44
+	leave.add_theme_color_override("font_color", UiTheme.MISSING)
+	leave.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
+	var hint := UiUtil.label("Esc: weiterspielen", v, 12)
+	hint.add_theme_color_override("font_color", UiTheme.MUTED)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	leave_confirm.hide()
+
+
+func open_leave_confirm() -> void:
+	leave_confirm.show()
+	get_tree().paused = true
+
+
+func close_leave_confirm() -> void:
+	leave_confirm.hide()
+	get_tree().paused = false
 
 
 func toggle_recipe_book() -> void:

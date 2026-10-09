@@ -308,6 +308,12 @@ func _ready() -> void:
 	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
 	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
 
+	# Menü-Knopf fragt erst nach und pausiert solange
+	game.hud.open_leave_confirm()
+	check(game.hud.leave_confirm.visible and get_tree().paused, "Menü-Knopf zeigt Rückfrage und pausiert")
+	game.hud.close_leave_confirm()
+	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Weiterspielen schließt Rückfrage")
+
 	# Sprechblase, wenn das Gold für die nächste Chance-Stufe reicht
 	var old_gold: int = game.gold
 	var old_level: int = game.chance_level

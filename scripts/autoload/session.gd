@@ -24,4 +24,5 @@ var return_scene := MAIN_MENU
 
 func goto(scene: String) -> void:
 	Engine.time_scale = 1.0
+	get_tree().paused = false
 	get_tree().change_scene_to_file(scene)
