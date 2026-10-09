@@ -11,6 +11,7 @@ signal menu_requested
 signal main_menu_requested
 signal restart_requested
 signal debug_tower_changed(key: String)
+signal debug_immortal_changed(on: bool)
 
 const BANNER_TOP := 64.0
 const LEFT_TOP := 120.0
@@ -34,6 +35,7 @@ var _chance_level := -1
 var _bubble_dismissed_level := -1
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
+var immortal_button: Button
 var debug_keys: Array[String] = []
 
 var banner: PanelContainer
@@ -225,6 +227,11 @@ func _build_top_bar() -> void:
 	debug_option.tooltip_text = "Debug: welcher Gem als nächstes gesetzt wird"
 	h.add_child(debug_option)
 	debug_option.item_selected.connect(func(i): debug_tower_changed.emit(debug_keys[i]))
+	immortal_button = _button("Unsterblich", h, func(): debug_immortal_changed.emit(immortal_button.button_pressed))
+	immortal_button.toggle_mode = true
+	immortal_button.tooltip_text = "Debug: Leben dürfen ins Minus gehen, das Spiel endet nicht"
+	immortal_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+	immortal_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 
 	_button("Rezepte (R)", h, toggle_recipe_book)
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)

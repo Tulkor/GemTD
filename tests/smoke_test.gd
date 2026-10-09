@@ -328,6 +328,14 @@ func _ready() -> void:
 
 	# Weglänge in der Leiste und Menü am Spielende
 	check(game.path_length > 0 and str(game.path_length) in game.hud.path_value.text, "Weglänge angezeigt: " + game.hud.path_value.text)
+	# Debug „Unsterblich“: Leben gehen ins Minus, kein Spielende
+	Session.debug_immortal = true
+	game.lives = 1
+	var leaker := Enemy.new()
+	leaker.damage = 3
+	game.on_enemy_leaked(leaker)
+	check(game.lives == -2 and game.phase < game.Phase.GAME_OVER, "Unsterblich: Leben %d, Spiel läuft weiter" % game.lives)
+	Session.debug_immortal = false
 	game._finish(game.Phase.GAME_OVER)
 	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
 

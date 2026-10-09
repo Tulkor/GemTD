@@ -14,6 +14,8 @@ var map_override: MapData = null
 var editor_map: MapData = null
 ## "tower_id:stufe" – im Debug-Menü des Spiels vorausgewählt.
 var test_tower := ""
+## Debug: Leben dürfen ins Minus gehen, das Spiel endet nicht.
+var debug_immortal := false
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Wohin "Zurück" im Spiel führt.

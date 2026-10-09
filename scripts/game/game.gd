@@ -83,6 +83,8 @@ func _ready() -> void:
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
 	hud.restart_requested.connect(func(): Session.goto(Session.GAME))
 	hud.debug_tower_changed.connect(func(k): debug_tower = k)
+	hud.debug_immortal_changed.connect(func(on): Session.debug_immortal = on)
+	hud.immortal_button.set_pressed_no_signal(Session.debug_immortal)
 	debug_tower = Session.test_tower
 	hud.setup_debug_towers(debug_tower)
 
@@ -693,7 +695,8 @@ func on_enemy_killed(e: Enemy) -> void:
 func on_enemy_leaked(e: Enemy) -> void:
 	lives -= e.damage
 	_remove_enemy(e)
-	if lives <= 0:
+	# Debug „Unsterblich“: Leben gehen ins Minus, das Spiel läuft weiter
+	if lives <= 0 and not Session.debug_immortal:
 		lives = 0
 		_finish(Phase.GAME_OVER)
 	_refresh_hud()

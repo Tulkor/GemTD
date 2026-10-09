@@ -55,6 +55,7 @@ Weitere Regeln:
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).
 
 Unter „Debug: nächster Gem“ lässt sich jeder Tower in jeder Stufe direkt setzen.
+Der Schalter „Unsterblich“ daneben lässt die Leben ins Minus gehen, ohne dass das Spiel endet.
 
 ## Tower
 
