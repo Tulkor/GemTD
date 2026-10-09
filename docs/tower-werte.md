@@ -43,7 +43,7 @@ Reichweite in Towerbreiten. **DPS** ist der Schaden pro Sekunde gegen ein einzel
 |  | Normal |  | 20–25 | 1 | 22 | 6,25 | Fläche 50 % im Radius 1,76 |
 |  | Makellos |  | 38–45 | 1 | 42 | 6,25 | Fläche 50 % im Radius 1,37 |
 |  | Perfekt |  | 80–100 | 1 | 90 | 7,03 | Fläche 50 % im Radius 1,72 |
-|  | Groß |  | 140 | 0,5 | 280 | 7,03 | 3 Ziele gleichzeitig |
+|  | Groß |  | 185 | 0,5 | 370 | 7,03 | 3 Ziele gleichzeitig |
 | Saphir | Splitter | Zauber | 8–11 | 0,8 | 12 | 4,3 | verlangsamt 30 % für 5 s |
 |  | Fehlerhaft |  | 10–14 | 1 | 12 | 5,86 | verlangsamt 20 % für 5 s |
 |  | Normal |  | 16–22 | 1 | 19 | 6,25 | verlangsamt 20 % für 5 s |
@@ -90,7 +90,7 @@ Reichweite in Towerbreiten. **DPS** ist der Schaden pro Sekunde gegen ein einzel
 | Stein von Bryvx |  | Belagerung | 500 | 0,8 | 625 | 6,64 | Aura: Tower +50 % Schaden (Radius 11,72) | aus Überlauf |
 | Sternrubin | Sternrubin | Held | – | – | – | – | Brand-Aura 40/s ohne Rüstung (Radius 2,07) | Rubin Fehlerhaft + Amethyst Splitter + Rubin Splitter |
 |  | Blutstern |  | – | – | – | – | Brand-Aura 50/s ohne Rüstung (Radius 3,91) | Upgrade 30 Gold |
-|  | Feuerstern |  | 65 | 0,5 | 130 | 4,69 | 99 Ziele gleichzeitig | Upgrade 290 Gold |
+|  | Feuerstern |  | 130 | 0,5 | 260 | 4,69 | 99 Ziele gleichzeitig | Upgrade 290 Gold |
 | Uran 238 | Uran 238 | Magie | – | – | – | – | Brand-Aura 80/s ohne Rüstung (Radius 3,91); Aura: Gegner −50 % Tempo (Radius 3,91) | Topas Perfekt + Saphir Normal + Opal Fehlerhaft |
 |  | Uran 235 |  | 14 | 0,2 | 70 | 7,03 | 99 Ziele gleichzeitig; Brand-Aura 80/s ohne Rüstung (Radius 3,91); Aura: Gegner −50 % Tempo (Radius 3,91) | Upgrade 190 Gold |
 

@@ -1,10 +1,12 @@
 extends Node
 ## Balance-Check späte Wellen: wie viel Prozent der Gesamt-HP einer Welle schafft ein einzelner Tower?
 ## Start: godot --headless --fixed-fps 60 --path . res://tests/late_balance_test.tscn -- [--tower=gold:1] [--waves=30,35]
-##        [--scenarios=normal,mass,boss] [--absolute]
+##        [--scenarios=normal,mass,boss] [--absolute] [--trap-passes=3]
 ## Szenarien mit gleicher Gesamt-HP wie die Welle: normal (wie in der Wellendatei),
 ## mass (30 Gegner dicht hintereinander) und boss (ein einzelner Gegner mit der ganzen HP).
-## Der Tower steht allein an der ersten Ecke der klassischen Map (Fallen liegen auf dem Weg),
+## Der Tower steht allein an der ersten Ecke der klassischen Map. Fallen liegen auf dem Weg, und der Weg
+## führt hin und zurück, sodass die Welle trap_passes-mal darüberläuft (Platten sind für mehrere
+## Durchgänge im Labyrinth gedacht; nur ungerade Zahlen, damit die Gegner danach weiterlaufen).
 ## die übrigen vier Gems der Runde werden abseits zu Steinen. Leben sind unbegrenzt, jede Welle
 ## läuft also komplett durch. Ausgabe pro Zeile: Tower, dann Prozent der Wellen-HP je Welle.
 ## Auren für andere Tower (Schaden, Tempo) und Verlangsamung zählen hier nicht mit.
@@ -18,6 +20,7 @@ const MASS_INTERVAL := 0.25
 const ROCKS_AT := [Vector2i(40, 50), Vector2i(44, 50), Vector2i(48, 50), Vector2i(52, 50)]
 
 var absolute := false
+var trap_passes := 1
 
 
 func _ready() -> void:
@@ -31,6 +34,8 @@ func _ready() -> void:
 			configs.append([p[0], int(p[1]) if p.size() > 1 else 0])
 		elif arg.begins_with("--waves="):
 			waves = Array(arg.substr(8).split(",")).map(func(s): return int(s))
+		elif arg.begins_with("--trap-passes="):
+			trap_passes = int(arg.substr(14))
 		elif arg == "--absolute":
 			absolute = true
 		elif arg.begins_with("--scenarios="):
@@ -66,6 +71,30 @@ func _is_air(wave: int) -> bool:
 	return Database.enemies.get(str(g.enemy), {}).get("flying", false)
 
 
+func _nearest_index(path: PackedVector2Array, p: Vector2) -> int:
+	var best := 0
+	for i in path.size():
+		if path[i].distance_to(p) < path[best].distance_to(p):
+			best = i
+	return best
+
+
+## Weg, der um die Falle bei Index k hin- und herführt, sodass sie passes-mal überquert wird.
+func _detour(path: PackedVector2Array, k: int, passes: int) -> PackedVector2Array:
+	const MARGIN := 6  ## Felder vor und hinter der Falle, weit genug aus ihrer Reichweite
+	var a := maxi(k - MARGIN, 0)
+	var b := mini(k + MARGIN, path.size() - 1)
+	var forward := path.slice(a, b + 1)
+	var back := forward.duplicate()
+	back.reverse()
+	var out := path.slice(0, b + 1)
+	for i in (passes - 1) / 2:
+		out.append_array(back)
+		out.append_array(forward)
+	out.append_array(path.slice(b + 1))
+	return out
+
+
 ## Gruppen der Welle im gewünschten Szenario, Gesamt-HP bleibt gleich.
 func _groups(wave: int, scenario: String) -> Array:
 	var groups: Array = Database.wave_sets.get("classic", {}).get("waves", [])[wave - 1].groups
@@ -90,9 +119,11 @@ func _run(id: String, tier: int, wave: int, scenario := "normal") -> float:
 	game.waves[wave - 1] = {"groups": _groups(wave, scenario)}
 	game.lives = 1000000
 	var at := TOWER_AT
+	var trap_index := -1
 	if str(Database.towers[id].get("kind", "tower")) == "trap":
 		var path: Array = game.pathfinder.compute_path()
-		at = path[path.size() / 8]
+		trap_index = path.size() / 8
+		at = path[trap_index]
 	game.debug_tower = "%s:%d" % [id, tier]
 	var t: Tower = game.place_gem(at)
 	game.debug_tower = "topaz:0"
@@ -100,6 +131,8 @@ func _run(id: String, tier: int, wave: int, scenario := "normal") -> float:
 		game.place_gem(a)
 	game._select(t)
 	game._on_option_chosen(0)
+	if trap_index >= 0 and trap_passes > 1:
+		game.ground_path = _detour(game.ground_path, _nearest_index(game.ground_path, t.pos), trap_passes)
 	var total_hp := 0.0
 	for g in game.waves[wave - 1].groups:
 		total_hp += float(g.get("hp", Database.enemies[str(g.enemy)].hp)) * int(g.count)
