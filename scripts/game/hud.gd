@@ -59,6 +59,7 @@ var message_label: Label
 var recipe_book: RecipeBook
 
 var owned: Array = []
+var owned_now := {}
 var _options: Array = []
 var _main_index := -1
 var _main_button: Button
@@ -376,15 +377,17 @@ func set_phase(title: String, text: String, oneshot := "") -> void:
 
 
 ## Tower auf dem Feld plus neue Gems, als [id, stufe] – für die Rezeptanzeige.
-func set_owned(list: Array) -> void:
-	if list == owned:
+## now: was gerade zum Bauen zählt, {"pool": [[id, stufe]], "wave": bool} (siehe Recipes.ready_now).
+func set_owned(list: Array, now := {}) -> void:
+	if list == owned and now == owned_now:
 		return
 	owned = list
+	owned_now = now
 	_used_key = []
 	_refresh_used_in()
 	_refresh_pinned()
 	if recipe_book.visible:
-		recipe_book.open(owned)
+		recipe_book.open(owned, owned_now)
 
 
 ## gems: [{label, color, selected, oneshot}] – die neuen Gems der Runde.
@@ -598,13 +601,13 @@ func toggle_recipe_book() -> void:
 	if recipe_book.visible:
 		recipe_book.close()
 	else:
-		recipe_book.open(owned)
+		recipe_book.open(owned, owned_now)
 
 
 # --- intern ------------------------------------------------------------------
 
 func _refresh_used_in() -> void:
-	var key := [_selection.get("used_in", null), Session.pinned_recipes.duplicate()]
+	var key := [_selection.get("used_in", null), Session.pinned_recipes.duplicate(), owned_now]
 	if key == _used_key:
 		return
 	_used_key = key
@@ -619,7 +622,7 @@ func _refresh_used_in() -> void:
 		UiUtil.label("Keine Rezepte brauchen diesen Tower.", used_row, 13).add_theme_color_override("font_color", UiTheme.MUTED)
 		return
 	for id in ids:
-		var c := RecipeBook.card(id, owned, _on_pins_changed, true)
+		var c := RecipeBook.card(id, owned, _on_pins_changed, true, owned_now)
 		c.custom_minimum_size.x = 245
 		c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		used_row.add_child(c)
@@ -643,7 +646,7 @@ func _refresh_pinned() -> void:
 	UiUtil.label("%d" % Session.pinned_recipes.size(), head, 12).add_theme_color_override("font_color", UiTheme.MUTED)
 	for id in Session.pinned_recipes:
 		if Database.towers.has(id):
-			pinned_box.add_child(RecipeBook.card(id, owned, _on_pins_changed, true))
+			pinned_box.add_child(RecipeBook.card(id, owned, _on_pins_changed, true, owned_now))
 	pinned_panel.visible = not Session.pinned_recipes.is_empty()
 
 

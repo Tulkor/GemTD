@@ -62,6 +62,17 @@ static func _matches(ing: Dictionary, id: String, tier: int) -> bool:
 	return str(ing.get("tower", "")) == id and int(ing.get("tier", 0)) == tier
 
 
+## Ob das Rezept gerade jetzt baubar ist. now = {"pool": [[id, stufe]], "wave": bool}:
+## während der Welle zählen die fertigen Tower auf dem Feld (ohne Rezepte nur aus einer Runde),
+## beim Setzen und Auswählen nur die neuen Gems dieser Runde. Leeres now: alles zählt.
+static func ready_now(id: String, owned: Array, now: Dictionary) -> bool:
+	if now.is_empty():
+		return status(id, owned).missing == 0
+	if now.get("wave", false) and Database.towers.get(id, {}).get("recipe_same_round", false):
+		return false
+	return status(id, now.get("pool", [])).missing == 0
+
+
 ## Rezepte, in denen der Tower id/tier als Zutat vorkommt.
 static func used_in(id: String, tier: int) -> Array:
 	return ids().filter(func(sid): return (Database.towers[sid].get("recipe", []) as Array).any(func(ing): return _matches(ing, id, tier)))

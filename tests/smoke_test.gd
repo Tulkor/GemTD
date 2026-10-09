@@ -219,6 +219,10 @@ func _ready() -> void:
 	st = Recipes.status("poison_slate", [["emerald", 2], ["opal", 1]])
 	check(st.missing == 0, "Rezeptstatus Giftplatte mit 'einer von' erfüllt")
 	check(Recipes.used_in("emerald", 2).has("jade") and Recipes.used_in("emerald", 2).has("poison_slate"), "Normaler Smaragd wird für Jade und Giftplatte gebraucht")
+	var jade_set := [["emerald", 2], ["opal", 2], ["sapphire", 1]]
+	check(not Recipes.ready_now("jade", jade_set, {"pool": [], "wave": false}), "Jade mit Feld-Towern beim Setzen nicht baubar")
+	check(Recipes.ready_now("jade", jade_set, {"pool": jade_set, "wave": true}), "Jade mit Feld-Towern in der Welle baubar")
+	check(not Recipes.ready_now("poison_slate", [["emerald", 2], ["opal", 1]], {"pool": [["emerald", 2], ["opal", 1]], "wave": true}), "Giftplatte nur aus einer Runde, nicht in der Welle")
 	Session.pinned_recipes = ["jade"]
 	game._refresh_hud()
 	game.hud._refresh_pinned()

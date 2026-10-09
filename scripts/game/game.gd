@@ -605,7 +605,10 @@ func _refresh_hud() -> void:
 	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), lives, gold)
 	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
 	hud.set_waves(_upcoming_waves(4))
-	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]))
+	# Baubar: in der Welle aus fertigen Towern, beim Setzen und Auswählen nur aus den Gems der Runde
+	var now_pool: Array = towers.values().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
+	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]),
+			{"pool": now_pool.map(func(t): return [t.tower_id, t.tier]), "wave": phase == Phase.WAVE})
 
 	# Neue Gems, die eine Zutat für einen Spezial-Tower aus dieser Runde sind (lila markiert)
 	var specials := []
@@ -654,10 +657,19 @@ func _refresh_hud() -> void:
 		hud.set_options([])
 		return
 	var lines := selected.info_text().split("\n")
-	hud.set_selection({"title": lines[0], "color": selected.color, "body": "\n".join(lines.slice(1)),
-			"used_in": Recipes.used_in(selected.tower_id, selected.tier)})
+	var used := Recipes.used_in(selected.tower_id, selected.tier)
+	var body := "\n".join(lines.slice(1))
+	if not selected.is_new and phase <= Phase.CHOOSE and _field_recipe_complete(used):
+		body += "\nKombinieren geht erst wieder während der Welle."
+	hud.set_selection({"title": lines[0], "color": selected.color, "body": body, "used_in": used})
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
+
+
+## Ob eines der Rezepte mit den fertigen Towern auf dem Feld komplett wäre (für den Hinweis außerhalb der Welle).
+func _field_recipe_complete(ids: Array) -> bool:
+	var field: Array = towers.values().filter(func(t): return not t.is_new).map(func(t): return [t.tower_id, t.tier])
+	return ids.any(func(id): return Recipes.ready_now(id, field, {"pool": field, "wave": true}))
 
 
 ## Vorschau der nächsten Wellen für die linke Spalte.

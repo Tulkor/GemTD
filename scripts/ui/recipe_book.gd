@@ -8,6 +8,7 @@ signal closed
 const COLUMNS := 4
 
 var owned: Array = []
+var now := {}
 var filter := "all"
 var grid: GridContainer
 var search: LineEdit
@@ -26,11 +27,13 @@ static func toggle_pin(id: String) -> void:
 
 
 ## Karte für ein Rezept. on_pin wird nach dem Umschalten des Pins aufgerufen.
-static func card(id: String, have: Array, on_pin: Callable, compact := false) -> PanelContainer:
+## now: was gerade zum Bauen zählt, siehe Recipes.ready_now.
+static func card(id: String, have: Array, on_pin: Callable, compact := false, now := {}) -> PanelContainer:
 	var st := Recipes.status(id, have)
+	var ready := Recipes.ready_now(id, have, now)
 	var pinned := is_pinned(id)
 	var p := PanelContainer.new()
-	var border := UiTheme.HAVE if st.missing == 0 else (UiTheme.GOLD if pinned else UiTheme.BORDER)
+	var border := UiTheme.HAVE if ready else (UiTheme.GOLD if pinned else UiTheme.BORDER)
 	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, border, 8, 1, 10))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)
@@ -46,8 +49,22 @@ static func card(id: String, have: Array, on_pin: Callable, compact := false) ->
 	var name_l := UiUtil.label(Database.tower_label(id, 0), head, 15)
 	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_l.clip_text = true
-	var status_l := UiUtil.label("baubar" if st.missing == 0 else "noch %d" % st.missing, head, 12)
-	status_l.add_theme_color_override("font_color", UiTheme.HAVE if st.missing == 0 else UiTheme.MISSING)
+	var status_text := "noch %d" % st.missing
+	var status_col := UiTheme.MISSING
+	if ready:
+		status_text = "baubar"
+		status_col = UiTheme.HAVE
+	elif st.missing == 0 and Database.towers[id].get("recipe_same_round", false):
+		# Alles da, aber nicht aus einer Runde: geht nur als One-Shot mit den neuen Gems
+		status_text = "nur aus einer Runde"
+		status_col = UiTheme.MUTED
+		p.tooltip_text = "Alle Zutaten müssen in derselben Runde gesetzt werden."
+	elif st.missing == 0:
+		status_text = "in der Welle"
+		status_col = UiTheme.GOLD
+		p.tooltip_text = "Fertige Tower auf dem Feld lassen sich nur während der Welle kombinieren."
+	var status_l := UiUtil.label(status_text, head, 12)
+	status_l.add_theme_color_override("font_color", status_col)
 	var pin := Button.new()
 	pin.text = "Gepinnt" if pinned else "Pin"
 	pin.tooltip_text = "Rezept lösen" if pinned else "Rezept anpinnen: erscheint im Spiel links oben"
@@ -71,6 +88,7 @@ static func card(id: String, have: Array, on_pin: Callable, compact := false) ->
 		var l := UiUtil.label(("    " if line.indent > 0 else "") + text, v, 13 if not compact else 12)
 		l.add_theme_color_override("font_color", col)
 	p.set_meta("missing", st.missing)
+	p.set_meta("ready", ready)
 	return p
 
 
@@ -100,7 +118,7 @@ func _ready() -> void:
 	var title := UiUtil.label("Rezeptbuch", head, 26)
 	title.add_theme_color_override("font_color", UiTheme.GOLD)
 	var group := ButtonGroup.new()
-	for f in [["all", "Alle"], ["ready", "Baubar"], ["pinned", "Angepinnt"]]:
+	for f in [["all", "Alle"], ["ready", "Jetzt baubar"], ["pinned", "Angepinnt"]]:
 		var b := Button.new()
 		b.text = f[1]
 		b.toggle_mode = true
@@ -139,13 +157,15 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	scroll.add_child(grid)
 
-	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Gezählt werden alle Tower auf dem Feld und die neuen Gems dieser Runde.", v, 13)
+	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Grün/rot zählt alle Tower auf dem Feld und die neuen Gems. Baubar ist ein Rezept aber nur so: beim Setzen und Auswählen aus den Gems dieser Runde, während der Welle aus fertigen Towern auf dem Feld.", v, 13)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hide()
 
 
-func open(have: Array) -> void:
+func open(have: Array, now_pool := {}) -> void:
 	owned = have
+	now = now_pool
 	show()
 	refresh()
 
@@ -174,13 +194,16 @@ func refresh() -> void:
 				continue
 		var c := card(id, owned, func():
 			refresh.call_deferred()
-			pins_changed.emit())
-		if filter == "ready" and int(c.get_meta("missing")) > 0:
+			pins_changed.emit(), false, now)
+		if filter == "ready" and not c.get_meta("ready"):
 			c.free()
 			continue
 		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cards.append(c)
-	cards.sort_custom(func(a, b): return int(a.get_meta("missing")) < int(b.get_meta("missing")))
+	cards.sort_custom(func(a, b):
+		if a.get_meta("ready") != b.get_meta("ready"):
+			return a.get_meta("ready")
+		return int(a.get_meta("missing")) < int(b.get_meta("missing")))
 	for c in cards:
 		grid.add_child(c)
 	if cards.is_empty():
