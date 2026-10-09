@@ -16,6 +16,7 @@ var editor_map: MapData = null
 var test_tower := ""
 ## Debug: Leben dürfen ins Minus gehen, das Spiel endet nicht.
 var debug_immortal := false
+var debug_gems_per_round := 0   ## Debug: Gems pro Runde, 0 = Wert aus balance.json
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Wohin "Zurück" im Spiel führt.

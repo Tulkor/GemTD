@@ -308,6 +308,31 @@ func _ready() -> void:
 	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
 	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
 
+	# Debug-Menü
+	var g0: int = game.gold
+	game.hud.debug_gold_requested.emit(100)
+	check(game.gold == g0 + 100, "Debug: Gold +100")
+	var l0: int = game.lives
+	game.hud.debug_lives_requested.emit(10)
+	check(game.lives == l0 + 10, "Debug: Leben +10")
+	game.hud.debug_gems.value = 3
+	check(game.gems_per_round() == 3, "Debug: Gems pro Runde einstellbar")
+	game.hud.debug_gems.value = 5
+	Session.debug_gems_per_round = 0
+	var sep_ok := false
+	for i in game.hud.debug_option.item_count:
+		if game.hud.debug_option.is_item_separator(i) and game.hud.debug_option.get_item_text(i) == "Spezial-Tower":
+			sep_ok = game.hud.debug_keys[i] == "" and game.hud.debug_keys[i + 1].begins_with(Database.special_ids()[0])
+	check(sep_ok, "Debug: Gem-Liste mit Trennern Basis-Gems / Spezial-Tower")
+	game.lives = l0
+	game.gold = g0
+	var w0: int = game.wave_index
+	if game.phase != game.Phase.WAVE:
+		game.debug_jump_to_wave(3)
+		check(game.wave_index == 2 and game._upcoming_waves(1)[0].number == 3, "Debug: Welle 3 kommt als nächste")
+		game.wave_index = w0
+		game._refresh_hud()
+
 	# Menü-Knopf fragt erst nach und pausiert solange
 	game.hud.open_leave_confirm()
 	check(game.hud.leave_confirm.visible and get_tree().paused, "Menü-Knopf zeigt Rückfrage und pausiert")

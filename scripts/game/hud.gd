@@ -12,6 +12,10 @@ signal main_menu_requested
 signal restart_requested
 signal debug_tower_changed(key: String)
 signal debug_immortal_changed(on: bool)
+signal debug_gems_changed(count: int)
+signal debug_gold_requested(amount: int)
+signal debug_lives_requested(amount: int)
+signal debug_wave_requested(number: int)
 
 const BANNER_TOP := 64.0
 const LEFT_TOP := 120.0
@@ -36,6 +40,10 @@ var _chance_level := -1
 var _bubble_dismissed_level := -1
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
+var debug_button: Button
+var debug_panel: PanelContainer
+var debug_gems: SpinBox
+var debug_wave: SpinBox
 var immortal_button: Button
 var debug_keys: Array[String] = []
 
@@ -97,6 +105,7 @@ func _ready() -> void:
 	_build_pinned()
 	_build_bottom()
 	_build_help()
+	_build_debug()
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -229,19 +238,11 @@ func _build_top_bar() -> void:
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		speed_buttons.append(b)
 
-	debug_option = OptionButton.new()
-	debug_option.fit_to_longest_item = false
-	debug_option.clip_text = true
-	debug_option.custom_minimum_size.x = 130
-	debug_option.focus_mode = Control.FOCUS_NONE
-	debug_option.tooltip_text = "Debug: welcher Gem als nächstes gesetzt wird"
-	h.add_child(debug_option)
-	debug_option.item_selected.connect(func(i): debug_tower_changed.emit(debug_keys[i]))
-	immortal_button = _button("Unsterblich", h, func(): debug_immortal_changed.emit(immortal_button.button_pressed))
-	immortal_button.toggle_mode = true
-	immortal_button.tooltip_text = "Debug: Leben dürfen ins Minus gehen, das Spiel endet nicht"
-	immortal_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
-	immortal_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	debug_button = _button("Debug", h, func(): debug_panel.visible = not debug_panel.visible)
+	debug_button.toggle_mode = true
+	debug_button.tooltip_text = "Debug-Menü"
+	debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+	debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 
 	_button("Rezepte", h, toggle_recipe_book).tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
@@ -385,17 +386,99 @@ func _build_help() -> void:
 	help_panel.hide()
 
 
+## Debug-Menü unter dem Debug-Knopf: Gems pro Runde, Gold, Leben, nächster Gem, Unsterblich, Welle.
+func _build_debug() -> void:
+	debug_panel = PanelContainer.new()
+	debug_panel.anchor_left = 1.0
+	debug_panel.anchor_right = 1.0
+	debug_panel.offset_top = 60
+	debug_panel.offset_right = -16
+	debug_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	debug_panel.custom_minimum_size.x = 320
+	debug_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 10, 1, 14))
+	root.add_child(debug_panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	debug_panel.add_child(v)
+	var title := UiUtil.label("Debug", v, 18)
+	title.add_theme_color_override("font_color", UiTheme.GOLD)
+
+	var row := _debug_row("Gems pro Runde", v)
+	debug_gems = SpinBox.new()
+	debug_gems.min_value = 1
+	debug_gems.max_value = 20
+	debug_gems.value_changed.connect(func(n): debug_gems_changed.emit(int(n)))
+	row.add_child(debug_gems)
+
+	row = _debug_row("Gold", v)
+	for n in [100, 1000]:
+		_button("+%d" % n, row, func(): debug_gold_requested.emit(n))
+	row = _debug_row("Leben", v)
+	for n in [10, 50]:
+		_button("+%d" % n, row, func(): debug_lives_requested.emit(n))
+
+	UiTheme.caption("Nächster Gem", v)
+	debug_option = OptionButton.new()
+	debug_option.fit_to_longest_item = false
+	debug_option.clip_text = true
+	debug_option.focus_mode = Control.FOCUS_NONE
+	debug_option.tooltip_text = "Welcher Gem als nächstes gesetzt wird"
+	v.add_child(debug_option)
+	debug_option.item_selected.connect(func(i): debug_tower_changed.emit(debug_keys[i]))
+
+	immortal_button = CheckBox.new()
+	immortal_button.text = "Unsterblich (Leben dürfen ins Minus)"
+	immortal_button.focus_mode = Control.FOCUS_NONE
+	immortal_button.toggled.connect(func(on): debug_immortal_changed.emit(on))
+	v.add_child(immortal_button)
+
+	row = _debug_row("Welle", v)
+	debug_wave = SpinBox.new()
+	debug_wave.min_value = 1
+	row.add_child(debug_wave)
+	_button("Starten", row, func(): debug_wave_requested.emit(int(debug_wave.value)))
+	var hint := UiUtil.wrap_label("Läuft gerade eine Welle, wird sie abgebrochen und die gewählte startet sofort. In der Bau- und Wahlphase kommt sie als nächste.", v, 290)
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", UiTheme.MUTED)
+	debug_panel.hide()
+
+
+func _debug_row(text: String, parent: Node) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	parent.add_child(row)
+	var l := UiUtil.label(text, row, 14)
+	l.custom_minimum_size.x = 120
+	return row
+
+
 # --- Schnittstelle für game.gd -------------------------------------------------
 
 func setup_debug_towers(preselect: String) -> void:
 	debug_option.clear()
 	debug_keys = [""]
-	debug_option.add_item("Debug: zufälliger Gem")
-	for id in Database.tower_ids():
-		for t in Database.tier_count(id):
-			debug_keys.append("%s:%d" % [id, t])
-			debug_option.add_item(Database.tower_label(id, t))
-	debug_option.select(maxi(debug_keys.find(preselect), 0))
+	debug_option.add_item("Zufälliger Gem")
+	var specials := Database.special_ids()
+	var gems := Database.gem_ids()
+	var groups := [["Basis-Gems", gems], ["Spezial-Tower", specials],
+			["Sonstige", Database.tower_ids().filter(func(id): return not gems.has(id) and not specials.has(id))]]
+	for g in groups:
+		if (g[1] as Array).is_empty():
+			continue
+		# Trenner: OptionButton zählt sie als Einträge mit, daher Platzhalter in debug_keys
+		debug_option.add_separator(g[0])
+		debug_keys.append("")
+		for id in g[1]:
+			for t in Database.tier_count(id):
+				debug_keys.append("%s:%d" % [id, t])
+				debug_option.add_item(Database.tower_label(id, t))
+	debug_option.select(maxi(debug_keys.find(preselect), 0) if preselect != "" else 0)
+
+
+## Werte für das Debug-Menü: Gems pro Runde und Anzahl der Wellen.
+func setup_debug(gems_per_round: int, wave_count: int) -> void:
+	debug_gems.set_value_no_signal(gems_per_round)
+	debug_wave.max_value = maxi(wave_count, 1)
 
 
 func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:

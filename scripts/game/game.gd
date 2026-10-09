@@ -87,6 +87,15 @@ func _ready() -> void:
 	hud.immortal_button.set_pressed_no_signal(Session.debug_immortal)
 	debug_tower = Session.test_tower
 	hud.setup_debug_towers(debug_tower)
+	hud.setup_debug(gems_per_round(), waves.size())
+	hud.debug_gems_changed.connect(_debug_set_gems)
+	hud.debug_gold_requested.connect(func(n):
+		gold += n
+		_refresh_hud())
+	hud.debug_lives_requested.connect(func(n):
+		lives += n
+		_refresh_hud())
+	hud.debug_wave_requested.connect(debug_jump_to_wave)
 
 	_apply_variance()
 	_update_paths()
@@ -310,7 +319,31 @@ func _select(t: Tower, rock := NO_CELL) -> void:
 # --- Bauphase ----------------------------------------------------------------
 
 func gems_per_round() -> int:
+	if Session.debug_gems_per_round > 0:
+		return Session.debug_gems_per_round
 	return int(Database.balance.get("gems_per_round", 5))
+
+
+func _debug_set_gems(n: int) -> void:
+	Session.debug_gems_per_round = n
+	# Schon genug gesetzt: gleich in die Wahlphase
+	if phase == Phase.BUILD and not round_towers.is_empty() and round_towers.size() >= n:
+		phase = Phase.CHOOSE
+		_select(round_towers[-1])
+	_refresh_hud()
+
+
+## Debug: Welle number (ab 1). Läuft eine Welle, wird sie abgebrochen und die gewählte startet sofort,
+## sonst kommt die gewählte nach der laufenden Runde.
+func debug_jump_to_wave(number: int) -> void:
+	if phase >= Phase.GAME_OVER or waves.is_empty():
+		return
+	wave_index = clampi(number - 1, 0, waves.size() - 1)
+	if phase == Phase.WAVE:
+		for e in enemies.duplicate():
+			_remove_enemy(e)
+		_start_wave()
+	_refresh_hud()
 
 
 func rock_remove_cost() -> int:
