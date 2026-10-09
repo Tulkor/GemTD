@@ -60,7 +60,7 @@ func _ready() -> void:
 			tries += 1
 			# nahe am aktuellen Weg bauen, wie ein Spieler
 			var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
-			var c := Vector2i(p / MapView.CELL) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
+			var c := Vector2i(p) + Vector2i(rng.randi_range(-1, 1), rng.randi_range(-1, 1))
 			if game.can_place(c):
 				game.place_gem(c)
 				placed += 1
@@ -79,6 +79,13 @@ func _ready() -> void:
 			frames += 1
 		print("  Tower-Schaden: ", game.towers.values().map(func(t): return [t.tower_id, t.cell, int(t.total_damage)]))
 		check(game.phase == game.Phase.BUILD, "Welle %d beendet (Leben %d, Gold %d)" % [round_i + 1, game.lives, game.gold])
+
+	# Stein entfernen (Bauphase)
+	var rock: Vector2i = game.rocks.keys()[0]
+	var gold_before: int = game.gold
+	check(game.remove_rock(rock), "Stein entfernt")
+	check(not game.rocks.has(rock) and game.can_place(rock), "Feld ist wieder bebaubar")
+	check(game.gold == gold_before - game.rock_remove_cost(), "Kosten abgezogen")
 
 	# Kombinieren: zwei gleiche Gems -> nächste Stufe, Rezept -> Silber
 	game.debug_tower = "ruby:0"

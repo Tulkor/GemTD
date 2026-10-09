@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 ## Einfacher Map-Editor: Kacheln malen, Spawn/Ziel/Checkpoints setzen, speichern, testen.
 
 const PANEL_WIDTH := 340.0
@@ -14,7 +14,8 @@ const TOOL_NAMES := {
 }
 
 var map: MapData
-var map_view: MapView
+var board: Board3D
+var camera_rig: CameraRig
 var tool := Tool.BLOCKED
 var painting := 0  ## 0 = nein, 1 = links (Werkzeug), 2 = rechts (Radierer)
 
@@ -37,19 +38,20 @@ var status_label: Label
 
 func _ready() -> void:
 	map = Session.editor_map.duplicate_map() if Session.editor_map != null else MapData.create_empty(30, 30)
-	map_view = MapView.new()
-	map_view.map = map
-	add_child(map_view)
+	CameraRig.add_environment(self)
+	board = Board3D.new()
+	board.map = map
+	add_child(board)
+	camera_rig = CameraRig.new()
+	add_child(camera_rig)
 	_build_ui()
 	_sync_fields()
-	get_viewport().size_changed.connect(_layout)
 	_layout()
 	_on_map_changed()
 
 
 func _layout() -> void:
-	var vp := get_viewport_rect().size
-	map_view.fit_into(Rect2(Vector2(12, 12), vp - Vector2(PANEL_WIDTH + 24, 24)))
+	camera_rig.frame_map(map.width, map.height)
 
 
 # --- Oberfläche --------------------------------------------------------------
@@ -61,6 +63,7 @@ func _build_ui() -> void:
 	UiUtil.label("Map-Editor", box, 24)
 
 	UiUtil.label("Werkzeug (Rechtsklick radiert)", box)
+	UiUtil.wrap_label("Kamera: WASD/Pfeile, Q/E, Mausrad, mittlere Maustaste", box, PANEL_WIDTH - 40).modulate = Color(1, 1, 1, 0.6)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	box.add_child(grid)
@@ -144,7 +147,7 @@ func _sync_fields() -> void:
 
 func _set_map(m: MapData) -> void:
 	map = m
-	map_view.map = m
+	board.map = m
 	_sync_fields()
 	_layout()
 	_on_map_changed()
@@ -198,11 +201,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed:
 				painting = 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
-				_apply(map_view.mouse_cell(), true)
+				_apply(board.mouse_cell(camera_rig.camera), true)
 			else:
 				painting = 0
 	elif event is InputEventMouseMotion and painting != 0:
-		_apply(map_view.mouse_cell(), false)
+		_apply(board.mouse_cell(camera_rig.camera), false)
 
 
 func _apply(c: Vector2i, is_click: bool) -> void:
@@ -250,11 +253,11 @@ func _on_map_changed() -> void:
 	var cells := pathfinder_path()
 	var pts := PackedVector2Array()
 	for c in cells:
-		pts.append(MapView.cell_center(c))
-	map_view.path_points = pts
-	map_view.path_color = Color(0.3, 1, 0.3, 0.6)
+		pts.append(Board3D.cell_center(c))
+	board.path_points = pts
+	board.path_color = Color(0.3, 1, 0.3, 0.8)
 	if cells.is_empty():
 		status_label.text = "Kein gültiger Weg! Spawn, Checkpoints und Ziel müssen verbunden sein."
 	else:
 		status_label.text = "Weglänge ohne Labyrinth: %d Felder, %d Checkpoints" % [cells.size(), map.checkpoints.size()]
-	map_view.queue_redraw()
+	board.rebuild()

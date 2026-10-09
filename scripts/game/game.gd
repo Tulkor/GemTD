@@ -1,13 +1,14 @@
-extends Node2D
+extends Node3D
 ## Hauptspiel.
 ## Ablauf pro Runde wie in GemTD:
 ##   1. Bauphase: der Spieler setzt gems_per_round zufällige Gems ins Labyrinth.
+##      Steine kann er in der Bauphase (gegen Gold laut balance.json) entfernen.
 ##   2. Auswahl: einen davon behalten (oder kombinieren), der Rest wird zu Steinen.
 ##   3. Welle: Gegner laufen Spawn -> Checkpoints -> Ziel durch das Labyrinth.
 
-const CELL := MapView.CELL
-
 enum Phase { BUILD, CHOOSE, WAVE, GAME_OVER, VICTORY }
+
+const NO_CELL := Vector2i(-1, -1)
 
 var map: MapData
 var pathfinder: Pathfinder
@@ -15,15 +16,17 @@ var waves: Array = []
 var ground_path := PackedVector2Array()
 var air_path := PackedVector2Array()
 
-var map_view: MapView
+var board: Board3D
+var camera_rig: CameraRig
 var effects: Effects
 var hud: Hud
 
-var towers: Dictionary = {}  ## Vector2i -> Tower
+var towers: Dictionary = {}  ## Vector2i -> Tower (auch Fallen)
 var rocks: Dictionary = {}   ## Vector2i -> true
 var enemies: Array = []
 var round_towers: Array = []
 var selected: Tower = null
+var selected_rock := NO_CELL
 
 var phase := Phase.BUILD
 var wave_index := 0
@@ -48,13 +51,16 @@ func _ready() -> void:
 	gold = map.start_gold
 	pathfinder = Pathfinder.new(map)
 
-	map_view = MapView.new()
-	map_view.map = map
-	map_view.rocks = rocks
-	add_child(map_view)
+	CameraRig.add_environment(self)
+	board = Board3D.new()
+	board.map = map
+	board.rocks = rocks
+	add_child(board)
 	effects = Effects.new()
-	effects.z_index = 10
-	map_view.add_child(effects)
+	board.add_child(effects)
+	camera_rig = CameraRig.new()
+	add_child(camera_rig)
+	camera_rig.frame_map(map.width, map.height)
 
 	hud = Hud.new()
 	add_child(hud)
@@ -68,8 +74,7 @@ func _ready() -> void:
 
 	_apply_variance()
 	_update_paths()
-	get_viewport().size_changed.connect(_layout)
-	_layout()
+	board.refresh_rocks()
 	_enter_build()
 
 
@@ -87,11 +92,6 @@ func _load_map() -> MapData:
 			return null
 		path = maps[0].path
 	return MapData.load_file(path)
-
-
-func _layout() -> void:
-	var vp := get_viewport_rect().size
-	map_view.fit_into(Rect2(Vector2(12, 12), vp - Vector2(Hud.WIDTH + 24, 24)))
 
 
 ## Zufällige Steine laut map.variance.
@@ -119,12 +119,12 @@ func _apply_variance() -> void:
 func _update_paths() -> void:
 	ground_path = PackedVector2Array()
 	for c in pathfinder.compute_path():
-		ground_path.append(MapView.cell_center(c))
+		ground_path.append(Board3D.cell_center(c))
 	air_path = PackedVector2Array()
 	for c in map.waypoints():
-		air_path.append(MapView.cell_center(c))
-	map_view.path_points = ground_path
-	map_view.queue_redraw()
+		air_path.append(Board3D.cell_center(c))
+	board.path_points = ground_path
+	board.refresh_path()
 
 
 # --- Eingabe -----------------------------------------------------------------
@@ -136,19 +136,19 @@ func _process(delta: float) -> void:
 
 
 func _update_hover() -> void:
-	var c := map_view.mouse_cell() if phase == Phase.BUILD else Vector2i(-1, -1)
-	if towers.has(c):
-		c = Vector2i(-1, -1)
-	if c != map_view.hover_cell:
-		map_view.hover_cell = c
-		map_view.hover_ok = can_place(c)
-		map_view.queue_redraw()
+	var c := board.mouse_cell(camera_rig.camera) if phase == Phase.BUILD else NO_CELL
+	if towers.has(c) or rocks.has(c):
+		c = NO_CELL
+	if c != board.hover_cell:
+		board.hover_cell = c
+		board.hover_ok = can_place(c)
+		board.refresh_hover()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_on_click(map_view.mouse_cell())
+			_on_click(board.mouse_cell(camera_rig.camera))
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_select(null)
 	elif event is InputEventKey and event.pressed:
@@ -166,6 +166,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_click(c: Vector2i) -> void:
 	if towers.has(c):
 		_select(towers[c])
+	elif rocks.has(c):
+		_select(null, c)
 	elif phase == Phase.BUILD and can_place(c):
 		place_gem(c)
 	else:
@@ -176,14 +178,13 @@ func can_place(c: Vector2i) -> bool:
 	return map.is_buildable(c) and not towers.has(c) and not rocks.has(c) and not pathfinder.would_block(c)
 
 
-func _select(t: Tower) -> void:
+func _select(t: Tower, rock := NO_CELL) -> void:
 	if selected != null and is_instance_valid(selected):
-		selected.selected = false
-		selected.queue_redraw()
+		selected.set_selected(false)
 	selected = t
+	selected_rock = rock
 	if t != null:
-		t.selected = true
-		t.queue_redraw()
+		t.set_selected(true)
 	_refresh_hud()
 
 
@@ -191,6 +192,10 @@ func _select(t: Tower) -> void:
 
 func gems_per_round() -> int:
 	return int(Database.balance.get("gems_per_round", 5))
+
+
+func rock_remove_cost() -> int:
+	return int(Database.balance.get("rock_remove_cost", 0))
 
 
 func _enter_build() -> void:
@@ -214,20 +219,38 @@ func place_gem(c: Vector2i) -> Tower:
 		push_error("Unbekannter Tower: " + id)
 		return null
 	var t := Tower.new()
-	map_view.add_child(t)
-	t.setup(self, c, id, tier)
 	t.is_new = true
+	board.add_child(t)
+	t.setup(self, c, id, tier)
 	towers[c] = t
 	round_towers.append(t)
-	pathfinder.set_solid(c, true)
+	pathfinder.set_solid(c, not t.is_trap())
 	_update_paths()
 	_update_auras()
-	map_view.hover_ok = false
+	board.hover_ok = false
+	board.refresh_hover()
 	if round_towers.size() >= gems_per_round():
 		phase = Phase.CHOOSE
 		_select(t)
 	_refresh_hud()
 	return t
+
+
+## Stein entfernen (nur in der Bauphase, kostet rock_remove_cost Gold).
+func can_remove_rock(c: Vector2i) -> bool:
+	return phase == Phase.BUILD and rocks.has(c) and gold >= rock_remove_cost()
+
+
+func remove_rock(c: Vector2i) -> bool:
+	if not can_remove_rock(c):
+		return false
+	gold -= rock_remove_cost()
+	rocks.erase(c)
+	pathfinder.set_solid(c, false)
+	_update_paths()
+	board.refresh_rocks()
+	_select(null)
+	return true
 
 
 ## Was man mit dem ausgewählten Gem dieser Runde machen kann.
@@ -238,10 +261,11 @@ func choice_options(t: Tower) -> Array:
 	var opts := [{"label": "Behalten: " + t.label(), "id": t.tower_id, "tier": t.tier}]
 	var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
 	var max_tier := Database.tier_count(t.tower_id) - 1
-	if same >= 2 and t.tier + 1 <= max_tier:
-		opts.append({"label": "2 gleiche → " + Database.tower_label(t.tower_id, t.tier + 1), "id": t.tower_id, "tier": t.tier + 1})
-	if same >= 4 and t.tier + 2 <= max_tier:
-		opts.append({"label": "4 gleiche → " + Database.tower_label(t.tower_id, t.tier + 2), "id": t.tower_id, "tier": t.tier + 2})
+	if t.def.get("category", "gem") == "gem":
+		if same >= 2 and t.tier + 1 <= max_tier:
+			opts.append({"label": "2 gleiche → " + Database.tower_label(t.tower_id, t.tier + 1), "id": t.tower_id, "tier": t.tier + 1})
+		if same >= 4 and t.tier + 2 <= max_tier:
+			opts.append({"label": "4 gleiche → " + Database.tower_label(t.tower_id, t.tier + 2), "id": t.tower_id, "tier": t.tier + 2})
 	for sid in Database.special_ids():
 		var recipe: Array = Database.towers[sid].get("recipe", [])
 		if not recipe.is_empty() and _recipe_satisfied(recipe, t):
@@ -270,24 +294,81 @@ func _recipe_satisfied(recipe: Array, t: Tower) -> bool:
 	return used_selected
 
 
+## Upgrades fertiger Spezial-Tower (Feld "upgrades" in der Tower-Datei), außerhalb der Welle.
+## Rückgabe: [{label, tier, consume: [Tower], cost}]
+func upgrade_options(t: Tower) -> Array:
+	if t == null or t.is_new or phase == Phase.WAVE or phase >= Phase.GAME_OVER:
+		return []
+	var ups: Array = t.def.get("upgrades", [])
+	if t.tier >= ups.size():
+		return []
+	var up: Dictionary = ups[t.tier]
+	if t.tier + 1 >= Database.tier_count(t.tower_id):
+		return []
+	var consume := []
+	var pool := towers.values().filter(func(o): return o != t and not o.is_new)
+	for ing in up.get("recipe", []):
+		var found = null
+		for o in pool:
+			if o.tower_id == str(ing.get("tower", "")) and o.tier == int(ing.get("tier", 0)):
+				found = o
+				break
+		if found == null:
+			return []
+		pool.erase(found)
+		consume.append(found)
+	var cost := int(up.get("cost", 0))
+	return [{"label": "Aufwerten → %s%s" % [Database.tower_label(t.tower_id, t.tier + 1), " (%d Gold)" % cost if cost > 0 else ""],
+			"tier": t.tier + 1, "consume": consume, "cost": cost}]
+
+
 func _on_option_chosen(index: int) -> void:
+	if selected_rock != NO_CELL:
+		remove_rock(selected_rock)
+		return
+	if phase != Phase.CHOOSE:
+		var ups := upgrade_options(selected)
+		if index < ups.size():
+			_apply_upgrade(selected, ups[index])
+		return
 	var opts := choice_options(selected)
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
 	for t in round_towers:
 		if t == selected:
-			t.set_tower(o.id, o.tier)
 			t.is_new = false
-			t.queue_redraw()
+			t.set_tower(o.id, o.tier)
+			pathfinder.set_solid(t.cell, not t.is_trap())
 		else:
-			towers.erase(t.cell)
-			rocks[t.cell] = true
-			t.queue_free()
+			_turn_into_rock(t)
 	round_towers.clear()
-	map_view.queue_redraw()
+	_update_paths()
+	board.refresh_rocks()
 	_update_auras()
 	_start_wave()
+
+
+func _turn_into_rock(t: Tower) -> void:
+	towers.erase(t.cell)
+	rocks[t.cell] = true
+	pathfinder.set_solid(t.cell, true)
+	t.queue_free()
+
+
+## Zutaten eines Upgrades werden zu Steinen (wie beim Kombinieren in GemTD).
+func _apply_upgrade(t: Tower, up: Dictionary) -> void:
+	if gold < int(up.cost):
+		return
+	gold -= int(up.cost)
+	for o in up.consume:
+		_turn_into_rock(o)
+	t.set_tower(t.tower_id, int(up.tier))
+	t.set_selected(true)
+	_update_paths()
+	board.refresh_rocks()
+	_update_auras()
+	_refresh_hud()
 
 
 func _upgrade_chance() -> void:
@@ -302,16 +383,28 @@ func _upgrade_chance() -> void:
 	_refresh_hud()
 
 
+func add_gold(amount: int) -> void:
+	gold += amount
+	_refresh_hud()
+
+
+## Auren, die andere Tower verstärken.
 func _update_auras() -> void:
 	for t in towers.values():
 		t.speed_bonus = 0.0
+		t.damage_bonus = 0.0
 	for src in towers.values():
-		var aura: Dictionary = src.ability("speed_aura")
-		if aura.is_empty():
-			continue
-		for t in towers.values():
-			if t != src and t.position.distance_to(src.position) <= float(aura.radius) * CELL:
-				t.speed_bonus = maxf(t.speed_bonus, float(aura.bonus))
+		for ab in src.abilities():
+			var type := str(ab.get("type", ""))
+			if type != "speed_aura" and type != "damage_aura":
+				continue
+			for t in towers.values():
+				if t == src or t.pos.distance_to(src.pos) > float(ab.radius):
+					continue
+				if type == "speed_aura":
+					t.speed_bonus = maxf(t.speed_bonus, float(ab.bonus))
+				else:
+					t.damage_bonus = maxf(t.damage_bonus, float(ab.bonus))
 
 
 # --- Welle -------------------------------------------------------------------
@@ -342,6 +435,7 @@ func _process_wave(delta: float) -> void:
 		spawn_timer += float(g.get("interval", 1.0))
 	if spawn_queue.is_empty() and enemies.is_empty() and phase == Phase.WAVE:
 		wave_index += 1
+		effects.clear()
 		if wave_index >= waves.size():
 			_finish(Phase.VICTORY)
 		else:
@@ -354,24 +448,23 @@ func _spawn_enemy(g: Dictionary) -> void:
 		push_warning("Unbekannter Gegner: %s" % g.get("enemy", ""))
 		return
 	var e := Enemy.new()
-	e.z_index = 5
+	board.add_child(e)
 	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
-	map_view.add_child(e)
 	enemies.append(e)
 
 
 func find_targets(t: Tower, count: int) -> Array:
-	var r := t.range_px()
-	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.position.distance_to(t.position) <= r)
+	var r := t.range_cells()
+	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_to(t.pos) <= r)
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
 
-func enemies_in_radius(pos: Vector2, radius: float) -> Array:
-	return enemies.filter(func(e): return not e.dead and e.position.distance_to(pos) <= radius)
+func enemies_in_radius(p: Vector2, radius: float) -> Array:
+	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
 
 
-func add_beam(from: Vector2, to: Vector2, col: Color) -> void:
+func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 	effects.add_beam(from, to, col)
 
 
@@ -410,9 +503,9 @@ func _refresh_hud() -> void:
 	hud.set_stats("Map: %s\nWelle: %d / %d\nLeben: %d\nGold: %d" % [map.name, mini(wave_index + 1, waves.size()), waves.size(), lives, gold])
 	match phase:
 		Phase.BUILD:
-			hud.set_phase("Bauphase: setze Gems (%d / %d)" % [round_towers.size(), gems_per_round()])
+			hud.set_phase("Bauphase: setze Gems (%d / %d). Steine anklicken, um sie zu entfernen." % [round_towers.size(), gems_per_round()])
 		Phase.CHOOSE:
-			hud.set_phase("Wähle einen der neuen Gems (weiß umrandet) und entscheide unten, was daraus wird. Die anderen werden zu Steinen.")
+			hud.set_phase("Wähle einen der neuen Gems (weißer Ring) und entscheide unten, was daraus wird. Die anderen werden zu Steinen.")
 		Phase.WAVE:
 			hud.set_phase("Welle läuft – noch %d Gegner" % (enemies.size() + spawn_queue.size()))
 		Phase.GAME_OVER:
@@ -423,10 +516,19 @@ func _refresh_hud() -> void:
 	var levels: Array = Database.balance.get("chance_levels", [])
 	if chance_level + 1 < levels.size():
 		var cost := int(levels[chance_level + 1].get("cost", 0))
-		hud.set_chance("Chance-Stufe %d → %d (%d Gold)" % [chance_level, chance_level + 1, cost], gold >= cost and phase != Phase.GAME_OVER)
+		hud.set_chance("Chance-Stufe %d → %d (%d Gold)" % [chance_level, chance_level + 1, cost], gold >= cost and phase < Phase.GAME_OVER)
 	else:
 		hud.set_chance("Chance-Stufe %d (max)" % chance_level, false)
 
-	var opts := choice_options(selected)
-	hud.set_options(opts.map(func(o): return o.label))
+	if selected_rock != NO_CELL:
+		var cost := rock_remove_cost()
+		hud.set_options(["Stein entfernen" + (" (%d Gold)" % cost if cost > 0 else "")])
+		hud.set_options_enabled(can_remove_rock(selected_rock))
+		hud.set_tower_info("Stein" + ("" if phase == Phase.BUILD else "\nKann nur in der Bauphase entfernt werden."))
+		return
+	var labels: Array = choice_options(selected).map(func(o): return o.label)
+	if labels.is_empty():
+		labels = upgrade_options(selected).map(func(o): return o.label)
+	hud.set_options(labels)
+	hud.set_options_enabled(true)
 	hud.set_tower_info(selected.info_text() if selected != null and is_instance_valid(selected) else "")

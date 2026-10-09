@@ -49,7 +49,7 @@ func _ready() -> void:
 
 	box.add_child(HSeparator.new())
 	UiUtil.button("Zurück", box, func(): menu_requested.emit())
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower auswählen\nRechtsklick, Esc: Auswahl aufheben\nTasten 1, 2, 3: Tempo", box, inner).modulate = Color(1, 1, 1, 0.6)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nWASD/Pfeile: Kamera bewegen, Q/E oder mittlere Maustaste: drehen, Mausrad: zoomen\nTasten 1, 2, 3: Tempo", box, inner).modulate = Color(1, 1, 1, 0.6)
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -98,6 +98,11 @@ func set_options(labels: Array) -> void:
 		var b := UiUtil.button(labels[i], options_box, func(): option_chosen.emit(i))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
+
+
+func set_options_enabled(enabled: bool) -> void:
+	for b in options_box.get_children():
+		(b as Button).disabled = not enabled
 
 
 func show_message(text: String) -> void:
