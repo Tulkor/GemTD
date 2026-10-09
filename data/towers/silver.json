@@ -1,0 +1,43 @@
+{
+	"id": "silver",
+	"name": "Silber",
+	"category": "special",
+	"color": "#c8d0d8",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "topaz",
+			"tier": 0
+		},
+		{
+			"tower": "diamond",
+			"tier": 0
+		},
+		{
+			"tower": "sapphire",
+			"tier": 0
+		}
+	],
+	"tiers": [
+		{
+			"damage": [
+				20,
+				30
+			],
+			"range": 3.5,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.3,
+					"duration": 2.0
+				}
+			]
+		}
+	]
+}

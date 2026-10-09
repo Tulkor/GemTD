@@ -1,0 +1,37 @@
+{
+	"id": "malachite",
+	"name": "Malachit",
+	"category": "special",
+	"color": "#1abc9c",
+	"targets": "both",
+	"recipe": [
+		{
+			"tower": "opal",
+			"tier": 0
+		},
+		{
+			"tower": "emerald",
+			"tier": 0
+		},
+		{
+			"tower": "aquamarine",
+			"tier": 0
+		}
+	],
+	"tiers": [
+		{
+			"damage": [
+				8,
+				12
+			],
+			"range": 3.5,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 4
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,11 @@
+{
+	"id": "runner",
+	"name": "Sprinter",
+	"hp": 9,
+	"speed": 3.4,
+	"armor": 0,
+	"bounty": 1,
+	"damage": 1,
+	"color": "#f39c12",
+	"size": 0.8
+}

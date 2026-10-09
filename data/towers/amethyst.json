@@ -1,0 +1,54 @@
+{
+	"id": "amethyst",
+	"name": "Amethyst",
+	"category": "gem",
+	"color": "#9b59d0",
+	"targets": "air",
+	"tiers": [
+		{
+			"damage": [
+				18,
+				26
+			],
+			"range": 4.5,
+			"cooldown": 1.0,
+			"abilities": []
+		},
+		{
+			"damage": [
+				40,
+				57
+			],
+			"range": 4.75,
+			"cooldown": 1.0,
+			"abilities": []
+		},
+		{
+			"damage": [
+				86,
+				125
+			],
+			"range": 5.0,
+			"cooldown": 1.0,
+			"abilities": []
+		},
+		{
+			"damage": [
+				180,
+				260
+			],
+			"range": 5.25,
+			"cooldown": 1.0,
+			"abilities": []
+		},
+		{
+			"damage": [
+				396,
+				572
+			],
+			"range": 5.5,
+			"cooldown": 1.0,
+			"abilities": []
+		}
+	]
+}

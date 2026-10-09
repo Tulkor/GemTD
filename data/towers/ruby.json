@@ -1,0 +1,84 @@
+{
+	"id": "ruby",
+	"name": "Rubin",
+	"category": "gem",
+	"color": "#e0303a",
+	"targets": "both",
+	"tiers": [
+		{
+			"damage": [
+				8,
+				11
+			],
+			"range": 3.0,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				}
+			]
+		},
+		{
+			"damage": [
+				18,
+				24
+			],
+			"range": 3.25,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				}
+			]
+		},
+		{
+			"damage": [
+				38,
+				53
+			],
+			"range": 3.5,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				}
+			]
+		},
+		{
+			"damage": [
+				80,
+				110
+			],
+			"range": 3.75,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				}
+			]
+		},
+		{
+			"damage": [
+				176,
+				242
+			],
+			"range": 4.0,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.0,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,11 @@
+{
+	"id": "boss",
+	"name": "Boss",
+	"hp": 150,
+	"speed": 1.6,
+	"armor": 3,
+	"bounty": 20,
+	"damage": 5,
+	"color": "#c0392b",
+	"size": 1.6
+}

@@ -1,0 +1,11 @@
+{
+	"id": "armored",
+	"name": "Gepanzerter",
+	"hp": 18,
+	"speed": 1.8,
+	"armor": 4,
+	"bounty": 2,
+	"damage": 1,
+	"color": "#7f8c8d",
+	"size": 1.1
+}

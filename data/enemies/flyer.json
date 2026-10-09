@@ -1,0 +1,12 @@
+{
+	"id": "flyer",
+	"name": "Flieger",
+	"hp": 10,
+	"speed": 2.0,
+	"armor": 0,
+	"bounty": 1,
+	"damage": 1,
+	"color": "#8e44ad",
+	"size": 0.9,
+	"flying": true
+}

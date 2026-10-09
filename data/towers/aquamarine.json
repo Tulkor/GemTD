@@ -1,0 +1,54 @@
+{
+	"id": "aquamarine",
+	"name": "Aquamarin",
+	"category": "gem",
+	"color": "#5fd3d6",
+	"targets": "both",
+	"tiers": [
+		{
+			"damage": [
+				5,
+				7
+			],
+			"range": 2.5,
+			"cooldown": 0.4,
+			"abilities": []
+		},
+		{
+			"damage": [
+				11,
+				15
+			],
+			"range": 2.75,
+			"cooldown": 0.4,
+			"abilities": []
+		},
+		{
+			"damage": [
+				24,
+				34
+			],
+			"range": 3.0,
+			"cooldown": 0.4,
+			"abilities": []
+		},
+		{
+			"damage": [
+				50,
+				70
+			],
+			"range": 3.25,
+			"cooldown": 0.4,
+			"abilities": []
+		},
+		{
+			"damage": [
+				110,
+				154
+			],
+			"range": 3.5,
+			"cooldown": 0.4,
+			"abilities": []
+		}
+	]
+}

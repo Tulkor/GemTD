@@ -1,0 +1,84 @@
+{
+	"id": "opal",
+	"name": "Opal",
+	"category": "gem",
+	"color": "#f5cba7",
+	"targets": "both",
+	"tiers": [
+		{
+			"damage": [
+				3,
+				5
+			],
+			"range": 3.0,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 3.0,
+					"bonus": 0.1
+				}
+			]
+		},
+		{
+			"damage": [
+				7,
+				11
+			],
+			"range": 3.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 3.0,
+					"bonus": 0.15
+				}
+			]
+		},
+		{
+			"damage": [
+				14,
+				24
+			],
+			"range": 3.5,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 3.0,
+					"bonus": 0.2
+				}
+			]
+		},
+		{
+			"damage": [
+				30,
+				50
+			],
+			"range": 3.75,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 3.0,
+					"bonus": 0.25
+				}
+			]
+		},
+		{
+			"damage": [
+				66,
+				110
+			],
+			"range": 4.0,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "speed_aura",
+					"radius": 3.0,
+					"bonus": 0.3
+				}
+			]
+		}
+	]
+}

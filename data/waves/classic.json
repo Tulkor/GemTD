@@ -1,0 +1,361 @@
+{
+	"id": "classic",
+	"name": "Klassisch (30 Wellen)",
+	"waves": [
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 12,
+					"bounty": 1
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 11,
+					"bounty": 1
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "armored",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 26,
+					"armor": 4,
+					"bounty": 1
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 17,
+					"bounty": 1
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 19,
+					"bounty": 2
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 30,
+					"bounty": 2
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "armored",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 54,
+					"armor": 5,
+					"bounty": 2
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 32,
+					"bounty": 2
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 43,
+					"bounty": 2
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "boss",
+					"count": 1,
+					"interval": 1.0,
+					"hp": 774,
+					"bounty": 30
+				},
+				{
+					"enemy": "grunt",
+					"count": 6,
+					"interval": 0.8,
+					"hp": 62,
+					"bounty": 3
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 56,
+					"bounty": 3
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 89,
+					"bounty": 3
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 107,
+					"bounty": 3
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 107,
+					"bounty": 3
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "armored",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 231,
+					"armor": 6,
+					"bounty": 4
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 185,
+					"bounty": 4
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 166,
+					"bounty": 4
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 266,
+					"bounty": 4
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 266,
+					"bounty": 4
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "boss",
+					"count": 1,
+					"interval": 1.0,
+					"hp": 4792,
+					"bounty": 40
+				},
+				{
+					"enemy": "grunt",
+					"count": 6,
+					"interval": 0.8,
+					"hp": 383,
+					"bounty": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 460,
+					"bounty": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 552,
+					"bounty": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 497,
+					"bounty": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 662,
+					"bounty": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 954,
+					"bounty": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "runner",
+					"count": 12,
+					"interval": 0.6,
+					"hp": 859,
+					"bounty": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "armored",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 2061,
+					"armor": 8,
+					"bounty": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "grunt",
+					"count": 10,
+					"interval": 0.8,
+					"hp": 1648,
+					"bounty": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "flyer",
+					"count": 10,
+					"interval": 0.9,
+					"hp": 1648,
+					"bounty": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"enemy": "boss",
+					"count": 1,
+					"interval": 1.0,
+					"hp": 29672,
+					"bounty": 50
+				},
+				{
+					"enemy": "grunt",
+					"count": 6,
+					"interval": 0.8,
+					"hp": 2374,
+					"bounty": 7
+				}
+			]
+		}
+	]
+}

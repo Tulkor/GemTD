@@ -1,0 +1,84 @@
+{
+	"id": "sapphire",
+	"name": "Saphir",
+	"category": "gem",
+	"color": "#2f6fe0",
+	"targets": "both",
+	"tiers": [
+		{
+			"damage": [
+				5,
+				8
+			],
+			"range": 3.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				11,
+				18
+			],
+			"range": 3.25,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.3,
+					"duration": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				24,
+				38
+			],
+			"range": 3.5,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.35,
+					"duration": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				50,
+				80
+			],
+			"range": 3.75,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.4,
+					"duration": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				110,
+				176
+			],
+			"range": 4.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.45,
+					"duration": 2.0
+				}
+			]
+		}
+	]
+}

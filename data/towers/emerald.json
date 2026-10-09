@@ -1,0 +1,84 @@
+{
+	"id": "emerald",
+	"name": "Smaragd",
+	"category": "gem",
+	"color": "#2ecc71",
+	"targets": "both",
+	"tiers": [
+		{
+			"damage": [
+				5,
+				8
+			],
+			"range": 3.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 3,
+					"duration": 3.0
+				}
+			]
+		},
+		{
+			"damage": [
+				11,
+				18
+			],
+			"range": 3.25,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 6.6,
+					"duration": 3.0
+				}
+			]
+		},
+		{
+			"damage": [
+				24,
+				38
+			],
+			"range": 3.5,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 14.4,
+					"duration": 3.0
+				}
+			]
+		},
+		{
+			"damage": [
+				50,
+				80
+			],
+			"range": 3.75,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 30,
+					"duration": 3.0
+				}
+			]
+		},
+		{
+			"damage": [
+				110,
+				176
+			],
+			"range": 4.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 66,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,84 @@
+{
+	"id": "diamond",
+	"name": "Diamant",
+	"category": "gem",
+	"color": "#f2f4ff",
+	"targets": "ground",
+	"tiers": [
+		{
+			"damage": [
+				12,
+				16
+			],
+			"range": 3.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.0
+				}
+			]
+		},
+		{
+			"damage": [
+				26,
+				35
+			],
+			"range": 3.25,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.25
+				}
+			]
+		},
+		{
+			"damage": [
+				58,
+				77
+			],
+			"range": 3.5,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.5
+				}
+			]
+		},
+		{
+			"damage": [
+				120,
+				160
+			],
+			"range": 3.75,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 2.75
+				}
+			]
+		},
+		{
+			"damage": [
+				264,
+				352
+			],
+			"range": 4.0,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.25,
+					"multiplier": 3.0
+				}
+			]
+		}
+	]
+}
