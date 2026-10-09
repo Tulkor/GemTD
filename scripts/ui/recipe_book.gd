@@ -31,6 +31,9 @@ static func toggle_pin(id: String) -> void:
 static func card(id: String, have: Array, on_pin: Callable, compact := false, now := {}) -> PanelContainer:
 	var st := Recipes.status(id, have)
 	var ready := Recipes.ready_now(id, have, now)
+	# One-Shot aus den Gems dieser Runde: Zutaten aus der Runde zeigen (violett)
+	if ready and not now.is_empty() and not now.get("wave", false):
+		st = Recipes.status(id, now.get("pool", []))
 	var pinned := is_pinned(id)
 	var p := PanelContainer.new()
 	var border := UiTheme.HAVE if ready else (UiTheme.GOLD if pinned else UiTheme.BORDER)
@@ -143,7 +146,7 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	for leg in [["✓ fixiert", UiTheme.HAVE], ["✓ neu in dieser Runde", UiTheme.PURPLE_LIGHT], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
+	for leg in [["✓ fixiert", UiTheme.HAVE], ["✓ ausgewählter neuer Gem", UiTheme.PURPLE_LIGHT], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
 		UiUtil.label(leg[0], head, 13).add_theme_color_override("font_color", leg[1])
 	var close_b := UiUtil.button("Schließen (R)", head, close)
 	close_b.focus_mode = Control.FOCUS_NONE
@@ -159,7 +162,7 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	scroll.add_child(grid)
 
-	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Grün sind fixierte Tower aus früheren Runden, violett die neuen Gems dieser Runde, rot fehlt noch. Baubar ist ein Rezept aber nur so: beim Setzen und Auswählen aus den Gems dieser Runde, während der Welle aus fertigen Towern auf dem Feld.", v, 13)
+	var hint := UiUtil.label("Angepinnte Rezepte stehen im Spiel links oben und zeigen, was noch fehlt. Grün sind fixierte Tower aus früheren Runden, violett der ausgewählte neue Gem (bei One-Shots alle Zutaten aus der Runde), rot fehlt noch. Baubar ist ein Rezept aber nur so: beim Setzen und Auswählen aus den Gems dieser Runde, während der Welle aus fertigen Towern auf dem Feld.", v, 13)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hide()
