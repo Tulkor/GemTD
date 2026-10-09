@@ -41,11 +41,15 @@ Weitere Regeln:
 - **Spezial-Tower:** Zutaten aus den Gems dieser Runde *oder* fertige Tower auf dem Feld. Fertige Tower
   untereinander kombinieren geht nur während der Welle. Beim Setzen und Auswählen der neuen Gems zählen
   für Rezepte nur die Gems dieser Runde.
-  Verbrauchte Tower vom Feld werden zu Steinen. Upgrades (z. B. Silber → Sterlingsilber → Silberritter) kosten Gold.
+  Verbrauchte Tower vom Feld werden zu Steinen. Upgrades (z. B. Silber → Sterlingsilber → Silberritter) kosten Gold und gehen nur während der Welle.
 - **Fallen (Platten):** Normaler Gem + einer der passenden fehlerhaften Gems in derselben Runde.
   Gegner laufen über Fallen. Zwei Fallen auf dem Feld ergeben eine kombinierte Falle
   (z. B. Halteplatte + Luftplatte → Uralte Platte): während der Welle eine Falle anklicken, dann „Kombinieren“.
-- **Steine** in der Bauphase anklicken und kostenlos entfernen.
+  Fallen sind 3×3 Felder groß und treffen alles auf dieser Fläche (Reichweitenplatte und Luftangriffe
+  wirken weiter im Kreis). Tower dürfen auf Fallen gebaut werden; eine Falle unter einem Tower wählt
+  man mit einem zweiten Klick aus. Jede Falle lässt sich zweimal verschieben („Verschieben“, dann
+  Ziel anklicken), auch auf Checkpoints, Spawn und Ziel.
+- **Steine** jederzeit anklicken und kostenlos entfernen (Bau-, Auswahlphase und während der Welle).
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).

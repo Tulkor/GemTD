@@ -19,6 +19,7 @@ var speed_bonus := 0.0   ## von Tempo-Auren anderer Tower
 var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
 var cooldown_left := 0.0
 var kills := 0
+var moves_left := 0  ## wie oft eine Falle noch verschoben werden darf
 var total_damage := 0.0
 
 var _visual: Node3D
@@ -34,8 +35,6 @@ static var _octahedron: ArrayMesh
 func setup(g, c: Vector2i, id: String, t: int) -> void:
 	game = g
 	cell = c
-	pos = Board3D.footprint_center(c)
-	position = Board3D.to_3d(pos)
 	set_tower(id, t)
 
 
@@ -45,7 +44,19 @@ func set_tower(id: String, t: int) -> void:
 	def = Database.towers.get(id, {})
 	stats = Database.tower_tier(id, t)
 	color = Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
+	place_at(cell)
 	_build_visual()
+
+
+## Felder pro Kante: Tower 2×2, Fallen 3×3 (ab dem Anker cell).
+func footprint_size() -> int:
+	return Board3D.TRAP_CELLS if is_trap() else Board3D.TOWER_CELLS
+
+
+func place_at(c: Vector2i) -> void:
+	cell = c
+	pos = Board3D.footprint_center(c, footprint_size())
+	position = Board3D.to_3d(pos)
 
 
 func label() -> String:
@@ -94,6 +105,15 @@ func range_for(e) -> float:
 	if e.flying and stats.has("range_air"):
 		return float(stats.range_air)
 	return range_cells()
+
+
+## Fallen mit kurzer Reichweite treffen alles auf ihrer 3×3-Fläche, alle anderen im Kreis.
+func in_range(e) -> bool:
+	var r := range_for(e)
+	if is_trap() and r <= Board3D.TRAP_CELLS * Board3D.CELL:
+		var half := Board3D.TRAP_CELLS * Board3D.CELL / 2.0
+		return absf(e.pos.x - pos.x) <= half and absf(e.pos.y - pos.y) <= half
+	return e.pos.distance_to(pos) <= r
 
 
 func damage_type() -> String:
@@ -258,13 +278,14 @@ func _nova(target, ab: Dictionary) -> void:
 func info_text() -> String:
 	var lines := [label()]
 	if is_trap():
-		lines.append("Falle – Gegner laufen darüber")
+		lines.append("Falle – Gegner laufen darüber" + (", noch %d× verschiebbar" % moves_left if moves_left > 0 else ""))
 	if can_attack():
 		var dmg: Array = stats.get("damage", [0, 0])
 		var bonus := "  (+%d%% Aura/Rang)" % int((damage_bonus + kill_bonus()) * 100) if damage_bonus + kill_bonus() > 0 else ""
 		lines.append("Schaden: %d–%d%s" % [int(dmg[0]), int(dmg[1]), bonus])
 		lines.append("Abklingzeit: %.2fs%s" % [cooldown(), "  (+%d%% Aura)" % int(speed_bonus * 100) if speed_bonus > 0 else ""])
-		lines.append("Reichweite: %.1f Towerbreiten%s" % [range_cells(), " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
+		var reach := "Fläche %d×%d Felder" % [Board3D.TRAP_CELLS, Board3D.TRAP_CELLS] if _square_hitbox() else "%.1f Towerbreiten" % range_cells()
+		lines.append("Reichweite: %s%s" % [reach, " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
 		if damage_type() != "":
 			lines.append("Schadensart: " + Database.DAMAGE_TYPE_NAMES.get(damage_type(), damage_type()))
 	match target_mode():
@@ -288,6 +309,10 @@ func set_selected(value: bool) -> void:
 	if _select_ring:
 		_select_ring.visible = value
 		_range_ring.visible = value and (can_attack() or _aura_radius() > 0.0)
+
+
+func _square_hitbox() -> bool:
+	return is_trap() and range_cells() <= Board3D.TRAP_CELLS * Board3D.CELL
 
 
 func _aura_radius() -> float:
@@ -317,8 +342,10 @@ func _build_visual() -> void:
 	if is_trap():
 		var plate := MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
-		cyl.top_radius = 0.42
-		cyl.bottom_radius = 0.46
+		# Platte deckt die 3×3-Fläche der Falle ab
+		var plate_r := Board3D.TRAP_CELLS * Board3D.CELL / 2.0
+		cyl.top_radius = plate_r * 0.98
+		cyl.bottom_radius = plate_r * 1.05
 		cyl.height = 0.08
 		cyl.radial_segments = 6
 		plate.mesh = cyl
@@ -371,7 +398,9 @@ func _finish_visual() -> void:
 	_new_ring = _ring(0.48, 0.05, Color(1, 1, 1, 0.9))
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)
-	_range_ring = _ring(maxf(range_cells(), _aura_radius()), 0.05, Color(1, 1, 1, 0.6))
+	# Fallen zeigen ihre Fläche über die Platte, der Ring nur Luft- oder Aurareichweite
+	var ring := maxf(float(stats.get("range_air", 0.0)), _aura_radius()) if _square_hitbox() else maxf(range_cells(), _aura_radius())
+	_range_ring = _ring(ring, 0.05, Color(1, 1, 1, 0.6))
 	set_selected(selected)
 
 

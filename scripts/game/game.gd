@@ -2,7 +2,7 @@ extends Node3D
 ## Hauptspiel.
 ## Ablauf pro Runde wie in GemTD:
 ##   1. Bauphase: der Spieler setzt gems_per_round zufällige Gems ins Labyrinth.
-##      Steine kann er in der Bauphase (gegen Gold laut balance.json) entfernen.
+##      Steine kann er jederzeit (gegen Gold laut balance.json) entfernen.
 ##   2. Auswahl: einen davon behalten (oder kombinieren), der Rest wird zu Steinen.
 ##   3. Welle: Gegner laufen Spawn -> Checkpoints -> Ziel durch das Labyrinth.
 
@@ -22,9 +22,14 @@ var effects: Effects
 var hud: Hud
 
 ## Tower und Steine belegen 2×2 Felder und sind über ihr Feld oben links (Anker) gespeichert.
-var towers: Dictionary = {}    ## Anker -> Tower (auch Fallen)
-var rocks: Dictionary = {}     ## Anker -> true
-var occupied: Dictionary = {}  ## jedes belegte Feld -> Anker
+## Fallen liegen auf einer eigenen Ebene darunter (3×3 Felder): Gegner laufen darüber,
+## und man kann Tower darauf bauen.
+var towers: Dictionary = {}      ## Anker -> Tower (ohne Fallen)
+var rocks: Dictionary = {}       ## Anker -> true
+var occupied: Dictionary = {}    ## jedes von Tower/Stein belegte Feld -> Anker
+var traps: Dictionary = {}       ## Anker -> Falle
+var trap_cells: Dictionary = {}  ## jedes Feld unter einer Falle -> Anker
+var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewählt wird
 var enemies: Array = []
 var round_towers: Array = []
 var selected: Tower = null
@@ -148,11 +153,16 @@ func _process(delta: float) -> void:
 
 func _update_hover() -> void:
 	var c := NO_CELL
-	if phase == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
+	var size := Board3D.TOWER_CELLS
+	if moving != null:
+		size = Board3D.TRAP_CELLS
+		c = board.mouse_anchor(camera_rig.camera, size)
+	elif phase == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
 		c = board.mouse_anchor(camera_rig.camera)
-	if c != board.hover_cell:
+	if c != board.hover_cell or size != board.hover_size:
 		board.hover_cell = c
-		board.hover_ok = can_place(c)
+		board.hover_size = size
+		board.hover_ok = can_move_trap(moving, c) if moving != null else can_place(c)
 		board.refresh_hover()
 
 
@@ -177,18 +187,94 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme.
 func _on_click(c: Vector2i, anchor: Vector2i) -> void:
+	if moving != null:
+		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
+		if can_move_trap(moving, target):
+			move_trap(moving, target)
+		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
-	if towers.has(a):
+	var trap: Tower = traps.get(trap_cells.get(c, NO_CELL), null)
+	# Liegt eine Falle unter einem Tower/Stein, wählt ein zweiter Klick die Falle
+	var on_top_selected: bool = (towers.has(a) and selected == towers[a]) or (rocks.has(a) and selected_rock == a)
+	if trap != null and on_top_selected:
+		_select(trap)
+	elif towers.has(a):
 		_select(towers[a])
 	elif rocks.has(a):
 		_select(null, a)
 	elif phase == Phase.BUILD and can_place(anchor):
 		place_gem(anchor)
+	elif trap != null:
+		_select(trap)
 	else:
 		_select(null)
 
 
-## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren?
+## Alle Tower und Fallen.
+func all_towers() -> Array:
+	return towers.values() + traps.values()
+
+
+## Tower/Falle eintragen: Tower belegen ihre Felder und blockieren Gegner, Fallen liegen darunter.
+func _register(t: Tower) -> void:
+	if t.is_trap():
+		traps[t.cell] = t
+		for c in Board3D.footprint(t.cell, Board3D.TRAP_CELLS):
+			trap_cells[c] = t.cell
+	else:
+		towers[t.cell] = t
+		_occupy(t.cell, true, true)
+
+
+func _unregister(t: Tower) -> void:
+	if traps.get(t.cell) == t:
+		traps.erase(t.cell)
+		for c in Board3D.footprint(t.cell, Board3D.TRAP_CELLS):
+			if trap_cells.get(c) == t.cell:
+				trap_cells.erase(c)
+	if towers.get(t.cell) == t:
+		towers.erase(t.cell)
+		_occupy(t.cell, false, false)
+
+
+## Würde t als Falle auf seinem Platz eine andere Falle überdecken (außer den verbrauchten)?
+func _trap_overlaps(t: Tower, at: Vector2i, ignore: Array = []) -> bool:
+	for c in Board3D.footprint(at, Board3D.TRAP_CELLS):
+		var other: Tower = traps.get(trap_cells.get(c, NO_CELL), null)
+		if other != null and other != t and not ignore.has(other):
+			return true
+	return false
+
+
+func trap_moves() -> int:
+	return int(Database.balance.get("trap_moves", 2))
+
+
+## Falle verschieben: auf jedes begehbare Feld (auch Checkpoints und unter Tower), nicht auf andere Fallen.
+func can_move_trap(t: Tower, a: Vector2i) -> bool:
+	if t == null or not is_instance_valid(t) or not t.is_trap() or t.moves_left <= 0 or a == t.cell:
+		return false
+	for c in Board3D.footprint(a, Board3D.TRAP_CELLS):
+		if not map.is_walkable(c):
+			return false
+	return not _trap_overlaps(t, a)
+
+
+func move_trap(t: Tower, a: Vector2i) -> bool:
+	if not can_move_trap(t, a):
+		return false
+	_unregister(t)
+	t.place_at(a)
+	_register(t)
+	t.moves_left -= 1
+	moving = null
+	board.hover_cell = NO_CELL
+	_update_auras()
+	_refresh_hud()
+	return true
+
+
+## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren? Fallen darunter stören nicht.
 func can_place(a: Vector2i) -> bool:
 	var cells := Board3D.footprint(a)
 	for c in cells:
@@ -209,6 +295,7 @@ func _occupy(a: Vector2i, on: bool, solid: bool) -> void:
 
 
 func _select(t: Tower, rock := NO_CELL) -> void:
+	moving = null
 	if selected != null and is_instance_valid(selected):
 		selected.set_selected(false)
 	selected = t
@@ -253,9 +340,8 @@ func place_gem(c: Vector2i) -> Tower:
 	t.is_new = true
 	board.add_child(t)
 	t.setup(self, c, id, tier)
-	towers[c] = t
+	_register(t)
 	round_towers.append(t)
-	_occupy(c, true, not t.is_trap())
 	_update_paths()
 	_update_auras()
 	board.hover_ok = false
@@ -267,9 +353,9 @@ func place_gem(c: Vector2i) -> Tower:
 	return t
 
 
-## Stein entfernen (nur in der Bauphase, kostet rock_remove_cost Gold).
+## Stein entfernen (in jeder Phase, kostet rock_remove_cost Gold).
 func can_remove_rock(c: Vector2i) -> bool:
-	return phase == Phase.BUILD and rocks.has(c) and gold >= rock_remove_cost()
+	return phase < Phase.GAME_OVER and rocks.has(c) and gold >= rock_remove_cost()
 
 
 func remove_rock(c: Vector2i) -> bool:
@@ -295,7 +381,7 @@ func tower_options(t: Tower) -> Array:
 	if t.is_new:
 		return choice_options(t)
 	var opts := []
-	var field := towers.values().filter(func(o): return o != t and not o.is_new)
+	var field := all_towers().filter(func(o): return o != t and not o.is_new)
 	# Fertige Tower auf dem Feld kombinieren geht nur während der Welle, nicht beim Setzen und Auswählen
 	# der neuen Gems (deren Rezepte siehe choice_options)
 	if phase == Phase.WAVE:
@@ -308,7 +394,17 @@ func tower_options(t: Tower) -> Array:
 				opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "action": "combine",
 						"id": sid, "tier": 0, "consume": consume, "cost": 0})
 	opts.append_array(upgrade_options(t))
-	return opts
+	if t.is_trap() and t.moves_left > 0:
+		opts.append({"label": "Verschieben (noch %d×)" % t.moves_left, "action": "move", "id": t.tower_id,
+				"tier": t.tier, "consume": [], "cost": 0})
+	return opts.filter(func(o): return not _makes_blocked_trap(t, o))
+
+
+## Option, die aus t eine Falle macht, obwohl dort schon eine andere Falle liegt?
+func _makes_blocked_trap(t: Tower, o: Dictionary) -> bool:
+	if o.action == "move" or str(Database.towers.get(o.id, {}).get("kind", "tower")) != "trap":
+		return false
+	return _trap_overlaps(t, t.cell, o.consume)
 
 
 ## In der Auswahlphase: behalten, 2/4 gleiche, Rezepte.
@@ -343,7 +439,7 @@ func choice_options(t: Tower) -> Array:
 		# Zutaten sind alle aus dieser Runde und werden ohnehin mit dem Rest zu Steinen
 		if _match_recipe(def.get("recipe", []), t, others) != null:
 			opts.append(_keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0))
-	return opts
+	return opts.filter(func(o): return not _makes_blocked_trap(t, o))
 
 
 ## Spezial-Tower, die man in der Bauphase schon jetzt bauen könnte, z. B. "Silber (aus Splitter Topas)".
@@ -398,15 +494,16 @@ func _match_recipe(recipe: Array, t: Tower, pool: Array):
 
 
 ## Upgrades fertiger Spezial-Tower (Feld "upgrades" in der Tower-Datei): Gold, optional weitere Zutaten.
+## Nur während der Welle möglich.
 func upgrade_options(t: Tower) -> Array:
-	if t == null or t.is_new or phase == Phase.WAVE or phase >= Phase.GAME_OVER:
+	if t == null or t.is_new or phase != Phase.WAVE:
 		return []
 	var ups: Array = t.def.get("upgrades", [])
 	if t.tier >= ups.size() or t.tier + 1 >= Database.tier_count(t.tower_id):
 		return []
 	var up: Dictionary = ups[t.tier]
 	var consume := []
-	var pool := towers.values().filter(func(o): return o != t and not o.is_new)
+	var pool := all_towers().filter(func(o): return o != t and not o.is_new)
 	for ing in up.get("recipe", []):
 		var found = null
 		for o in pool:
@@ -426,10 +523,21 @@ func _on_option_chosen(index: int) -> void:
 	if selected_rock != NO_CELL:
 		remove_rock(selected_rock)
 		return
+	if moving != null:
+		# einzige Option im Verschiebe-Modus: abbrechen
+		moving = null
+		board.hover_cell = NO_CELL
+		_refresh_hud()
+		return
 	var opts := tower_options(selected)
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
+	if o.action == "move":
+		moving = selected
+		board.hover_cell = NO_CELL
+		_refresh_hud()
+		return
 	if gold < int(o.cost):
 		return
 	gold -= int(o.cost)
@@ -443,9 +551,13 @@ func _on_option_chosen(index: int) -> void:
 		round_towers.clear()
 		t.is_new = false
 	t.kills += o.consume.reduce(func(acc, c): return acc + c.kills, 0)
+	var old_id := t.tower_id
+	_unregister(t)
 	t.set_tower(o.id, o.tier)
+	_register(t)
+	if t.is_trap() and (o.id != old_id or o.action == "keep"):
+		t.moves_left = trap_moves()
 	t.set_selected(true)
-	pathfinder.set_solid_cells(Board3D.footprint(t.cell), not t.is_trap())
 	_update_paths()
 	board.refresh_rocks()
 	_update_auras()
@@ -458,15 +570,14 @@ func _on_option_chosen(index: int) -> void:
 ## Verbrauchte Zutat: Tower werden zu Steinen, Fallen verschwinden.
 func _consume(t: Tower) -> void:
 	if t.is_trap():
-		towers.erase(t.cell)
-		_occupy(t.cell, false, false)
+		_unregister(t)
 		t.queue_free()
 	else:
 		_turn_into_rock(t)
 
 
 func _turn_into_rock(t: Tower) -> void:
-	towers.erase(t.cell)
+	_unregister(t)
 	rocks[t.cell] = true
 	_occupy(t.cell, true, true)
 	t.queue_free()
@@ -495,15 +606,15 @@ func add_gold(amount: int) -> void:
 
 ## Auren, die andere Tower verstärken.
 func _update_auras() -> void:
-	for t in towers.values():
+	for t in all_towers():
 		t.speed_bonus = 0.0
 		t.damage_bonus = 0.0
-	for src in towers.values():
+	for src in all_towers():
 		for ab in src.abilities():
 			var type := str(ab.get("type", ""))
 			if type != "speed_aura" and type != "damage_aura":
 				continue
-			for t in towers.values():
+			for t in all_towers():
 				if t == src or t.pos.distance_to(src.pos) > float(ab.radius):
 					continue
 				if type == "speed_aura":
@@ -559,7 +670,7 @@ func _spawn_enemy(g: Dictionary) -> void:
 
 
 func find_targets(t: Tower, count: int) -> Array:
-	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_to(t.pos) <= t.range_for(e))
+	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and t.in_range(e))
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
@@ -609,9 +720,9 @@ func _refresh_hud() -> void:
 	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
 	hud.set_waves(_upcoming_waves(4))
 	# Baubar: in der Welle aus fertigen Towern, beim Setzen und Auswählen nur aus den Gems der Runde
-	var now_pool: Array = towers.values().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
+	var now_pool: Array = all_towers().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
 	# Zutaten: fixierte Tower plus nur der ausgewählte neue Gem (pro Runde behält man genau einen)
-	var have: Array = towers.values().filter(func(t): return not t.is_new or t == selected)
+	var have: Array = all_towers().filter(func(t): return not t.is_new or t == selected)
 	hud.set_owned(have.map(func(t): return [t.tower_id, t.tier, t.is_new]),
 			{"pool": now_pool.map(func(t): return [t.tower_id, t.tier, t.is_new]), "wave": phase == Phase.WAVE})
 
@@ -653,9 +764,15 @@ func _refresh_hud() -> void:
 	if selected_rock != NO_CELL:
 		var cost := rock_remove_cost()
 		hud.set_selection({"title": "Stein", "color": Color("6d6a63"), "used_in": null,
-				"body": "" if phase == Phase.BUILD else "Kann nur in der Bauphase entfernt werden."})
+				"body": ""})
 		hud.set_options([{"label": "Stein entfernen" + (" (%d Gold)" % cost if cost > 0 else ""), "style": "normal"}])
 		hud.set_options_enabled(can_remove_rock(selected_rock))
+		return
+	if moving != null and is_instance_valid(moving):
+		hud.set_selection({"title": moving.label() + " verschieben", "color": moving.color, "used_in": null,
+				"body": "Neuen Platz anklicken (grün = möglich). Fallen dürfen auf Checkpoints und unter Tower.\nRechtsklick oder Esc bricht ab."})
+		hud.set_options([{"label": "Abbrechen", "style": "normal"}])
+		hud.set_options_enabled(true)
 		return
 	if selected == null or not is_instance_valid(selected):
 		hud.set_selection({})
@@ -673,7 +790,7 @@ func _refresh_hud() -> void:
 
 ## Ob eines der Rezepte mit den fertigen Towern auf dem Feld komplett wäre (für den Hinweis außerhalb der Welle).
 func _field_recipe_complete(ids: Array) -> bool:
-	var field: Array = towers.values().filter(func(t): return not t.is_new).map(func(t): return [t.tower_id, t.tier])
+	var field: Array = all_towers().filter(func(t): return not t.is_new).map(func(t): return [t.tower_id, t.tier])
 	return ids.any(func(id): return Recipes.ready_now(id, field, {"pool": field, "wave": true}))
 
 

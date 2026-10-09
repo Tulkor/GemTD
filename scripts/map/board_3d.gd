@@ -28,6 +28,8 @@ const ROCK_SIZE := 0.95
 const CELL := 0.5
 ## Ein Tower ist so viele Felder breit und tief.
 const TOWER_CELLS := 2
+## Fallen sind größer (Trefferfläche).
+const TRAP_CELLS := 3
 
 var map: MapData
 var rocks: Dictionary = {}

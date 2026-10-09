@@ -148,12 +148,35 @@ func _ready() -> void:
 	game._on_option_chosen(slate_index)
 	check(amethyst.tower_id == "air_slate" and amethyst.is_trap(), "Luftplatte gesetzt")
 	check(not game.pathfinder.astar.is_point_solid(amethyst.cell), "Falle blockiert den Weg nicht")
+	var slate_cell: Vector2i = amethyst.cell
+	check(game.traps.get(slate_cell) == amethyst and not game.towers.has(slate_cell) and not game.occupied.has(slate_cell), "Falle liegt auf eigener Ebene")
+	# Trefferfläche 3×3 Felder (1,5 Towerbreiten) um die Mitte der Falle
+	check(amethyst.in_range({"pos": amethyst.pos + Vector2(0.7, -0.7), "flying": false}) and not amethyst.in_range({"pos": amethyst.pos + Vector2(0.8, 0), "flying": false}), "Falle trifft auf 3×3 Feldern")
+	# Zweimal verschieben, auch auf einen Checkpoint
+	check(amethyst.moves_left == 2 and game.tower_options(amethyst).any(func(o): return o.action == "move"), "Falle hat 2 Verschiebungen")
+	var on_cp: Vector2i = game.map.checkpoints[0] - Vector2i(1, 1)
+	check(game.can_move_trap(amethyst, on_cp) and game.move_trap(amethyst, on_cp), "Falle auf Checkpoint verschoben")
+	check(amethyst.cell == on_cp and amethyst.moves_left == 1 and game.traps.has(on_cp) and not game.traps.has(slate_cell), "Falle liegt jetzt am Checkpoint")
+	check(game.move_trap(amethyst, slate_cell) and amethyst.moves_left == 0, "zweites Verschieben")
+	check(not game.can_move_trap(amethyst, on_cp) and not game.tower_options(amethyst).any(func(o): return o.action == "move"), "kein drittes Verschieben")
+	# Steine auch während der Welle entfernen
+	var wave_rock: Vector2i = game.rocks.keys()[0]
+	check(game.remove_rock(wave_rock) and not game.ground_path.is_empty(), "Stein während der Welle entfernt")
 	var dmg_before: float = amethyst.total_damage
 	var frames2 := 0
 	while game.phase == game.Phase.WAVE and frames2 < 20000:
 		await get_tree().process_frame
 		frames2 += 1
 	print("  Luftplatte Schaden: ", int(amethyst.total_damage - dmg_before))
+
+	# Tower auf eine Falle bauen; zweiter Klick wählt die Falle darunter
+	check(game.can_place(slate_cell), "Tower auf Falle baubar")
+	game.debug_tower = "topaz:4"
+	var on_trap = game.place_gem(slate_cell)
+	check(game.towers.get(slate_cell) == on_trap and game.traps.get(slate_cell) == amethyst, "Tower steht auf der Falle")
+	game._select(on_trap)
+	game._on_click(slate_cell, slate_cell)
+	check(game.selected == amethyst, "zweiter Klick wählt die Falle unter dem Tower")
 
 	# Stein von Bryvx: 4 gleiche perfekte Gems
 	tries2 = 0
@@ -248,6 +271,8 @@ func _ready() -> void:
 	game._select(field_sapphire)
 	game._on_option_chosen(field_labels.find("Kombinieren → Silber"))
 	check(field_sapphire.tower_id == "silver" and game.phase == game.Phase.WAVE and not game.ground_path.is_empty(), "während der Welle kombiniert, Welle läuft weiter")
+	labels = game.tower_options(topaz).map(func(o): return o.label)
+	check(labels.any(func(l): return l.begins_with("Aufwerten → Sterlingsilber")), "Upgrade während der Welle: %s" % [labels])
 
 	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
 	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle
@@ -274,6 +299,8 @@ func _ready() -> void:
 	check(game.phase == game.Phase.CHOOSE and not labels.any(func(l): return star_name in l), "Auswahlphase: kein %s mit altem Rubin: %s" % [star_name, labels])
 	labels = game.tower_options(star[0]).map(func(o): return o.label)
 	check(not labels.any(func(l): return "Kombinieren" in l), "alter Rubin kombiniert in der Auswahlphase nicht: %s" % [labels])
+	labels = game.tower_options(topaz).map(func(o): return o.label)
+	check(labels.is_empty(), "kein Upgrade außerhalb der Welle: %s" % [labels])
 
 	# Wellenvorschau links
 	var preview: Array = game._upcoming_waves(4)
