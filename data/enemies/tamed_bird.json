@@ -1,8 +1,8 @@
 {
 	"id": "tamed_bird",
 	"name": "Tamed Bird",
-	"hp": 1620,
-	"speed": 2.19,
+	"hp": 1515,
+	"speed": 2.05,
 	"armor": 13,
 	"armor_type": "unarmored",
 	"bounty": 6,

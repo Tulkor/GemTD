@@ -1,8 +1,8 @@
 {
 	"id": "flying_gem_thief",
 	"name": "Flying Gem Thief",
-	"hp": 288,
-	"speed": 1.44,
+	"hp": 251,
+	"speed": 1.25,
 	"armor": 12,
 	"armor_type": "unarmored",
 	"bounty": 3,

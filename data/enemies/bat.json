@@ -1,8 +1,8 @@
 {
 	"id": "bat",
 	"name": "Bat",
-	"hp": 84,
-	"speed": 1.44,
+	"hp": 71,
+	"speed": 1.22,
 	"armor": 12,
 	"armor_type": "unarmored",
 	"bounty": 2,
