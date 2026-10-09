@@ -140,6 +140,8 @@ func _ready() -> void:
 	check(labels.any(func(l): return "Luftplatte" in l), "Amethyst: Luftplatte angeboten: %s" % [labels])
 	labels = game.choice_options(game.round_towers[2]).map(func(o): return o.label)
 	check(labels.any(func(l): return "Großartiger Rubin" in l), "2 perfekte Rubine → Großartig: %s" % [labels])
+	var down: Array = game.choice_options(game.round_towers[2]).filter(func(o): return o.label.begins_with("Abstufen"))
+	check(down.size() == 1 and down[0].id == "ruby" and down[0].tier == 3, "Perfekten Rubin abstufen → %s" % [down.map(func(o): return o.label)])
 	game._select(amethyst)
 	var opts: Array = game.choice_options(amethyst)
 	var slate_index := opts.map(func(o): return o.label).find(opts.filter(func(o): return "Luftplatte" in o.label)[0].label)

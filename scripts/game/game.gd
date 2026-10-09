@@ -321,6 +321,9 @@ func choice_options(t: Tower) -> Array:
 		return []
 	var opts := [] if one_shot else [_keep_option("Behalten: " + t.label(), t.tower_id, t.tier)]
 	if t.def.get("category", "gem") == "gem" and not one_shot:
+		# Abstufen wie in WC3: den Gem eine Qualität niedriger behalten, z. B. für ein Rezept
+		if t.tier > 0:
+			opts.append(_keep_option("Abstufen → " + Database.tower_label(t.tower_id, t.tier - 1), t.tower_id, t.tier - 1))
 		var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
 		var max_tier := Database.tier_count(t.tower_id) - 1
 		for n in [2, 4]:

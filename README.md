@@ -30,7 +30,8 @@ Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen
    halbe Breite versetzen, und Gegner passen durch Lücken von einem Feld (wie in WC3).
 2. Einen der 5 neuen Gems anklicken und rechts wählen: behalten, 2 gleiche → +1 Qualität,
    4 gleiche → +2 Qualitäten (über „Großartig“ hinaus entsteht der Stein von Bryvx),
-   oder ein Spezial-Rezept. Die anderen 4 werden zu Steinen.
+   oder ein Spezial-Rezept. Die anderen 4 werden zu Steinen. Mit „Abstufen“ behält man einen Gem
+   eine Qualität niedriger (z. B. Fehlerhaft → Splitter), etwa weil ein Rezept genau diese Stufe braucht.
    **One-Shot:** Sind schon während der Bauphase alle Zutaten eines Spezial-Rezepts da (gesetzte Gems
    dieser Runde; fertige Tower auf dem Feld zählen dafür nicht), zeigt das Spiel das an. Gem anklicken und „One-Shot“
    wählen baut den Spezial-Tower sofort; die restlichen Gems der Runde entfallen.
