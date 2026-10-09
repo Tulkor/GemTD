@@ -14,6 +14,13 @@ Im Hauptmenü Map wählen und *Spielen*.
 
 **Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, Rechtsklick/Esc hebt die Auswahl auf.
 Kamera: WASD/Pfeile, Maus an den Fensterrand oder mit gedrückter rechter Maustaste ziehen verschiebt, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
+Leertaste: große Aktion unten rechts (Behalten, bzw. lila One-Shot). R: Rezeptbuch.
+
+**Oberfläche:** Leiste oben (Welle, Leben, Gold, Chance-Stufe, Tempo), darunter das Phasenbanner.
+Unten die Auswahlkarte: die neuen Gems der Runde (lila Rand = Zutat für einen One-Shot/Spezial-Tower),
+Werte des angeklickten Towers, „Wird gebraucht für“ mit allen Rezepten, in denen er vorkommt, und die Aktionen.
+Im Rezeptbuch (R) stehen alle Spezial-Rezepte, Zutaten grün (✓ vorhanden) oder rot (✗ fehlt).
+Mit „Pin“ angepinnte Rezepte erscheinen links oben und zeigen, was noch fehlt.
 
 **Spielablauf wie in Gem TD:**
 1. Bauphase: 5 zufällige Gems setzen. Der Weg kann nie ganz blockiert werden.

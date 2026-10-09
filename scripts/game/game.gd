@@ -67,6 +67,7 @@ func _ready() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	hud.option_chosen.connect(_on_option_chosen)
+	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
 	hud.chance_upgrade_requested.connect(_upgrade_chance)
 	hud.speed_selected.connect(func(f): Engine.time_scale = f)
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
@@ -593,36 +594,78 @@ func _finish(p: Phase) -> void:
 func _refresh_hud() -> void:
 	if hud == null:
 		return
-	hud.set_stats("Map: %s\nWelle: %d / %d\nLeben: %d\nGold: %d" % [map.name, mini(wave_index + 1, waves.size()), waves.size(), lives, gold])
+	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), lives, gold)
+	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]))
+
+	# Neue Gems, die eine Zutat für einen Spezial-Tower aus dieser Runde sind (lila markiert)
+	var specials := []
+	var gems := []
+	for t in round_towers:
+		var shot := false
+		for o in choice_options(t):
+			if _is_special_option(t, o):
+				shot = true
+				if not specials.has(Database.tower_label(o.id, o.tier)):
+					specials.append(Database.tower_label(o.id, o.tier))
+		gems.append({"label": t.label(), "color": t.color, "selected": t == selected, "oneshot": shot})
+	var shot_text := ""
+	if not specials.is_empty():
+		shot_text = ("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
+	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], "Lila Rand: Zutat für " + ", ".join(specials) if not specials.is_empty() else "")
+
 	match phase:
 		Phase.BUILD:
-			var text := "Bauphase: setze Gems (%d / %d). Steine anklicken, um sie zu entfernen." % [round_towers.size(), gems_per_round()]
-			var shots := one_shot_hints()
-			if not shots.is_empty():
-				text += "\nOne-Shot möglich: " + ", ".join(shots) + ". Gem anklicken, um ihn direkt zu bauen."
-			hud.set_phase(text)
+			hud.set_phase("Bauphase", "Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen" % [round_towers.size(), gems_per_round()], shot_text)
 		Phase.CHOOSE:
-			hud.set_phase("Wähle einen der neuen Gems (weißer Ring) und entscheide unten, was daraus wird. Die anderen werden zu Steinen.")
+			hud.set_phase("Wahlphase", "Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen.", shot_text)
 		Phase.WAVE:
-			hud.set_phase("Welle läuft – noch %d Gegner" % (enemies.size() + spawn_queue.size()))
+			hud.set_phase("Welle %d" % (wave_index + 1), "noch %d Gegner" % (enemies.size() + spawn_queue.size()))
 		Phase.GAME_OVER:
-			hud.set_phase("Spiel verloren.")
+			hud.set_phase("Verloren", "")
 		Phase.VICTORY:
-			hud.set_phase("Alle Wellen geschafft!")
+			hud.set_phase("Gewonnen", "Alle Wellen geschafft!")
 
 	var levels: Array = Database.balance.get("chance_levels", [])
 	if chance_level + 1 < levels.size():
 		var cost := int(levels[chance_level + 1].get("cost", 0))
-		hud.set_chance("Chance-Stufe %d → %d (%d Gold)" % [chance_level, chance_level + 1, cost], gold >= cost and phase < Phase.GAME_OVER)
+		hud.set_chance(chance_level, cost, gold >= cost and phase < Phase.GAME_OVER)
 	else:
-		hud.set_chance("Chance-Stufe %d (max)" % chance_level, false)
+		hud.set_chance(chance_level, -1, false)
 
 	if selected_rock != NO_CELL:
 		var cost := rock_remove_cost()
-		hud.set_options(["Stein entfernen" + (" (%d Gold)" % cost if cost > 0 else "")])
+		hud.set_selection({"title": "Stein", "color": Color("6d6a63"), "used_in": null,
+				"body": "" if phase == Phase.BUILD else "Kann nur in der Bauphase entfernt werden."})
+		hud.set_options([{"label": "Stein entfernen" + (" (%d Gold)" % cost if cost > 0 else ""), "style": "normal"}])
 		hud.set_options_enabled(can_remove_rock(selected_rock))
-		hud.set_tower_info("Stein" + ("" if phase == Phase.BUILD else "\nKann nur in der Bauphase entfernt werden."))
 		return
-	hud.set_options(tower_options(selected).map(func(o): return o.label))
+	if selected == null or not is_instance_valid(selected):
+		hud.set_selection({})
+		hud.set_options([])
+		return
+	var lines := selected.info_text().split("\n")
+	hud.set_selection({"title": lines[0], "color": selected.color, "body": "\n".join(lines.slice(1)),
+			"used_in": Recipes.used_in(selected.tower_id, selected.tier)})
+	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
-	hud.set_tower_info(selected.info_text() if selected != null and is_instance_valid(selected) else "")
+
+
+## Wird aus dem Gem ein Spezial-Tower (One-Shot in der Bau-, Kombination in der Wahlphase)?
+func _is_special_option(t: Tower, o: Dictionary) -> bool:
+	return t.is_new and o.action == "keep" and o.id != t.tower_id \
+			and Database.towers.get(o.id, {}).get("category", "gem") == "special"
+
+
+func _option_view(t: Tower, o: Dictionary) -> Dictionary:
+	var v := {"label": o.label, "style": "normal"}
+	if _is_special_option(t, o):
+		v.style = "oneshot"
+		var hint := "Baut %s sofort und beendet die Runde." % Database.tower_label(o.id, o.tier) if phase == Phase.BUILD else ""
+		hint += " Die übrigen neuen Gems werden zu Steinen."
+		if not o.consume.is_empty():
+			hint += " Verbraucht vom Feld: " + ", ".join(o.consume.map(func(c): return c.label()))
+		v.hint = hint.strip_edges()
+	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
+		v.style = "primary"
+		v.label = "Behalten"
+	return v
