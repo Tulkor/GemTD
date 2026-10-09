@@ -29,6 +29,7 @@ var slow_factor := 0.0
 var slow_time := 0.0
 var poison_dps := 0.0
 var poison_time := 0.0
+var poison_source = null  ## Tower, dem der Giftschaden gutgeschrieben wird
 var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
@@ -81,7 +82,11 @@ func _process(delta: float) -> void:
 			armor_reduction = 0.0
 	if poison_time > 0.0:
 		poison_time -= delta
-		take_raw_damage(poison_dps * delta)
+		var dealt := take_raw_damage(poison_dps * delta)
+		if is_instance_valid(poison_source):
+			poison_source.total_damage += dealt
+			if dead:
+				poison_source.kills += 1
 		if dead:
 			return
 	if stack_time > 0.0:
@@ -152,7 +157,9 @@ func apply_slow(factor: float, duration: float) -> void:
 	slow_time = maxf(slow_time, duration)
 
 
-func apply_poison(dps: float, duration: float) -> void:
+func apply_poison(dps: float, duration: float, source = null) -> void:
+	if poison_time <= 0.0 or dps >= poison_dps:
+		poison_source = source
 	poison_dps = maxf(poison_dps, dps) if poison_time > 0.0 else dps
 	poison_time = maxf(poison_time, duration)
 
