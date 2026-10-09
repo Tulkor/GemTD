@@ -606,6 +606,7 @@ func _refresh_hud() -> void:
 		return
 	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), lives, gold)
 	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
+	hud.set_waves(_upcoming_waves(4))
 	hud.set_owned(towers.values().map(func(t): return [t.tower_id, t.tier]))
 
 	# Neue Gems, die eine Zutat für einen Spezial-Tower aus dieser Runde sind (lila markiert)
@@ -659,6 +660,56 @@ func _refresh_hud() -> void:
 			"used_in": Recipes.used_in(selected.tower_id, selected.tier)})
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
+
+
+## Vorschau der nächsten Wellen für die linke Spalte.
+func _upcoming_waves(count: int) -> Array:
+	var list := []
+	if phase >= Phase.GAME_OVER:
+		return list
+	for i in range(wave_index, mini(wave_index + count, waves.size())):
+		var groups: Array = waves[i].get("groups", [])
+		var defs := groups.map(func(g): return Database.enemies.get(str(g.get("enemy", "")), {}))
+		var total := 0
+		for g in groups:
+			total += int(g.get("count", 1))
+		var detail := ""
+		if groups.size() == 1 and not defs[0].is_empty():
+			var d: Dictionary = defs[0]
+			detail = "%d× %s · %d LP · Rüstung %d" % [total, d.get("name", "?"), int(d.get("hp", 0)), int(d.get("armor", 0))]
+		else:
+			detail = "%d Gegner: %s" % [total, ", ".join(defs.map(func(d): return str(d.get("name", "?"))))]
+		var state := ""
+		if i == wave_index:
+			state = "läuft" if phase == Phase.WAVE else "als Nächstes"
+		list.append({"number": i + 1, "type": wave_type(waves[i]), "detail": detail, "state": state})
+	return list
+
+
+## Wellentyp wie die Gegnerformen: Boss, Flieger, Masse (Pyramiden oder sehr viele Gegner), Boden oder Gemischt.
+static func wave_type(w: Dictionary) -> String:
+	if w.has("type"):
+		return str(w.type)
+	var groups: Array = w.get("groups", [])
+	var flying := 0
+	var ground := 0
+	var total := 0
+	for g in groups:
+		var d: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
+		if d.get("boss", false):
+			return "Boss"
+		if d.get("flying", false):
+			flying += 1
+		else:
+			ground += 1
+		total += int(g.get("count", 1))
+		if str(d.get("shape", "")) == "pyramid":
+			return "Masse"
+	if flying > 0 and ground > 0:
+		return "Gemischt"
+	if flying > 0:
+		return "Flieger"
+	return "Masse" if total >= 20 else "Boden"
 
 
 ## Wird aus dem Gem ein Spezial-Tower (One-Shot in der Bau-, Kombination in der Wahlphase)?

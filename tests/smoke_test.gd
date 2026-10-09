@@ -209,6 +209,12 @@ func _ready() -> void:
 	check(topaz.tower_id == "silver" and game.phase == game.Phase.WAVE, "One-Shot gebaut, Welle startet")
 	check(game.rocks.size() == rocks_before + 2, "die anderen beiden Gems sind Steine")
 
+	# Wellenvorschau links
+	var preview: Array = game._upcoming_waves(4)
+	check(preview.size() == 4 and preview[0].number == game.wave_index + 1, "Vorschau zeigt die nächsten 4 Wellen ab Welle %d" % (game.wave_index + 1))
+	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
+	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
+
 	# Weglänge in der Leiste und Menü am Spielende
 	check(game.path_length > 0 and str(game.path_length) in game.hud.path_value.text, "Weglänge angezeigt: " + game.hud.path_value.text)
 	game._finish(game.Phase.GAME_OVER)

@@ -36,6 +36,9 @@ var oneshot_pill: PanelContainer
 var oneshot_label: Label
 
 var pinned_panel: PanelContainer
+var waves_panel: PanelContainer
+var waves_box: VBoxContainer
+var _waves: Array = []
 var pinned_box: VBoxContainer
 
 var bottom: PanelContainer
@@ -236,12 +239,23 @@ func _build_banner() -> void:
 
 
 func _build_pinned() -> void:
+	# Linke Spalte: nächste Wellen, darunter die angepinnten Rezepte
+	var left := VBoxContainer.new()
+	left.offset_left = 16
+	left.offset_top = 120
+	left.custom_minimum_size.x = 280
+	left.add_theme_constant_override("separation", 12)
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(left)
+	waves_panel = PanelContainer.new()
+	waves_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
+	left.add_child(waves_panel)
+	waves_box = VBoxContainer.new()
+	waves_box.add_theme_constant_override("separation", 8)
+	waves_panel.add_child(waves_box)
 	pinned_panel = PanelContainer.new()
 	pinned_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
-	pinned_panel.offset_left = 16
-	pinned_panel.offset_top = 120
-	pinned_panel.custom_minimum_size.x = 280
-	root.add_child(pinned_panel)
+	left.add_child(pinned_panel)
 	pinned_box = VBoxContainer.new()
 	pinned_box.add_theme_constant_override("separation", 10)
 	pinned_panel.add_child(pinned_box)
@@ -479,6 +493,45 @@ func set_options_enabled(enabled: bool) -> void:
 	for b in actions_col.get_children():
 		if b is Button:
 			(b as Button).disabled = not enabled
+
+
+## waves: [{number, type, detail, color, state}] – type: "Boden", "Flieger", "Masse", "Boss" oder "Gemischt",
+## state: "läuft", "nächste" oder "".
+func set_waves(waves: Array) -> void:
+	if waves == _waves:
+		return
+	_waves = waves
+	for c in waves_box.get_children():
+		waves_box.remove_child(c)
+		c.queue_free()
+	UiUtil.label("Nächste Wellen", waves_box, 15)
+	for w in waves:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		waves_box.add_child(row)
+		var icon := WaveIcon.new()
+		icon.kind = w.type
+		icon.custom_minimum_size = Vector2(26, 26)
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(icon)
+		var v := VBoxContainer.new()
+		v.add_theme_constant_override("separation", 0)
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(v)
+		var head := HBoxContainer.new()
+		head.add_theme_constant_override("separation", 8)
+		v.add_child(head)
+		UiUtil.label("Welle %d" % w.number, head, 14)
+		var t := UiUtil.label(w.type, head, 14)
+		t.add_theme_color_override("font_color", WaveIcon.COLORS.get(w.type, UiTheme.TEXT))
+		if w.state != "":
+			var st := UiUtil.label(w.state, head, 12)
+			st.add_theme_color_override("font_color", UiTheme.GOLD)
+			st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			st.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var d := UiUtil.label(w.detail, v, 12)
+		d.add_theme_color_override("font_color", UiTheme.MUTED)
+	waves_panel.visible = not waves.is_empty()
 
 
 func show_message(text: String) -> void:
