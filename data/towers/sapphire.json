@@ -9,15 +9,15 @@
 	"tiers": [
 		{
 			"damage": [
-				5,
-				8
+				8,
+				11
 			],
 			"range": 4.3,
 			"cooldown": 0.8,
 			"abilities": [
 				{
 					"type": "slow",
-					"factor": 0.2,
+					"factor": 0.3,
 					"duration": 5.0
 				}
 			]

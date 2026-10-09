@@ -49,7 +49,7 @@ func _ready() -> void:
 
 	box.add_child(HSeparator.new())
 	UiUtil.button("Zurück", box, func(): menu_requested.emit())
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nWASD/Pfeile: Kamera bewegen, Q/E oder mittlere Maustaste: drehen, Mausrad: zoomen\nTasten 1, 2, 3: Tempo", box, inner).modulate = Color(1, 1, 1, 0.6)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nWASD/Pfeile, Fensterrand oder rechte Maustaste ziehen: Kamera bewegen, Q/E oder mittlere Maustaste: drehen, Mausrad: zoomen\nTasten 1, 2, 3: Tempo", box, inner).modulate = Color(1, 1, 1, 0.6)
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)

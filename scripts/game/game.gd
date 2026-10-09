@@ -148,10 +148,11 @@ func _update_hover() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera))
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
+		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed and not camera_rig.right_dragged:
+			# Rechtsklick hebt die Auswahl auf, rechts ziehen verschiebt nur die Kamera
 			_select(null)
 	elif event is InputEventKey and event.pressed:
 		match event.keycode:
@@ -299,11 +300,15 @@ func tower_options(t: Tower) -> Array:
 	return opts
 
 
+## In der Auswahlphase: behalten, 2/4 gleiche, Rezepte.
+## Schon in der Bauphase (One-Shot): nur Rezepte, die mit den bisher gesetzten Gems und den
+## Towern auf dem Feld erfüllt sind. Wer das nimmt, beendet die Runde sofort.
 func choice_options(t: Tower) -> Array:
-	if phase != Phase.CHOOSE or t == null or not round_towers.has(t):
+	var one_shot := phase == Phase.BUILD
+	if (phase != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
 		return []
-	var opts := [_keep_option("Behalten: " + t.label(), t.tower_id, t.tier)]
-	if t.def.get("category", "gem") == "gem":
+	var opts := [] if one_shot else [_keep_option("Behalten: " + t.label(), t.tower_id, t.tier)]
+	if t.def.get("category", "gem") == "gem" and not one_shot:
 		var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
 		var max_tier := Database.tier_count(t.tower_id) - 1
 		for n in [2, 4]:
@@ -324,10 +329,19 @@ func choice_options(t: Tower) -> Array:
 		var pool: Array = others if def.get("recipe_same_round", false) else others + field
 		var consume = _match_recipe(def.get("recipe", []), t, pool)
 		if consume != null:
-			var o := _keep_option("Kombinieren → " + Database.tower_label(sid, 0), sid, 0)
+			var o := _keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0)
 			o.consume = consume.filter(func(c): return not c.is_new)
 			opts.append(o)
 	return opts
+
+
+## Spezial-Tower, die man in der Bauphase schon jetzt bauen könnte, z. B. "Silber (aus Splitter Topas)".
+func one_shot_hints() -> Array:
+	var hints := []
+	for t in round_towers:
+		for o in choice_options(t):
+			hints.append("%s (aus %s)" % [Database.tower_label(o.id, o.tier), t.label()])
+	return hints
 
 
 func _keep_option(label: String, id: String, tier: int) -> Dictionary:
@@ -582,7 +596,11 @@ func _refresh_hud() -> void:
 	hud.set_stats("Map: %s\nWelle: %d / %d\nLeben: %d\nGold: %d" % [map.name, mini(wave_index + 1, waves.size()), waves.size(), lives, gold])
 	match phase:
 		Phase.BUILD:
-			hud.set_phase("Bauphase: setze Gems (%d / %d). Steine anklicken, um sie zu entfernen." % [round_towers.size(), gems_per_round()])
+			var text := "Bauphase: setze Gems (%d / %d). Steine anklicken, um sie zu entfernen." % [round_towers.size(), gems_per_round()]
+			var shots := one_shot_hints()
+			if not shots.is_empty():
+				text += "\nOne-Shot möglich: " + ", ".join(shots) + ". Gem anklicken, um ihn direkt zu bauen."
+			hud.set_phase(text)
 		Phase.CHOOSE:
 			hud.set_phase("Wähle einen der neuen Gems (weißer Ring) und entscheide unten, was daraus wird. Die anderen werden zu Steinen.")
 		Phase.WAVE:

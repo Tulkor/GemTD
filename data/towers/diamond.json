@@ -9,8 +9,8 @@
 	"tiers": [
 		{
 			"damage": [
-				8,
-				12
+				14,
+				17
 			],
 			"range": 3.91,
 			"cooldown": 0.8,

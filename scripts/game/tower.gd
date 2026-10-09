@@ -122,7 +122,8 @@ func _process(delta: float) -> void:
 	_apply_enemy_auras(delta)
 	if not can_attack():
 		return
-	cooldown_left -= delta
+	# höchstens ein Frame Rückstand, sonst feuert ein Tower nach langer Pause mehrfach hintereinander
+	cooldown_left = maxf(cooldown_left - delta, -delta)
 	if cooldown_left > 0.0:
 		return
 	var count := 1
@@ -134,7 +135,8 @@ func _process(delta: float) -> void:
 		return
 	for e in targets:
 		_attack(e)
-	cooldown_left = cooldown()
+	# Überhang behalten, damit hohe Spielgeschwindigkeit (große Frames) die Feuerrate nicht senkt
+	cooldown_left += cooldown()
 
 
 ## Auren, die auf Gegner in Reichweite wirken (z. B. Fallen oder Uran).

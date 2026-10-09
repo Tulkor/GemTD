@@ -13,7 +13,7 @@ Godot öffnen → *Importieren* → `project.godot` wählen → F5.
 Im Hauptmenü Map wählen und *Spielen*.
 
 **Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, Rechtsklick/Esc hebt die Auswahl auf.
-Kamera: WASD/Pfeile verschieben, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
+Kamera: WASD/Pfeile, Maus an den Fensterrand oder mit gedrückter rechter Maustaste ziehen verschiebt, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
 
 **Spielablauf wie in Gem TD:**
 1. Bauphase: 5 zufällige Gems setzen. Der Weg kann nie ganz blockiert werden.
@@ -22,6 +22,9 @@ Kamera: WASD/Pfeile verschieben, Q/E oder mittlere Maustaste drehen, Mausrad zoo
 2. Einen der 5 neuen Gems anklicken und rechts wählen: behalten, 2 gleiche → +1 Qualität,
    4 gleiche → +2 Qualitäten (über „Großartig“ hinaus entsteht der Stein von Bryvx),
    oder ein Spezial-Rezept. Die anderen 4 werden zu Steinen.
+   **One-Shot:** Sind schon während der Bauphase alle Zutaten eines Spezial-Rezepts da (gesetzte Gems
+   dieser Runde plus fertige Tower auf dem Feld), zeigt das Spiel das an. Gem anklicken und „One-Shot“
+   wählen baut den Spezial-Tower sofort; die restlichen Gems der Runde entfallen.
 3. Die Welle startet. Gegner laufen Spawn (S) → Checkpoints 1…5 → Ziel (Z). Flieger fliegen direkt.
 
 Weitere Regeln:
@@ -87,7 +90,7 @@ ein Tower war, und werden beim Laden automatisch verdoppelt.
 Kacheln: `.` Boden (bebaubar), `#` blockiert, `_` nur Weg. Um Spawn, Ziel und Checkpoints ist im Umkreis
 `marker_radius` nicht bebaubar. `variance.random_rocks` setzt bei jedem Start zufällig Steine.
 
-**Map-Editor:** Kacheln malen (Linksklick, ziehen, Pinselgröße einstellbar), Rechtsklick radiert. Spawn/Ziel/Checkpoints per Werkzeug.
+**Map-Editor:** Kacheln malen (Linksklick, ziehen, Pinselgröße einstellbar), Rechtsklick radiert (rechts ziehen verschiebt die Kamera). Spawn/Ziel/Checkpoints per Werkzeug.
 Der Weg wird live angezeigt, *Testen* startet das Spiel mit der Map.
 
 ## Tower-Format (`data/towers/*.json`)
@@ -128,4 +131,7 @@ Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyra
 
 ```
 godot --headless --path . res://tests/smoke_test.tscn
+godot --headless --fixed-fps 60 --path . res://tests/balance_test.tscn -- --tier=0 --wave=1
 ```
+Der Balance-Test stellt jeden Gem einzeln an den Laufweg (Ecke und Gerade, ohne Labyrinth) und zählt,
+wie viele Gegner der Welle durchkommen. Splitter schaffen Welle 1 ohne Durchbruch (außer Amethyst, der nur Luft trifft).

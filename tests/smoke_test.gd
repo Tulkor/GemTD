@@ -164,6 +164,32 @@ func _ready() -> void:
 	labels = game.choice_options(game.round_towers[0]).map(func(o): return o.label)
 	check(labels.any(func(l): return "Bryvx" in l), "4 perfekte → Stein von Bryvx: %s" % [labels])
 
+	# One-Shot: Silber schon in der Bauphase, sobald Topas, Diamant und Saphir stehen
+	for t in game.towers.values().filter(func(o): return o.is_new):
+		game._turn_into_rock(t)
+	game.round_towers.clear()
+	game.phase = game.Phase.BUILD
+	var shot_plan := ["topaz:0", "diamond:0", "sapphire:0"]
+	tries2 = 0
+	while game.round_towers.size() < shot_plan.size() and tries2 < 5000:
+		tries2 += 1
+		var p: Vector2 = game.ground_path[rng.randi_range(0, game.ground_path.size() - 1)]
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
+		if game.can_place(c):
+			game.debug_tower = shot_plan[game.round_towers.size()]
+			game.place_gem(c)
+	check(game.phase == game.Phase.BUILD, "nach 3 Gems noch Bauphase")
+	check(game.one_shot_hints().any(func(h): return "Silber" in h), "One-Shot-Hinweis: %s" % [game.one_shot_hints()])
+	var topaz = game.round_towers[0]
+	game._select(topaz)
+	opts = game.choice_options(topaz)
+	labels = opts.map(func(o): return o.label)
+	check(labels == ["One-Shot → Silber"], "Bauphase bietet nur das Rezept an: %s" % [labels])
+	var rocks_before: int = game.rocks.size()
+	game._on_option_chosen(0)
+	check(topaz.tower_id == "silver" and game.phase == game.Phase.WAVE, "One-Shot gebaut, Welle startet")
+	check(game.rocks.size() == rocks_before + 2, "die anderen beiden Gems sind Steine")
+
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
 		var def: Dictionary = Database.towers[id]

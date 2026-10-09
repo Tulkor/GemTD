@@ -64,7 +64,7 @@ func _build_ui() -> void:
 	UiUtil.label("Map-Editor", box, 24)
 
 	UiUtil.label("Werkzeug (Rechtsklick radiert)", box)
-	UiUtil.wrap_label("Kamera: WASD/Pfeile, Q/E, Mausrad, mittlere Maustaste", box, PANEL_WIDTH - 40).modulate = Color(1, 1, 1, 0.6)
+	UiUtil.wrap_label("Kamera: WASD/Pfeile, Fensterrand, rechte Maustaste ziehen, Q/E, Mausrad, mittlere Maustaste", box, PANEL_WIDTH - 40).modulate = Color(1, 1, 1, 0.6)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	box.add_child(grid)
@@ -213,12 +213,17 @@ func _process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				painting = 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
+				painting = 1
 				_apply(true)
 			else:
 				painting = 0
+		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed and not camera_rig.right_dragged:
+			# Rechtsklick radiert einmal, rechts ziehen verschiebt die Kamera
+			painting = 2
+			_apply(true)
+			painting = 0
 	elif event is InputEventMouseMotion and painting != 0:
 		_apply(false)
 
