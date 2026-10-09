@@ -259,7 +259,10 @@ func _build_visual() -> void:
 
 	var category := str(def.get("category", "gem"))
 	_gem = null
-	if is_trap():
+	var model := ModelLoader.instantiate(str(stats.get("model", def.get("model", ""))), float(stats.get("model_scale", def.get("model_scale", 1.0))))
+	if model != null:
+		_visual.add_child(model)
+	elif is_trap():
 		var plate := MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
 		cyl.top_radius = 0.42

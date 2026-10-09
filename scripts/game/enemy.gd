@@ -32,6 +32,8 @@ var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
 
+var def_model := ""
+var def_model_scale := 1.0
 var _body_mat: StandardMaterial3D
 var _bar_fg: MeshInstance3D
 var _body: MeshInstance3D
@@ -49,6 +51,8 @@ func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 	flying = bool(def.get("flying", false))
 	size = float(def.get("size", 1.0))
 	color = Color.from_string(str(def.get("color", "#cccccc")), Color.GRAY)
+	def_model = str(def.get("model", ""))
+	def_model_scale = float(def.get("model_scale", 1.0))
 	path = p
 	if not path.is_empty():
 		pos = path[0]
@@ -155,6 +159,10 @@ func _build_visual() -> void:
 	_body_mat.roughness = 0.6
 	_body = MeshInstance3D.new()
 	var r := 0.26 * size
+	var model := ModelLoader.instantiate(str(def_model), def_model_scale * size)
+	if model != null:
+		add_child(model)
+		_body.visible = false
 	if flying:
 		var prism := PrismMesh.new()
 		prism.size = Vector3(r * 2.4, r * 0.5, r * 2.2)

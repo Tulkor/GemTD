@@ -4,6 +4,8 @@ extends Control
 
 const CATEGORIES := ["gem", "special"]
 const CATEGORY_LABELS := ["Gem (zufällig würfelbar)", "Spezial (per Rezept)"]
+const KINDS := ["tower", "trap"]
+const KIND_LABELS := ["Tower (blockiert den Weg)", "Falle (Gegner laufen darüber)"]
 const TARGETS := ["both", "ground", "air"]
 const TARGET_LABELS := ["Boden und Luft", "Nur Boden", "Nur Luft"]
 
@@ -133,12 +135,18 @@ func _build_form() -> void:
 			current["recipe"] = []
 		_build_form())
 
+	var kind_row := UiUtil.row("Art", form)
+	var kind := _option(kind_row, KIND_LABELS, KINDS.find(current.get("kind", "tower")))
+	kind.item_selected.connect(func(i): current["kind"] = KINDS[i])
+
 	var color_row := UiUtil.row("Farbe", form)
 	var picker := ColorPickerButton.new()
 	picker.custom_minimum_size = Vector2(96, 28)
 	picker.color = Color.from_string(str(current.get("color", "#ffffff")), Color.WHITE)
 	picker.color_changed.connect(func(c: Color): current["color"] = "#" + c.to_html(false))
 	color_row.add_child(picker)
+
+	_line_edit("Modell (optional, res://…glb)", "model")
 
 	var target_row := UiUtil.row("Ziele", form)
 	var tgt := _option(target_row, TARGET_LABELS, TARGETS.find(current.get("targets", "both")))
@@ -147,6 +155,8 @@ func _build_form() -> void:
 	if current.get("category", "gem") == "special":
 		_build_recipe()
 	_build_tiers()
+	if current.get("category", "gem") == "special":
+		_build_upgrades()
 
 
 func _line_edit(text: String, key: String) -> void:
@@ -177,16 +187,22 @@ func _section(title: String) -> VBoxContainer:
 
 func _build_recipe() -> void:
 	var box := _section("Rezept (alle Zutaten müssen in derselben Runde gesetzt werden)")
-	var recipe: Array = current.get("recipe", [])
-	var gem_ids := Database.gem_ids()
+	if not current.has("recipe"):
+		current["recipe"] = []
+	_ingredient_list(box, current["recipe"])
+
+
+## Zeilen für eine Zutatenliste [{tower, tier}] mit Hinzufügen/Entfernen.
+func _ingredient_list(box: Node, recipe: Array) -> void:
+	var ids := Database.tower_ids()
 	for k in recipe.size():
 		var ing: Dictionary = recipe[k]
+		if str(ing.get("tower", "")) == "" and not ids.is_empty():
+			ing["tower"] = ids[0]
 		var r := HBoxContainer.new()
 		box.add_child(r)
-		var o := _option(r, gem_ids.map(func(id): return Database.towers[id].get("name", id)), gem_ids.find(ing.get("tower", "")))
-		o.item_selected.connect(func(i): ing["tower"] = gem_ids[i])
-		if ing.get("tower", "") == "" and not gem_ids.is_empty():
-			ing["tower"] = gem_ids[0]
+		var o := _option(r, ids.map(func(id): return Database.towers[id].get("name", id)), ids.find(ing.get("tower", "")))
+		o.item_selected.connect(func(i): ing["tower"] = ids[i])
 		UiUtil.label("Stufe", r)
 		var tier_labels := []
 		for t in Database.TIER_NAMES.size():
@@ -197,9 +213,28 @@ func _build_recipe() -> void:
 			recipe.remove_at(k)
 			_build_form())
 	UiUtil.button("+ Zutat", box, func():
-		recipe.append({"tower": gem_ids[0] if not gem_ids.is_empty() else "", "tier": 0})
-		current["recipe"] = recipe
+		recipe.append({"tower": Database.gem_ids()[0] if not Database.gem_ids().is_empty() else "", "tier": 0})
 		_build_form())
+
+
+## Upgrade von Stufe i auf i+1: Zutaten müssen als fertige Tower auf dem Feld stehen und werden zu Steinen.
+func _build_upgrades() -> void:
+	var tiers: Array = current.get("tiers", [])
+	if tiers.size() < 2:
+		return
+	var box := _section("Upgrades (Zutaten stehen fertig auf dem Feld und werden zu Steinen)")
+	if not current.has("upgrades"):
+		current["upgrades"] = []
+	var ups: Array = current["upgrades"]
+	while ups.size() < tiers.size() - 1:
+		ups.append({"recipe": [], "cost": 0})
+	for i in tiers.size() - 1:
+		var up: Dictionary = ups[i]
+		if not up.has("recipe"):
+			up["recipe"] = []
+		UiUtil.label("Stufe %d → %d" % [i + 1, i + 2], box, 16)
+		UiUtil.spin(UiUtil.row("Goldkosten", box), float(up.get("cost", 0)), 0, 100000, 1, func(x): up["cost"] = int(x))
+		_ingredient_list(box, up["recipe"])
 
 
 func _build_tiers() -> void:
@@ -282,8 +317,13 @@ func _save() -> bool:
 		status_label.text = err
 		return false
 	var data := current.duplicate(true)
+	if str(data.get("model", "")) == "":
+		data.erase("model")
 	if data.get("category") != "special":
 		data.erase("recipe")
+		data.erase("upgrades")
+	elif data.has("upgrades"):
+		data["upgrades"] = (data["upgrades"] as Array).slice(0, maxi((data["tiers"] as Array).size() - 1, 0))
 	var path := Database.writable_path("towers", str(data.id))
 	if not Database.save_json(path, data):
 		status_label.text = "Speichern fehlgeschlagen: " + path
