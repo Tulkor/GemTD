@@ -39,7 +39,7 @@ func _ready() -> void:
 	var th := HBoxContainer.new()
 	th.add_theme_constant_override("separation", 10)
 	top.add_child(th)
-	UiUtil.label("Tower-Editor", th, 20).add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("Tower-Editor", th, 20))
 	var gap := Control.new()
 	gap.custom_minimum_size.x = 12
 	th.add_child(gap)
@@ -78,8 +78,8 @@ func _ready() -> void:
 	tower_list = ItemList.new()
 	tower_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tower_list.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER, 8, 1, 8))
-	tower_list.add_theme_stylebox_override("selected", UiTheme.box(Color("2b2412"), UiTheme.GOLD, 4))
-	tower_list.add_theme_stylebox_override("selected_focus", UiTheme.box(Color("2b2412"), UiTheme.GOLD, 4))
+	tower_list.add_theme_stylebox_override("selected", UiTheme.box(Color("2a0f2e"), UiTheme.GOLD, 4))
+	tower_list.add_theme_stylebox_override("selected_focus", UiTheme.box(Color("2a0f2e"), UiTheme.GOLD, 4))
 	tower_list.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	tower_list.item_selected.connect(_on_tower_selected)
 	left.add_child(tower_list)

@@ -5,7 +5,7 @@ extends Control
 signal pins_changed
 signal closed
 
-const COLUMNS := 4
+const COLUMNS := 3
 
 var owned: Array = []
 var now := {}
@@ -111,7 +111,7 @@ func _ready() -> void:
 	panel.offset_right = -60
 	panel.offset_top = 40
 	panel.offset_bottom = -40
-	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER, 12, 1, 20))
+	panel.add_theme_stylebox_override("panel", UiTheme.panel(20.0))
 	add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 14)
@@ -120,8 +120,7 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
 	v.add_child(head)
-	var title := UiUtil.label("Rezeptbuch", head, 26)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("Rezeptbuch", head, 24))
 	var group := ButtonGroup.new()
 	for f in [["all", "Alle"], ["ready", "Jetzt baubar"], ["pinned", "Angepinnt"]]:
 		var b := Button.new()
@@ -136,7 +135,7 @@ func _ready() -> void:
 				refresh())
 		head.add_child(b)
 		tabs[f[0]] = b
-		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT))
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 	search = LineEdit.new()
 	search.placeholder_text = "Suche, z. B. Opal"
@@ -146,10 +145,13 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	for leg in [["✓ fixiert", UiTheme.HAVE], ["✓ ausgewählter neuer Gem", UiTheme.PURPLE_LIGHT], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
-		UiUtil.label(leg[0], head, 13).add_theme_color_override("font_color", leg[1])
 	var close_b := UiUtil.button("Schließen (R)", head, close)
 	close_b.focus_mode = Control.FOCUS_NONE
+	var legend := HBoxContainer.new()
+	legend.add_theme_constant_override("separation", 18)
+	v.add_child(legend)
+	for leg in [["✓ fixiert", UiTheme.HAVE], ["✓ ausgewählter neuer Gem", UiTheme.PURPLE_LIGHT], ["✗ fehlt", UiTheme.MISSING], ["am wenigsten fehlt zuerst", UiTheme.MUTED]]:
+		UiUtil.label(leg[0], legend, 13).add_theme_color_override("font_color", leg[1])
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL

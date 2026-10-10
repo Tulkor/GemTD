@@ -57,7 +57,9 @@ static func side_panel(layer: CanvasLayer, width: float) -> VBoxContainer:
 	panel.anchor_bottom = 1.0
 	panel.offset_left = -width
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("1b1d24")
+	style.bg_color = UiTheme.PANEL
+	style.border_color = UiTheme.GOLD
+	style.border_width_left = 3
 	panel.add_theme_stylebox_override("panel", style)
 	layer.add_child(panel)
 	var scroll := ScrollContainer.new()

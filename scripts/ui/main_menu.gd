@@ -35,8 +35,9 @@ func _ready() -> void:
 	left.custom_minimum_size.x = 320
 	left.add_theme_constant_override("separation", 12)
 	row.add_child(left)
-	var title := UiUtil.label("GemTD", left, 64)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	var title := UiTheme.title(UiUtil.label("GemTD", left, 60))
+	title.add_theme_constant_override("shadow_offset_x", 4)
+	title.add_theme_constant_override("shadow_offset_y", 4)
 	var sub := UiUtil.label("Gems setzen, kombinieren, Labyrinth bauen", left, 15)
 	sub.add_theme_color_override("font_color", UiTheme.MUTED)
 	left.add_child(_gap(28))
@@ -102,14 +103,13 @@ func _build_settings() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings.add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.add_theme_stylebox_override("panel", UiTheme.panel(28.0))
 	panel.custom_minimum_size.x = 460
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 14)
 	panel.add_child(v)
-	var title := UiUtil.label("Einstellungen", v, 28)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("Einstellungen", v, 26))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 16)
@@ -188,7 +188,7 @@ func _difficulty_row(parent: Node) -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size.y = 36
 		b.tooltip_text = tr("Gegner: Leben und Rüstung ×%s") % str(d.factor)
-		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		b.set_pressed_no_signal(i == Session.difficulty)
 
@@ -250,10 +250,12 @@ func _map_card(i: int) -> Button:
 		info += "\n" + tr("Weg ohne Labyrinth: %d Felder") % preview.path_length()
 		if rocks > 0:
 			info += " · " + tr("%d zufällige Steine") % rocks
-	var l := UiUtil.label(info, v, 13)
+	var l := UiUtil.label(info, v, 12)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 316
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_color_override("font_color", UiTheme.MUTED)
-	b.custom_minimum_size.y = 240 + 24 + 6 * 2 + 26 + 40
+	b.custom_minimum_size.y = 240 + 24 + 6 * 2 + 26 + 58
 	b.pressed.connect(func():
 		selected = i
 		_update_selection())
@@ -270,7 +272,7 @@ func _update_selection() -> void:
 		cards[i].set_pressed_no_signal(on)
 		cards[i].add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD if on else UiTheme.BORDER, 10, 2))
 		cards[i].add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD, 10, 2))
-		cards[i].add_theme_stylebox_override("hover", UiTheme.box(Color("232836"), UiTheme.GOLD if on else UiTheme.BORDER_2, 10, 2))
+		cards[i].add_theme_stylebox_override("hover", UiTheme.box(Color("1f1036"), UiTheme.GOLD if on else UiTheme.BORDER_2, 10, 2))
 	play_button.disabled = maps.is_empty()
 	play_button.text = tr("Spielen: %s") % tr(maps[selected].name) if not maps.is_empty() else tr("Spielen")
 
