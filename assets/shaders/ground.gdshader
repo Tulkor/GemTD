@@ -2,7 +2,7 @@
 // Erde liegt dort, wo die Splat-Textur es sagt (Laufweg, Spawn, Ziel, Checkpoints, "_"-Felder),
 // die Ränder werden mit Rauschen ausgefranst. Die beiden Grasarten wechseln großflächig per Rauschen.
 shader_type spatial;
-render_mode diffuse_burley, specular_schlick_ggx;
+render_mode blend_mix, depth_draw_opaque, diffuse_burley, specular_schlick_ggx;
 
 uniform sampler2D grass_a : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass_b : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -22,6 +22,8 @@ uniform float dirt_tile = 2.2;
 /// Fotos sind sehr satt und hell; etwas abdunkeln und entsättigen, damit Tower und Gegner auffallen.
 uniform float brightness = 0.72;
 uniform float saturation = 0.75;
+/// Deckkraft des Bodens; 0 = unsichtbar (nur Rasterlinien bleiben sichtbar).
+uniform float ground_alpha = 1.0;
 /// Rasterlinien (für den Map-Editor), 0 = aus.
 uniform float grid_strength = 0.0;
 uniform float cell = 0.5;
@@ -107,13 +109,17 @@ void fragment() {
 	// leichte großflächige Helligkeitsschwankung
 	col *= 0.94 + 0.12 * fbm(p * 0.12 + vec2(-8.0, 2.0));
 
+	float alpha = ground_alpha;
 	if (grid_strength > 0.0) {
 		vec2 g = abs(fract(p / cell + 0.5) - 0.5) / fwidth(p / cell);
 		float line = 1.0 - clamp(min(g.x, g.y), 0.0, 1.0);
-		col *= 1.0 - grid_strength * line;
+		// auf sichtbarem Boden dunkle Linien, auf durchsichtigem helle
+		col = mix(col * (1.0 - grid_strength * line), vec3(0.55, 0.65, 0.8), (1.0 - ground_alpha) * line);
+		alpha = max(alpha, grid_strength * line);
 	}
 
 	ALBEDO = col;
+	ALPHA = alpha;
 	NORMAL_MAP = nrm;
 	NORMAL_MAP_DEPTH = normal_strength;
 	ROUGHNESS = mix(0.85, 0.95, blend);

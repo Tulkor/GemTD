@@ -20,8 +20,11 @@ const ROCK_MODELS := [
 	"res://assets/models/rocks/rock_large_c.glb",
 ]
 const ROCK_SIZE := 0.95
+## Helligkeit der Neon-Wegpunkte (über 1 = leuchtet im Glow).
+const NEON_ENERGY := 2.6
 ## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
 ## um Spawn, Ziel und Checkpoints und auf "_"-Feldern; sonst Gras.
+## Mit ground_alpha = 0 ist der Boden unsichtbar (nur Rasterlinien, falls grid_strength > 0).
 const GROUND_SHADER := "res://assets/shaders/ground.gdshader"
 const GROUND_TEXTURES := {
 	"grass_a": "res://assets/textures/ground/grass_a.jpg",
@@ -50,12 +53,20 @@ var path_color := Color(1, 1, 1, 0.6)
 var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
 var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
 var hover_ok := true
+## Deckkraft des Bodens: 0 = komplett durchsichtig (Skybox scheint durch), 1 = Gras und Erde.
+var ground_alpha := 0.0:
+	set(v):
+		ground_alpha = v
+		if _ground_mat != null:
+			_ground_mat.set_shader_parameter("ground_alpha", v)
+			_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
 ## Rasterlinien auf dem Boden (0 = aus), z. B. im Map-Editor.
 var grid_strength := 0.0:
 	set(v):
 		grid_strength = v
 		if _ground_mat != null:
 			_ground_mat.set_shader_parameter("grid_strength", v)
+			_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
 
 var _ground: MeshInstance3D
 var _ground_mat: ShaderMaterial
@@ -108,7 +119,9 @@ func _ready() -> void:
 		_ground_mat.set_shader_parameter(key, load(GROUND_TEXTURES[key]))
 	_ground_mat.set_shader_parameter("cell", CELL)
 	_ground_mat.set_shader_parameter("grid_strength", grid_strength)
+	_ground_mat.set_shader_parameter("ground_alpha", ground_alpha)
 	_ground.material_override = _ground_mat
+	_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
 	add_child(_ground)
 	_walls = _multimesh(_box(Vector3(CELL, WALL_HEIGHT, CELL)), false, COL_WALL)
 	for path in ROCK_MODELS:
@@ -284,21 +297,27 @@ func _rebuild_markers() -> void:
 	_add_marker(map.goal, "Z", Color("e74c3c"))
 
 
+## Wegpunkt als Neonröhren-Ring: nur die Kontur, mit überhelltem Kern, der im Glow leuchtet.
 func _add_marker(c: Vector2i, text: String, col: Color) -> void:
-	var disc := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.42
-	cyl.bottom_radius = 0.42
-	cyl.height = 0.06
-	disc.mesh = cyl
-	disc.material_override = make_material(col)
-	disc.position = to_3d(cell_center(c), 0.03)
-	_markers.add_child(disc)
+	var ring := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.39
+	torus.outer_radius = 0.47
+	torus.rings = 48
+	torus.ring_segments = 8
+	ring.mesh = torus
+	var mat := make_material(col, true)
+	mat.albedo_color = Color(col.r * NEON_ENERGY, col.g * NEON_ENERGY, col.b * NEON_ENERGY)
+	ring.material_override = mat
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ring.position = to_3d(cell_center(c), 0.04)
+	_markers.add_child(ring)
 	var label := Label3D.new()
 	label.text = text
 	label.font_size = 96
 	label.pixel_size = 0.006
 	label.outline_size = 24
+	label.modulate = col.lerp(Color.WHITE, 0.5)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position = to_3d(cell_center(c), 0.9)

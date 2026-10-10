@@ -4,6 +4,10 @@ extends Node3D
 ## cell ist das Feld oben links der 2×2 belegten Felder. Logische Position `pos` in Einheiten
 ## (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
+const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
+## Deckkraft für Modelle mit eigener Textur ("model_tint": false)
+const GEM_OPACITY_TEXTURED := 0.7
+
 var game  # game.gd
 var cell := Vector2i.ZERO
 var pos := Vector2.ZERO
@@ -328,13 +332,11 @@ func _build_visual() -> void:
 		_visual.queue_free()
 	_visual = Node3D.new()
 	add_child(_visual)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.metallic = 0.35
-	mat.roughness = 0.2
-	mat.emission_enabled = true
-	mat.emission = color
-	mat.emission_energy_multiplier = 0.25
+	var mat := ShaderMaterial.new()
+	mat.shader = GEM_SHADER
+	mat.set_shader_parameter("color", color)
+	# "model_tint": false behält die Farben/Texturen des Modells (nur leicht durchsichtig gemacht)
+	var tint: Material = mat if bool(def.get("model_tint", true)) else null
 
 	var category := str(def.get("category", "gem"))
 	_gem = null
@@ -377,8 +379,10 @@ func _build_visual() -> void:
 	var default_size := (0.75 + 0.05 * tier) if category == "special" else (0.5 + 0.06 * tier)
 	var size := float(stats.get("model_scale", def.get("model_scale", default_size)))
 	if model_path != "":
-		_gem = ModelLoader.instantiate(model_path, size, mat)
+		_gem = ModelLoader.instantiate(model_path, size, tint)
 		if _gem:
+			if tint == null:
+				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED)
 			_gem.position.y = cyl.height
 			_visual.add_child(_gem)
 	if _gem == null:

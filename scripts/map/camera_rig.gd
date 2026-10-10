@@ -145,11 +145,48 @@ func _apply() -> void:
 		camera.h_offset = distance * 0.12
 
 
+## Skybox: sechs Bilder in der Reihenfolge +X, -X, +Y, -Y, +Z, -Z.
+const SKY_FACES := ["right", "left", "top", "bottom", "front", "back"]
+const SKY_DIR := "res://assets/textures/sky/"
+static var _sky_cube: Cubemap
+
+
+static func _sky() -> Sky:
+	if _sky_cube == null:
+		var images: Array[Image] = []
+		for face in SKY_FACES:
+			var tex := load(SKY_DIR + face + ".png") as Texture2D
+			if tex == null:
+				return null
+			var img := tex.get_image()
+			if img.is_compressed():
+				img.decompress()
+			img.convert(Image.FORMAT_RGB8)
+			images.append(img)
+		_sky_cube = Cubemap.new()
+		_sky_cube.create_from_images(images)
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://assets/shaders/skybox.gdshader")
+	mat.set_shader_parameter("cube", _sky_cube)
+	var sky := Sky.new()
+	sky.sky_material = mat
+	return sky
+
+
 ## Licht und Himmel für eine 3D-Szene anlegen.
 static func add_environment(parent: Node) -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("15171d")
+	env.background_color = Color("05060a")
+	var sky := _sky()
+	if sky != null:
+		env.background_mode = Environment.BG_SKY
+		env.sky = sky
+	# Leuchten für helle (HDR) Flächen, z. B. die Neon-Wegpunkte
+	env.glow_enabled = true
+	env.glow_intensity = 0.9
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.0
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	# kühles, schwaches Umgebungslicht und eine warme, flach stehende Sonne: so entstehen
 	# deutliche Licht- und Schattenseiten statt einer gleichmäßig hellen Fläche

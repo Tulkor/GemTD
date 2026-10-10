@@ -93,3 +93,20 @@ static func _apply_material(n: Node, mat: Material) -> void:
 		n.material_override = mat
 	for c in n.get_children():
 		_apply_material(c, mat)
+
+
+## Alle Materialien des Modells leicht durchsichtig machen, Farben und Texturen bleiben.
+static func make_translucent(n: Node, alpha: float) -> void:
+	if n is MeshInstance3D and n.mesh != null:
+		for i in n.mesh.get_surface_count():
+			var src: Material = n.get_active_material(i)
+			if src is BaseMaterial3D:
+				var m: BaseMaterial3D = src.duplicate()
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				m.albedo_color.a = alpha
+				m.roughness = minf(m.roughness, 0.25)
+				m.rim_enabled = true
+				m.rim = 0.4
+				n.set_surface_override_material(i, m)
+	for c in n.get_children():
+		make_translucent(c, alpha)

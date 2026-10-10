@@ -3,7 +3,8 @@
 	"name": "Blutstein",
 	"category": "special",
 	"color": "#8b0f1f",
-	"model": "res://assets/models/crystals/crystal_24.glb",
+	"model": "res://assets/models/special/lava_tree.glb",
+	"model_tint": false,
 	"damage_type": "hero",
 	"targets": "both",
 	"tiers": [
