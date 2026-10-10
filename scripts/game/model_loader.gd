@@ -42,6 +42,25 @@ static func instantiate(path: String, size := 1.0, tint: Material = null) -> Nod
 	return holder
 
 
+## Wie instantiate, aber auf eine Grundfläche skaliert: breiteste waagrechte Kante = width,
+## höchstens max_height hoch.
+static func instantiate_fit(path: String, width: float, max_height: float, tint: Material = null) -> Node3D:
+	var holder := instantiate(path, 1.0, tint)
+	if holder == null:
+		return null
+	var model: Node3D = holder.get_child(0)
+	var box := aabb(holder, Transform3D())
+	var flat := maxf(box.size.x, box.size.z)
+	if flat <= 0.0:
+		return holder
+	var f := width / flat
+	if box.size.y * f > max_height:
+		f = max_height / box.size.y
+	model.scale *= f
+	model.position *= f
+	return holder
+
+
 ## Erstes Mesh eines Modells, normalisiert (für MultiMesh, z. B. Steine).
 ## Rückgabe: [Mesh, Transform3D] oder [] wenn nicht vorhanden.
 static func mesh_with_transform(path: String, size := 1.0) -> Array:

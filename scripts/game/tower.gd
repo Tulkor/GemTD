@@ -9,6 +9,11 @@ const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
 const GEM_OPACITY_TEXTURED := 0.85
 ## Helligkeit der Lichtscheibe im Sockel (über 1 = leuchtet im Glow)
 const BASE_LIGHT_ENERGY := 1.5
+const BASE_HEIGHT := 0.12
+const BASE_HEIGHT_SPECIAL := 0.18
+## Höchstens so hoch (Towerbreiten) wird ein Gem, auch wenn das Modell schmal und lang ist
+const GEM_MAX_HEIGHT := 1.3
+static var _slab_cache := {}
 
 var game  # game.gd
 var cell := Vector2i.ZERO
@@ -363,65 +368,96 @@ func _build_visual() -> void:
 				_visual.add_child(_gem)
 		_finish_visual()
 		return
-	# Sockel: runde Glasplatte, von innen beleuchtet (Lichtscheibe unter der Oberseite)
+	# Sockel: eckige Glasplatte mit runden Ecken über die ganzen 2×2 Felder, von innen beleuchtet
+	var foot := footprint_size() * Board3D.CELL
+	var base_h := BASE_HEIGHT_SPECIAL if category == "special" else BASE_HEIGHT
 	var base := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.radial_segments = 40
-	cyl.rings = 1
-	if category == "special":
-		cyl.top_radius = 0.36
-		cyl.bottom_radius = 0.4
-		cyl.height = 0.22
-	else:
-		cyl.top_radius = 0.3
-		cyl.bottom_radius = 0.34
-		cyl.height = 0.14
+	base.mesh = rounded_slab(foot * 0.96, base_h, 0.1)
 	base.material_override = _glass_material()
-	base.mesh = cyl
-	base.position.y = cyl.height / 2.0
 	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_visual.add_child(base)
 	var light := MeshInstance3D.new()
-	var disc := CylinderMesh.new()
-	disc.radial_segments = 32
-	disc.rings = 1
-	disc.top_radius = cyl.top_radius * 0.45
-	disc.bottom_radius = cyl.top_radius * 0.45
-	disc.height = 0.012
-	light.mesh = disc
+	light.mesh = rounded_slab(foot * 0.5, 0.012, 0.07)
 	var light_mat := Board3D.make_material(color.lerp(Color.WHITE, 0.4) * BASE_LIGHT_ENERGY, true)
+	light_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	light.material_override = light_mat
 	light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	light.position.y = cyl.height - 0.02
+	light.position.y = base_h - 0.025
 	_visual.add_child(light)
 	if mat is ShaderMaterial:
-		mat.set_shader_parameter("base_top", cyl.height)
-	var default_size := (0.75 + 0.05 * tier) if category == "special" else (0.5 + 0.06 * tier)
-	var size := float(stats.get("model_scale", def.get("model_scale", default_size)))
+		mat.set_shader_parameter("base_top", base_h)
+	# Gem füllt die Sockelfläche: Breite (nicht Höhe) wird angepasst, höhere Stufen etwas breiter
+	var width := (0.86 + 0.02 * tier) if category == "special" else (0.62 + 0.05 * tier)
+	width = minf(width, 0.92) * foot
 	if model_path != "":
-		_gem = ModelLoader.instantiate(model_path, size, tint)
+		if stats.has("model_scale") or def.has("model_scale"):
+			_gem = ModelLoader.instantiate(model_path, float(stats.get("model_scale", def.get("model_scale"))), tint)
+		else:
+			_gem = ModelLoader.instantiate_fit(model_path, width, GEM_MAX_HEIGHT, tint)
 		if _gem:
 			if tint == null:
 				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
-			_gem.position.y = cyl.height
+			_gem.position.y = base_h
 			_visual.add_child(_gem)
+	var size := width
 	if _gem == null:
 		var oct := MeshInstance3D.new()
 		oct.mesh = _gem_mesh()
 		oct.material_override = mat
 		var s := size * 0.45
 		oct.scale = Vector3(s, s * 1.4, s)
-		oct.position.y = cyl.height + s * 1.4 + 0.05
+		oct.position.y = base_h + s * 1.4 + 0.05
 		_gem = Node3D.new()
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
 	_finish_visual()
 
 
+## Quader mit abgerundeten senkrechten Kanten, Unterseite auf Y = 0, Mitte auf X/Z = 0.
+static func rounded_slab(size: float, height: float, radius: float, segments := 6) -> ArrayMesh:
+	var key := "%.3f/%.3f/%.3f" % [size, height, radius]
+	if _slab_cache.has(key):
+		return _slab_cache[key]
+	var h := size / 2.0 - radius
+	var outline: Array[Vector2] = []  # Umriss gegen den Uhrzeigersinn (von oben gesehen)
+	var normals: Array[Vector2] = []
+	var corners := [Vector2(h, h), Vector2(-h, h), Vector2(-h, -h), Vector2(h, -h)]
+	for i in 4:
+		for k in segments + 1:
+			var a := (i + float(k) / segments) * PI / 2.0
+			var n := Vector2(cos(a), sin(a))
+			outline.append(corners[i] + n * radius)
+			normals.append(n)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count := outline.size()
+	for i in count:
+		var j := (i + 1) % count
+		var p0 := outline[i]
+		var p1 := outline[j]
+		var n0 := Vector3(normals[i].x, 0, normals[i].y)
+		var n1 := Vector3(normals[j].x, 0, normals[j].y)
+		# Seite
+		for v in [[p0, n0, 0.0], [p1, n1, height], [p1, n1, 0.0], [p0, n0, 0.0], [p0, n0, height], [p1, n1, height]]:
+			st.set_normal(v[1])
+			st.add_vertex(Vector3(v[0].x, v[2], v[0].y))
+		# Deckel und Boden als Fächer um die Mitte
+		for v in [[Vector2.ZERO, height], [p0, height], [p1, height]]:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(v[0].x, v[1], v[0].y))
+		for v in [[Vector2.ZERO, 0.0], [p1, 0.0], [p0, 0.0]]:
+			st.set_normal(Vector3.DOWN)
+			st.add_vertex(Vector3(v[0].x, v[1], v[0].y))
+	var mesh := st.commit()
+	_slab_cache[key] = mesh
+	return mesh
+
+
 func _glass_material() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.roughness = 0.05
 	m.metallic_specular = 0.9
 	m.rim_enabled = true
