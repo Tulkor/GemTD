@@ -662,7 +662,7 @@ func gold_income_factor(wave: int) -> float:
 
 
 ## Gold aus Kills und Fähigkeiten, gekürzt um gold_income_factor (Reste werden gesammelt).
-func earn_gold(amount: int) -> void:
+func earn_gold(amount: float) -> void:
 	_gold_frac += amount * gold_income_factor(current_wave())
 	var whole := floori(_gold_frac)
 	gold += whole
@@ -883,7 +883,13 @@ func _upcoming_waves(count: int) -> Array:
 		var detail := ""
 		if groups.size() == 1 and not defs[0].is_empty():
 			var d: Dictionary = defs[0]
-			detail = tr("%d× %s · %d LP · Rüstung %d") % [total, tr(str(d.get("name", "?"))), int(d.get("hp", 0)), int(d.get("armor", 0))]
+			# Werte der Welle (Massenwellen überschreiben sie) mit der Schwierigkeitsstufe
+			var f := Session.difficulty_factor()
+			var hp := float(groups[0].get("hp", d.get("hp", 0))) * f
+			var armor := float(groups[0].get("armor", d.get("armor", 0)))
+			if armor > 0.0:
+				armor *= f
+			detail = tr("%d× %s · %d LP · Rüstung %d") % [total, tr(str(d.get("name", "?"))), roundi(hp), roundi(armor)]
 		else:
 			detail = tr("%d Gegner: %s") % [total, ", ".join(defs.map(func(d): return tr(str(d.get("name", "?")))))]
 		var state := ""

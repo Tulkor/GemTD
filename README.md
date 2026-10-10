@@ -23,6 +23,8 @@ Unten die Auswahlkarte: die neuen Gems der Runde (lila Rand = Zutat für einen O
 Werte des angeklickten Towers, „Wird gebraucht für“ mit allen Rezepten, in denen er vorkommt, und die Aktionen.
 Im Rezeptbuch (R) stehen alle Spezial-Rezepte, Zutaten grün (✓ vorhanden) oder rot (✗ fehlt).
 Mit „Pin“ angepinnte Rezepte erscheinen links oben und zeigen, was noch fehlt.
+Rechts oben zeigt das DPS-Meter die 5 Tower mit dem meisten Schaden pro Sekunde, umschaltbar zwischen aktueller Welle,
+der letzten Boss-, Flug-, Boden- und Massenwelle und Gesamt.
 „Weg“ in der Leiste oben zeigt die Länge des Laufwegs in Feldern, in der Bauphase mit der Änderung seit Rundenbeginn.
 Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen oder zurück ins Hauptmenü.
 
@@ -160,6 +162,9 @@ Jede Treffer-Fähigkeit kann `"chance"` haben.
 `data/enemies/*.json`: `hp`, `speed` (Towerbreiten/s), `armor`, `armor_type`, `bounty`, `damage` (Leben bei Durchbruch),
 `flying`, `boss`, `color`, `size`, optional `shape` und `model`.
 Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyramide = Massenwelle (`"shape": "pyramid"`).
+Wellenrhythmus (classic): Boden, Masse, Boden, Flieger; Massenwellen ab Welle 10 (10, 14 … 46), Flieger 4, 8 … 48; Bosse 42 und 50.
+Eine Massenwelle hat 25 statt 10 Gegner mit je 40 % Leben, Gold und Leben-Schaden und kürzerem Abstand.
+Dafür überschreibt die Gruppe in der Wellendatei `hp`, `bounty`, `damage`, `shape` und `size`.
 
 ## Test
 

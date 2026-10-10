@@ -87,8 +87,13 @@
 			"groups": [
 				{
 					"enemy": "merc",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 188,
+					"bounty": 1.2,
+					"damage": 1,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -123,8 +128,13 @@
 			"groups": [
 				{
 					"enemy": "ogre",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 260,
+					"bounty": 1.6,
+					"damage": 2,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -159,8 +169,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_razormane",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 740,
+					"bounty": 2.0,
+					"damage": 2,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -195,8 +210,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_mine_cart",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 1400,
+					"bounty": 2.4,
+					"damage": 2,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -231,8 +251,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_sb",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 2520,
+					"bounty": 2.8,
+					"damage": 3,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -267,8 +292,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_ogre_lord",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 4400,
+					"bounty": 3.2,
+					"damage": 3,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -303,8 +333,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_succubus",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 6600,
+					"bounty": 3.6,
+					"damage": 4,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -339,8 +374,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_tauren_chief",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 9200,
+					"bounty": 4.0,
+					"damage": 4,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},
@@ -411,8 +451,13 @@
 			"groups": [
 				{
 					"enemy": "extreme_jax",
-					"count": 10,
-					"interval": 1.61
+					"count": 25,
+					"interval": 0.64,
+					"hp": 21120,
+					"bounty": 7.2,
+					"damage": 7,
+					"shape": "pyramid",
+					"size": 0.8
 				}
 			]
 		},

@@ -36,6 +36,7 @@ var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_button: Button
 var debug_panel: PanelContainer
+var dps_meter: DpsMeter
 var debug_gems: SpinBox
 var debug_wave: SpinBox
 var immortal_button: Button
@@ -99,7 +100,11 @@ func _ready() -> void:
 	_build_pinned()
 	_build_bottom()
 	_build_help()
+	dps_meter = DpsMeter.new()
+	dps_meter.game = get_parent()
+	root.add_child(dps_meter)
 	_build_debug()
+	dps_meter.avoid = debug_panel
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)

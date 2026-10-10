@@ -1,7 +1,7 @@
 class_name Enemy
 extends Node3D
 ## Ein Gegner. Grundwerte aus data/enemies/<id>.json, eine Welle kann sie überschreiben
-## (hp, speed, armor, bounty, damage).
+## (hp, speed, armor, bounty, damage, Massenwellen auch shape und size).
 ## Logische Position `pos` in Einheiten (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
 const FLY_HEIGHT := 1.4
@@ -12,7 +12,7 @@ var max_hp := 10.0
 var hp := 10.0
 var speed := 2.0     ## Towerbreiten pro Sekunde
 var armor := 0.0
-var bounty := 1
+var bounty := 1.0   ## Gold pro Kill, bei Massenwellen auch Bruchteile
 var damage := 1      ## Leben, die der Spieler verliert, wenn der Gegner durchkommt
 var flying := false
 var armor_type := ""
@@ -60,15 +60,15 @@ func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 	hp = max_hp
 	speed = float(o.get("speed", def.get("speed", 2.0)))
 	armor = float(o.get("armor", def.get("armor", 0)))
-	bounty = int(o.get("bounty", def.get("bounty", 1)))
+	bounty = float(o.get("bounty", def.get("bounty", 1)))
 	damage = int(o.get("damage", def.get("damage", 1)))
 	flying = bool(def.get("flying", false))
 	armor_type = str(o.get("armor_type", def.get("armor_type", "")))
-	size = float(def.get("size", 1.0))
+	size = float(o.get("size", def.get("size", 1.0)))
 	color = Color.from_string(str(def.get("color", "#cccccc")), Color.GRAY)
 	def_model = str(def.get("model", ""))
 	def_model_scale = float(def.get("model_scale", 1.0))
-	shape_name = str(def.get("shape", ""))
+	shape_name = str(o.get("shape", def.get("shape", "")))
 	boss = bool(def.get("boss", false))
 	path = p
 	if not path.is_empty():
@@ -137,10 +137,10 @@ func current_speed() -> float:
 	return maxf(speed * (1.0 - slow_factor), min_speed)
 
 
-## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt)]
+## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt), Form, Größe]
 func net_state() -> Array:
 	var flags := (1 if slow_time > 0.0 else 0) | (2 if poison_time > 0.0 else 0) | (4 if stun_time > 0.0 else 0)
-	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags]
+	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags, shape_name, size]
 
 
 ## Neue Meldung vom Mitspieler übernehmen; die Position läuft in _remote_step weiter.
