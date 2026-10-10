@@ -11,8 +11,29 @@ const GEM_OPACITY_TEXTURED := 0.85
 const BASE_LIGHT_ENERGY := 1.5
 const BASE_HEIGHT := 0.12
 const BASE_HEIGHT_SPECIAL := 0.18
-## Höchstens so hoch (Towerbreiten) wird ein Gem, auch wenn das Modell schmal und lang ist
+## Höchstens so hoch (Towerbreiten) wird ein Special, auch wenn das Modell schmal und lang ist
 const GEM_MAX_HEIGHT := 1.3
+## Gems je Qualität (Splitter … Großartig): Anzahl Kristalle auf dem Sockel und die Kiste
+## (Breite, Höhe in Sockelbreiten), in die jeder Kristall passt. Splitter sind viele kleine,
+## mit jeder Stufe werden es weniger, dafür größere.
+const GEM_CLUSTERS := [
+	[5, 0.26, 0.34],
+	[4, 0.34, 0.46],
+	[3, 0.44, 0.6],
+	[2, 0.56, 0.78],
+	[1, 0.78, 1.0],
+	[1, 0.92, 1.25],
+]
+## Platz der Kristalle auf dem Sockel (in Sockelbreiten) je Anzahl
+const CLUSTER_SPOTS := {
+	1: [Vector2.ZERO],
+	2: [Vector2(-0.17, 0.15), Vector2(0.17, -0.15)],
+	3: [Vector2(0.0, -0.22), Vector2(-0.19, 0.11), Vector2(0.19, 0.11)],
+	4: [Vector2(-0.18, -0.18), Vector2(0.18, -0.18), Vector2(0.18, 0.18), Vector2(-0.18, 0.18)],
+	5: [Vector2.ZERO, Vector2(-0.21, -0.21), Vector2(0.21, -0.21), Vector2(0.21, 0.21), Vector2(-0.21, 0.21)],
+}
+## Größenunterschiede innerhalb eines Clusters, damit es natürlicher aussieht
+const CLUSTER_VARY := [1.0, 0.86, 0.94, 0.8, 0.9]
 static var _slab_cache := {}
 
 var game  # game.gd
@@ -387,10 +408,16 @@ func _build_visual() -> void:
 	_visual.add_child(light)
 	if mat is ShaderMaterial:
 		mat.set_shader_parameter("base_top", base_h)
-	# Gem füllt die Sockelfläche: Breite (nicht Höhe) wird angepasst, höhere Stufen etwas breiter
-	var width := (0.86 + 0.02 * tier) if category == "special" else (0.62 + 0.05 * tier)
-	width = minf(width, 0.92) * foot
-	if model_path != "":
+	# Special füllt die Sockelfläche: Breite (nicht Höhe) wird angepasst, höhere Stufen etwas breiter
+	var width := minf(0.86 + 0.02 * tier, 0.92) * foot
+	if category == "gem" and model_path != "":
+		_gem = _gem_cluster(model_path, tint, foot, base_h)
+		width = float(GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)][1]) * foot
+		if _gem:
+			if tint == null:
+				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
+			_visual.add_child(_gem)
+	elif model_path != "":
 		if stats.has("model_scale") or def.has("model_scale"):
 			_gem = ModelLoader.instantiate(model_path, float(stats.get("model_scale", def.get("model_scale"))), tint)
 		else:
@@ -413,6 +440,32 @@ func _build_visual() -> void:
 		_visual.add_child(_gem)
 	ModelLoader.add_outline(_gem)
 	_finish_visual()
+
+
+## Mehrere Kristalle auf dem Sockel, Anzahl und Größe nach Qualität (GEM_CLUSTERS).
+## Jeder Kristall passt in seine Kiste, schmale Modelle werden so nicht übermäßig hoch.
+func _gem_cluster(model_path: String, tint: Material, foot: float, base_h: float) -> Node3D:
+	var cfg: Array = GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)]
+	var spots: Array = CLUSTER_SPOTS[int(cfg[0])]
+	var cluster := Node3D.new()
+	for i in spots.size():
+		var k: float = CLUSTER_VARY[i % CLUSTER_VARY.size()]
+		var crystal := ModelLoader.instantiate_fit(model_path, float(cfg[1]) * foot * k, float(cfg[2]) * foot * k, tint)
+		if crystal == null:
+			break
+		var spot: Vector2 = spots[i] * foot
+		crystal.position = Vector3(spot.x, base_h, spot.y)
+		var basis := Basis(Vector3.UP, i * 2.4)
+		if spot != Vector2.ZERO:
+			# äußere Kristalle leicht nach außen geneigt wie bei einer Druse
+			var out := Vector3(spot.x, 0.0, spot.y).normalized()
+			basis = Basis(Vector3.UP.cross(out).normalized(), deg_to_rad(12.0)) * basis
+		crystal.basis = basis
+		cluster.add_child(crystal)
+	if cluster.get_child_count() == 0:
+		cluster.free()
+		return null
+	return cluster
 
 
 ## Quader mit abgerundeten senkrechten Kanten, Unterseite auf Y = 0, Mitte auf X/Z = 0.

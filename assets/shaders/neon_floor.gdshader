@@ -24,8 +24,8 @@ uniform float major_energy = 2.0;
 uniform float minor_energy = 0.5;
 uniform float minor_alpha = 0.6;
 /// Raster der einzelnen Felder (halbe Towerbreite, Tower lassen sich darauf versetzen), noch dunkler
-uniform float cell_energy = 0.28;
-uniform float cell_alpha = 0.32;
+uniform float cell_energy = 0.42;
+uniform float cell_alpha = 0.5;
 /// Linienbreite in Einheiten (1 = Towerbreite)
 uniform float line_width = 0.014;
 uniform float halo_width = 0.08;
@@ -70,7 +70,7 @@ void fragment() {
 		// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
 		vec2 go = g - grid_origin;
 		vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
-		vec4 cl = tube(min(dc.x, dc.y), line_width * 0.8, line_color.rgb, line_energy * cell_energy, aa);
+		vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, line_color.rgb, line_energy * cell_energy, aa);
 		cl.a *= cell_alpha;
 		col = mix(col, cl.rgb, cl.a);
 		alpha = max(alpha, cl.a);
