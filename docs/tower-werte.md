@@ -62,37 +62,37 @@ Reichweite in Towerbreiten. **DPS** ist der Schaden pro Sekunde gegen ein einzel
 | Tower | Stufe | Schadensart | Schaden | Abklingzeit | DPS | Reichweite | Besonderheiten | Rezept / Upgrade |
 |---|---|---|---:|---:|---:|---:|---|---|
 | Blutstein | Blutstein | Held | 115 | 1,5 | 77 | 5,47 | Fläche 50 % im Radius 3,12; Brand-Aura 60/s ohne Rüstung (Radius 3,91) | Rubin Perfekt + Aquamarin Makellos + Amethyst Normal |
-|  | Uralter Blutstein |  | 160–240 | 0,8 | 300 | 5,47 | Fläche 50 % im Radius 3,12; Brand-Aura 60/s ohne Rüstung (Radius 3,91); 10 % Crit, 3× Schaden; 10 % Chance: Nova 350 Zauberschaden im Radius 0,78 | Upgrade 225 Gold |
+|  | Uralter Blutstein |  | 160–240 | 0,8 | 300 | 5,47 | Fläche 50 % im Radius 3,12; Brand-Aura 60/s ohne Rüstung (Radius 3,91); 10 % Crit, 3× Schaden; 10 % Chance: Nova 350 Zauberschaden im Radius 0,78 | Upgrade 300 Gold |
 | Dunkler Smaragd | Dunkler Smaragd | Belagerung | 180–300 | 0,8 | 300 | 4,3 | 12,5 % Chance: betäubt 1,5 s | Smaragd Perfekt + Saphir Makellos + Topas Fehlerhaft |
-|  | Verzauberter Smaragd |  | 200–400 | 0,7 | 621 | 5,47 | 12,5 % Chance: betäubt 1,5 s; 15 % Crit, 4× Schaden | Upgrade 225 Gold |
+|  | Verzauberter Smaragd |  | 200–400 | 0,7 | 621 | 5,47 | 12,5 % Chance: betäubt 1,5 s; 15 % Crit, 4× Schaden | Upgrade 300 Gold |
 | Gelber Saphir | Gelber Saphir | Zauber | 250 | 1 | 250 | 6,25 | Fläche 50 % im Radius 3,12; verlangsamt 20 % für 5 s | Saphir Perfekt + Rubin Makellos + Topas Makellos |
-|  | Stern-Gelbsaphir |  | 400 | 0,8 | 500 | 6,64 | Fläche 50 % im Radius 3,12; verlangsamt 20 % für 5 s; Aura: Tower +5 % Schaden (Radius 9,38) | Upgrade 180 Gold |
+|  | Stern-Gelbsaphir |  | 400 | 0,8 | 500 | 6,64 | Fläche 50 % im Radius 3,12; verlangsamt 20 % für 5 s; Aura: Tower +5 % Schaden (Radius 9,38) | Upgrade 240 Gold |
 | Gold | Gold | Durchbohrend | 280–330 | 1 | 412 | 6,25 | 35 % Crit, 2× Schaden; Rüstung −5 für 5 s | Amethyst Perfekt + Amethyst Makellos + Diamant Fehlerhaft |
-|  | Ägyptisches Gold |  | 290–360 | 0,75 | 585 | 6,25 | 35 % Crit, 2× Schaden; Rüstung −8 für 5 s | Upgrade 205 Gold |
+|  | Ägyptisches Gold |  | 290–360 | 0,75 | 585 | 6,25 | 35 % Crit, 2× Schaden; Rüstung −8 für 5 s | Upgrade 270 Gold |
 | Jade | Jade | Magie | 30–35 | 0,5 | 65 | 6,25 | Gift 5/s für 2 s; verlangsamt 50 % für 2 s | Smaragd Normal + Opal Normal + Saphir Fehlerhaft |
-|  | China-Jade |  | 50 | 0,5 | 100 | 6,25 | Gift 10/s für 3 s; verlangsamt 50 % für 3 s | Upgrade 45 Gold |
-|  | Glücks-China-Jade |  | 55 | 0,35 | 181 | 6,64 | Gift 10/s für 4 s; verlangsamt 50 % für 4 s; 1 % Chance: 0 Gold + 0,5 pro Welle; 1 % Chance: betäubt 2 s; 5 % Crit, 4× Schaden | Upgrade 250 Gold |
+|  | China-Jade |  | 50 | 0,5 | 100 | 6,25 | Gift 10/s für 3 s; verlangsamt 50 % für 3 s | Upgrade 60 Gold |
+|  | Glücks-China-Jade |  | 55 | 0,35 | 181 | 6,64 | Gift 10/s für 4 s; verlangsamt 50 % für 4 s; 1 % Chance: 0 Gold + 0,5 pro Welle; 1 % Chance: betäubt 2 s; 5 % Crit, 4× Schaden | Upgrade 330 Gold |
 | Malachit | Malachit | Belagerung | 6 | 0,5 | 12 | 5,86 | 3 Ziele gleichzeitig | Aquamarin Splitter + Smaragd Splitter + Opal Splitter |
-|  | Leuchtender Malachit |  | 11 | 0,5 | 22 | 6,25 | 4 Ziele gleichzeitig | Upgrade 25 Gold |
-|  | Mächtiger Malachit |  | 45 | 0,55 | 82 | 6,25 | 99 Ziele gleichzeitig | Upgrade 280 Gold |
+|  | Leuchtender Malachit |  | 11 | 0,5 | 22 | 6,25 | 4 Ziele gleichzeitig | Upgrade 40 Gold |
+|  | Mächtiger Malachit |  | 45 | 0,55 | 82 | 6,25 | 99 Ziele gleichzeitig | Upgrade 370 Gold |
 | Paraiba-Turmalin | Paraiba-Turmalin | Magie | 10–400 | 0,75 | 273 | 6,64 | Aura: Gegner-Rüstung −4 (Radius 4,69); 20 % Chance: Nova 250 Zauberschaden im Radius 1,95, verlangsamt 20 % | Aquamarin Perfekt + Opal Makellos + Aquamarin Fehlerhaft + Smaragd Fehlerhaft |
-|  | Paraiba-Turmalin-Facette |  | 30–420 | 0,75 | 300 | 6,84 | Aura: Gegner-Rüstung −6 (Radius 5,08); 20 % Chance: Nova 350 Zauberschaden im Radius 1,95, verlangsamt 20 % | Upgrade 275 Gold |
+|  | Paraiba-Turmalin-Facette |  | 30–420 | 0,75 | 300 | 6,84 | Aura: Gegner-Rüstung −6 (Radius 5,08); 20 % Chance: Nova 350 Zauberschaden im Radius 1,95, verlangsamt 20 % | Upgrade 360 Gold |
 | Rosa Diamant | Rosa Diamant | Normal | 150–175 | 0,75 | 433 | 6,25 | nur Boden; 25 % Crit, 5× Schaden | Diamant Perfekt + Diamant Normal + Topas Normal |
-|  | Großer Rosa Diamant |  | 175–225 | 0,65 | 846 | 6,64 | nur Boden; 25 % Crit, 8× Schaden | Upgrade 175 Gold |
+|  | Großer Rosa Diamant |  | 175–225 | 0,65 | 846 | 6,64 | nur Boden; 25 % Crit, 8× Schaden | Upgrade 230 Gold |
 | Roter Kristall | Roter Kristall | Durchbohrend | 50–75 | 0,8 | 78 | 10,16 | nur Luft; Aura: Gegner-Rüstung −4 (Radius 10,16) | Smaragd Makellos + Rubin Normal + Amethyst Fehlerhaft |
-|  | Rote Facette |  | 75–100 | 0,8 | 109 | 10,94 | nur Luft; Aura: Gegner-Rüstung −5 (Radius 10,94) | Upgrade 100 Gold |
-|  | Rosenquarz-Kristall |  | 100–125 | 0,8 | 141 | 11,72 | nur Luft; Aura: Gegner-Rüstung −6 (Radius 11,72); Brand-Aura 50/s ohne Rüstung (Radius 11,72) | Upgrade 150 Gold |
+|  | Rote Facette |  | 75–100 | 0,8 | 109 | 10,94 | nur Luft; Aura: Gegner-Rüstung −5 (Radius 10,94) | Upgrade 130 Gold |
+|  | Rosenquarz-Kristall |  | 100–125 | 0,8 | 141 | 11,72 | nur Luft; Aura: Gegner-Rüstung −6 (Radius 11,72); Brand-Aura 50/s ohne Rüstung (Radius 11,72) | Upgrade 200 Gold |
 | Schwarzer Opal | Schwarzer Opal | Magie | 25 | 1 | 25 | 6,25 | Aura: Tower +30 % Schaden (Radius 7,81) | Opal Perfekt + Diamant Makellos + Aquamarin Normal |
-|  | Mystischer Schwarzer Opal |  | 50 | 1 | 50 | 7,81 | Aura: Tower +40 % Schaden (Radius 9,38) | Upgrade 275 Gold |
+|  | Mystischer Schwarzer Opal |  | 50 | 1 | 50 | 7,81 | Aura: Tower +40 % Schaden (Radius 9,38) | Upgrade 360 Gold |
 | Silber | Silber | Zauber | 20–21 | 1 | 20 | 4,3 | Fläche 50 % im Radius 1,95; verlangsamt 20 % für 5 s | Diamant Splitter + Saphir Splitter + Topas Splitter |
-|  | Sterlingsilber |  | 40 | 1 | 40 | 5,08 | Fläche 50 % im Radius 1,95; verlangsamt 20 % für 5 s | Upgrade 25 Gold |
-|  | Silberritter |  | 150 | 1 | 150 | 5,86 | Fläche 50 % im Radius 1,95; verlangsamt 20 % für 5 s | Upgrade 290 Gold |
+|  | Sterlingsilber |  | 40 | 1 | 40 | 5,08 | Fläche 50 % im Radius 1,95; verlangsamt 20 % für 5 s | Upgrade 40 Gold |
+|  | Silberritter |  | 150 | 1 | 150 | 5,86 | Fläche 50 % im Radius 1,95; verlangsamt 20 % für 5 s | Upgrade 380 Gold |
 | Stein von Bryvx |  | Belagerung | 500 | 0,8 | 625 | 6,64 | Aura: Tower +50 % Schaden (Radius 11,72) | aus Überlauf |
 | Sternrubin | Sternrubin | Held | – | – | – | – | Brand-Aura 40/s ohne Rüstung (Radius 2,07) | Rubin Fehlerhaft + Amethyst Splitter + Rubin Splitter |
-|  | Blutstern |  | – | – | – | – | Brand-Aura 50/s ohne Rüstung (Radius 3,91) | Upgrade 30 Gold |
-|  | Feuerstern |  | 130 | 0,5 | 260 | 4,69 | 99 Ziele gleichzeitig | Upgrade 290 Gold |
+|  | Blutstern |  | – | – | – | – | Brand-Aura 50/s ohne Rüstung (Radius 3,91) | Upgrade 40 Gold |
+|  | Feuerstern |  | 130 | 0,5 | 260 | 4,69 | 99 Ziele gleichzeitig | Upgrade 380 Gold |
 | Uran 238 | Uran 238 | Magie | – | – | – | – | Brand-Aura 80/s ohne Rüstung (Radius 3,91); Aura: Gegner −50 % Tempo (Radius 3,91) | Topas Perfekt + Saphir Normal + Opal Fehlerhaft |
-|  | Uran 235 |  | 14 | 0,2 | 70 | 7,03 | 99 Ziele gleichzeitig; Brand-Aura 80/s ohne Rüstung (Radius 3,91); Aura: Gegner −50 % Tempo (Radius 3,91) | Upgrade 190 Gold |
+|  | Uran 235 |  | 14 | 0,2 | 70 | 7,03 | 99 Ziele gleichzeitig; Brand-Aura 80/s ohne Rüstung (Radius 3,91); Aura: Gegner −50 % Tempo (Radius 3,91) | Upgrade 250 Gold |
 
 ## Fallen (Platten)
 

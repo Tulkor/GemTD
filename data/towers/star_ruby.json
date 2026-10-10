@@ -73,11 +73,11 @@
 	],
 	"upgrades": [
 		{
-			"cost": 30,
+			"cost": 40,
 			"recipe": []
 		},
 		{
-			"cost": 290,
+			"cost": 380,
 			"recipe": []
 		}
 	]
