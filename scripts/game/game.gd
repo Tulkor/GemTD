@@ -637,9 +637,22 @@ func next_chance_wave() -> int:
 	return int(levels[chance_level + 1].get("wave", 1))
 
 
+## Anteil des Golds aus Kills und Fähigkeiten in dieser Welle: gold_income_factor, ab gold_income_ramp
+## linear steigend bis to_factor in Welle to_wave, danach gleichbleibend.
+func gold_income_factor(wave: int) -> float:
+	var start := float(Database.balance.get("gold_income_factor", 1.0))
+	var ramp: Dictionary = Database.balance.get("gold_income_ramp", {})
+	if ramp.is_empty():
+		return start
+	var a := int(ramp.get("from_wave", 1))
+	var b := int(ramp.get("to_wave", a))
+	var t := clampf(float(wave - a) / maxf(b - a, 1), 0.0, 1.0)
+	return lerpf(start, float(ramp.get("to_factor", start)), t)
+
+
 ## Gold aus Kills und Fähigkeiten, gekürzt um gold_income_factor (Reste werden gesammelt).
 func earn_gold(amount: int) -> void:
-	_gold_frac += amount * float(Database.balance.get("gold_income_factor", 1.0))
+	_gold_frac += amount * gold_income_factor(current_wave())
 	var whole := floori(_gold_frac)
 	gold += whole
 	_gold_frac -= whole

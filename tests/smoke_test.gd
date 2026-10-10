@@ -348,6 +348,9 @@ func _ready() -> void:
 	for k in 4:
 		game.earn_gold(1)
 	check(game.gold == 3, "Goldeinkommen ×0,75: 4 × 1 Gold ergibt 3 Gold (%d)" % game.gold)
+	check(is_equal_approx(game.gold_income_factor(15), 0.75) and is_equal_approx(game.gold_income_factor(30), 1.0)
+		and is_equal_approx(game.gold_income_factor(50), 1.0) and game.gold_income_factor(22) > 0.75 and game.gold_income_factor(22) < 1.0,
+		"Goldeinkommen steigt von Welle 15 bis 30 linear von 0,75 auf 1,0")
 	game.gold = old_gold
 	game._refresh_hud()
 
