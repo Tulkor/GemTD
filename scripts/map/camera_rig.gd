@@ -151,14 +151,19 @@ static func add_environment(parent: Node) -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("15171d")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.75, 0.78, 0.85)
-	env.ambient_light_energy = 0.35
+	# kühles, schwaches Umgebungslicht und eine warme, flach stehende Sonne: so entstehen
+	# deutliche Licht- und Schattenseiten statt einer gleichmäßig hellen Fläche
+	env.ambient_light_color = Color(0.62, 0.7, 0.85)
+	env.ambient_light_energy = 0.22
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.1
 	var we := WorldEnvironment.new()
 	we.environment = env
 	parent.add_child(we)
 	var sun := DirectionalLight3D.new()
-	sun.rotation = Vector3(deg_to_rad(-55), deg_to_rad(-35), 0)
-	sun.light_energy = 0.75
+	sun.rotation = Vector3(deg_to_rad(-38), deg_to_rad(-35), 0)
+	sun.light_color = Color(1.0, 0.96, 0.88)
+	sun.light_energy = 1.25
 	sun.shadow_enabled = true
+	sun.shadow_blur = 1.5
 	parent.add_child(sun)

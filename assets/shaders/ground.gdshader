@@ -7,15 +7,20 @@ render_mode diffuse_burley, specular_schlick_ggx;
 uniform sampler2D grass_a : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass_b : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D dirt : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+/// Normal-Maps (aus der Helligkeit der Fotos abgeleitet), damit das Licht Struktur zeigt.
+uniform sampler2D grass_a_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D grass_b_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D dirt_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float normal_strength = 1.0;
 /// Erde-Anteil je Rasterfeld (0..1), ein Pixel pro Feld.
 uniform sampler2D splat : filter_linear, repeat_disable;
 /// Größe der Map in Einheiten.
 uniform vec2 map_size = vec2(37.0, 37.0);
 /// Kantenlänge einer Texturkachel in Einheiten (1 Einheit = 1 Towerbreite).
-uniform float grass_tile = 3.0;
-uniform float dirt_tile = 4.0;
+uniform float grass_tile = 1.5;
+uniform float dirt_tile = 2.2;
 /// Fotos sind sehr satt und hell; etwas abdunkeln und entsättigen, damit Tower und Gegner auffallen.
-uniform float brightness = 0.68;
+uniform float brightness = 0.72;
 uniform float saturation = 0.75;
 /// Rasterlinien (für den Map-Editor), 0 = aus.
 uniform float grid_strength = 0.0;
@@ -54,23 +59,32 @@ float fbm(vec2 p) {
 
 // Zwei gedrehte, unterschiedlich große Abtastungen derselben Textur, per Rauschen gemischt:
 // so fällt die Wiederholung der Kacheln nicht auf.
+const mat2 ROT = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8));
+
 vec3 sample_varied(sampler2D t, vec2 p, float n) {
 	vec3 a = texture(t, p).rgb;
-	mat2 rot = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8));
-	vec3 b = texture(t, rot * p * 0.71 + vec2(0.37, 0.13)).rgb;
+	vec3 b = texture(t, ROT * p * 0.71 + vec2(0.37, 0.13)).rgb;
 	return mix(a, b, smoothstep(0.3, 0.7, n));
 }
 
 void fragment() {
 	vec2 p = world_xz;
 	float n_tile = fbm(p * 0.35);
-	vec3 ga = sample_varied(grass_a, p / grass_tile, n_tile);
-	vec3 gb = sample_varied(grass_b, p / (grass_tile * 1.15) + vec2(0.5), 1.0 - n_tile);
-	vec3 dt = sample_varied(dirt, p / dirt_tile, n_tile);
+	vec2 uv_ga = p / grass_tile;
+	vec2 uv_gb = p / (grass_tile * 1.15) + vec2(0.5);
+	vec2 uv_dt = p / dirt_tile;
+	vec3 ga = sample_varied(grass_a, uv_ga, n_tile);
+	vec3 gb = sample_varied(grass_b, uv_gb, 1.0 - n_tile);
+	vec3 dt = sample_varied(dirt, uv_dt, n_tile);
+	vec3 na = sample_varied(grass_a_normal, uv_ga, n_tile);
+	vec3 nb = sample_varied(grass_b_normal, uv_gb, 1.0 - n_tile);
+	vec3 nd = sample_varied(dirt_normal, uv_dt, n_tile);
 
-	// Grasarten: große, weiche Flecken
-	float g_mix = smoothstep(0.38, 0.62, fbm(p * 0.09 + vec2(3.7, 1.2)));
-	vec3 grass = mix(ga, gb * 1.1, g_mix);
+	// Grasarten: kleine, unregelmäßige Flecken (keine großen einfarbigen Flächen)
+	float g_mix = smoothstep(0.3, 0.7, fbm(p * 0.45 + vec2(3.7, 1.2)));
+	g_mix = 0.2 + 0.6 * g_mix;  // nie ganz eine Sorte: weiche, unauffällige Wechsel
+	vec3 grass = mix(ga, gb * 1.15, g_mix);
+	vec3 grass_n = mix(na, nb, g_mix);
 
 	// Erde: Splat-Wert plus ausfransender Rand
 	float w = texture(splat, p / map_size).r;
@@ -83,11 +97,15 @@ void fragment() {
 	float dirt_h = dot(dt, vec3(0.33));
 	float blend = clamp((d - 0.5) * 2.5 + 0.5 + (dirt_h - 0.35) * 0.8 * (1.0 - abs(d * 2.0 - 1.0)), 0.0, 1.0);
 	vec3 col = mix(grass, dt, blend);
+	vec3 nrm = mix(grass_n, nd, blend);
+	// Vertiefungen (dunkle Stellen im Foto) zusätzlich abdunkeln
+	float cavity = smoothstep(0.05, 0.45, dot(col, vec3(0.299, 0.587, 0.114)));
+	col *= mix(0.7, 1.0, cavity);
 
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 	col = mix(vec3(lum), col, saturation) * brightness;
 	// leichte großflächige Helligkeitsschwankung
-	col *= 0.9 + 0.2 * fbm(p * 0.05 + vec2(-8.0, 2.0));
+	col *= 0.94 + 0.12 * fbm(p * 0.12 + vec2(-8.0, 2.0));
 
 	if (grid_strength > 0.0) {
 		vec2 g = abs(fract(p / cell + 0.5) - 0.5) / fwidth(p / cell);
@@ -96,6 +114,8 @@ void fragment() {
 	}
 
 	ALBEDO = col;
-	ROUGHNESS = mix(0.95, 0.85, blend);
-	SPECULAR = 0.2;
+	NORMAL_MAP = nrm;
+	NORMAL_MAP_DEPTH = normal_strength;
+	ROUGHNESS = mix(0.85, 0.95, blend);
+	SPECULAR = 0.35;
 }

@@ -27,6 +27,9 @@ const GROUND_TEXTURES := {
 	"grass_a": "res://assets/textures/ground/grass_a.jpg",
 	"grass_b": "res://assets/textures/ground/grass_b.jpg",
 	"dirt": "res://assets/textures/ground/dirt.jpg",
+	"grass_a_normal": "res://assets/textures/ground/grass_a_normal.jpg",
+	"grass_b_normal": "res://assets/textures/ground/grass_b_normal.jpg",
+	"dirt_normal": "res://assets/textures/ground/dirt_normal.jpg",
 }
 ## Erde: voller Anteil bis DIRT_CORE Felder Abstand vom Weg, dann Auslaufen über DIRT_FADE Felder.
 const DIRT_CORE := 0.8
