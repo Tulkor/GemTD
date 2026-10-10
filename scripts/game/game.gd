@@ -701,6 +701,7 @@ func _spawn_enemy(g: Dictionary) -> void:
 	var e := Enemy.new()
 	board.add_child(e)
 	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
+	e.apply_difficulty(Session.difficulty_factor())
 	enemies.append(e)
 
 

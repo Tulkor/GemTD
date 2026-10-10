@@ -124,6 +124,14 @@ func _sync_position() -> void:
 	position = Board3D.to_3d(pos, FLY_HEIGHT if flying else 0.0)
 
 
+## Schwierigkeitsstufe: Leben und (positive) Rüstung skalieren.
+func apply_difficulty(f: float) -> void:
+	max_hp *= f
+	hp = max_hp
+	if armor > 0.0:
+		armor *= f
+
+
 func effective_armor() -> float:
 	return armor - armor_reduction
 

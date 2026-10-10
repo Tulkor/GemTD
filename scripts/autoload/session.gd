@@ -17,6 +17,14 @@ var test_tower := ""
 ## Debug: Leben dürfen ins Minus gehen, das Spiel endet nicht.
 var debug_immortal := false
 var debug_gems_per_round := 0   ## Debug: Gems pro Runde, 0 = Wert aus balance.json
+## Schwierigkeitsstufen: Faktor auf Leben und Rüstung der Gegner.
+const DIFFICULTIES := [
+	{"name": "Einfach", "factor": 0.8},
+	{"name": "Normal", "factor": 0.9},
+	{"name": "Schwer", "factor": 1.15},
+]
+## Gewählte Stufe (Index in DIFFICULTIES), Standard „Normal“.
+var difficulty := 1
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Wohin "Zurück" im Spiel führt.
@@ -27,3 +35,11 @@ func goto(scene: String) -> void:
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	get_tree().change_scene_to_file(scene)
+
+
+func difficulty_factor() -> float:
+	return float(DIFFICULTIES[clampi(difficulty, 0, DIFFICULTIES.size() - 1)].factor)
+
+
+func difficulty_name() -> String:
+	return str(DIFFICULTIES[clampi(difficulty, 0, DIFFICULTIES.size() - 1)].name)

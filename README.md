@@ -53,6 +53,8 @@ Weitere Regeln:
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).
+**Schwierigkeit** im Hauptmenü unter „Spielen“: Einfach (Leben und Rüstung der Gegner ×0,8), Normal (×0,9), Schwer (×1,15).
+
 
 Unter „Debug: nächster Gem“ lässt sich jeder Tower in jeder Stufe direkt setzen.
 Der Schalter „Unsterblich“ daneben lässt die Leben ins Minus gehen, ohne dass das Spiel endet.

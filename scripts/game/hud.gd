@@ -705,7 +705,7 @@ func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int
 	help_panel.hide()
 	game_over_title.text = "Gewonnen!" if victory else "Verloren"
 	game_over_title.add_theme_color_override("font_color", UiTheme.GOLD if victory else UiTheme.MISSING)
-	game_over_stats.text = "Welle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder" % [wave, waves, lives, kills, path_cells]
+	game_over_stats.text = "Schwierigkeit: " + Session.difficulty_name() + "\nWelle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder" % [wave, waves, lives, kills, path_cells]
 	editor_button.visible = Session.return_scene != Session.MAIN_MENU
 	editor_button.text = "Zurück zum Map-Editor" if Session.return_scene == Session.MAP_EDITOR else "Zurück zum Tower-Editor"
 	game_over.show()

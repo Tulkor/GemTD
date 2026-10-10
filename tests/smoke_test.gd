@@ -367,6 +367,19 @@ func _ready() -> void:
 	game.on_enemy_leaked(leaker)
 	check(game.lives == -2 and game.phase < game.Phase.GAME_OVER, "Unsterblich: Leben %d, Spiel läuft weiter" % game.lives)
 	Session.debug_immortal = false
+	var tough := Enemy.new()
+	tough.max_hp = 100.0
+	tough.armor = 4.0
+	var expect := [80.0, 90.0, 115.0]
+	for d in 3:
+		tough.max_hp = 100.0
+		tough.armor = 4.0
+		Session.difficulty = d
+		tough.apply_difficulty(Session.difficulty_factor())
+		check(is_equal_approx(tough.max_hp, expect[d]) and is_equal_approx(tough.armor, 4.0 * expect[d] / 100.0) and tough.hp == tough.max_hp,
+			"%s: Leben %.0f, Rüstung %.2f" % [Session.difficulty_name(), tough.max_hp, tough.armor])
+	tough.free()
+	Session.difficulty = 1
 	game._finish(game.Phase.GAME_OVER)
 	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
 

@@ -42,6 +42,7 @@ func _ready() -> void:
 	play_button.add_theme_font_size_override("font_size", 22)
 	play_button.clip_text = true
 	UiTheme.accent_button(play_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
+	_difficulty_row(left)
 	_menu_button("Map-Editor", left, _open_map_editor)
 	_menu_button("Tower-Editor", left, _open_tower_editor)
 	var fill := Control.new()
@@ -69,6 +70,26 @@ func _ready() -> void:
 	var hint := UiUtil.label("Doppelklick auf eine Map startet sie direkt.", right, 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	_reload()
+
+
+## Schwierigkeit: drei Umschalter, genau einer aktiv.
+func _difficulty_row(parent: Node) -> void:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	parent.add_child(h)
+	var group := ButtonGroup.new()
+	for i in Session.DIFFICULTIES.size():
+		var d: Dictionary = Session.DIFFICULTIES[i]
+		var idx := i
+		var b := UiUtil.button(str(d.name), h, func(): Session.difficulty = idx)
+		b.toggle_mode = true
+		b.button_group = group
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 36
+		b.tooltip_text = "Gegner: Leben und Rüstung ×%s" % str(d.factor)
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		b.set_pressed_no_signal(i == Session.difficulty)
 
 
 func _gap(h: float) -> Control:
