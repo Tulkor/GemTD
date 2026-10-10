@@ -23,7 +23,7 @@ func _ready() -> void:
 	for w in Database.wave_sets.get("classic", {}).get("waves", []):
 		var k: String = load("res://scripts/game/game.gd").wave_type(w)
 		kinds[k] = kinds.get(k, 0) + 1
-	check(kinds.get("Masse", 0) >= 10 and kinds.get("Flieger", 0) >= 10 and kinds.get("Boss", 0) >= 1 and kinds.get("Boden", 0) >= 10,
+	check(kinds.get("Masse", 0) >= 8 and kinds.get("Flieger", 0) >= 10 and kinds.get("Boss", 0) >= 1 and kinds.get("Boden", 0) >= 10,
 		"alle vier Wellentypen kommen vor: %s" % [kinds])
 
 	for m in Database.list_maps():

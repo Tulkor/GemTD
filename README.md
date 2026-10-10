@@ -162,7 +162,7 @@ Jede Treffer-Fähigkeit kann `"chance"` haben.
 `data/enemies/*.json`: `hp`, `speed` (Towerbreiten/s), `armor`, `armor_type`, `bounty`, `damage` (Leben bei Durchbruch),
 `flying`, `boss`, `color`, `size`, optional `shape` und `model`.
 Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyramide = Massenwelle (`"shape": "pyramid"`).
-Wellenrhythmus (classic): Boden, Masse, Boden, Flieger, also Massenwellen 2, 6, 10 … 46 und Flieger 4, 8 … 48; Bosse 42 und 50.
+Wellenrhythmus (classic): Boden, Masse, Boden, Flieger; Massenwellen ab Welle 10 (10, 14 … 46), Flieger 4, 8 … 48; Bosse 42 und 50.
 Eine Massenwelle hat 25 statt 10 Gegner mit je 40 % Leben, Gold und Leben-Schaden und kürzerem Abstand.
 Dafür überschreibt die Gruppe in der Wellendatei `hp`, `bounty`, `damage`, `shape` und `size`.
 

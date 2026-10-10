@@ -15,13 +15,8 @@
 			"groups": [
 				{
 					"enemy": "mine_gekko",
-					"count": 25,
-					"interval": 0.64,
-					"hp": 12,
-					"bounty": 0.4,
-					"damage": 1,
-					"shape": "pyramid",
-					"size": 0.8
+					"count": 10,
+					"interval": 1.61
 				}
 			]
 		},
@@ -56,13 +51,8 @@
 			"groups": [
 				{
 					"enemy": "bigger_rockmen",
-					"count": 25,
-					"interval": 0.64,
-					"hp": 48,
-					"bounty": 0.8,
-					"damage": 1,
-					"shape": "pyramid",
-					"size": 0.8
+					"count": 10,
+					"interval": 1.61
 				}
 			]
 		},
