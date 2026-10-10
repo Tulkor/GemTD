@@ -88,7 +88,9 @@ func _field(parent: Node, text: String, control: Control) -> Control:
 	v.add_theme_constant_override("separation", 4)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(v)
-	UiUtil.label(text, v, 13).add_theme_color_override("font_color", UiTheme.MUTED)
+	var l := UiUtil.label(text, v, 13)
+	l.add_theme_color_override("font_color", UiTheme.MUTED)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(control)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return control
@@ -122,7 +124,7 @@ func _build_ui() -> void:
 	var th := HBoxContainer.new()
 	th.add_theme_constant_override("separation", 10)
 	top.add_child(th)
-	UiUtil.label("Map-Editor", th, 20).add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("Map-Editor", th, 20))
 	th.add_child(_hgap(12))
 	load_option = OptionButton.new()
 	load_option.custom_minimum_size.x = 220
@@ -180,7 +182,7 @@ func _build_ui() -> void:
 		var key_l := UiUtil.label(str(key), h, 12)
 		key_l.add_theme_color_override("font_color", UiTheme.MUTED)
 		key_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_theme_stylebox_override("pressed", UiTheme.box(Color("2b2412"), UiTheme.GOLD))
+		b.add_theme_stylebox_override("pressed", UiTheme.box(Color("2a0f2e"), UiTheme.GOLD))
 		tool_buttons[t] = b
 		key += 1
 	lv.add_child(HSeparator.new())
@@ -224,7 +226,7 @@ func _build_ui() -> void:
 	tabs.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	tabs.add_theme_stylebox_override("tab_selected", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4, 0, 14))
 	tabs.add_theme_stylebox_override("tab_unselected", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 4, 0, 14))
-	tabs.add_theme_stylebox_override("tab_hovered", UiTheme.box(Color("232836"), Color.TRANSPARENT, 4, 0, 14))
+	tabs.add_theme_stylebox_override("tab_hovered", UiTheme.box(Color("1f1036"), Color.TRANSPARENT, 4, 0, 14))
 	tabs.add_theme_color_override("font_selected_color", UiTheme.GOLD_DARK)
 	tabs.add_theme_color_override("font_unselected_color", UiTheme.TEXT)
 	tabs.add_theme_color_override("font_hovered_color", UiTheme.TEXT)

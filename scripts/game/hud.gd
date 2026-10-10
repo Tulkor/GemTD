@@ -165,7 +165,7 @@ func _button(text: String, parent: Node, on_pressed: Callable) -> Button:
 
 func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, Color.TRANSPARENT, 6, 0, 10))
+	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2, 10))
 	parent.add_child(p)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 6)
@@ -186,19 +186,24 @@ func _vsep(parent: Node) -> void:
 
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BAR, Color.TRANSPARENT, 0, 0, 14))
+	var bar_style := UiTheme.box(UiTheme.BAR, Color.TRANSPARENT, 0, 0, 14)
+	bar_style.border_color = UiTheme.GOLD
+	bar_style.border_width_bottom = 3
+	bar_style.shadow_color = UiTheme.CYAN
+	bar_style.shadow_size = 1
+	bar_style.shadow_offset = Vector2(0, 4)
+	bar.add_theme_stylebox_override("panel", bar_style)
 	bar.anchor_right = 1.0
 	bar.custom_minimum_size.y = 52
 	root.add_child(bar)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 5)
 	bar.add_child(h)
-	var title := UiUtil.label("GemTD", h, 22)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("GemTD", h, 22))
 	h.add_child(_spacer(4))
 	wave_value = _chip("Welle", h)
 	lives_value = _chip("Leben", h, UiTheme.MISSING)
-	gold_value = _chip("Gold", h, UiTheme.GOLD)
+	gold_value = _chip("Gold", h, UiTheme.COIN)
 	path_value = _chip("Weg", h)
 	path_value.get_parent().get_parent().tooltip_text = "Länge des Laufwegs der Bodengegner in Feldern (ein Tower ist 2 Felder breit).\nIn Klammern: wie viel länger der Weg in dieser Bauphase geworden ist."
 	chance_value = _chip("Chance", h)
@@ -216,19 +221,26 @@ func _build_top_bar() -> void:
 		b.button_group = group
 		b.tooltip_text = "Tempo (Tasten 1, 2, 3)"
 		b.custom_minimum_size.x = 44
-		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		speed_buttons.append(b)
 
 	debug_button = _button("Debug", h, func(): debug_panel.visible = not debug_panel.visible)
 	debug_button.toggle_mode = true
 	debug_button.tooltip_text = "Debug-Menü"
-	debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
+	debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 	debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 
 	_button("Rezepte", h, toggle_recipe_book).tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
 	_button("Menü", h, open_leave_confirm)
+
+
+## Panel-Überschrift: Großbuchstaben, fett.
+func _panel_title(l: Label) -> Label:
+	l.uppercase = true
+	l.add_theme_font_override("font", UiTheme.font(true))
+	return l
 
 
 func _spacer(w: float) -> Control:
@@ -240,7 +252,7 @@ func _spacer(w: float) -> Control:
 func _build_banner() -> void:
 	banner = PanelContainer.new()
 	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	banner.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.92), UiTheme.BORDER_2, 20, 1, 18))
+	banner.add_theme_stylebox_override("panel", UiTheme.panel(18.0, 0.92))
 	banner.anchor_left = 0.5
 	banner.anchor_right = 0.5
 	banner.offset_top = BANNER_TOP
@@ -251,11 +263,13 @@ func _build_banner() -> void:
 	h.add_theme_constant_override("separation", 12)
 	banner.add_child(h)
 	phase_title = UiUtil.label("", h, 15)
-	phase_title.add_theme_color_override("font_color", UiTheme.GOLD)
+	phase_title.uppercase = true
+	phase_title.add_theme_font_override("font", UiTheme.font(true))
+	phase_title.add_theme_color_override("font_color", UiTheme.CYAN)
 	phase_label = UiUtil.label("", h, 15)
 	oneshot_pill = PanelContainer.new()
 	oneshot_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	oneshot_pill.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PURPLE, Color.TRANSPARENT, 12, 0, 10))
+	oneshot_pill.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PURPLE, Color.TRANSPARENT, 0, 0, 10))
 	h.add_child(oneshot_pill)
 	oneshot_label = UiUtil.label("", oneshot_pill, 13)
 	oneshot_label.add_theme_color_override("font_color", Color.WHITE)
@@ -272,13 +286,13 @@ func _build_pinned() -> void:
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(left)
 	waves_panel = PanelContainer.new()
-	waves_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
+	waves_panel.add_theme_stylebox_override("panel", UiTheme.panel(12.0, 0.94))
 	left.add_child(waves_panel)
 	waves_box = VBoxContainer.new()
 	waves_box.add_theme_constant_override("separation", 8)
 	waves_panel.add_child(waves_box)
 	pinned_panel = PanelContainer.new()
-	pinned_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
+	pinned_panel.add_theme_stylebox_override("panel", UiTheme.panel(12.0, 0.94))
 	left.add_child(pinned_panel)
 	pinned_box = VBoxContainer.new()
 	pinned_box.add_theme_constant_override("separation", 10)
@@ -287,7 +301,7 @@ func _build_pinned() -> void:
 
 func _build_bottom() -> void:
 	bottom = PanelContainer.new()
-	bottom.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.96), UiTheme.BORDER, 10, 1, 14))
+	bottom.add_theme_stylebox_override("panel", UiTheme.panel(14.0, 0.96))
 	bottom.anchor_left = 0.5
 	bottom.anchor_right = 0.5
 	bottom.anchor_top = 1.0
@@ -377,13 +391,12 @@ func _build_debug() -> void:
 	debug_panel.offset_right = -16
 	debug_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	debug_panel.custom_minimum_size.x = 320
-	debug_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 10, 1, 14))
+	debug_panel.add_theme_stylebox_override("panel", UiTheme.panel(14.0))
 	root.add_child(debug_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	debug_panel.add_child(v)
-	var title := UiUtil.label("Debug", v, 18)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.title(UiUtil.label("Debug", v, 18))
 
 	var row := _debug_row("Gems pro Runde", v)
 	debug_gems = SpinBox.new()
@@ -518,7 +531,7 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = g.label
 		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
-		var bg := Color("241a38") if g.oneshot else (Color("2b2412") if g.selected else UiTheme.PANEL_2)
+		var bg := Color("241a38") if g.oneshot else (Color("2a0f2e") if g.selected else UiTheme.PANEL_2)
 		var st := UiTheme.box(bg, border, 6, 2, 0)
 		b.add_theme_stylebox_override("normal", st)
 		var hover := st.duplicate() as StyleBoxFlat
@@ -623,7 +636,7 @@ func _two_line(b: Button, title: String, sub: String) -> void:
 	t.clip_text = true
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var g := UiUtil.label(sub, v, 13)
-	g.add_theme_color_override("font_color", UiTheme.GOLD)
+	g.add_theme_color_override("font_color", UiTheme.COIN)
 	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -642,7 +655,7 @@ func set_waves(waves: Array) -> void:
 	for c in waves_box.get_children():
 		waves_box.remove_child(c)
 		c.queue_free()
-	UiUtil.label("Nächste Wellen", waves_box, 15)
+	_panel_title(UiUtil.label("Nächste Wellen", waves_box, 15))
 	for w in waves:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
@@ -708,13 +721,13 @@ func _build_game_over() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	game_over.add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.add_theme_stylebox_override("panel", UiTheme.panel(28.0))
 	panel.custom_minimum_size.x = 380
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	game_over_title = UiUtil.label("", v, 40)
+	game_over_title = UiTheme.title(UiUtil.label("", v, 40))
 	game_over_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	game_over_stats = UiUtil.label("", v, 15)
 	game_over_stats.add_theme_color_override("font_color", UiTheme.DIM)
@@ -746,13 +759,13 @@ func _build_leave_confirm() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	leave_confirm.add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.add_theme_stylebox_override("panel", UiTheme.panel(28.0))
 	panel.custom_minimum_size.x = 380
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	var title := UiUtil.label("Spiel verlassen?", v, 28)
+	var title := UiTheme.title(UiUtil.label("Spiel verlassen?", v, 26))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var text := UiUtil.label("Die laufende Partie geht dabei verloren.", v, 15)
 	text.add_theme_color_override("font_color", UiTheme.DIM)
@@ -844,7 +857,7 @@ func _refresh_pinned() -> void:
 		c.queue_free()
 	var head := HBoxContainer.new()
 	pinned_box.add_child(head)
-	var t := UiUtil.label("Angepinnt", head, 15)
+	var t := _panel_title(UiUtil.label("Angepinnt", head, 15))
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UiUtil.label("%d" % Session.pinned_recipes.size(), head, 12).add_theme_color_override("font_color", UiTheme.MUTED)
 	for id in Session.pinned_recipes:
