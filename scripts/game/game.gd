@@ -426,11 +426,11 @@ func tower_options(t: Tower) -> Array:
 				continue
 			var consume = _match_recipe(def.get("recipe", []), t, field)
 			if consume != null:
-				opts.append({"label": "Kombinieren → " + Database.tower_label(sid, 0), "action": "combine",
+				opts.append({"label": tr("Kombinieren → ") + Database.tower_label(sid, 0), "action": "combine",
 						"id": sid, "tier": 0, "consume": consume, "cost": 0})
 	opts.append_array(upgrade_options(t))
 	if t.is_trap() and t.moves_left > 0:
-		opts.append({"label": "Verschieben (noch %d×)" % t.moves_left, "action": "move", "id": t.tower_id,
+		opts.append({"label": tr("Verschieben (noch %d×)") % t.moves_left, "action": "move", "id": t.tower_id,
 				"tier": t.tier, "consume": [], "cost": 0})
 	return opts.filter(func(o): return not _makes_blocked_trap(t, o))
 
@@ -450,11 +450,11 @@ func choice_options(t: Tower) -> Array:
 	var one_shot := phase == Phase.BUILD
 	if (phase != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
 		return []
-	var opts := [] if one_shot else [_keep_option("Behalten: " + t.label(), t.tower_id, t.tier)]
+	var opts := [] if one_shot else [_keep_option(tr("Behalten: ") + t.label(), t.tower_id, t.tier)]
 	if t.def.get("category", "gem") == "gem" and not one_shot:
 		# Abstufen wie in WC3: den Gem eine Qualität niedriger behalten, z. B. für ein Rezept
 		if t.tier > 0:
-			opts.append(_keep_option("Abstufen → " + Database.tower_label(t.tower_id, t.tier - 1), t.tower_id, t.tier - 1))
+			opts.append(_keep_option(tr("Abstufen → ") + Database.tower_label(t.tower_id, t.tier - 1), t.tower_id, t.tier - 1))
 		var same := round_towers.filter(func(o): return o.tower_id == t.tower_id and o.tier == t.tier).size()
 		var max_tier := Database.tier_count(t.tower_id) - 1
 		for n in [2, 4]:
@@ -462,18 +462,18 @@ func choice_options(t: Tower) -> Array:
 				continue
 			var steps := 1 if n == 2 else 2
 			if t.tier + steps <= max_tier:
-				opts.append(_keep_option("%d gleiche → %s" % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps))
+				opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps))
 			else:
 				var overflow := str(Database.balance.get("overflow_tower", ""))
 				if Database.towers.has(overflow):
-					opts.append(_keep_option("%d gleiche → %s" % [n, Database.tower_label(overflow, 0)], overflow, 0))
+					opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(overflow, 0)], overflow, 0))
 				break
 	var others := round_towers.filter(func(o): return o != t)
 	for sid in Database.special_ids():
 		var def: Dictionary = Database.towers[sid]
 		# Zutaten sind alle aus dieser Runde und werden ohnehin mit dem Rest zu Steinen
 		if _match_recipe(def.get("recipe", []), t, others) != null:
-			opts.append(_keep_option(("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0))
+			opts.append(_keep_option(tr("One-Shot → " if one_shot else "Kombinieren → ") + Database.tower_label(sid, 0), sid, 0))
 	return opts.filter(func(o): return not _makes_blocked_trap(t, o))
 
 
@@ -482,7 +482,7 @@ func one_shot_hints() -> Array:
 	var hints := []
 	for t in round_towers:
 		for o in choice_options(t):
-			hints.append("%s (aus %s)" % [Database.tower_label(o.id, o.tier), t.label()])
+			hints.append(tr("%s (aus %s)") % [Database.tower_label(o.id, o.tier), t.label()])
 	return hints
 
 
@@ -550,7 +550,7 @@ func upgrade_options(t: Tower) -> Array:
 		pool.erase(found)
 		consume.append(found)
 	var cost := int(up.get("cost", 0))
-	return [{"label": "Aufwerten → %s%s" % [Database.tower_label(t.tower_id, t.tier + 1), " (%d Gold)" % cost if cost > 0 else ""],
+	return [{"label": tr("Aufwerten → %s%s") % [Database.tower_label(t.tower_id, t.tier + 1), tr(" (%d Gold)") % cost if cost > 0 else ""],
 			"action": "upgrade", "id": t.tower_id, "tier": t.tier + 1, "consume": consume, "cost": cost}]
 
 
@@ -776,20 +776,20 @@ func _refresh_hud() -> void:
 		gems.append({"label": t.label(), "color": t.color, "selected": t == selected, "oneshot": shot})
 	var shot_text := ""
 	if not specials.is_empty():
-		shot_text = ("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
-	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], "Lila Rand: Zutat für " + ", ".join(specials) if not specials.is_empty() else "")
+		shot_text = tr("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
+	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], tr("Lila Rand: Zutat für ") + ", ".join(specials) if not specials.is_empty() else "")
 
 	match phase:
 		Phase.BUILD:
-			hud.set_phase("Bauphase", "Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen" % [round_towers.size(), gems_per_round()], shot_text)
+			hud.set_phase(tr("Bauphase"), tr("Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen") % [round_towers.size(), gems_per_round()], shot_text)
 		Phase.CHOOSE:
-			hud.set_phase("Wahlphase", "Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen.", shot_text)
+			hud.set_phase(tr("Wahlphase"), tr("Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen."), shot_text)
 		Phase.WAVE:
-			hud.set_phase("Welle %d" % (wave_index + 1), "noch %d Gegner" % (enemies.size() + spawn_queue.size()))
+			hud.set_phase(tr("Welle %d") % (wave_index + 1), tr("noch %d Gegner") % (enemies.size() + spawn_queue.size()))
 		Phase.GAME_OVER:
-			hud.set_phase("Verloren", "")
+			hud.set_phase(tr("Verloren"), "")
 		Phase.VICTORY:
-			hud.set_phase("Gewonnen", "Alle Wellen geschafft!")
+			hud.set_phase(tr("Gewonnen"), tr("Alle Wellen geschafft!"))
 
 	var levels: Array = Database.balance.get("chance_levels", [])
 	if chance_level + 1 < levels.size():
@@ -800,15 +800,15 @@ func _refresh_hud() -> void:
 
 	if selected_rock != NO_CELL:
 		var cost := rock_remove_cost()
-		hud.set_selection({"title": "Stein", "color": Color("6d6a63"), "used_in": null,
+		hud.set_selection({"title": tr("Stein"), "color": Color("6d6a63"), "used_in": null,
 				"body": ""})
-		hud.set_options([{"label": "Stein entfernen" + (" (%d Gold)" % cost if cost > 0 else ""), "style": "normal"}])
+		hud.set_options([{"label": tr("Stein entfernen") + (tr(" (%d Gold)") % cost if cost > 0 else ""), "style": "normal"}])
 		hud.set_options_enabled(can_remove_rock(selected_rock))
 		return
 	if moving != null and is_instance_valid(moving):
-		hud.set_selection({"title": moving.label() + " verschieben", "color": moving.color, "used_in": null,
-				"body": "Neuen Platz anklicken (grün = möglich). Fallen dürfen auf Checkpoints und unter Tower.\nRechtsklick oder Esc bricht ab."})
-		hud.set_options([{"label": "Abbrechen", "style": "normal"}])
+		hud.set_selection({"title": tr("%s verschieben") % moving.label(), "color": moving.color, "used_in": null,
+				"body": tr("Neuen Platz anklicken (grün = möglich). Fallen dürfen auf Checkpoints und unter Tower.\nRechtsklick oder Esc bricht ab.")})
+		hud.set_options([{"label": tr("Abbrechen"), "style": "normal"}])
 		hud.set_options_enabled(true)
 		return
 	if selected == null or not is_instance_valid(selected):
@@ -819,7 +819,7 @@ func _refresh_hud() -> void:
 	var used := Recipes.used_in(selected.tower_id, selected.tier)
 	var body := "\n".join(lines.slice(1))
 	if not selected.is_new and phase <= Phase.CHOOSE and _field_recipe_complete(used):
-		body += "\nKombinieren geht erst wieder während der Welle."
+		body += "\n" + tr("Kombinieren geht erst wieder während der Welle.")
 	hud.set_selection({"title": lines[0], "color": selected.color, "body": body, "used_in": used})
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
@@ -845,12 +845,12 @@ func _upcoming_waves(count: int) -> Array:
 		var detail := ""
 		if groups.size() == 1 and not defs[0].is_empty():
 			var d: Dictionary = defs[0]
-			detail = "%d× %s · %d LP · Rüstung %d" % [total, d.get("name", "?"), int(d.get("hp", 0)), int(d.get("armor", 0))]
+			detail = tr("%d× %s · %d LP · Rüstung %d") % [total, tr(str(d.get("name", "?"))), int(d.get("hp", 0)), int(d.get("armor", 0))]
 		else:
-			detail = "%d Gegner: %s" % [total, ", ".join(defs.map(func(d): return str(d.get("name", "?"))))]
+			detail = tr("%d Gegner: %s") % [total, ", ".join(defs.map(func(d): return tr(str(d.get("name", "?")))))]
 		var state := ""
 		if i == wave_index:
-			state = "läuft" if phase == Phase.WAVE else "als Nächstes"
+			state = tr("läuft") if phase == Phase.WAVE else tr("als Nächstes")
 		list.append({"number": i + 1, "type": wave_type(waves[i]), "detail": detail, "state": state})
 	return list
 
@@ -891,12 +891,12 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	var v := {"label": o.label, "style": "normal"}
 	if _is_special_option(t, o):
 		v.style = "oneshot"
-		var hint := "Baut %s sofort und beendet die Runde." % Database.tower_label(o.id, o.tier) if phase == Phase.BUILD else ""
-		hint += " Die übrigen neuen Gems werden zu Steinen."
+		var hint := tr("Baut %s sofort und beendet die Runde.") % Database.tower_label(o.id, o.tier) if phase == Phase.BUILD else ""
+		hint += " " + tr("Die übrigen neuen Gems werden zu Steinen.")
 		if not o.consume.is_empty():
-			hint += " Verbraucht vom Feld: " + ", ".join(o.consume.map(func(c): return c.label()))
+			hint += " " + tr("Verbraucht vom Feld: ") + ", ".join(o.consume.map(func(c): return c.label()))
 		v.hint = hint.strip_edges()
 	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
 		v.style = "primary"
-		v.label = "Behalten"
+		v.label = tr("Behalten")
 	return v

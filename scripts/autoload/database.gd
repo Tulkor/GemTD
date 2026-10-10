@@ -137,13 +137,14 @@ func tower_tier(id: String, tier: int) -> Dictionary:
 func tower_label(id: String, tier: int) -> String:
 	var def: Dictionary = towers.get(id, {})
 	var stats := tower_tier(id, tier)
+	# Namen kommen deutsch aus den Daten und werden erst für die Anzeige übersetzt
 	if stats.has("name"):
-		return str(stats.name)
-	var name := str(def.get("name", id))
+		return tr(str(stats.name))
+	var name := tr(str(def.get("name", id)))
 	if def.get("category", "gem") == "gem":
-		return "%s %s" % [TIER_NAMES[clampi(tier, 0, TIER_NAMES.size() - 1)], name]
+		return "%s %s" % [tr(TIER_NAMES[clampi(tier, 0, TIER_NAMES.size() - 1)]), name]
 	if tier_count(id) > 1:
-		return "%s (Stufe %d)" % [name, tier + 1]
+		return tr("%s (Stufe %d)") % [name, tier + 1]
 	return name
 
 

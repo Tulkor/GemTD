@@ -54,33 +54,33 @@ static func describe(ab: Dictionary) -> String:
 	var type := str(ab.get("type", "?"))
 	match type:
 		"splash":
-			return "Flächenschaden %d%% im Radius %.1f" % [float(ab.factor) * 100, float(ab.radius)]
+			return str(TranslationServer.translate("Flächenschaden %d%% im Radius %.1f")) % [float(ab.factor) * 100, float(ab.radius)]
 		"slow":
-			return "Verlangsamt um %d%% für %.1fs" % [float(ab.factor) * 100, float(ab.duration)]
+			return str(TranslationServer.translate("Verlangsamt um %d%% für %.1fs")) % [float(ab.factor) * 100, float(ab.duration)]
 		"poison":
-			return "Gift: %.1f Schaden/s für %.1fs" % [float(ab.dps), float(ab.duration)]
+			return str(TranslationServer.translate("Gift: %.1f Schaden/s für %.1fs")) % [float(ab.dps), float(ab.duration)]
 		"crit":
-			return "%d%% Chance auf %.1fx Schaden" % [float(ab.chance) * 100, float(ab.multiplier)]
+			return str(TranslationServer.translate("%d%% Chance auf %.1fx Schaden")) % [float(ab.chance) * 100, float(ab.multiplier)]
 		"multishot":
-			return "Trifft %d Ziele gleichzeitig" % int(ab.targets)
+			return str(TranslationServer.translate("Trifft %d Ziele gleichzeitig")) % int(ab.targets)
 		"bounce":
-			return "Springt auf %d weitere Ziele (je %d%% Schaden)" % [int(ab.targets), float(ab.falloff) * 100]
+			return str(TranslationServer.translate("Springt auf %d weitere Ziele (je %d%% Schaden)")) % [int(ab.targets), float(ab.falloff) * 100]
 		"armor_reduce":
-			return "Senkt Rüstung um %.0f für %.1fs" % [float(ab.amount), float(ab.duration)]
+			return str(TranslationServer.translate("Senkt Rüstung um %.0f für %.1fs")) % [float(ab.amount), float(ab.duration)]
 		"stun":
-			return "%d%% Chance, %.1fs zu betäuben" % [float(ab.chance) * 100, float(ab.duration)]
+			return str(TranslationServer.translate("%d%% Chance, %.1fs zu betäuben")) % [float(ab.chance) * 100, float(ab.duration)]
 		"air_bonus":
-			return "%.1fx Schaden gegen Flieger" % float(ab.multiplier)
+			return str(TranslationServer.translate("%.1fx Schaden gegen Flieger")) % float(ab.multiplier)
 		"gold_on_hit":
-			return "%d%% Chance auf %d Gold pro Treffer" % [float(ab.chance) * 100, int(ab.gold)]
+			return str(TranslationServer.translate("%d%% Chance auf %d Gold pro Treffer")) % [float(ab.chance) * 100, int(ab.gold)]
 		"speed_aura":
-			return "Aura: +%d%% Angriffstempo für Tower im Radius %.1f" % [float(ab.bonus) * 100, float(ab.radius)]
+			return str(TranslationServer.translate("Aura: +%d%% Angriffstempo für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
 		"damage_aura":
-			return "Aura: +%d%% Schaden für Tower im Radius %.1f" % [float(ab.bonus) * 100, float(ab.radius)]
+			return str(TranslationServer.translate("Aura: +%d%% Schaden für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
 		"burn_aura":
-			return "Verbrennt Gegner im Radius %.1f: %.0f Schaden/s" % [float(ab.radius), float(ab.dps)]
+			return str(TranslationServer.translate("Verbrennt Gegner im Radius %.1f: %.0f Schaden/s")) % [float(ab.radius), float(ab.dps)]
 		"slow_aura":
-			return "Verlangsamt Gegner im Radius %.1f um %d%%" % [float(ab.radius), float(ab.factor) * 100]
+			return str(TranslationServer.translate("Verlangsamt Gegner im Radius %.1f um %d%%")) % [float(ab.radius), float(ab.factor) * 100]
 		"armor_aura":
-			return "Senkt Rüstung von Gegnern im Radius %.1f um %.0f" % [float(ab.radius), float(ab.amount)]
+			return str(TranslationServer.translate("Senkt Rüstung von Gegnern im Radius %.1f um %.0f")) % [float(ab.radius), float(ab.amount)]
 	return type

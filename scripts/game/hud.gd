@@ -457,7 +457,7 @@ func _debug_row(text: String, parent: Node) -> HBoxContainer:
 func setup_debug_towers(preselect: String) -> void:
 	debug_option.clear()
 	debug_keys = [""]
-	debug_option.add_item("Zufälliger Gem")
+	debug_option.add_item(tr("Zufälliger Gem"))
 	var specials := Database.special_ids()
 	var gems := Database.gem_ids()
 	var groups := [["Basis-Gems", gems], ["Spezial-Tower", specials],
@@ -466,7 +466,7 @@ func setup_debug_towers(preselect: String) -> void:
 		if (g[1] as Array).is_empty():
 			continue
 		# Trenner: OptionButton zählt sie als Einträge mit, daher Platzhalter in debug_keys
-		debug_option.add_separator(g[0])
+		debug_option.add_separator(tr(g[0]))
 		debug_keys.append("")
 		for id in g[1]:
 			for t in Database.tier_count(id):
@@ -489,9 +489,9 @@ func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:
 
 ## level: aktuelle Chance-Stufe, cost: Kosten der nächsten (-1 = schon maximal).
 func set_chance(level: int, cost: int, enabled: bool) -> void:
-	chance_value.text = "Stufe %d" % level
+	chance_value.text = tr("Stufe %d") % level
 	chance_button.visible = cost >= 0
-	chance_button.text = "Stufe %d · %d Gold" % [level + 1, cost]
+	chance_button.text = tr("Stufe %d · %d Gold") % [level + 1, cost]
 	chance_button.disabled = not enabled
 	_chance_level = level
 	if enabled:
@@ -501,7 +501,7 @@ func set_chance(level: int, cost: int, enabled: bool) -> void:
 			chance_button.remove_theme_stylebox_override(k)
 		for k in ["font_color", "font_hover_color", "font_pressed_color"]:
 			chance_button.remove_theme_color_override(k)
-	chance_bubble.set_text("Genug Gold: Chance auf Stufe %d verbessern!" % (level + 1))
+	chance_bubble.set_text(tr("Genug Gold: Chance auf Stufe %d verbessern!") % (level + 1))
 	_show_chance_bubble(enabled and _bubble_dismissed_level != level)
 
 
@@ -619,7 +619,7 @@ func set_options(options: Array) -> void:
 		var main := _main_index
 		var big := _button(o.label, actions_col, func(): option_chosen.emit(main))
 		_main_button = big
-		big.tooltip_text = o.label + " (Leertaste)"
+		big.tooltip_text = o.label + " " + tr("(Leertaste)")
 		big.clip_text = true
 		big.custom_minimum_size = Vector2(260, 56)
 		big.add_theme_font_size_override("font_size", 18)
@@ -627,7 +627,7 @@ func set_options(options: Array) -> void:
 			UiTheme.accent_button(big, UiTheme.PURPLE, Color.WHITE, Color(UiTheme.PURPLE_LIGHT, 0.55))
 		else:
 			UiTheme.accent_button(big, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.45))
-		var hint: String = "Leertaste" + (" · " + str(o.hint) if o.has("hint") else "")
+		var hint: String = tr("Leertaste") + (" · " + str(o.hint) if o.has("hint") else "")
 		UiUtil.wrap_label(hint, actions_col, 260).add_theme_color_override("font_color", UiTheme.MUTED)
 	for i in options.size():
 		if i == _main_index:
@@ -675,8 +675,8 @@ func set_waves(waves: Array) -> void:
 		var head := HBoxContainer.new()
 		head.add_theme_constant_override("separation", 8)
 		v.add_child(head)
-		UiUtil.label("Welle %d" % w.number, head, 14)
-		var t := UiUtil.label(w.type, head, 14)
+		UiUtil.label(tr("Welle %d") % w.number, head, 14)
+		var t := UiUtil.label(tr(w.type), head, 14)
 		t.add_theme_color_override("font_color", WaveIcon.COLORS.get(w.type, UiTheme.TEXT))
 		if w.state != "":
 			var st := UiUtil.label(w.state, head, 12)
@@ -694,7 +694,7 @@ func show_message(text: String) -> void:
 
 ## delta: wie viel länger der Weg seit Beginn der Bauphase ist (0 = nicht anzeigen).
 func set_path_length(cells: int, delta: int) -> void:
-	path_value.text = "%d Felder" % cells
+	path_value.text = tr("%d Felder") % cells
 	if delta != 0:
 		path_value.text += " (%+d)" % delta
 	path_value.add_theme_color_override("font_color", UiTheme.HAVE if delta > 0 else (UiTheme.MISSING if delta < 0 else UiTheme.TEXT))
@@ -705,7 +705,7 @@ func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int
 	help_panel.hide()
 	game_over_title.text = "Gewonnen!" if victory else "Verloren"
 	game_over_title.add_theme_color_override("font_color", UiTheme.GOLD if victory else UiTheme.MISSING)
-	game_over_stats.text = "Schwierigkeit: " + Session.difficulty_name() + "\nWelle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder" % [wave, waves, lives, kills, path_cells]
+	game_over_stats.text = tr("Schwierigkeit: ") + tr(Session.difficulty_name()) + "\n" + tr("Welle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder") % [wave, waves, lives, kills, path_cells]
 	editor_button.visible = Session.return_scene != Session.MAIN_MENU
 	editor_button.text = "Zurück zum Map-Editor" if Session.return_scene == Session.MAP_EDITOR else "Zurück zum Tower-Editor"
 	game_over.show()

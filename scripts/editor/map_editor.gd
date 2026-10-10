@@ -157,7 +157,7 @@ func _build_ui() -> void:
 		b.button_pressed = t == tool
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size.y = 38
-		b.tooltip_text = "Taste %d" % key
+		b.tooltip_text = tr("Taste %d") % key
 		b.pressed.connect(func(): tool = t)
 		lv.add_child(b)
 		var h := HBoxContainer.new()
@@ -173,7 +173,7 @@ func _build_ui() -> void:
 		sw.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		sw.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		h.add_child(sw)
-		var name_l := UiUtil.label(str(TOOL_NAMES[t]).split(" (")[0], h, 15)
+		var name_l := UiUtil.label(tr(str(TOOL_NAMES[t]).split(" (")[0]), h, 15)
 		name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var key_l := UiUtil.label(str(key), h, 12)
@@ -254,7 +254,7 @@ func _build_ui() -> void:
 	wave_option = OptionButton.new()
 	wave_ids = Database.wave_sets.keys()
 	for wid in wave_ids:
-		wave_option.add_item(str(Database.wave_sets[wid].get("name", wid)))
+		wave_option.add_item(tr(str(Database.wave_sets[wid].get("name", wid))))
 	wave_option.item_selected.connect(func(i):
 		map.wave_set = wave_ids[i]
 		_touch())
@@ -314,7 +314,7 @@ func _vgap(h: float) -> Control:
 func _touch() -> void:
 	dirty = true
 	if dirty_label != null:
-		dirty_label.text = "● Ungespeicherte Änderungen"
+		dirty_label.text = "● " + tr("Ungespeicherte Änderungen")
 
 
 func _set_clean() -> void:
@@ -348,7 +348,7 @@ func _refresh_load_list() -> void:
 	map_entries = Database.list_maps()
 	load_option.clear()
 	for e in map_entries:
-		load_option.add_item(e.name)
+		load_option.add_item(tr(e.name))
 
 
 func _load_selected() -> void:
@@ -357,23 +357,23 @@ func _load_selected() -> void:
 	var m := MapData.load_file(map_entries[load_option.selected].path)
 	if m != null:
 		_set_map(m)
-		status_label.text = "Geladen: " + m.name
+		status_label.text = tr("Geladen: ") + tr(m.name)
 
 
 func _save() -> void:
 	if not _valid_id(map.id):
-		status_label.text = "Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt."
+		status_label.text = tr("Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt.")
 		return
 	var path := Database.writable_path("maps", map.id)
 	if map.save_file(path):
-		status_label.text = "Gespeichert: " + path
+		status_label.text = tr("Gespeichert: ") + path
 		_refresh_load_list()
 		_set_clean()
 
 
 func _test() -> void:
 	if pathfinder_path().is_empty():
-		status_label.text = "Kein gültiger Weg, so kann nicht getestet werden."
+		status_label.text = tr("Kein gültiger Weg, so kann nicht getestet werden.")
 		return
 	Session.editor_map = map.duplicate_map()
 	Session.map_override = map.duplicate_map()
@@ -397,7 +397,7 @@ func _process(_delta: float) -> void:
 	var size := 1 if _is_point_tool() else brush
 	var a := board.mouse_cell(camera_rig.camera) if size == 1 else board.mouse_anchor(camera_rig.camera, size)
 	if a != board.hover_cell or size != board.hover_size:
-		cell_label.text = "Feld %d, %d" % [a.x, a.y] if map.in_bounds(a) else ""
+		cell_label.text = tr("Feld %d, %d") % [a.x, a.y] if map.in_bounds(a) else ""
 		board.hover_cell = a
 		board.hover_size = size
 		board.refresh_hover()
@@ -488,10 +488,10 @@ func _on_map_changed() -> void:
 	board.path_points = pts
 	board.path_color = Color(0.3, 1, 0.3, 0.8)
 	if cells.is_empty():
-		path_label.text = "✗ Kein gültiger Weg: Spawn, Checkpoints und Ziel müssen verbunden sein"
+		path_label.text = "✗ " + tr("Kein gültiger Weg: Spawn, Checkpoints und Ziel müssen verbunden sein")
 		path_label.add_theme_color_override("font_color", UiTheme.MISSING)
 	else:
-		path_label.text = "✓ Weg gültig · %d Felder ohne Labyrinth · %d Checkpoints" % [cells.size(), map.checkpoints.size()]
+		path_label.text = "✓ " + tr("Weg gültig · %d Felder ohne Labyrinth · %d Checkpoints") % [cells.size(), map.checkpoints.size()]
 		path_label.add_theme_color_override("font_color", UiTheme.HAVE)
 	_touch()
 	board.rebuild()

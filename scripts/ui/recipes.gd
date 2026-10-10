@@ -43,7 +43,7 @@ static func status(id: String, owned: Array) -> Dictionary:
 	for i in recipe.size():
 		var ing: Dictionary = recipe[i]
 		if ing.has("any_of"):
-			lines.append({"text": "einer von:", "have": null, "new": false, "indent": 0})
+			lines.append({"text": str(TranslationServer.translate("einer von:")), "have": null, "new": false, "indent": 0})
 			var got: Variant = null
 			for alt in ing.any_of:
 				got = _take(pool, alt)

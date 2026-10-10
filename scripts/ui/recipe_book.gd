@@ -52,7 +52,7 @@ static func card(id: String, have: Array, on_pin: Callable, compact := false, no
 	var name_l := UiUtil.label(Database.tower_label(id, 0), head, 15)
 	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_l.clip_text = true
-	var status_text := "noch %d" % st.missing
+	var status_text := str(TranslationServer.translate("noch %d")) % st.missing
 	var status_col := UiTheme.MISSING
 	if ready:
 		status_text = "baubar"

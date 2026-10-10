@@ -278,27 +278,27 @@ func _nova(target, ab: Dictionary) -> void:
 func info_text() -> String:
 	var lines := [label()]
 	if is_trap():
-		lines.append("Falle – Gegner laufen darüber" + (", noch %d× verschiebbar" % moves_left if moves_left > 0 else ""))
+		lines.append(tr("Falle – Gegner laufen darüber") + (tr(", noch %d× verschiebbar") % moves_left if moves_left > 0 else ""))
 	if can_attack():
 		var dmg: Array = stats.get("damage", [0, 0])
-		var bonus := "  (+%d%% Aura/Rang)" % int((damage_bonus + kill_bonus()) * 100) if damage_bonus + kill_bonus() > 0 else ""
-		lines.append("Schaden: %d–%d%s" % [int(dmg[0]), int(dmg[1]), bonus])
-		lines.append("Abklingzeit: %.2fs%s" % [cooldown(), "  (+%d%% Aura)" % int(speed_bonus * 100) if speed_bonus > 0 else ""])
-		var reach := "Fläche %d×%d Felder" % [Board3D.TRAP_CELLS, Board3D.TRAP_CELLS] if _square_hitbox() else "%.1f Towerbreiten" % range_cells()
-		lines.append("Reichweite: %s%s" % [reach, " (Luft %.1f)" % float(stats.range_air) if stats.has("range_air") else ""])
+		var bonus := tr("  (+%d%% Aura/Rang)") % int((damage_bonus + kill_bonus()) * 100) if damage_bonus + kill_bonus() > 0 else ""
+		lines.append(tr("Schaden: %d–%d%s") % [int(dmg[0]), int(dmg[1]), bonus])
+		lines.append(tr("Abklingzeit: %.2fs%s") % [cooldown(), tr("  (+%d%% Aura)") % int(speed_bonus * 100) if speed_bonus > 0 else ""])
+		var reach := tr("Fläche %d×%d Felder") % [Board3D.TRAP_CELLS, Board3D.TRAP_CELLS] if _square_hitbox() else tr("%.1f Towerbreiten") % range_cells()
+		lines.append(tr("Reichweite: %s%s") % [reach, tr(" (Luft %.1f)") % float(stats.range_air) if stats.has("range_air") else ""])
 		if damage_type() != "":
-			lines.append("Schadensart: " + Database.DAMAGE_TYPE_NAMES.get(damage_type(), damage_type()))
+			lines.append(tr("Schadensart: ") + tr(Database.DAMAGE_TYPE_NAMES.get(damage_type(), damage_type())))
 	match target_mode():
 		"air":
-			lines.append("Wirkt nur gegen Luft")
+			lines.append(tr("Wirkt nur gegen Luft"))
 		"ground":
-			lines.append("Wirkt nur gegen Boden")
+			lines.append(tr("Wirkt nur gegen Boden"))
 	for ab in abilities():
 		lines.append("• " + Abilities.describe(ab))
 	if def.has("description"):
-		lines.append(str(def.description))
+		lines.append(tr(str(def.description)))
 	if not is_new:
-		lines.append("Kills: %d   Schaden gesamt: %d" % [kills, int(total_damage)])
+		lines.append(tr("Kills: %d   Schaden gesamt: %d") % [kills, int(total_damage)])
 	return "\n".join(lines)
 
 

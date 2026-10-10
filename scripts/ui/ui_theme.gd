@@ -82,6 +82,6 @@ static func accent_button(b: Button, bg: Color, fg: Color, glow: Color) -> void:
 
 ## Kleines Label mit Großbuchstaben als Abschnittstitel.
 static func caption(text: String, parent: Node) -> Label:
-	var l := UiUtil.label(text.to_upper(), parent, 12)
+	var l := UiUtil.label(str(TranslationServer.translate(text)).to_upper(), parent, 12)
 	l.add_theme_color_override("font_color", MUTED)
 	return l

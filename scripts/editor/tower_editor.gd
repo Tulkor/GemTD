@@ -120,11 +120,11 @@ func _refresh_list(select_id := "") -> void:
 			var def: Dictionary = Database.towers[id]
 			if _group(def) != g:
 				continue
-			var label := "%s  [%s]" % [def.get("name", id), id]
+			var label := "%s  [%s]" % [tr(str(def.get("name", id))), id]
 			if q != "" and not q in label.to_lower():
 				continue
 			if not header_added:
-				var h := tower_list.add_item(["GEMS", "SPEZIAL-TOWER", "FALLEN"][g], null, false)
+				var h := tower_list.add_item(tr(["GEMS", "SPEZIAL-TOWER", "FALLEN"][g]), null, false)
 				tower_list.set_item_custom_fg_color(h, UiTheme.MUTED)
 				tower_list.set_item_disabled(h, true)
 				list_ids.append("")
@@ -148,7 +148,7 @@ func _on_tower_selected(i: int) -> void:
 func _new_tower(category: String) -> void:
 	current = {
 		"id": "neuer_tower",
-		"name": "Neuer Tower",
+		"name": tr("Neuer Tower"),
 		"category": category,
 		"color": "#ffffff",
 		"targets": "both",
@@ -165,7 +165,7 @@ func _duplicate() -> void:
 		return
 	current = current.duplicate(true)
 	current["id"] = str(current.get("id", "tower")) + "_kopie"
-	current["name"] = str(current.get("name", "")) + " (Kopie)"
+	current["name"] = str(current.get("name", "")) + tr(" (Kopie)")
 	tower_list.deselect_all()
 	_build_form()
 
@@ -183,7 +183,7 @@ func _build_form() -> void:
 	if current.is_empty():
 		return
 
-	var title := UiUtil.label(str(current.get("name", "")), form, 26)
+	var title := UiUtil.label(tr(str(current.get("name", ""))), form, 26)
 	title.add_theme_color_override("font_color", Color.from_string(str(current.get("color", "#ffffff")), Color.WHITE).lerp(Color.WHITE, 0.25))
 	var general := _section("Allgemein")
 	_line_edit("ID (Dateiname)", "id", general)
@@ -247,7 +247,7 @@ func _section(title: String) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	card.add_child(box)
-	var parts := title.split(" (", true, 1)
+	var parts := tr(title).split(" (", true, 1)
 	UiUtil.label(parts[0], box, 18).add_theme_color_override("font_color", UiTheme.GOLD)
 	if parts.size() > 1:
 		var hint := UiUtil.label(parts[1].trim_suffix(")"), box, 13)
@@ -277,7 +277,7 @@ func _ingredient_list(box: Node, recipe: Array) -> void:
 			var r0 := HBoxContainer.new()
 			box.add_child(r0)
 			var names: Array = ing.any_of.map(func(a): return Database.tower_label(str(a.get("tower", "")), int(a.get("tier", 0))))
-			UiUtil.label("Einer von: " + ", ".join(names), r0)
+			UiUtil.label(tr("Einer von: ") + ", ".join(names), r0)
 			_any_of_row(box, ing.any_of)
 			UiUtil.button("Entfernen", r0, func():
 				recipe.remove_at(k)
@@ -287,12 +287,12 @@ func _ingredient_list(box: Node, recipe: Array) -> void:
 			ing["tower"] = ids[0]
 		var r := HBoxContainer.new()
 		box.add_child(r)
-		var o := _option(r, ids.map(func(id): return Database.towers[id].get("name", id)), ids.find(ing.get("tower", "")))
+		var o := _option(r, ids.map(func(id): return tr(str(Database.towers[id].get("name", id)))), ids.find(ing.get("tower", "")))
 		o.item_selected.connect(func(i): ing["tower"] = ids[i])
 		UiUtil.label("Stufe", r)
 		var tier_labels := []
 		for t in Database.TIER_NAMES.size():
-			tier_labels.append("%d – %s" % [t + 1, Database.TIER_NAMES[t]])
+			tier_labels.append("%d – %s" % [t + 1, tr(Database.TIER_NAMES[t])])
 		var to := _option(r, tier_labels, int(ing.get("tier", 0)))
 		to.item_selected.connect(func(i): ing["tier"] = i)
 		UiUtil.button("Entfernen", r, func():
@@ -333,7 +333,7 @@ func _build_upgrades() -> void:
 		var up: Dictionary = ups[i]
 		if not up.has("recipe"):
 			up["recipe"] = []
-		UiUtil.label("Stufe %d → %d" % [i + 1, i + 2], box, 16)
+		UiUtil.label(tr("Stufe %d → %d") % [i + 1, i + 2], box, 16)
 		UiUtil.spin(UiUtil.row("Goldkosten", box), float(up.get("cost", 0)), 0, 100000, 1, func(x): up["cost"] = int(x))
 		_ingredient_list(box, up["recipe"])
 
@@ -356,9 +356,9 @@ func _build_tiers() -> void:
 
 		var head := HBoxContainer.new()
 		v.add_child(head)
-		var title := "Stufe %d" % (i + 1)
+		var title := tr("Stufe %d") % (i + 1)
 		if current.get("category", "gem") == "gem" and i < Database.TIER_NAMES.size():
-			title += " – " + Database.TIER_NAMES[i]
+			title += " – " + tr(Database.TIER_NAMES[i])
 		UiUtil.label(title, head, 16)
 		UiUtil.button("Entfernen", head, func():
 			tiers.remove_at(i)
@@ -405,11 +405,11 @@ func _build_tiers() -> void:
 func _validate() -> String:
 	var id := str(current.get("id", ""))
 	if RegEx.create_from_string("^[a-z0-9_]+$").search(id) == null:
-		return "Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt."
+		return tr("Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt.")
 	if (current.get("tiers", []) as Array).is_empty():
-		return "Der Tower braucht mindestens eine Stufe."
+		return tr("Der Tower braucht mindestens eine Stufe.")
 	if current.get("category") == "special" and (current.get("recipe", []) as Array).is_empty():
-		return "Ein Spezial-Tower braucht ein Rezept."
+		return tr("Ein Spezial-Tower braucht ein Rezept.")
 	return ""
 
 
@@ -428,11 +428,11 @@ func _save() -> bool:
 		data["upgrades"] = (data["upgrades"] as Array).slice(0, maxi((data["tiers"] as Array).size() - 1, 0))
 	var path := Database.writable_path("towers", str(data.id))
 	if not Database.save_json(path, data):
-		status_label.text = "Speichern fehlgeschlagen: " + path
+		status_label.text = tr("Speichern fehlgeschlagen: ") + path
 		return false
 	Database.reload()
 	_refresh_list(str(data.id))
-	status_label.text = "Gespeichert: " + path
+	status_label.text = tr("Gespeichert: ") + path
 	return true
 
 
