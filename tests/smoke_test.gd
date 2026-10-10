@@ -347,10 +347,16 @@ func _ready() -> void:
 	game._gold_frac = 0.0
 	for k in 4:
 		game.earn_gold(1)
-	check(game.gold == 3, "Goldeinkommen ×0,75: 4 × 1 Gold ergibt 3 Gold (%d)" % game.gold)
-	check(is_equal_approx(game.gold_income_factor(15), 0.75) and is_equal_approx(game.gold_income_factor(30), 1.0)
-		and is_equal_approx(game.gold_income_factor(50), 1.0) and game.gold_income_factor(22) > 0.75 and game.gold_income_factor(22) < 1.0,
-		"Goldeinkommen steigt von Welle 15 bis 30 linear von 0,75 auf 1,0")
+	var g_start := float(Database.balance.gold_income_factor)
+	check(game.gold == floori(4 * g_start), "Goldeinkommen ×%s: 4 × 1 Gold ergibt %d Gold" % [g_start, game.gold])
+	var ramp: Dictionary = Database.balance.gold_income_ramp
+	var g_from := int(ramp.from_wave)
+	var g_to := int(ramp.to_wave)
+	var g_top := float(ramp.to_factor)
+	var g_mid: float = game.gold_income_factor((g_from + g_to) / 2)
+	check(is_equal_approx(game.gold_income_factor(g_from), g_start) and is_equal_approx(game.gold_income_factor(g_to), g_top)
+		and is_equal_approx(game.gold_income_factor(g_to + 10), g_top) and g_mid > g_start and g_mid < g_top,
+		"Goldeinkommen steigt von Welle %d bis %d linear von %s auf %s" % [g_from, g_to, g_start, g_top])
 	game.gold = old_gold
 	game._refresh_hud()
 
