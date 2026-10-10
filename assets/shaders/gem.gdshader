@@ -5,7 +5,7 @@ render_mode blend_mix, depth_draw_always, cull_back, specular_schlick_ggx;
 
 uniform vec4 color : source_color = vec4(1.0);
 /// Deckkraft in der Mitte der Flächen (zum Rand hin wird es dichter).
-uniform float opacity = 0.38;
+uniform float opacity = 0.62;
 uniform float glow = 0.25;
 /// Höhe der Sockel-Oberseite (Welt-Y); darüber wird der Stein von unten angestrahlt.
 uniform float base_top = 0.14;

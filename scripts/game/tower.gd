@@ -6,7 +6,7 @@ extends Node3D
 
 const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
 ## Deckkraft für Modelle mit eigener Textur ("model_tint": false)
-const GEM_OPACITY_TEXTURED := 0.7
+const GEM_OPACITY_TEXTURED := 0.85
 ## Helligkeit der Lichtscheibe im Sockel (über 1 = leuchtet im Glow)
 const BASE_LIGHT_ENERGY := 1.5
 

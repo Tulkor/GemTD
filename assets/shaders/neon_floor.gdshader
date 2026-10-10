@@ -17,6 +17,8 @@ uniform float line_energy = 1.0;
 uniform float edge_energy = 2.6;
 /// Jede wievielte Gitterlinie hell ist; die übrigen werden mit minor_energy/minor_alpha gedämpft
 uniform float major_every = 5.0;
+/// Ursprung des Gitters in Feldern (erstes freies Feld), damit die hellen Linien am Feldrand liegen
+uniform vec2 grid_origin = vec2(0.0);
 uniform float minor_energy = 0.5;
 uniform float minor_alpha = 0.6;
 /// Linienbreite in Einheiten (1 = Towerbreite)
@@ -61,13 +63,14 @@ void fragment() {
 
 	if (b < 0.5) {
 		// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
-		vec2 gg = g / grid_cells;
+		vec2 go = g - grid_origin;
+		vec2 gg = go / grid_cells;
 		vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
 		vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
 		l.a *= minor_alpha;
 		col = mix(col, l.rgb, l.a);
 		alpha = max(alpha, l.a);
-		vec2 gm = g / (grid_cells * major_every);
+		vec2 gm = go / (grid_cells * major_every);
 		vec2 dm = abs(fract(gm + 0.5) - 0.5) * grid_cells * major_every * cell;
 		vec4 m = tube(min(dm.x, dm.y), line_width, line_color.rgb, line_energy, aa);
 		col = mix(col, m.rgb, m.a);

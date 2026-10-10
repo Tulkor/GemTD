@@ -268,10 +268,14 @@ func _rebuild_floor() -> void:
 	_floor.mesh = plane
 	_floor.position = to_3d(size / 2.0, 0.001)
 	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)  # RGBA8: L8 mit ungerader Breite wird im GL-Renderer verschoben hochgeladen
+	var origin := Vector2i(map.width, map.height)  # erstes freies Feld (oben links)
 	for y in map.height:
 		for x in map.width:
 			if map.get_tile(Vector2i(x, y)) == MapData.BLOCKED:
 				img.set_pixel(x, y, Color.WHITE)
+			else:
+				origin = origin.min(Vector2i(x, y))
+	_floor_mat.set_shader_parameter("grid_origin", Vector2(origin))
 	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
 	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
 
