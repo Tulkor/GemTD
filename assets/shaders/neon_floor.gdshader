@@ -19,8 +19,8 @@ uniform float edge_energy = 2.6;
 uniform float major_every = 5.0;
 /// Ursprung des Gitters in Feldern (erstes freies Feld), damit die hellen Linien am Feldrand liegen
 uniform vec2 grid_origin = vec2(0.0);
-uniform float minor_energy = 0.5;
-uniform float minor_alpha = 0.6;
+uniform float minor_energy = 0.3;
+uniform float minor_alpha = 0.38;
 /// Linienbreite in Einheiten (1 = Towerbreite)
 uniform float line_width = 0.014;
 uniform float halo_width = 0.08;
