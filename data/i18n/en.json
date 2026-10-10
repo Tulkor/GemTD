@@ -377,5 +377,6 @@
 	"Deine Adresse: %s": "Your address: %s",
 	"Nicht verbunden": "Not connected",
 	"(du)": "(you)",
-	"Mehrspieler · %d verbunden": "Multiplayer · %d connected"
+	"Mehrspieler · %d verbunden": "Multiplayer · %d connected",
+	"%d Gold": "%d gold"
 }
