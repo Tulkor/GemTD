@@ -22,6 +22,7 @@ const ROCK_MODELS := [
 const ROCK_SIZE := 0.94
 const ROCK_MAX_HEIGHT := 0.75
 const ROCK_SHADER := preload("res://assets/shaders/rock.gdshader")
+const ROCK_OUTLINE_SHADER := preload("res://assets/shaders/outline.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
@@ -78,6 +79,7 @@ var _floor: MeshInstance3D
 var _floor_mat: ShaderMaterial
 var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
 var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
+var _rock_outlines: Array = []  ## je Variante die Kontur-Hülle (oder null)
 var _path: MultiMeshInstance3D
 var _markers: Node3D
 var _hover: MeshInstance3D
@@ -146,8 +148,17 @@ func _ready() -> void:
 		mmi.material_override = rock_mat
 		_rocks.append(mmi)
 		_rock_fits.append(m[1])
+		# Kontur: eigene Hülle mit geglätteten Normalen (die Modelle sind flach schattiert)
+		var hull := _multimesh(ModelLoader.smooth_normals(m[0]), false)
+		var outline := ShaderMaterial.new()
+		outline.shader = ROCK_OUTLINE_SHADER
+		outline.render_priority = 1
+		hull.material_override = outline
+		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_rock_outlines.append(hull)
 	if _rocks.is_empty():
 		_rocks.append(_multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK))
+		_rock_outlines.append(null)
 		_rock_fits.append(Transform3D(Basis(), Vector3(0, ROCK_HEIGHT / 2.0, 0)))
 	var dot := SphereMesh.new()
 	dot.radius = 0.055
@@ -296,12 +307,17 @@ func refresh_rocks() -> void:
 	for i in _rocks.size():
 		var mm: MultiMesh = _rocks[i].multimesh
 		mm.instance_count = buckets[i].size()
+		var om: MultiMesh = _rock_outlines[i].multimesh if _rock_outlines[i] != null else null
+		if om != null:
+			om.instance_count = buckets[i].size()
 		for j in buckets[i].size():
 			var c: Vector2i = buckets[i][j]
 			# leicht gedreht, damit nicht alle Steine gleich aussehen
 			var turn := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 4) * PI / 2.0)  # nur Vierteldrehungen: Stein bleibt in seinen Feldern
 			var place := Transform3D(turn, to_3d(footprint_center(c)))
 			mm.set_instance_transform(j, place * _rock_fits[i])
+			if om != null:
+				om.set_instance_transform(j, place * _rock_fits[i])
 
 
 func refresh_path() -> void:

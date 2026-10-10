@@ -140,3 +140,28 @@ static func make_translucent(n: Node, alpha: float, glow := Color.BLACK) -> void
 				n.set_surface_override_material(i, m)
 	for c in n.get_children():
 		make_translucent(c, alpha, glow)
+
+
+## Kopie des Meshes mit geglätteten Normalen: Ecken an derselben Position bekommen dieselbe
+## (gemittelte) Normale. Für Konturen per aufgeblähter Hülle, die sonst an harten Kanten aufreißen.
+static func smooth_normals(mesh: Mesh) -> ArrayMesh:
+	var out := ArrayMesh.new()
+	for si in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(si)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var sums := {}
+		for i in verts.size():
+			var key := (verts[i] * 1000.0).round()
+			sums[key] = sums.get(key, Vector3.ZERO) + (normals[i] if i < normals.size() else Vector3.UP)
+		var smooth := PackedVector3Array()
+		smooth.resize(verts.size())
+		for i in verts.size():
+			smooth[i] = (sums[(verts[i] * 1000.0).round()] as Vector3).normalized()
+		var keep := []
+		keep.resize(Mesh.ARRAY_MAX)
+		keep[Mesh.ARRAY_VERTEX] = verts
+		keep[Mesh.ARRAY_NORMAL] = smooth
+		keep[Mesh.ARRAY_INDEX] = arrays[Mesh.ARRAY_INDEX]
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, keep)
+	return out
