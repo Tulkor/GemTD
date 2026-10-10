@@ -446,26 +446,90 @@ func _build_visual() -> void:
 ## Jeder Kristall passt in seine Kiste, schmale Modelle werden so nicht übermäßig hoch.
 func _gem_cluster(model_path: String, tint: Material, foot: float, base_h: float) -> Node3D:
 	var cfg: Array = GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)]
-	var spots: Array = CLUSTER_SPOTS[int(cfg[0])]
+	var n := int(cfg[0])
+	var layout := _splinter_layout(tower_id, n) if tier <= 1 else []
+	if layout.is_empty():
+		# äußere Kristalle leicht nach außen geneigt wie bei einer Druse
+		for i in n:
+			var spot: Vector2 = CLUSTER_SPOTS[n][i]
+			layout.append([spot, CLUSTER_VARY[i % CLUSTER_VARY.size()], 0.0 if spot == Vector2.ZERO else 12.0, -1.0])
 	var cluster := Node3D.new()
-	for i in spots.size():
-		var k: float = CLUSTER_VARY[i % CLUSTER_VARY.size()]
+	for i in layout.size():
+		var entry: Array = layout[i]
+		var k := float(entry[1])
 		var crystal := ModelLoader.instantiate_fit(model_path, float(cfg[1]) * foot * k, float(cfg[2]) * foot * k, tint)
 		if crystal == null:
 			break
-		var spot: Vector2 = spots[i] * foot
-		crystal.position = Vector3(spot.x, base_h, spot.y)
+		var spot: Vector2 = entry[0] * foot
+		var tilt := deg_to_rad(float(entry[2]))
 		var basis := Basis(Vector3.UP, i * 2.4)
-		if spot != Vector2.ZERO:
-			# äußere Kristalle leicht nach außen geneigt wie bei einer Druse
-			var out := Vector3(spot.x, 0.0, spot.y).normalized()
-			basis = Basis(Vector3.UP.cross(out).normalized(), deg_to_rad(12.0)) * basis
+		var lift := 0.0
+		if tilt > 0.0:
+			var dir := Vector3(spot.x, 0.0, spot.y)
+			if float(entry[3]) >= 0.0 or dir.is_zero_approx():
+				var a := deg_to_rad(maxf(float(entry[3]), 0.0))
+				dir = Vector3(cos(a), 0.0, sin(a))
+			basis = Basis(Vector3.UP.cross(dir.normalized()).normalized(), tilt) * basis
+			# geneigte Kristalle anheben, damit die Unterkante nicht im Sockel verschwindet
+			var box := ModelLoader.aabb(crystal, Transform3D())
+			lift = maxf(box.size.x, box.size.z) * 0.5 * sin(tilt) * 0.8
+		crystal.position = Vector3(spot.x, base_h + lift, spot.y)
 		crystal.basis = basis
 		cluster.add_child(crystal)
 	if cluster.get_child_count() == 0:
 		cluster.free()
 		return null
 	return cluster
+
+
+## Anordnung der Splitter (Stufe 0 und 1, n Kristalle), je Grundgem eine eigene.
+## Je Kristall: [Platz in Sockelbreiten, Größe, Neigung in Grad, Neigungsrichtung in Grad
+## (0 = +X, 90 = +Z, nach vorne zur Kamera) oder -1 = vom Sockelmittelpunkt weg].
+## Leer = Standardanordnung aus CLUSTER_SPOTS.
+static func _splinter_layout(id: String, n: int) -> Array:
+	var out := []
+	match id:
+		"ruby":  # Krone: Ring mit freier Mitte, alle nach außen geneigt
+			for i in n:
+				var a := deg_to_rad(-90.0 + 360.0 * i / n)
+				out.append([Vector2(cos(a), sin(a)) * 0.21, 1.0 - 0.1 * (i % 2), 22.0, -1.0])
+		"sapphire":  # Reihe quer über den Sockel, nach hinten größer
+			for i in n:
+				var t := float(i) / (n - 1)
+				out.append([Vector2(-0.28, 0.28).lerp(Vector2(0.28, -0.28), t), 0.75 + 0.4 * t, 6.0, 270.0])
+		"emerald":  # Druse: ein großer in der Mitte, kleine rundherum stark geneigt
+			out.append([Vector2.ZERO, 1.4, 0.0, -1.0])
+			for i in n - 1:
+				var a := deg_to_rad(45.0 + 360.0 * i / (n - 1))
+				out.append([Vector2(cos(a), sin(a)) * 0.24, 0.7, 34.0, -1.0])
+		"diamond":  # zwei Grüppchen in gegenüberliegenden Ecken
+			var back := n - floori(n / 2.0)
+			for i in n:
+				var group := Vector2(-0.16, -0.15) if i < back else Vector2(0.19, 0.17)
+				var j := i if i < back else i - back
+				var a := deg_to_rad(200.0 + 120.0 * j)
+				out.append([group + Vector2(cos(a), sin(a)) * 0.1, (0.95 if i < back else 0.78) - 0.06 * j, 10.0, -1.0])
+		"topaz":  # Bogen hinten, nach vorne offen, die Mitte am größten
+			for i in n:
+				var t := float(i) / (n - 1)
+				var a := deg_to_rad(lerpf(195.0, 345.0, t))
+				out.append([Vector2(cos(a), sin(a)) * 0.25 + Vector2(0.0, 0.06), 0.8 + 0.35 * sin(t * PI), 14.0, -1.0])
+		"amethyst":  # wie aus einer Wand gewachsen: hinten aufgereiht, alle nach vorne geneigt
+			var spots := [Vector2(-0.26, -0.2), Vector2(0.24, -0.24), Vector2(-0.04, -0.27), Vector2(0.06, 0.02), Vector2(-0.2, 0.12)]
+			var sizes := [1.0, 0.95, 1.1, 0.8, 0.72]
+			for i in n:
+				out.append([spots[i], sizes[i], 30.0, 70.0])
+		"aquamarine":  # Strauß: alle aus der Mitte, nach außen gefächert
+			out.append([Vector2.ZERO, 1.15, 0.0, -1.0])
+			for i in n - 1:
+				var a := deg_to_rad(20.0 + 360.0 * i / (n - 1))
+				out.append([Vector2(cos(a), sin(a)) * 0.07, 0.95, 38.0, -1.0])
+		"opal":  # verstreut liegend, einer steht
+			var spots := [Vector2(0.02, -0.02), Vector2(-0.22, -0.19), Vector2(0.21, -0.2), Vector2(0.22, 0.19), Vector2(-0.2, 0.2)]
+			var dirs := [0.0, 20.0, 150.0, 250.0, 300.0]
+			for i in n:
+				out.append([spots[i], 1.1 if i == 0 else 0.9, 0.0 if i == 0 else 62.0, dirs[i]])
+	return out
 
 
 ## Quader mit abgerundeten senkrechten Kanten, Unterseite auf Y = 0, Mitte auf X/Z = 0.
