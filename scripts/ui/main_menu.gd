@@ -100,32 +100,39 @@ func _build_settings() -> void:
 	panel.add_child(v)
 	var title := UiUtil.label("Einstellungen", v, 28)
 	title.add_theme_color_override("font_color", UiTheme.GOLD)
-	UiTheme.caption(tr("Sprache") + " / Language", v)
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 10)
-	v.add_child(h)
-	var group := ButtonGroup.new()
-	for lang in Loc.LANGUAGES:
-		var code: String = lang[0]
-		var b := Button.new()
-		b.text = lang[1]
-		b.auto_translate = false
-		b.toggle_mode = true
-		b.button_group = group
-		b.focus_mode = Control.FOCUS_NONE
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size.y = 52
-		b.add_theme_font_size_override("font_size", 18)
-		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 8))
-		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
-		b.set_pressed_no_signal(code == Loc.language)
-		b.pressed.connect(func():
-			if code != Loc.language:
-				Loc.set_language(code)
-				Session.reopen_settings = true
-				get_tree().reload_current_scene())
-		h.add_child(b)
-	var hint := UiUtil.wrap_label("Gilt sofort für Menüs, Editoren und das Spiel und bleibt gespeichert.", v, 400)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 12)
+	v.add_child(grid)
+
+	# Sprache: Wechsel lädt das Menü neu, damit alle Texte neu gebaut werden
+	var lang := _settings_option(tr("Sprache") + ("" if Loc.language == "en" else " / Language"), grid)
+	for l in Loc.LANGUAGES:
+		lang.add_item(l[1])
+	lang.select(maxi(Loc.LANGUAGES.map(func(l): return l[0]).find(Loc.language), 0))
+	lang.item_selected.connect(func(i):
+		Loc.set_language(Loc.LANGUAGES[i][0])
+		Session.reopen_settings = true
+		get_tree().reload_current_scene())
+
+	var mode := _settings_option(tr("Anzeige"), grid)
+	mode.add_item(tr("Fenster"))
+	mode.add_item(tr("Vollbild"))
+	mode.select(1 if Display.fullscreen else 0)
+
+	var res := _settings_option(tr("Auflösung"), grid)
+	for r in Display.RESOLUTIONS:
+		res.add_item("%d × %d" % [r.x, r.y])
+	res.select(maxi(Display.RESOLUTIONS.find(Display.resolution), 0))
+	res.disabled = Display.fullscreen
+	res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if Display.fullscreen else ""
+	res.item_selected.connect(func(i): Display.set_resolution(Display.RESOLUTIONS[i]))
+	mode.item_selected.connect(func(i):
+		Display.set_fullscreen(i == 1)
+		res.disabled = i == 1
+		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
+	var hint := UiUtil.wrap_label("Änderungen gelten sofort und bleiben gespeichert.", v, 400)
 	hint.add_theme_font_size_override("font_size", 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	v.add_child(_gap(4))
@@ -133,6 +140,18 @@ func _build_settings() -> void:
 	done.custom_minimum_size.y = 46
 	UiTheme.accent_button(done, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
 	settings.hide()
+
+
+func _settings_option(text: String, grid: GridContainer) -> OptionButton:
+	var l := UiUtil.label(text, grid, 15)
+	l.custom_minimum_size.x = 150
+	var o := OptionButton.new()
+	o.focus_mode = Control.FOCUS_NONE
+	o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	o.custom_minimum_size.y = 40
+	o.add_theme_font_size_override("font_size", 16)
+	grid.add_child(o)
+	return o
 
 
 func _open_settings() -> void:
@@ -243,7 +262,7 @@ func _update_selection() -> void:
 		cards[i].add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD, 10, 2))
 		cards[i].add_theme_stylebox_override("hover", UiTheme.box(Color("232836"), UiTheme.GOLD if on else UiTheme.BORDER_2, 10, 2))
 	play_button.disabled = maps.is_empty()
-	play_button.text = tr("Spielen: %s") % maps[selected].name if not maps.is_empty() else tr("Spielen")
+	play_button.text = tr("Spielen: %s") % tr(maps[selected].name) if not maps.is_empty() else tr("Spielen")
 
 
 func _play() -> void:

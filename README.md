@@ -16,7 +16,9 @@ Im Hauptmenü Map wählen und *Spielen*.
 Kamera: WASD/Pfeile, Maus an den Fensterrand oder mit gedrückter rechter Maustaste ziehen verschiebt, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
 Leertaste: große Aktion unten rechts (Behalten, bzw. lila One-Shot). R: Rezeptbuch.
 
-**Oberfläche:** Leiste oben (Welle, Leben, Gold, Chance-Stufe, Tempo), darunter das Phasenbanner. Reicht das Gold für die nächste Chance-Stufe, zeigt eine goldene Sprechblase darauf (Klick verbessert, × blendet sie bis zur nächsten Stufe aus). Der Menü-Knopf fragt vorher nach („Spiel verlassen?“), das Spiel ist solange pausiert.
+**Oberfläche:** Leiste oben (Welle, Leben, Gold, Chance-Stufe, Tempo), darunter das Phasenbanner. Die Chance-Stufe (bessere Gems) steigt automatisch mit der Welle: Stufe 1 ab Welle 3, dann ab 6, 10, 13, 17, 20, 23 und 27 (`"wave"` in `chance_levels` in `data/balance.json`). Dafür gibt es bis Welle 28 nur 70 % des Golds aus Kills und Fähigkeiten (`gold_income_factor`), danach steigt der Anteil linear bis Welle 35 auf 135 % (`gold_income_ramp`). Der Menü-Knopf fragt vorher nach („Spiel verlassen?“), das Spiel ist solange pausiert.
+
+**Einstellungen** (Hauptmenü): Sprache Deutsch/Englisch, Fenster oder Vollbild, Auflösung. Gespeichert in `user://settings.cfg`. Englische Texte stehen in `data/i18n/en.json` (deutscher Text → englischer Text); neue Texte im Code mit `tr("…")` umschließen und dort eintragen.
 Unten die Auswahlkarte: die neuen Gems der Runde (lila Rand = Zutat für einen One-Shot/Spezial-Tower),
 Werte des angeklickten Towers, „Wird gebraucht für“ mit allen Rezepten, in denen er vorkommt, und die Aktionen.
 Im Rezeptbuch (R) stehen alle Spezial-Rezepte, Zutaten grün (✓ vorhanden) oder rot (✗ fehlt).

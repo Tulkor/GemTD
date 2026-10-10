@@ -5,7 +5,6 @@ extends CanvasLayer
 
 signal option_chosen(index: int)
 signal round_gem_selected(index: int)
-signal chance_upgrade_requested
 signal speed_selected(factor: float)
 signal menu_requested
 signal main_menu_requested
@@ -19,7 +18,6 @@ signal debug_wave_requested(number: int)
 
 const BANNER_TOP := 64.0
 const LEFT_TOP := 120.0
-const BUBBLE_SHIFT := 48.0
 const SPEEDS := [1.0, 2.0, 4.0]
 
 var root: Control
@@ -33,11 +31,7 @@ var game_over_title: Label
 var game_over_stats: Label
 var editor_button: Button
 var chance_value: Label
-var chance_button: Button
-var chance_bubble: SpeechBubble
 var left_col: VBoxContainer
-var _chance_level := -1
-var _bubble_dismissed_level := -1
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_button: Button
@@ -116,16 +110,6 @@ func _ready() -> void:
 	message_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	message_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	root.add_child(message_label)
-
-	# Erinnerung, sobald das Gold für die nächste Chance-Stufe reicht
-	chance_bubble = SpeechBubble.new()
-	chance_bubble.target = chance_button
-	chance_bubble.hide()
-	root.add_child(chance_bubble)
-	chance_bubble.pressed.connect(func(): chance_upgrade_requested.emit())
-	chance_bubble.dismissed.connect(func():
-		_bubble_dismissed_level = _chance_level
-		_show_chance_bubble(false))
 
 	recipe_book = RecipeBook.new()
 	root.add_child(recipe_book)
@@ -218,8 +202,6 @@ func _build_top_bar() -> void:
 	path_value = _chip("Weg", h)
 	path_value.get_parent().get_parent().tooltip_text = "Länge des Laufwegs der Bodengegner in Feldern (ein Tower ist 2 Felder breit).\nIn Klammern: wie viel länger der Weg in dieser Bauphase geworden ist."
 	chance_value = _chip("Chance", h)
-	chance_button = _button("", h, func(): chance_upgrade_requested.emit())
-	chance_button.tooltip_text = "Bessere Gems: höhere Chance-Stufe gegen Gold"
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(fill)
@@ -487,32 +469,11 @@ func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:
 	gold_value.text = str(gold)
 
 
-## level: aktuelle Chance-Stufe, cost: Kosten der nächsten (-1 = schon maximal).
-func set_chance(level: int, cost: int, enabled: bool) -> void:
+## level: aktuelle Chance-Stufe, next_wave: ab dieser Welle gilt die nächste (-1 = schon maximal).
+func set_chance(level: int, next_wave: int) -> void:
 	chance_value.text = tr("Stufe %d") % level
-	chance_button.visible = cost >= 0
-	chance_button.text = tr("Stufe %d · %d Gold") % [level + 1, cost]
-	chance_button.disabled = not enabled
-	_chance_level = level
-	if enabled:
-		UiTheme.accent_button(chance_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
-	else:
-		for k in ["normal", "hover", "pressed", "disabled"]:
-			chance_button.remove_theme_stylebox_override(k)
-		for k in ["font_color", "font_hover_color", "font_pressed_color"]:
-			chance_button.remove_theme_color_override(k)
-	chance_bubble.set_text(tr("Genug Gold: Chance auf Stufe %d verbessern!") % (level + 1))
-	_show_chance_bubble(enabled and _bubble_dismissed_level != level)
-
-
-func _show_chance_bubble(on: bool) -> void:
-	if chance_bubble.visible == on:
-		return
-	chance_bubble.visible = on
-	# Banner und linke Spalte rutschen unter die Sprechblase, damit sie nichts verdeckt
-	banner.offset_top = BANNER_TOP + (BUBBLE_SHIFT if on else 0.0)
-	left_col.offset_top = LEFT_TOP + (BUBBLE_SHIFT if on else 0.0)
-	_recenter.call_deferred()
+	chance_value.get_parent().get_parent().tooltip_text = tr("Bessere Gems: die Chance-Stufe steigt automatisch.") + "\n" + \
+		(tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht"))
 
 
 ## oneshot: Text für die lila Markierung, leer = keine.

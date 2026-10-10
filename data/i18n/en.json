@@ -18,7 +18,6 @@
 	"Weg ohne Labyrinth: %d Felder": "Path without maze: %d tiles",
 	"%d zufällige Steine": "%d random rocks",
 	"Sprache": "Language",
-	"Gilt sofort für Menüs, Editoren und das Spiel und bleibt gespeichert.": "Applies right away to menus, editors and the game, and is saved.",
 	"Fertig": "Done",
 	"Welle": "Wave",
 	"Leben": "Lives",
@@ -335,5 +334,14 @@
 	"Entsteht, wenn man über Großartig hinaus kombiniert (4 gleiche Perfekte).": "Created by combining beyond Great (4 identical Perfect gems).",
 	"Neuer Tower": "New tower",
 	" (Kopie)": " (copy)",
-	"Gem TD+ (50 Level)": "Gem TD+ (50 levels)"
+	"Gem TD+ (50 Level)": "Gem TD+ (50 levels)",
+	"Anzeige": "Display",
+	"Fenster": "Windowed",
+	"Vollbild": "Fullscreen",
+	"Auflösung": "Resolution",
+	"Im Vollbild gilt die Auflösung des Bildschirms.": "In fullscreen the screen's own resolution is used.",
+	"Änderungen gelten sofort und bleiben gespeichert.": "Changes apply right away and are saved.",
+	"Bessere Gems: die Chance-Stufe steigt automatisch.": "Better gems: the chance level rises automatically.",
+	"Stufe %d ab Welle %d": "Level %d from wave %d",
+	"Höchste Stufe erreicht": "Highest level reached"
 }
