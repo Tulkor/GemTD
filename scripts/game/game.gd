@@ -49,6 +49,10 @@ var enemies_killed := 0
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
+## Mehrspieler (nur wenn verbunden): Stand senden und Mitspielern zuschauen.
+var net_sync: NetSync = null
+var net_panel: NetPanel = null
+var _next_enemy_id := 1
 
 
 func _ready() -> void:
@@ -101,6 +105,13 @@ func _ready() -> void:
 	_update_paths()
 	board.refresh_rocks()
 	_enter_build()
+	if Net.is_active():
+		net_sync = NetSync.new()
+		net_sync.game = self
+		add_child(net_sync)
+		net_panel = NetPanel.new()
+		net_panel.game = self
+		add_child(net_panel)
 
 
 func _exit_tree() -> void:
@@ -727,6 +738,8 @@ func _spawn_enemy(g: Dictionary) -> void:
 		push_warning("Unbekannter Gegner: %s" % g.get("enemy", ""))
 		return
 	var e := Enemy.new()
+	e.net_id = _next_enemy_id
+	_next_enemy_id += 1
 	board.add_child(e)
 	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
 	e.apply_difficulty(Session.difficulty_factor())
@@ -745,6 +758,8 @@ func enemies_in_radius(p: Vector2, radius: float) -> Array:
 
 func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 	effects.add_beam(from, to, col)
+	if net_sync:
+		net_sync.add_beam(from, to, col)
 
 
 func on_enemy_killed(e: Enemy) -> void:

@@ -61,6 +61,19 @@ Weitere Regeln:
 Unter „Debug: nächster Gem“ lässt sich jeder Tower in jeder Stufe direkt setzen.
 Der Schalter „Unsterblich“ daneben lässt die Leben ins Minus gehen, ohne dass das Spiel endet.
 
+## Mehrspieler
+
+Hauptmenü → „Mehrspieler“: einer klickt „Spiel hosten“, die anderen geben seine IP ein und klicken „Beitreten“
+(UDP-Port 24565; im LAN direkt, übers Internet mit Portfreigabe beim Host oder über Tailscale/ZeroTier).
+Modus „jeder sein Feld“ wie im alten GemTD: jeder startet, spielt und startet neu, wann er will, mit eigener Schwierigkeit.
+Der Host kann mit „Alle starten“ alle gleichzeitig auf der gewählten Map starten.
+Im Spiel zeigt die Liste „Mitspieler“ rechts unten Welle und Leben der anderen; „Zuschauen“ zeigt ihr Feld, Esc führt zurück.
+Das eigene Spiel läuft beim Zuschauen weiter.
+
+Technik: `scripts/autoload/net.gd` (Verbindung, Spielerliste), `scripts/net/net_sync.gd` schickt Zuschauern Map,
+Feld (bei Änderung) und Gegner/Schüsse etwa 15 Mal pro Sekunde. `scripts/net/remote_field.gd` zeigt das Feld;
+die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur sanft nachkorrigiert.
+
 ## Tower
 
 | Gems (je 6 Qualitäten) | Spezial-Tower (mit Upgrades) | Fallen |
@@ -153,6 +166,10 @@ Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyra
 ```
 godot --headless --path . res://tests/smoke_test.tscn
 godot --headless --fixed-fps 60 --path . res://tests/balance_test.tscn -- --tier=0 --wave=1
+godot --headless --path . res://tests/net_test.tscn -- --role=host &
+godot --headless --path . res://tests/net_test.tscn -- --role=client
 ```
+Der Netz-Test startet zwei Spiele auf demselben Rechner: der Host spielt eine Runde, der Client schaut zu und prüft
+Feld, Gegner und dass sie ohne Sprünge laufen.
 Der Balance-Test stellt jeden Gem einzeln an den Laufweg (Ecke und Gerade, ohne Labyrinth) und zählt,
 wie viele Gegner der Welle durchkommen. Splitter schaffen Welle 1 ohne Durchbruch (außer Amethyst, der nur Luft trifft).

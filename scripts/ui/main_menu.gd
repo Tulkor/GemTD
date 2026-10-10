@@ -7,6 +7,8 @@ var cards_box: HFlowContainer
 var play_button: Button
 var cards: Array[Button] = []
 var settings: Control
+var lobby: LobbyPanel
+var net_button: Button
 
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func _ready() -> void:
 	play_button.clip_text = true
 	UiTheme.accent_button(play_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
 	_difficulty_row(left)
+	net_button = _menu_button("Mehrspieler", left, func(): lobby.show())
 	_menu_button("Map-Editor", left, _open_map_editor)
 	_menu_button("Tower-Editor", left, _open_tower_editor)
 	_menu_button("Einstellungen", left, _open_settings)
@@ -73,6 +76,13 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	_reload()
 	_build_settings()
+	lobby = LobbyPanel.new()
+	add_child(lobby)
+	lobby.hide()
+	lobby.start_all_requested.connect(_start_all)
+	Net.players_changed.connect(_update_net_button)
+	Net.connection_changed.connect(_update_net_button)
+	_update_net_button()
 	if Session.reopen_settings:
 		Session.reopen_settings = false
 		settings.show()
@@ -273,6 +283,19 @@ func _play() -> void:
 	Session.test_tower = ""
 	Session.return_scene = Session.MAIN_MENU
 	Session.goto(Session.GAME)
+
+
+func _update_net_button() -> void:
+	net_button.text = tr("Mehrspieler · %d verbunden") % (Net.players.size() + 1) if Net.is_active() else tr("Mehrspieler")
+
+
+## Host: alle Verbundenen starten gleichzeitig auf der gewählten Map.
+func _start_all() -> void:
+	if maps.is_empty():
+		return
+	var m := MapData.load_file(maps[selected].path)
+	if m != null:
+		Net.start_all(m.to_dict())
 
 
 func _open_map_editor() -> void:

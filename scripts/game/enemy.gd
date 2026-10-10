@@ -36,6 +36,14 @@ var stun_time := 0.0
 var stacks := 0.0
 var stack_time := 0.0
 
+## Mehrspieler: Nummer für den Abgleich, und ob dieser Gegner nur das Feld eines Mitspielers zeigt.
+var net_id := 0
+var remote := false
+var remote_field = null   ## remote_field.gd, liefert Punkt auf dem Weg zu einer Strecke
+var net_traveled := 0.0   ## zuletzt gemeldete Strecke
+var net_speed := 0.0      ## zuletzt gemeldetes Tempo (Towerbreiten pro Sekunde des Mitspielers)
+var net_age := 0.0        ## Spielzeit des Mitspielers seit der letzten Meldung
+
 var shape_name := ""
 var boss := false
 var def_model := ""
@@ -70,6 +78,9 @@ func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 
 
 func _process(delta: float) -> void:
+	if remote:
+		_remote_step(delta)
+		return
 	if dead:
 		return
 	if slow_time > 0.0:
@@ -93,12 +104,9 @@ func _process(delta: float) -> void:
 		stack_time -= delta
 		if stack_time <= 0.0:
 			stacks = 0.0
-	# Verlangsamung drückt nicht unter die Mindestgeschwindigkeit (WC3: 220)
-	var min_speed := minf(speed, float(Database.balance.get("min_slowed_speed", 0.0)))
-	var move := maxf(speed * (1.0 - slow_factor), min_speed) * delta
+	var move := current_speed() * delta
 	if stun_time > 0.0:
 		stun_time -= delta
-		move = 0.0
 	while move > 0.0 and path_index < path.size():
 		var target := path[path_index]
 		var dist := pos.distance_to(target)
@@ -118,6 +126,56 @@ func _process(delta: float) -> void:
 	if path_index >= path.size():
 		dead = true
 		game.on_enemy_leaked(self)
+
+
+## Tempo gerade jetzt: Verlangsamung drückt nicht unter die Mindestgeschwindigkeit (WC3: 220),
+## betäubt steht der Gegner.
+func current_speed() -> float:
+	if stun_time > 0.0:
+		return 0.0
+	var min_speed := minf(speed, float(Database.balance.get("min_slowed_speed", 0.0)))
+	return maxf(speed * (1.0 - slow_factor), min_speed)
+
+
+## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt)]
+func net_state() -> Array:
+	var flags := (1 if slow_time > 0.0 else 0) | (2 if poison_time > 0.0 else 0) | (4 if stun_time > 0.0 else 0)
+	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags]
+
+
+## Neue Meldung vom Mitspieler übernehmen; die Position läuft in _remote_step weiter.
+func apply_net_state(s: Array) -> void:
+	net_traveled = float(s[2])
+	net_speed = float(s[3])
+	net_age = 0.0
+	hp = float(s[4])
+	max_hp = float(s[5])
+	var flags := int(s[6])
+	slow_time = 1.0 if flags & 1 else 0.0
+	poison_time = 1.0 if flags & 2 else 0.0
+	stun_time = 1.0 if flags & 4 else 0.0
+
+
+## Zuschauer: Gegner läuft mit dem gemeldeten Tempo selbst weiter und wird sanft
+## auf die vorausberechnete Strecke des Mitspielers gezogen, damit es flüssig aussieht.
+func _remote_step(delta: float) -> void:
+	var real_dt := delta / maxf(Engine.time_scale, 0.01)
+	var dt: float = real_dt * remote_field.time_scale
+	net_age += dt
+	var predicted := net_traveled + net_speed * net_age
+	traveled += net_speed * dt
+	if absf(predicted - traveled) > 1.5:
+		traveled = predicted
+	else:
+		traveled = lerpf(traveled, predicted, 1.0 - exp(-6.0 * real_dt))
+	traveled = clampf(traveled, 0.0, remote_field.path_length(flying))
+	var p: Vector2 = remote_field.point_at(flying, traveled)
+	var step := p - pos
+	if step.length_squared() > 0.000001:
+		rotation.y = atan2(-step.x, -step.y)
+	pos = p
+	_sync_position()
+	_update_visual()
 
 
 func _sync_position() -> void:
