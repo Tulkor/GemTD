@@ -335,6 +335,38 @@ func _ready() -> void:
 		game.wave_index = w0
 		game._refresh_hud()
 
+	# DPS-Meter rechts: Top 5 je Welle, letzte Welle je Typ, Gesamt
+	var meter: DpsMeter = game.hud.dps_meter
+	var dps_towers: Array = game.all_towers()
+	check(meter != null and meter.select.item_count == 6, "DPS-Meter mit 6 Ansichten im Dropdown")
+	check(meter._total_time > 0.0 and not meter._total.is_empty(), "DPS-Meter hat die bisherigen Wellen mitgezählt")
+	if not dps_towers.is_empty():
+		meter._last.clear()
+		meter._total.clear()
+		meter._total_time = 0.0
+		meter._begin_wave()
+		meter._running = true
+		meter._wave_time = 10.0
+		dps_towers[0].total_damage += 500.0
+		meter.view = "now"
+		var dps_top: Array = meter.top()
+		check(dps_top.size() == 1 and is_equal_approx(dps_top[0][2], 50.0), "DPS-Meter: 500 Schaden in 10 s ergibt 50 DPS")
+		var dps_type: String = meter._wave_type
+		meter._end_wave()
+		meter.view = dps_type
+		check(meter._last.has(dps_type) and is_equal_approx(meter.top()[0][2], 50.0), "DPS-Meter merkt sich die letzte %s-Welle" % dps_type)
+		meter.view = "total"
+		meter.refresh()
+		check(is_equal_approx(meter.top()[0][2], 50.0) and meter.rows[0].box.visible and not meter.rows[1].box.visible, "DPS-Meter: Gesamt zeigt den Tower")
+		meter.view = "Boss" if dps_type != "Boss" else "Masse"
+		check(meter.top().is_empty(), "DPS-Meter: Welle ohne Daten ist leer")
+		dps_towers[0].total_damage -= 500.0
+		meter._last.clear()
+		meter._total.clear()
+		meter._total_time = 0.0
+		meter.view = "now"
+		meter.refresh()
+
 	# Menü-Knopf fragt erst nach und pausiert solange
 	game.hud.open_leave_confirm()
 	check(game.hud.leave_confirm.visible and get_tree().paused, "Menü-Knopf zeigt Rückfrage und pausiert")

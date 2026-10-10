@@ -378,5 +378,18 @@
 	"Nicht verbunden": "Not connected",
 	"(du)": "(you)",
 	"Mehrspieler · %d verbunden": "Multiplayer · %d connected",
-	"%d Gold": "%d gold"
+	"%d Gold": "%d gold",
+	"Aktuelle Welle": "Current wave",
+	"Letzte Boss-Welle": "Last boss wave",
+	"Letzte Flug-Welle": "Last air wave",
+	"Letzte Boden-Welle": "Last ground wave",
+	"Letzte Massen-Welle": "Last mass wave",
+	"Gesamt": "Total",
+	"Ein-/ausklappen": "Collapse / expand",
+	"Welle %d läuft · %d s": "Wave %d running · %d s",
+	"Welle %d (vorbei) · %d s": "Wave %d (over) · %d s",
+	"Noch keine Welle gelaufen": "No wave played yet",
+	"Alle Wellen · %d s Kampfzeit": "All waves · %d s of combat",
+	"Welle %d · %d s": "Wave %d · %d s",
+	"Noch keine Welle dieser Art": "No wave of this kind yet"
 }

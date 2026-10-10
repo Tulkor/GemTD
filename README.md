@@ -23,6 +23,8 @@ Unten die Auswahlkarte: die neuen Gems der Runde (lila Rand = Zutat für einen O
 Werte des angeklickten Towers, „Wird gebraucht für“ mit allen Rezepten, in denen er vorkommt, und die Aktionen.
 Im Rezeptbuch (R) stehen alle Spezial-Rezepte, Zutaten grün (✓ vorhanden) oder rot (✗ fehlt).
 Mit „Pin“ angepinnte Rezepte erscheinen links oben und zeigen, was noch fehlt.
+Rechts oben zeigt das DPS-Meter die 5 Tower mit dem meisten Schaden pro Sekunde, umschaltbar zwischen aktueller Welle,
+der letzten Boss-, Flug-, Boden- und Massenwelle und Gesamt.
 „Weg“ in der Leiste oben zeigt die Länge des Laufwegs in Feldern, in der Bauphase mit der Änderung seit Rundenbeginn.
 Am Spielende öffnet sich ein Menü: nochmal mit denselben Einstellungen spielen oder zurück ins Hauptmenü.
 
