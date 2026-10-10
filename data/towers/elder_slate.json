@@ -1,6 +1,6 @@
 {
 	"id": "elder_slate",
-	"name": "Aeltestenplatte",
+	"name": "Ältestenplatte",
 	"category": "special",
 	"kind": "trap",
 	"color": "#8e7cc3",
@@ -20,7 +20,7 @@
 	"description": "Entsteht aus zwei Fallen auf dem Feld.",
 	"tiers": [
 		{
-			"name": "Aeltestenplatte",
+			"name": "Ältestenplatte",
 			"damage": [
 				100,
 				100

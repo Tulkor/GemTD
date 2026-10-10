@@ -339,7 +339,7 @@ func _build_upgrades() -> void:
 
 
 func _build_tiers() -> void:
-	var box := _section("Stufen (bei Gems: Splitter, Fehlerhaft, Normal, Makellos, Perfekt)")
+	var box := _section("Stufen (bei Gems: Splitter, Fehlerhaft, Normal, Makellos, Perfekt, Großartig)")
 	var tiers: Array = current.get("tiers", [])
 	current["tiers"] = tiers
 	for i in tiers.size():
