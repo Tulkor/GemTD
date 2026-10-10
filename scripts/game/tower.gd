@@ -7,6 +7,8 @@ extends Node3D
 const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
 ## Deckkraft für Modelle mit eigener Textur ("model_tint": false)
 const GEM_OPACITY_TEXTURED := 0.7
+## Helligkeit der Lichtscheibe im Sockel (über 1 = leuchtet im Glow)
+const BASE_LIGHT_ENERGY := 1.5
 
 var game  # game.gd
 var cell := Vector2i.ZERO
@@ -361,28 +363,46 @@ func _build_visual() -> void:
 				_visual.add_child(_gem)
 		_finish_visual()
 		return
+	# Sockel: runde Glasplatte, von innen beleuchtet (Lichtscheibe unter der Oberseite)
 	var base := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
-	cyl.radial_segments = 6
+	cyl.radial_segments = 40
+	cyl.rings = 1
 	if category == "special":
-		cyl.top_radius = 0.34
-		cyl.bottom_radius = 0.42
-		cyl.height = 0.35
+		cyl.top_radius = 0.36
+		cyl.bottom_radius = 0.4
+		cyl.height = 0.22
 	else:
-		cyl.top_radius = 0.28
-		cyl.bottom_radius = 0.36
-		cyl.height = 0.2
-	base.material_override = Board3D.make_material(Color("4a4a52"))
+		cyl.top_radius = 0.3
+		cyl.bottom_radius = 0.34
+		cyl.height = 0.14
+	base.material_override = _glass_material()
 	base.mesh = cyl
 	base.position.y = cyl.height / 2.0
+	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_visual.add_child(base)
+	var light := MeshInstance3D.new()
+	var disc := CylinderMesh.new()
+	disc.radial_segments = 32
+	disc.rings = 1
+	disc.top_radius = cyl.top_radius * 0.45
+	disc.bottom_radius = cyl.top_radius * 0.45
+	disc.height = 0.012
+	light.mesh = disc
+	var light_mat := Board3D.make_material(color.lerp(Color.WHITE, 0.4) * BASE_LIGHT_ENERGY, true)
+	light.material_override = light_mat
+	light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	light.position.y = cyl.height - 0.02
+	_visual.add_child(light)
+	if mat is ShaderMaterial:
+		mat.set_shader_parameter("base_top", cyl.height)
 	var default_size := (0.75 + 0.05 * tier) if category == "special" else (0.5 + 0.06 * tier)
 	var size := float(stats.get("model_scale", def.get("model_scale", default_size)))
 	if model_path != "":
 		_gem = ModelLoader.instantiate(model_path, size, tint)
 		if _gem:
 			if tint == null:
-				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED)
+				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
 			_gem.position.y = cyl.height
 			_visual.add_child(_gem)
 	if _gem == null:
@@ -396,6 +416,21 @@ func _build_visual() -> void:
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
 	_finish_visual()
+
+
+func _glass_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)
+	m.roughness = 0.05
+	m.metallic_specular = 0.9
+	m.rim_enabled = true
+	m.rim = 0.7
+	m.rim_tint = 0.2
+	m.emission_enabled = true
+	m.emission = color.lerp(Color.WHITE, 0.5)
+	m.emission_energy_multiplier = 0.35
+	return m
 
 
 func _finish_visual() -> void:

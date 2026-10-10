@@ -1,15 +1,14 @@
 class_name Board3D
 extends Node3D
-## 3D-Darstellung einer Map: Boden, Mauern, Steine, Wegpunkte, Weg und Hover-Markierung.
+## 3D-Darstellung einer Map: Neon-Gitter als Boden, Steine, Wegpunkte, Weg und Hover-Markierung.
+## Blockierte Felder (Mauern) werden nicht gezeichnet, nur ihr Rand als Neonlinie.
 ## Wird vom Spiel und vom Map-Editor benutzt. Tower und Gegner hängen als Kinder darunter.
 ##
 ## Koordinaten: 1 Einheit = 1 Towerbreite (128 WC3-Einheiten). Das Raster ist halb so fein:
 ## Feld (x, y) liegt bei X = x*CELL..(x+1)*CELL, Z entsprechend, Boden bei Y = 0.
 ## Tower und Steine belegen TOWER_CELLS × TOWER_CELLS Felder, angegeben über das Feld oben links (Anker).
 
-const COL_WALL := Color("2a2b31")
 const COL_ROCK := Color("5c5c63")
-const WALL_HEIGHT := 0.8
 const ROCK_HEIGHT := 0.55
 ## Modelle für Steine (werden reihum verteilt). Fehlen sie, werden einfache Blöcke gezeichnet.
 const ROCK_MODELS := [
@@ -20,11 +19,14 @@ const ROCK_MODELS := [
 	"res://assets/models/rocks/rock_large_c.glb",
 ]
 const ROCK_SIZE := 0.95
-## Helligkeit der Neon-Wegpunkte (über 1 = leuchtet im Glow).
-const NEON_ENERGY := 2.6
+## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
+const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
+const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
+const COL_WAYPOINT := Color("ff4fc8")
+const COL_PATH := Color("2ef2e0")
 ## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
 ## um Spawn, Ziel und Checkpoints und auf "_"-Feldern; sonst Gras.
-## Mit ground_alpha = 0 ist der Boden unsichtbar (nur Rasterlinien, falls grid_strength > 0).
+## Liegt unter dem Neon-Gitter und ist mit ground_alpha = 0 (Standard) ausgeblendet.
 const GROUND_SHADER := "res://assets/shaders/ground.gdshader"
 const GROUND_TEXTURES := {
 	"grass_a": "res://assets/textures/ground/grass_a.jpg",
@@ -49,28 +51,28 @@ const TRAP_CELLS := 3
 var map: MapData
 var rocks: Dictionary = {}
 var path_points := PackedVector2Array()
-var path_color := Color(1, 1, 1, 0.6)
+var path_color := COL_PATH
 var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
 var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
 var hover_ok := true
-## Deckkraft des Bodens: 0 = komplett durchsichtig (Skybox scheint durch), 1 = Gras und Erde.
+## Deckkraft des Gras-/Erdbodens unter dem Gitter: 0 = aus.
 var ground_alpha := 0.0:
 	set(v):
 		ground_alpha = v
 		if _ground_mat != null:
 			_ground_mat.set_shader_parameter("ground_alpha", v)
-			_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
-## Rasterlinien auf dem Boden (0 = aus), z. B. im Map-Editor.
+			_ground.visible = ground_alpha > 0.0
+## Feine Linien je Feld zusätzlich zum Towergitter (0 = aus), z. B. im Map-Editor.
 var grid_strength := 0.0:
 	set(v):
 		grid_strength = v
-		if _ground_mat != null:
-			_ground_mat.set_shader_parameter("grid_strength", v)
-			_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
+		if _floor_mat != null:
+			_floor_mat.set_shader_parameter("fine_strength", v)
 
 var _ground: MeshInstance3D
 var _ground_mat: ShaderMaterial
-var _walls: MultiMeshInstance3D
+var _floor: MeshInstance3D
+var _floor_mat: ShaderMaterial
 var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
 var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
 var _path: MultiMeshInstance3D
@@ -118,12 +120,19 @@ func _ready() -> void:
 	for key in GROUND_TEXTURES:
 		_ground_mat.set_shader_parameter(key, load(GROUND_TEXTURES[key]))
 	_ground_mat.set_shader_parameter("cell", CELL)
-	_ground_mat.set_shader_parameter("grid_strength", grid_strength)
 	_ground_mat.set_shader_parameter("ground_alpha", ground_alpha)
 	_ground.material_override = _ground_mat
-	_ground.visible = ground_alpha > 0.0 or grid_strength > 0.0
+	_ground.visible = ground_alpha > 0.0
 	add_child(_ground)
-	_walls = _multimesh(_box(Vector3(CELL, WALL_HEIGHT, CELL)), false, COL_WALL)
+	_floor = MeshInstance3D.new()
+	_floor_mat = ShaderMaterial.new()
+	_floor_mat.shader = NEON_FLOOR_SHADER
+	_floor_mat.set_shader_parameter("cell", CELL)
+	_floor_mat.set_shader_parameter("grid_cells", float(TOWER_CELLS))
+	_floor_mat.set_shader_parameter("fine_strength", grid_strength)
+	_floor.material_override = _floor_mat
+	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_floor)
 	for path in ROCK_MODELS:
 		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE)
 		if m.is_empty():
@@ -135,12 +144,14 @@ func _ready() -> void:
 	if _rocks.is_empty():
 		_rocks.append(_multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK))
 		_rock_fits.append(Transform3D(Basis(), Vector3(0, ROCK_HEIGHT / 2.0, 0)))
-	var dot := CylinderMesh.new()
-	dot.top_radius = 0.08
-	dot.bottom_radius = 0.08
-	dot.height = 0.02
-	dot.radial_segments = 8
-	_path = _multimesh(dot, false, path_color, true)
+	var dot := SphereMesh.new()
+	dot.radius = 0.055
+	dot.height = 0.11
+	dot.radial_segments = 12
+	dot.rings = 6
+	_path = _multimesh(dot, false)
+	_path.material_override = neon_material(path_color, 2.2)
+	_path.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_markers = Node3D.new()
 	add_child(_markers)
 	_hover = MeshInstance3D.new()
@@ -151,6 +162,15 @@ func _ready() -> void:
 	add_child(_hover)
 	if map != null:
 		rebuild()
+
+
+## Material für Neonröhren: innen weiß, außen col, energy > 1 leuchtet im Glow.
+static func neon_material(col: Color, energy := 3.0) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = NEON_SHADER
+	m.set_shader_parameter("color", col)
+	m.set_shader_parameter("energy", energy)
+	return m
 
 
 func _box(size: Vector3) -> BoxMesh:
@@ -178,17 +198,8 @@ func _multimesh(mesh: Mesh, colors: bool, col := Color.WHITE, unshaded := false)
 func rebuild() -> void:
 	if map == null or _ground == null:
 		return
-	var walls: Array = []
-	for y in map.height:
-		for x in map.width:
-			var c := Vector2i(x, y)
-			if map.get_tile(c) == MapData.BLOCKED:
-				walls.append(c)
 	_rebuild_ground()
-	var wm := _walls.multimesh
-	wm.instance_count = walls.size()
-	for i in walls.size():
-		wm.set_instance_transform(i, Transform3D(Basis(), to_3d(cell_center(walls[i]), WALL_HEIGHT / 2.0 - 0.1)))
+	_rebuild_floor()
 	_rebuild_markers()
 	refresh_rocks()
 	refresh_path()
@@ -241,12 +252,28 @@ func _rebuild_ground() -> void:
 				if x < w - 1: v = minf(v, dist[i + w + 1] + D)
 				if x > 0: v = minf(v, dist[i + w - 1] + D)
 			dist[i] = v
-	var img := Image.create(w, h, false, Image.FORMAT_L8)
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)  # RGBA8: L8 mit ungerader Breite wird im GL-Renderer verschoben hochgeladen
 	for y in h:
 		for x in w:
 			var a := clampf(1.0 - (dist[y * w + x] - DIRT_CORE) / DIRT_FADE, 0.0, 1.0)
 			img.set_pixel(x, y, Color(a, a, a))
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
+
+
+## Neon-Feld: Fläche über die ganze Map, blockierte Felder als Maske (ein Pixel pro Feld).
+func _rebuild_floor() -> void:
+	var size := Vector2(map.width, map.height) * CELL
+	var plane := PlaneMesh.new()
+	plane.size = size
+	_floor.mesh = plane
+	_floor.position = to_3d(size / 2.0, 0.001)
+	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)  # RGBA8: L8 mit ungerader Breite wird im GL-Renderer verschoben hochgeladen
+	for y in map.height:
+		for x in map.width:
+			if map.get_tile(Vector2i(x, y)) == MapData.BLOCKED:
+				img.set_pixel(x, y, Color.WHITE)
+	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
+	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
 
 
 func refresh_rocks() -> void:
@@ -271,7 +298,7 @@ func refresh_rocks() -> void:
 func refresh_path() -> void:
 	if _path == null:
 		return
-	(_path.material_override as StandardMaterial3D).albedo_color = path_color
+	(_path.material_override as ShaderMaterial).set_shader_parameter("color", path_color)
 	var mm := _path.multimesh
 	mm.instance_count = path_points.size()
 	for i in path_points.size():
@@ -291,24 +318,22 @@ func refresh_hover() -> void:
 func _rebuild_markers() -> void:
 	for c in _markers.get_children():
 		c.queue_free()
-	_add_marker(map.spawn, "S", Color("2ecc71"))
+	_add_marker(map.spawn, "S", COL_WAYPOINT)
 	for i in map.checkpoints.size():
-		_add_marker(map.checkpoints[i], str(i + 1), Color("f1c40f"))
-	_add_marker(map.goal, "Z", Color("e74c3c"))
+		_add_marker(map.checkpoints[i], str(i + 1), COL_WAYPOINT)
+	_add_marker(map.goal, "Z", COL_WAYPOINT)
 
 
 ## Wegpunkt als Neonröhren-Ring: nur die Kontur, mit überhelltem Kern, der im Glow leuchtet.
 func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
-	torus.inner_radius = 0.39
-	torus.outer_radius = 0.47
+	torus.inner_radius = 0.38
+	torus.outer_radius = 0.48
 	torus.rings = 48
 	torus.ring_segments = 8
 	ring.mesh = torus
-	var mat := make_material(col, true)
-	mat.albedo_color = Color(col.r * NEON_ENERGY, col.g * NEON_ENERGY, col.b * NEON_ENERGY)
-	ring.material_override = mat
+	ring.material_override = neon_material(col, 2.2)
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.position = to_3d(cell_center(c), 0.04)
 	_markers.add_child(ring)

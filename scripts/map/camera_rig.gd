@@ -177,30 +177,30 @@ static func _sky() -> Sky:
 static func add_environment(parent: Node) -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("05060a")
+	env.background_color = Color("05030c")
 	var sky := _sky()
 	if sky != null:
 		env.background_mode = Environment.BG_SKY
 		env.sky = sky
 	# Leuchten für helle (HDR) Flächen, z. B. die Neon-Wegpunkte
 	env.glow_enabled = true
-	env.glow_intensity = 0.9
+	env.glow_intensity = 1.1
 	env.glow_bloom = 0.0
 	env.glow_hdr_threshold = 1.0
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	# kühles, schwaches Umgebungslicht und eine warme, flach stehende Sonne: so entstehen
-	# deutliche Licht- und Schattenseiten statt einer gleichmäßig hellen Fläche
+	# dunkle Szene: schwaches kühles Umgebungslicht und eine schwache, flach stehende Sonne,
+	# damit Neon, Sockel und Gems hervorstechen
 	env.ambient_light_color = Color(0.62, 0.7, 0.85)
-	env.ambient_light_energy = 0.22
+	env.ambient_light_energy = 0.1
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.1
+	env.tonemap_exposure = 1.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	parent.add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(-38), deg_to_rad(-35), 0)
 	sun.light_color = Color(1.0, 0.96, 0.88)
-	sun.light_energy = 1.25
+	sun.light_energy = 0.55
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.5
 	parent.add_child(sun)

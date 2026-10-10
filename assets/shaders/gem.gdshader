@@ -1,24 +1,38 @@
 // Edelstein-Material für Tower: leicht durchsichtig, an den Kanten dichter (Fresnel),
-// mit innerem Leuchten und scharfem Glanzlicht.
+// mit innerem Leuchten, scharfem Glanzlicht und Licht von unten (leuchtender Sockel).
 shader_type spatial;
 render_mode blend_mix, depth_draw_always, cull_back, specular_schlick_ggx;
 
 uniform vec4 color : source_color = vec4(1.0);
 /// Deckkraft in der Mitte der Flächen (zum Rand hin wird es dichter).
 uniform float opacity = 0.38;
-uniform float glow = 0.3;
+uniform float glow = 0.25;
+/// Höhe der Sockel-Oberseite (Welt-Y); darüber wird der Stein von unten angestrahlt.
+uniform float base_top = 0.14;
+uniform float under_light = 1.1;
+uniform float under_height = 0.45;
+
+varying float world_y;
+
+void vertex() {
+	world_y = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y;
+}
 
 void fragment() {
 	float facing = clamp(dot(NORMAL, VIEW), 0.0, 1.0);
 	float fresnel = pow(1.0 - facing, 2.5);
-	// Facetten: Flächen, die zur Kamera zeigen, wirken wie Blick ins Innere (dunkler, satter)
+	// Flächen, die zur Kamera zeigen, wirken wie Blick ins Innere (dunkler, satter)
 	vec3 deep = color.rgb * color.rgb;
 	ALBEDO = mix(deep, color.rgb, 0.4 + 0.6 * fresnel);
 	ALPHA = clamp(opacity + fresnel * 0.45, 0.0, 1.0);
 	METALLIC = 0.0;
 	ROUGHNESS = 0.08;
 	SPECULAR = 0.9;
-	EMISSION = color.rgb * (glow + fresnel * 0.5);
+	// Licht von unten: stark am Fuß, nach oben abnehmend; nach unten zeigende Flächen extra hell
+	float under = 1.0 - smoothstep(base_top, base_top + under_height, world_y);
+	float down = max(0.0, -(INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y);
+	vec3 lit = mix(color.rgb, vec3(1.0), 0.35);
+	EMISSION = color.rgb * (glow + fresnel * 0.5) + lit * under_light * (under * under + down * 0.6 * under);
 	RIM = 0.4;
 	RIM_TINT = 0.6;
 }

@@ -96,7 +96,8 @@ static func _apply_material(n: Node, mat: Material) -> void:
 
 
 ## Alle Materialien des Modells leicht durchsichtig machen, Farben und Texturen bleiben.
-static func make_translucent(n: Node, alpha: float) -> void:
+## glow: Farbe des Lichts von unten (Sockel), schwach als Eigenleuchten.
+static func make_translucent(n: Node, alpha: float, glow := Color.BLACK) -> void:
 	if n is MeshInstance3D and n.mesh != null:
 		for i in n.mesh.get_surface_count():
 			var src: Material = n.get_active_material(i)
@@ -107,6 +108,10 @@ static func make_translucent(n: Node, alpha: float) -> void:
 				m.roughness = minf(m.roughness, 0.25)
 				m.rim_enabled = true
 				m.rim = 0.4
+				if glow != Color.BLACK:
+					m.emission_enabled = true
+					m.emission = glow
+					m.emission_energy_multiplier = 0.35
 				n.set_surface_override_material(i, m)
 	for c in n.get_children():
-		make_translucent(c, alpha)
+		make_translucent(c, alpha, glow)
