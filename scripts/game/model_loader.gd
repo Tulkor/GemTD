@@ -63,7 +63,9 @@ static func instantiate_fit(path: String, width: float, max_height: float, tint:
 
 ## Erstes Mesh eines Modells, normalisiert (für MultiMesh, z. B. Steine).
 ## Rückgabe: [Mesh, Transform3D] oder [] wenn nicht vorhanden.
-static func mesh_with_transform(path: String, size := 1.0) -> Array:
+## flat = true: breiteste waagrechte Kante = size (füllt die Grundfläche), sonst längste Kante.
+## max_height > 0 begrenzt die Höhe durch Stauchen in Y (Breite bleibt).
+static func mesh_with_transform(path: String, size := 1.0, flat := false, max_height := 0.0) -> Array:
 	var scene := _load(path)
 	if scene == null:
 		return []
@@ -75,9 +77,13 @@ static func mesh_with_transform(path: String, size := 1.0) -> Array:
 	var mesh: Mesh = mi[0]
 	var xf: Transform3D = mi[1]
 	var box: AABB = xf * mesh.get_aabb()
-	var longest := maxf(box.size.x, maxf(box.size.y, box.size.z))
+	var longest := maxf(box.size.x, box.size.z) if flat else maxf(box.size.x, maxf(box.size.y, box.size.z))
 	var s := size / longest if longest > 0.0 else 1.0
-	var fit := Transform3D(Basis().scaled(Vector3.ONE * s), -Vector3(box.get_center().x, box.position.y, box.get_center().z) * s)
+	var sy := s
+	if max_height > 0.0 and box.size.y * s > max_height:
+		sy = max_height / box.size.y
+	var scale := Vector3(s, sy, s)
+	var fit := Transform3D(Basis().scaled(scale), -Vector3(box.get_center().x, box.position.y, box.get_center().z) * scale)
 	return [mesh, fit * xf]
 
 

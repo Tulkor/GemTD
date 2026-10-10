@@ -18,7 +18,10 @@ const ROCK_MODELS := [
 	"res://assets/models/rocks/rock_large_b.glb",
 	"res://assets/models/rocks/rock_large_c.glb",
 ]
-const ROCK_SIZE := 0.95
+## Steine füllen ihre 2×2 Felder (breiteste waagrechte Kante in Towerbreiten), höchstens so hoch
+const ROCK_SIZE := 0.94
+const ROCK_MAX_HEIGHT := 0.75
+const ROCK_SHADER := preload("res://assets/shaders/rock.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
@@ -134,11 +137,13 @@ func _ready() -> void:
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
 	for path in ROCK_MODELS:
-		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE)
+		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE, true, ROCK_MAX_HEIGHT)
 		if m.is_empty():
 			continue
 		var mmi := _multimesh(m[0], false)
-		mmi.material_override = null
+		var rock_mat := ShaderMaterial.new()
+		rock_mat.shader = ROCK_SHADER
+		mmi.material_override = rock_mat
 		_rocks.append(mmi)
 		_rock_fits.append(m[1])
 	if _rocks.is_empty():
@@ -294,7 +299,7 @@ func refresh_rocks() -> void:
 		for j in buckets[i].size():
 			var c: Vector2i = buckets[i][j]
 			# leicht gedreht, damit nicht alle Steine gleich aussehen
-			var turn := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 12) * 0.52)
+			var turn := Basis(Vector3.UP, float((c.x * 7 + c.y * 13) % 4) * PI / 2.0)  # nur Vierteldrehungen: Stein bleibt in seinen Feldern
 			var place := Transform3D(turn, to_3d(footprint_center(c)))
 			mm.set_instance_transform(j, place * _rock_fits[i])
 
