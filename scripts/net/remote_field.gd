@@ -92,7 +92,8 @@ func apply_enemies(packet: Dictionary) -> void:
 			e.remote_field = self
 			e.net_id = id
 			add_child(e)
-			e.setup(null, def, {}, _paths[bool(def.get("flying", false))])
+			var o := {"shape": str(s[7]), "size": float(s[8])} if s.size() > 8 else {}
+			e.setup(null, def, o, _paths[bool(def.get("flying", false))])
 			e.traveled = float(s[2])
 			enemies[id] = e
 		e.apply_net_state(s)

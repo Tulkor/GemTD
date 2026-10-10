@@ -18,6 +18,13 @@ func _ready() -> void:
 	check(Database.towers.size() >= 8, "Tower geladen: %d" % Database.towers.size())
 	check(Database.enemies.size() >= 1, "Gegner geladen: %d" % Database.enemies.size())
 	check(not Database.list_maps().is_empty(), "Maps gefunden")
+	# Wellentypen: jede vierte Welle Flieger, versetzt dazu Massenwellen, dazu Bosse
+	var kinds := {}
+	for w in Database.wave_sets.get("classic", {}).get("waves", []):
+		var k: String = load("res://scripts/game/game.gd").wave_type(w)
+		kinds[k] = kinds.get(k, 0) + 1
+	check(kinds.get("Masse", 0) >= 10 and kinds.get("Flieger", 0) >= 10 and kinds.get("Boss", 0) >= 1 and kinds.get("Boden", 0) >= 10,
+		"alle vier Wellentypen kommen vor: %s" % [kinds])
 
 	for m in Database.list_maps():
 		var md := MapData.load_file(m.path)
