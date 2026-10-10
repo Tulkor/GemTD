@@ -8,9 +8,10 @@
 		"max_bonus": 1.2
 	},
 	"min_slowed_speed": 1.72,
-	"chance_levels": [
+	"gold_income_factor": 0.75,
+  "chance_levels": [
 		{
-			"cost": 0,
+			"wave": 1,
 			"weights": [
 				100,
 				0,
@@ -20,7 +21,7 @@
 			]
 		},
 		{
-			"cost": 20,
+			"wave": 3,
 			"weights": [
 				70,
 				30,
@@ -30,7 +31,7 @@
 			]
 		},
 		{
-			"cost": 50,
+			"wave": 6,
 			"weights": [
 				60,
 				30,
@@ -40,7 +41,7 @@
 			]
 		},
 		{
-			"cost": 80,
+			"wave": 10,
 			"weights": [
 				50,
 				30,
@@ -50,7 +51,7 @@
 			]
 		},
 		{
-			"cost": 110,
+			"wave": 13,
 			"weights": [
 				40,
 				30,
@@ -60,7 +61,7 @@
 			]
 		},
 		{
-			"cost": 140,
+			"wave": 17,
 			"weights": [
 				30,
 				30,
@@ -70,7 +71,7 @@
 			]
 		},
 		{
-			"cost": 170,
+			"wave": 20,
 			"weights": [
 				20,
 				30,
@@ -80,7 +81,7 @@
 			]
 		},
 		{
-			"cost": 200,
+			"wave": 23,
 			"weights": [
 				10,
 				30,
@@ -90,7 +91,7 @@
 			]
 		},
 		{
-			"cost": 230,
+			"wave": 27,
 			"weights": [
 				0,
 				30,

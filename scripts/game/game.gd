@@ -40,6 +40,7 @@ var wave_index := 0
 var lives := 50
 var gold := 0
 var chance_level := 0
+var _gold_frac := 0.0
 var spawn_queue: Array = []
 ## Länge des Bodenwegs in Feldern, und wie lang er zu Beginn der Bauphase war.
 var path_length := 0
@@ -77,7 +78,6 @@ func _ready() -> void:
 	add_child(hud)
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
-	hud.chance_upgrade_requested.connect(_upgrade_chance)
 	hud.speed_selected.connect(func(f): Engine.time_scale = f)
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
@@ -352,6 +352,7 @@ func rock_remove_cost() -> int:
 
 func _enter_build() -> void:
 	phase = Phase.BUILD
+	chance_level = chance_level_for(current_wave())
 	round_towers.clear()
 	round_path_start = path_length
 	_refresh_hud()
@@ -618,16 +619,30 @@ func _turn_into_rock(t: Tower) -> void:
 	t.queue_free()
 
 
-func _upgrade_chance() -> void:
+## Chance-Stufe steigt automatisch: höchste Stufe, deren „wave“ erreicht ist.
+func chance_level_for(wave: int) -> int:
+	var levels: Array = Database.balance.get("chance_levels", [])
+	var lvl := 0
+	for i in levels.size():
+		if wave >= int(levels[i].get("wave", 1)):
+			lvl = i
+	return lvl
+
+
+## Welle, ab der die nächste Chance-Stufe gilt (-1 = schon maximal).
+func next_chance_wave() -> int:
 	var levels: Array = Database.balance.get("chance_levels", [])
 	if chance_level + 1 >= levels.size():
-		return
-	var cost := int(levels[chance_level + 1].get("cost", 0))
-	if gold < cost:
-		return
-	gold -= cost
-	chance_level += 1
-	_refresh_hud()
+		return -1
+	return int(levels[chance_level + 1].get("wave", 1))
+
+
+## Gold aus Kills und Fähigkeiten, gekürzt um gold_income_factor (Reste werden gesammelt).
+func earn_gold(amount: int) -> void:
+	_gold_frac += amount * float(Database.balance.get("gold_income_factor", 1.0))
+	var whole := floori(_gold_frac)
+	gold += whole
+	_gold_frac -= whole
 
 
 func current_wave() -> int:
@@ -635,7 +650,7 @@ func current_wave() -> int:
 
 
 func add_gold(amount: int) -> void:
-	gold += amount
+	earn_gold(amount)
 	_refresh_hud()
 
 
@@ -721,7 +736,7 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
-	gold += e.bounty
+	earn_gold(e.bounty)
 	_remove_enemy(e)
 	_refresh_hud()
 
@@ -791,12 +806,7 @@ func _refresh_hud() -> void:
 		Phase.VICTORY:
 			hud.set_phase("Gewonnen", "Alle Wellen geschafft!")
 
-	var levels: Array = Database.balance.get("chance_levels", [])
-	if chance_level + 1 < levels.size():
-		var cost := int(levels[chance_level + 1].get("cost", 0))
-		hud.set_chance(chance_level, cost, gold >= cost and phase < Phase.GAME_OVER)
-	else:
-		hud.set_chance(chance_level, -1, false)
+	hud.set_chance(chance_level, next_chance_wave())
 
 	if selected_rock != NO_CELL:
 		var cost := rock_remove_cost()

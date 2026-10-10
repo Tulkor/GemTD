@@ -339,22 +339,16 @@ func _ready() -> void:
 	game.hud.close_leave_confirm()
 	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Weiterspielen schließt Rückfrage")
 
-	# Sprechblase, wenn das Gold für die nächste Chance-Stufe reicht
+	# Chance-Stufe steigt automatisch mit der Welle, Gold wird um gold_income_factor gekürzt
+	check(game.chance_level_for(1) == 0 and game.chance_level_for(3) == 1 and game.chance_level_for(27) == 8 and game.chance_level_for(50) == 8,
+		"Chance automatisch: Welle 1 → 0, Welle 3 → 1, ab Welle 27 → 8")
 	var old_gold: int = game.gold
-	var old_level: int = game.chance_level
 	game.gold = 0
-	game._refresh_hud()
-	check(not game.hud.chance_bubble.visible, "Keine Chance-Sprechblase ohne Gold")
-	game.gold = 100000
-	game._refresh_hud()
-	check(game.hud.chance_bubble.visible and game.hud.banner.offset_top > game.hud.BANNER_TOP, "Chance-Sprechblase erscheint, Banner rutscht darunter")
-	game.hud.chance_bubble.dismissed.emit()
-	game._refresh_hud()
-	check(not game.hud.chance_bubble.visible and game.hud.banner.offset_top == game.hud.BANNER_TOP, "Sprechblase lässt sich für diese Stufe wegklicken")
-	game.hud.chance_bubble.pressed.emit()
-	check(game.chance_level == old_level + 1 and game.hud.chance_bubble.visible, "Klick auf Sprechblase verbessert die Chance, nächste Stufe wird wieder angezeigt")
+	game._gold_frac = 0.0
+	for k in 4:
+		game.earn_gold(1)
+	check(game.gold == 3, "Goldeinkommen ×0,75: 4 × 1 Gold ergibt 3 Gold (%d)" % game.gold)
 	game.gold = old_gold
-	game.chance_level = old_level
 	game._refresh_hud()
 
 	# Weglänge in der Leiste und Menü am Spielende
