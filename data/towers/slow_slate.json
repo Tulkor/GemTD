@@ -1,6 +1,6 @@
 {
 	"id": "slow_slate",
-	"name": "Verlangsamungsplatte",
+	"name": "Bremsplatte",
 	"category": "special",
 	"kind": "trap",
 	"color": "#6fa8ff",
@@ -32,7 +32,7 @@
 	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
 	"tiers": [
 		{
-			"name": "Verlangsamungsplatte",
+			"name": "Bremsplatte",
 			"damage": [
 				100,
 				100

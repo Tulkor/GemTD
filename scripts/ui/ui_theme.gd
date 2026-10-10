@@ -100,6 +100,29 @@ static func get_theme() -> Theme:
 	return t
 
 
+static var _icons: Dictionary = {}
+
+## Kleine Symbole für Aktionsknöpfe: "up" (grüner Pfeil), "down" (roter Pfeil), "combine" (Kombinieren).
+static func icon(kind: String, px := 22) -> Texture2D:
+	var key := "%s_%d" % [kind, px]
+	if _icons.has(key):
+		return _icons[key]
+	var svg := ""
+	match kind:
+		"up":
+			svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2 L22 13 L15.5 13 L15.5 22 L8.5 22 L8.5 13 L2 13 Z" fill="#%s" stroke="#0d0618" stroke-width="1.5"/></svg>' % HAVE.to_html(false)
+		"down":
+			svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 22 L22 11 L15.5 11 L15.5 2 L8.5 2 L8.5 11 L2 11 Z" fill="#%s" stroke="#0d0618" stroke-width="1.5"/></svg>' % MISSING.to_html(false)
+		"combine":
+			svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><g fill="none" stroke="#%s" stroke-width="3.2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 4 L10 12 L3 20"/><path d="M10 12 L17 12"/></g><path d="M15 6 L23 12 L15 18 Z" fill="#%s"/></svg>' % [CYAN.to_html(false), CYAN.to_html(false)]
+	var img := Image.new()
+	if svg == "" or img.load_svg_from_string(svg, px / 24.0) != OK:
+		return null
+	var tex := ImageTexture.create_from_image(img)
+	_icons[key] = tex
+	return tex
+
+
 ## Button in einer Akzentfarbe (Rosa für die Hauptaktion, Lila für One-Shots), mit hartem Versatz-Schatten.
 static func accent_button(b: Button, bg: Color, fg: Color, _glow: Color = Color.TRANSPARENT) -> void:
 	var normal := box(bg, Color.TRANSPARENT, 0, 0, 14)

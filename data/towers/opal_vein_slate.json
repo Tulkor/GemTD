@@ -1,6 +1,6 @@
 {
 	"id": "opal_vein_slate",
-	"name": "Opalader-Platte",
+	"name": "Opalplatte",
 	"category": "special",
 	"kind": "trap",
 	"color": "#f7d9bd",
@@ -28,7 +28,7 @@
 	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
 	"tiers": [
 		{
-			"name": "Opalader-Platte",
+			"name": "Opalplatte",
 			"damage": [
 				80,
 				80

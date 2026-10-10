@@ -48,8 +48,8 @@ Weitere Regeln:
   Verbrauchte Tower vom Feld werden zu Steinen. Upgrades (z. B. Silber → Sterlingsilber → Silberritter) kosten Gold und gehen nur während der Welle.
 - **Fallen (Platten):** Normaler Gem + einer der passenden fehlerhaften Gems in derselben Runde.
   Gegner laufen über Fallen. Zwei Fallen auf dem Feld ergeben eine kombinierte Falle
-  (z. B. Halteplatte + Luftplatte → Uralte Platte): während der Welle eine Falle anklicken, dann „Kombinieren“.
-  Fallen sind 3×3 Felder groß und treffen alles auf dieser Fläche (Reichweitenplatte und Luftangriffe
+  (z. B. Halteplatte + Luftplatte → Urplatte): während der Welle eine Falle anklicken, dann „Kombinieren“.
+  Fallen sind 3×3 Felder groß und treffen alles auf dieser Fläche (Weitplatte und Luftangriffe
   wirken weiter im Kreis). Tower dürfen auf Fallen gebaut werden; eine Falle unter einem Tower wählt
   man mit einem zweiten Klick aus. Jede Falle lässt sich zweimal verschieben („Verschieben“, dann
   Ziel anklicken), auch auf Checkpoints, Spawn und Ziel.
@@ -80,7 +80,7 @@ die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur san
 
 | Gems (je 6 Qualitäten) | Spezial-Tower (mit Upgrades) | Fallen |
 |---|---|---|
-| Amethyst, Aquamarin, Diamant, Smaragd, Opal, Rubin, Saphir, Topas | Silber, Malachit, Sternrubin, Jade, Roter Kristall, Dunkler Smaragd, Gold, Uran 238, Rosa Diamant, Paraiba-Turmalin, Schwarzer Opal, Blutstein, Gelber Saphir, Stein von Bryvx | Luft-, Halte-, Verlangsamungs-, Opalader-, Zauber-, Gift-, Reichweiten-, Schadensplatte; kombiniert: Uralte, Geister-, Ältesten-, Viperplatte |
+| Amethyst, Aquamarin, Diamant, Smaragd, Opal, Rubin, Saphir, Topas | Silber, Malachit, Sternrubin, Jade, Roter Kristall, Dunkler Smaragd, Gold, Uran 238, Rosa Diamant, Paraiba-Turmalin, Schwarzer Opal, Blutstein, Gelber Saphir, Stein von Bryvx | Luft-, Halte-, Verlangsamungs-, Opalader-, Zauber-, Gift-, Reichweiten-, Kraftplatte; kombiniert: Uralte, Geister-, Ältesten-, Viperplatte |
 
 Vereinfachungen gegenüber WC3 (stehen auch in den Tower-Dateien als Fähigkeiten):
 Zauber wie Frostnova, Blitz oder Messerfächer sind als „nova“ (Flächenschaden mit Chance) umgesetzt;

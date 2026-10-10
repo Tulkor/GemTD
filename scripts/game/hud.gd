@@ -68,7 +68,8 @@ var used_prev: Button
 var used_next: Button
 var used_page_label: Label
 var used_page := 0
-var _used_ids: Variant = null
+var _used_ids: Variant = null  ## sortiert, siehe sort_used_in
+var _used_raw: Variant = null
 var actions_col: VBoxContainer
 var separators: Array[Control] = []
 
@@ -606,6 +607,7 @@ func set_options(options: Array) -> void:
 			UiTheme.accent_button(big, UiTheme.PURPLE, Color.WHITE, Color(UiTheme.PURPLE_LIGHT, 0.55))
 		else:
 			UiTheme.accent_button(big, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.45))
+		_set_icon(big, o)
 		var hint: String = tr("Leertaste") + (" · " + str(o.hint) if o.has("hint") else "")
 		UiUtil.wrap_label(hint, actions_col, 260).add_theme_color_override("font_color", UiTheme.MUTED)
 	for i in options.size():
@@ -617,26 +619,51 @@ func set_options(options: Array) -> void:
 		b.clip_text = true
 		b.custom_minimum_size = Vector2(260, 40)
 		if o.has("sub"):
-			_two_line(b, o.label, o.sub)
+			_two_line(b, o.label, o.sub, UiTheme.icon(o.icon) if o.has("icon") else null)
+		else:
+			_set_icon(b, o)
+		if o.has("tooltip"):
+			b.tooltip_text = o.tooltip
 		if o.get("style", "normal") == "oneshot":
 			b.add_theme_stylebox_override("normal", UiTheme.box(Color("241a38"), UiTheme.PURPLE_LIGHT))
 	actions_col.visible = not options.is_empty()
 	_update_layout()
 
 
-## Knopf mit Name oben und kleiner goldener Zeile darunter (z. B. Upgrade und Goldkosten).
-func _two_line(b: Button, title: String, sub: String) -> void:
+## Symbol links im Knopf (Pfeil hoch/runter, Kombinieren), siehe UiTheme.icon.
+func _set_icon(b: Button, o: Dictionary) -> void:
+	if not o.has("icon"):
+		return
+	b.icon = UiTheme.icon(o.icon)
+	b.add_theme_constant_override("h_separation", 10)
+	for st in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color", "icon_hover_pressed_color"]:
+		b.add_theme_color_override(st, Color.WHITE)
+
+
+## Knopf mit Name oben und kleiner goldener Zeile darunter (z. B. Upgrade und Goldkosten), optional mit Symbol links.
+func _two_line(b: Button, title: String, sub: String, icon: Texture2D = null) -> void:
 	b.text = ""
 	b.tooltip_text = title + " · " + sub
 	b.custom_minimum_size.y = 54
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 12
+	row.offset_right = -12
+	b.add_child(row)
+	if icon != null:
+		var ic := TextureRect.new()
+		ic.texture = icon
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(ic)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 0)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 12
-	v.offset_right = -12
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	b.add_child(v)
+	row.add_child(v)
 	var t := UiUtil.label(title, v, 15)
 	t.clip_text = true
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -812,10 +839,18 @@ func toggle_recipe_book() -> void:
 # --- intern ------------------------------------------------------------------
 
 func _refresh_used_in() -> void:
-	var ids = _selection.get("used_in", null)
-	if ids != _used_ids:
-		_used_ids = ids
-		used_page = 0
+	var raw = _selection.get("used_in", null)
+	var sort_key := [raw, owned, owned_now]
+	if sort_key != _used_raw:
+		if raw != (_used_raw[0] if _used_raw != null else null):
+			used_page = 0
+		_used_raw = sort_key
+		# Gezählt wird alles, was auf dem Feld steht: fixierte Tower und die neuen Gems dieser Runde
+		var standing: Array = owned.filter(func(o): return not Recipes._is_new(o))
+		if not owned_now.get("wave", false):
+			standing += owned_now.get("pool", [])
+		_used_ids = sort_used_in(raw, standing) if raw != null else null
+	var ids = _used_ids
 	var key := [ids, Session.pinned_recipes.duplicate(), owned, owned_now, used_page]
 	if key == _used_key:
 		return
@@ -839,6 +874,24 @@ func _refresh_used_in() -> void:
 	c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	used_row.add_child(c)
 	_recenter.call_deferred()
+
+
+## Zuerst die Rezepte, für die schon die meisten Zutaten stehen; bei Gleichstand Tower vor Fallen.
+static func sort_used_in(ids: Array, have: Array) -> Array:
+	var keyed := []
+	for i in ids.size():
+		var sid: String = ids[i]
+		var recipe: Array = Database.towers.get(sid, {}).get("recipe", [])
+		var got: int = recipe.size() - int(Recipes.status(sid, have).missing)
+		var trap := 1 if str(Database.towers.get(sid, {}).get("kind", "tower")) == "trap" else 0
+		keyed.append([got, trap, i, sid])
+	keyed.sort_custom(func(a, b):
+		if a[0] != b[0]:
+			return a[0] > b[0]
+		if a[1] != b[1]:
+			return a[1] < b[1]
+		return a[2] < b[2])
+	return keyed.map(func(k): return k[3])
 
 
 func _turn_used_page(step: int) -> void:

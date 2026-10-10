@@ -948,4 +948,15 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
 		v.style = "primary"
 		v.label = tr("Behalten")
+	# Symbol + Zielname statt "Abstufen → …", "2 gleiche → …", "Kombinieren → …"
+	var overflow := str(Database.balance.get("overflow_tower", ""))
+	if o.action == "upgrade" or (o.action == "keep" and ((o.id == t.tower_id and o.tier > t.tier) or (o.id == overflow and o.id != t.tower_id))):
+		v.icon = "up"
+	elif o.action == "keep" and o.id == t.tower_id and o.tier < t.tier:
+		v.icon = "down"
+	elif o.action == "combine" or (o.action == "keep" and o.id != t.tower_id):
+		v.icon = "combine"
+	if v.has("icon"):
+		v.tooltip = o.label
+		v.label = Database.tower_label(o.id, o.tier)
 	return v

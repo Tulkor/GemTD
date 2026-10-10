@@ -1,6 +1,6 @@
 {
 	"id": "damage_slate",
-	"name": "Schadensplatte",
+	"name": "Kraftplatte",
 	"category": "special",
 	"kind": "trap",
 	"color": "#dfe6f5",
@@ -28,7 +28,7 @@
 	"description": "Entsteht, wenn der normale Gem und einer der fehlerhaften in derselben Runde gesetzt werden.",
 	"tiers": [
 		{
-			"name": "Schadensplatte",
+			"name": "Kraftplatte",
 			"damage": [
 				0,
 				0
