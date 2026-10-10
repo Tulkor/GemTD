@@ -8,11 +8,11 @@
 		"max_bonus": 1.2
 	},
 	"min_slowed_speed": 1.72,
-	"gold_income_factor": 0.75,
+	"gold_income_factor": 0.7,
 	"gold_income_ramp": {
-		"from_wave": 15,
-		"to_wave": 30,
-		"to_factor": 1.0
+		"from_wave": 28,
+		"to_wave": 35,
+		"to_factor": 1.35
 	},
   "chance_levels": [
 		{
