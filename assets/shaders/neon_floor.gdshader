@@ -15,6 +15,10 @@ uniform vec4 floor_color : source_color = vec4(0.09, 0.03, 0.22, 1.0);
 uniform float floor_alpha = 0.4;
 uniform float line_energy = 1.0;
 uniform float edge_energy = 2.6;
+/// Jede wievielte Gitterlinie hell ist; die übrigen werden mit minor_energy/minor_alpha gedämpft
+uniform float major_every = 5.0;
+uniform float minor_energy = 0.5;
+uniform float minor_alpha = 0.6;
 /// Linienbreite in Einheiten (1 = Towerbreite)
 uniform float line_width = 0.014;
 uniform float halo_width = 0.08;
@@ -56,12 +60,18 @@ void fragment() {
 	float alpha = floor_alpha * (1.0 - b);
 
 	if (b < 0.5) {
-		// Gitterlinien
+		// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
 		vec2 gg = g / grid_cells;
 		vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
-		vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy, aa);
+		vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
+		l.a *= minor_alpha;
 		col = mix(col, l.rgb, l.a);
 		alpha = max(alpha, l.a);
+		vec2 gm = g / (grid_cells * major_every);
+		vec2 dm = abs(fract(gm + 0.5) - 0.5) * grid_cells * major_every * cell;
+		vec4 m = tube(min(dm.x, dm.y), line_width, line_color.rgb, line_energy, aa);
+		col = mix(col, m.rgb, m.a);
+		alpha = max(alpha, m.a);
 		if (fine_strength > 0.0) {
 			vec2 df = abs(fract(g + 0.5) - 0.5) / fwidth(g);
 			float fl = (1.0 - clamp(min(df.x, df.y), 0.0, 1.0)) * fine_strength;
