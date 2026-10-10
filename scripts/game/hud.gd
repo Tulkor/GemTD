@@ -840,16 +840,13 @@ func toggle_recipe_book() -> void:
 
 func _refresh_used_in() -> void:
 	var raw = _selection.get("used_in", null)
-	var sort_key := [raw, owned, owned_now]
+	var sort_key := [raw, owned]
 	if sort_key != _used_raw:
 		if raw != (_used_raw[0] if _used_raw != null else null):
 			used_page = 0
 		_used_raw = sort_key
-		# Gezählt wird alles, was auf dem Feld steht: fixierte Tower und die neuen Gems dieser Runde
-		var standing: Array = owned.filter(func(o): return not Recipes._is_new(o))
-		if not owned_now.get("wave", false):
-			standing += owned_now.get("pool", [])
-		_used_ids = sort_used_in(raw, standing) if raw != null else null
+		# Gezählt werden nur fixierte Tower und der gerade ausgewählte Gem (steckt beides in owned)
+		_used_ids = sort_used_in(raw, owned) if raw != null else null
 	var ids = _used_ids
 	var key := [ids, Session.pinned_recipes.duplicate(), owned, owned_now, used_page]
 	if key == _used_key:
