@@ -7,6 +7,8 @@ extends RefCounted
 ## Fehlt das Modell, zeichnet das Spiel eine eingebaute einfache Form.
 
 static var _cache := {}
+static var _smooth_cache := {}  ## Mesh -> Mesh mit geglätteten Normalen (für Konturen)
+static var _outline_mat: ShaderMaterial
 
 
 static func _load(path: String) -> PackedScene:
@@ -129,6 +131,7 @@ static func make_translucent(n: Node, alpha: float, glow := Color.BLACK) -> void
 			if src is BaseMaterial3D:
 				var m: BaseMaterial3D = src.duplicate()
 				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS  # damit die Kontur innen verdeckt wird
 				m.albedo_color.a = alpha
 				m.roughness = minf(m.roughness, 0.25)
 				m.rim_enabled = true
@@ -143,25 +146,67 @@ static func make_translucent(n: Node, alpha: float, glow := Color.BLACK) -> void
 
 
 ## Kopie des Meshes mit geglätteten Normalen: Ecken an derselben Position bekommen dieselbe
-## (gemittelte) Normale. Für Konturen per aufgeblähter Hülle, die sonst an harten Kanten aufreißen.
+## Normale (Summe der angrenzenden Flächennormalen). Für Konturen per aufgeblähter Hülle,
+## die an harten Kanten sonst aufreißen. Braucht keine Normalen im Original.
 static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 	var out := ArrayMesh.new()
 	for si in mesh.get_surface_count():
+		if mesh.surface_get_primitive_type(si) != Mesh.PRIMITIVE_TRIANGLES:
+			continue
 		var arrays := mesh.surface_get_arrays(si)
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var indices := PackedInt32Array()
+		if arrays[Mesh.ARRAY_INDEX] != null:
+			indices = arrays[Mesh.ARRAY_INDEX]
+		else:
+			indices.resize(verts.size())
+			for i in verts.size():
+				indices[i] = i
 		var sums := {}
-		for i in verts.size():
-			var key := (verts[i] * 1000.0).round()
-			sums[key] = sums.get(key, Vector3.ZERO) + (normals[i] if i < normals.size() else Vector3.UP)
+		for t in range(0, indices.size() - 2, 3):
+			var a := verts[indices[t]]
+			var b := verts[indices[t + 1]]
+			var c := verts[indices[t + 2]]
+			# Godot: Vorderseite im Uhrzeigersinn, daher (c - a) × (b - a) zeigt nach außen
+			var n := (c - a).cross(b - a)
+			for v in [a, b, c]:
+				var key: Vector3 = (v * 1000.0).round()
+				sums[key] = sums.get(key, Vector3.ZERO) + n
 		var smooth := PackedVector3Array()
 		smooth.resize(verts.size())
 		for i in verts.size():
-			smooth[i] = (sums[(verts[i] * 1000.0).round()] as Vector3).normalized()
+			var sum: Vector3 = sums.get((verts[i] * 1000.0).round(), Vector3.UP)
+			smooth[i] = sum.normalized() if sum.length() > 0.0 else Vector3.UP
 		var keep := []
 		keep.resize(Mesh.ARRAY_MAX)
 		keep[Mesh.ARRAY_VERTEX] = verts
 		keep[Mesh.ARRAY_NORMAL] = smooth
-		keep[Mesh.ARRAY_INDEX] = arrays[Mesh.ARRAY_INDEX]
+		keep[Mesh.ARRAY_INDEX] = indices
 		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, keep)
 	return out
+
+
+## Leuchtende Kontur um alle Meshes unter n (gleiche wie bei den Felsbrocken): je Mesh eine
+## aufgeblähte Hülle als Kind. Das Material darunter muss Tiefe schreiben (opak oder DEPTH_DRAW_ALWAYS).
+static func add_outline(n: Node) -> void:
+	if _outline_mat == null:
+		_outline_mat = ShaderMaterial.new()
+		_outline_mat.shader = preload("res://assets/shaders/outline.gdshader")
+		_outline_mat.render_priority = 1
+	var targets: Array[MeshInstance3D] = []
+	_collect_meshes(n, targets)
+	for mi in targets:
+		if not _smooth_cache.has(mi.mesh):
+			_smooth_cache[mi.mesh] = smooth_normals(mi.mesh)
+		var hull := MeshInstance3D.new()
+		hull.mesh = _smooth_cache[mi.mesh]
+		hull.material_override = _outline_mat
+		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.add_child(hull)
+
+
+static func _collect_meshes(n: Node, out: Array[MeshInstance3D]) -> void:
+	if n is MeshInstance3D and n.mesh != null:
+		out.append(n)
+	for c in n.get_children():
+		_collect_meshes(c, out)

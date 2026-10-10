@@ -376,6 +376,7 @@ func _build_visual() -> void:
 	base.material_override = _glass_material()
 	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_visual.add_child(base)
+	ModelLoader.add_outline(base)
 	var light := MeshInstance3D.new()
 	light.mesh = rounded_slab(foot * 0.5, 0.012, 0.07)
 	var light_mat := Board3D.make_material(color.lerp(Color.WHITE, 0.4) * BASE_LIGHT_ENERGY, true)
@@ -410,6 +411,7 @@ func _build_visual() -> void:
 		_gem = Node3D.new()
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
+	ModelLoader.add_outline(_gem)
 	_finish_visual()
 
 
@@ -458,6 +460,7 @@ func _glass_material() -> StandardMaterial3D:
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS  # damit die Kontur innen verdeckt wird
 	m.roughness = 0.05
 	m.metallic_specular = 0.9
 	m.rim_enabled = true
