@@ -7,10 +7,6 @@ extends Node3D
 ## Feld (x, y) liegt bei X = x*CELL..(x+1)*CELL, Z entsprechend, Boden bei Y = 0.
 ## Tower und Steine belegen TOWER_CELLS × TOWER_CELLS Felder, angegeben über das Feld oben links (Anker).
 
-const COL_FLOOR_A := Color("2f4a29")
-const COL_FLOOR_B := Color("2a4325")
-const COL_WALK := Color("54462f")
-const COL_ZONE := Color("4b5530")
 const COL_WALL := Color("2a2b31")
 const COL_ROCK := Color("5c5c63")
 const WALL_HEIGHT := 0.8
@@ -24,6 +20,19 @@ const ROCK_MODELS := [
 	"res://assets/models/rocks/rock_large_c.glb",
 ]
 const ROCK_SIZE := 0.95
+## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
+## um Spawn, Ziel und Checkpoints und auf "_"-Feldern; sonst Gras.
+const GROUND_SHADER := "res://assets/shaders/ground.gdshader"
+const GROUND_TEXTURES := {
+	"grass_a": "res://assets/textures/ground/grass_a.jpg",
+	"grass_b": "res://assets/textures/ground/grass_b.jpg",
+	"dirt": "res://assets/textures/ground/dirt.jpg",
+}
+## Erde: voller Anteil bis DIRT_CORE Felder Abstand vom Weg, dann Auslaufen über DIRT_FADE Felder.
+const DIRT_CORE := 0.8
+const DIRT_FADE := 2.2
+## Um Spawn, Ziel und Checkpoints ist der Erdfleck so viele Felder größer als die Sperrzone.
+const DIRT_ZONE_EXTRA := 1.5
 ## Kantenlänge eines Rasterfelds in Einheiten.
 const CELL := 0.5
 ## Ein Tower ist so viele Felder breit und tief.
@@ -38,8 +47,15 @@ var path_color := Color(1, 1, 1, 0.6)
 var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
 var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
 var hover_ok := true
+## Rasterlinien auf dem Boden (0 = aus), z. B. im Map-Editor.
+var grid_strength := 0.0:
+	set(v):
+		grid_strength = v
+		if _ground_mat != null:
+			_ground_mat.set_shader_parameter("grid_strength", v)
 
-var _ground: MultiMeshInstance3D
+var _ground: MeshInstance3D
+var _ground_mat: ShaderMaterial
 var _walls: MultiMeshInstance3D
 var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
 var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
@@ -82,7 +98,15 @@ static func make_material(col: Color, unshaded := false, transparent := false) -
 
 
 func _ready() -> void:
-	_ground = _multimesh(_box(Vector3(CELL, 0.1, CELL)), true)
+	_ground = MeshInstance3D.new()
+	_ground_mat = ShaderMaterial.new()
+	_ground_mat.shader = load(GROUND_SHADER)
+	for key in GROUND_TEXTURES:
+		_ground_mat.set_shader_parameter(key, load(GROUND_TEXTURES[key]))
+	_ground_mat.set_shader_parameter("cell", CELL)
+	_ground_mat.set_shader_parameter("grid_strength", grid_strength)
+	_ground.material_override = _ground_mat
+	add_child(_ground)
 	_walls = _multimesh(_box(Vector3(CELL, WALL_HEIGHT, CELL)), false, COL_WALL)
 	for path in ROCK_MODELS:
 		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE)
@@ -138,26 +162,13 @@ func _multimesh(mesh: Mesh, colors: bool, col := Color.WHITE, unshaded := false)
 func rebuild() -> void:
 	if map == null or _ground == null:
 		return
-	var ground: Array = []
 	var walls: Array = []
 	for y in map.height:
 		for x in map.width:
 			var c := Vector2i(x, y)
-			match map.get_tile(c):
-				MapData.BLOCKED:
-					walls.append(c)
-				MapData.WALK_ONLY:
-					ground.append([c, COL_WALK])
-				_:
-					var col := COL_FLOOR_A if (x + y) % 2 == 0 else COL_FLOOR_B
-					if map.is_marker_zone(c):
-						col = COL_ZONE
-					ground.append([c, col])
-	var gm := _ground.multimesh
-	gm.instance_count = ground.size()
-	for i in ground.size():
-		gm.set_instance_transform(i, Transform3D(Basis(), to_3d(cell_center(ground[i][0]), -0.05)))
-		gm.set_instance_color(i, ground[i][1])
+			if map.get_tile(c) == MapData.BLOCKED:
+				walls.append(c)
+	_rebuild_ground()
 	var wm := _walls.multimesh
 	wm.instance_count = walls.size()
 	for i in walls.size():
@@ -166,6 +177,60 @@ func rebuild() -> void:
 	refresh_rocks()
 	refresh_path()
 	refresh_hover()
+
+
+## Bodenfläche und Erde-Verteilung (ein Pixel pro Feld) neu berechnen.
+func _rebuild_ground() -> void:
+	var size := Vector2(map.width, map.height) * CELL
+	var plane := PlaneMesh.new()
+	plane.size = size
+	_ground.mesh = plane
+	_ground.position = to_3d(size / 2.0)
+	_ground_mat.set_shader_parameter("map_size", size)
+	# Abstand jedes Felds zur nächsten Erde-Quelle (Chamfer-Distanz, zwei Durchläufe)
+	var w := map.width
+	var h := map.height
+	var dist := PackedFloat32Array()
+	dist.resize(w * h)
+	dist.fill(1e6)
+	for c in Pathfinder.new(map).compute_path():
+		dist[c.y * w + c.x] = 0.0
+	for p in map.waypoints():
+		var r := map.marker_radius
+		for y in range(maxi(p.y - r, 0), mini(p.y + r + 1, h)):
+			for x in range(maxi(p.x - r, 0), mini(p.x + r + 1, w)):
+				dist[y * w + x] = -DIRT_ZONE_EXTRA
+	for y in h:
+		for x in w:
+			if map.get_tile(Vector2i(x, y)) == MapData.WALK_ONLY:
+				dist[y * w + x] = 0.0
+	const D := 1.4142
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			var v := dist[i]
+			if x > 0: v = minf(v, dist[i - 1] + 1.0)
+			if y > 0:
+				v = minf(v, dist[i - w] + 1.0)
+				if x > 0: v = minf(v, dist[i - w - 1] + D)
+				if x < w - 1: v = minf(v, dist[i - w + 1] + D)
+			dist[i] = v
+	for y in range(h - 1, -1, -1):
+		for x in range(w - 1, -1, -1):
+			var i := y * w + x
+			var v := dist[i]
+			if x < w - 1: v = minf(v, dist[i + 1] + 1.0)
+			if y < h - 1:
+				v = minf(v, dist[i + w] + 1.0)
+				if x < w - 1: v = minf(v, dist[i + w + 1] + D)
+				if x > 0: v = minf(v, dist[i + w - 1] + D)
+			dist[i] = v
+	var img := Image.create(w, h, false, Image.FORMAT_L8)
+	for y in h:
+		for x in w:
+			var a := clampf(1.0 - (dist[y * w + x] - DIRT_CORE) / DIRT_FADE, 0.0, 1.0)
+			img.set_pixel(x, y, Color(a, a, a))
+	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
 
 func refresh_rocks() -> void:
