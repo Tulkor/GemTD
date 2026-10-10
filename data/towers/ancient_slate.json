@@ -1,6 +1,6 @@
 {
 	"id": "ancient_slate",
-	"name": "Uralte Platte",
+	"name": "Urplatte",
 	"category": "special",
 	"kind": "trap",
 	"color": "#c8a46e",
@@ -20,7 +20,7 @@
 	"description": "Entsteht aus zwei Fallen auf dem Feld.",
 	"tiers": [
 		{
-			"name": "Uralte Platte",
+			"name": "Urplatte",
 			"damage": [
 				50,
 				50

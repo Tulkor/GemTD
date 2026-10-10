@@ -149,6 +149,14 @@ func _ready() -> void:
 	check(labels.any(func(l): return "Großartiger Rubin" in l), "2 perfekte Rubine → Großartig: %s" % [labels])
 	var down: Array = game.choice_options(game.round_towers[2]).filter(func(o): return o.label.begins_with("Abstufen"))
 	check(down.size() == 1 and down[0].id == "ruby" and down[0].tier == 3, "Perfekten Rubin abstufen → %s" % [down.map(func(o): return o.label)])
+	var views: Array = game.choice_options(game.round_towers[2]).map(func(o): return game._option_view(game.round_towers[2], o))
+	var down_view: Array = views.filter(func(v): return v.get("icon", "") == "down")
+	var up_view: Array = views.filter(func(v): return v.get("icon", "") == "up")
+	check(down_view.size() == 1 and down_view[0].label == "Makelloser Rubin" and up_view.size() == 1 and up_view[0].label == "Großartiger Rubin",
+		"Knöpfe: roter Pfeil + Makelloser Rubin, grüner Pfeil + Großartiger Rubin: %s" % [views])
+	var amethyst_views: Array = game.choice_options(amethyst).map(func(o): return game._option_view(amethyst, o))
+	check(amethyst_views.any(func(v): return v.get("icon", "") == "combine" and v.label == "Luftplatte"), "Kombinieren-Symbol + Luftplatte: %s" % [amethyst_views])
+	check(UiTheme.icon("up") != null and UiTheme.icon("down") != null and UiTheme.icon("combine") != null, "Symbole für Pfeile und Kombinieren laden")
 	game._select(amethyst)
 	var opts: Array = game.choice_options(amethyst)
 	var slate_index := opts.map(func(o): return o.label).find(opts.filter(func(o): return "Luftplatte" in o.label)[0].label)
@@ -258,6 +266,11 @@ func _ready() -> void:
 	check(game.hud.used_page_label.text == "2 / %d" % used_n, "Pfeil blättert weiter")
 	game.hud._turn_used_page(-2)
 	check(game.hud.used_page_label.text == "%d / %d" % [used_n, used_n], "Pfeil zurück springt ans Ende")
+	# Reihenfolge: meiste vorhandene Zutaten zuerst, bei Gleichstand Tower vor Fallen
+	var sorted_ids: Array = Hud.sort_used_in(["air_slate", "silver"], [])
+	check(sorted_ids == ["silver", "air_slate"], "Gleichstand: Tower vor Falle: %s" % [sorted_ids])
+	sorted_ids = Hud.sort_used_in(["silver", "air_slate"], [["amethyst", 2, false]])
+	check(sorted_ids[0] == "air_slate", "Rezept mit mehr vorhandenen Zutaten zuerst: %s" % [sorted_ids])
 	st = Recipes.status("silver", [["diamond", 0, true], ["sapphire", 0], ["topaz", 0]])
 	check(st.lines[0].new and not st.lines[1].new and st.missing == 0, "Neuer Gem der Runde violett, fixierter Tower grün")
 	var jade_set := [["emerald", 2], ["opal", 2], ["sapphire", 1]]

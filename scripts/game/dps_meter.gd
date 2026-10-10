@@ -5,6 +5,7 @@ extends PanelContainer
 ## Liest nur game.is_wave_running(), game.wave_index, game.waves und tower.total_damage.
 
 const TOP := 5
+const TOP_Y := 128.0  ## unter dem Phasenbanner
 ## [Schlüssel, Text]. Die Schlüssel sind die Typen aus game.wave_type().
 const VIEWS := [
 	["now", "Aktuelle Welle"],
@@ -38,7 +39,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	anchor_left = 1.0
 	anchor_right = 1.0
-	offset_top = 64
+	offset_top = TOP_Y
 	offset_right = -16
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	custom_minimum_size.x = 280
@@ -116,7 +117,7 @@ func _row() -> Dictionary:
 
 func _process(delta: float) -> void:
 	if avoid != null:
-		offset_top = avoid.get_rect().end.y + 12 if avoid.visible else 64.0
+		offset_top = avoid.get_rect().end.y + 12 if avoid.visible else TOP_Y
 	if game == null or not game.has_method("is_wave_running"):
 		return
 	var running: bool = game.is_wave_running()
