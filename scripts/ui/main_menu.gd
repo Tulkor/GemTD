@@ -6,6 +6,7 @@ var selected := 0
 var cards_box: HFlowContainer
 var play_button: Button
 var cards: Array[Button] = []
+var settings: Control
 
 
 func _ready() -> void:
@@ -45,6 +46,7 @@ func _ready() -> void:
 	_difficulty_row(left)
 	_menu_button("Map-Editor", left, _open_map_editor)
 	_menu_button("Tower-Editor", left, _open_tower_editor)
+	_menu_button("Einstellungen", left, _open_settings)
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(fill)
@@ -70,6 +72,76 @@ func _ready() -> void:
 	var hint := UiUtil.label("Doppelklick auf eine Map startet sie direkt.", right, 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	_reload()
+	_build_settings()
+	if Session.reopen_settings:
+		Session.reopen_settings = false
+		settings.show()
+
+
+## Einstellungen: Sprache. Ein Wechsel lädt das Menü neu, damit alle Texte neu gebaut werden.
+func _build_settings() -> void:
+	settings = Control.new()
+	settings.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(settings)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	settings.add_child(center)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 28))
+	panel.custom_minimum_size.x = 460
+	center.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 14)
+	panel.add_child(v)
+	var title := UiUtil.label("Einstellungen", v, 28)
+	title.add_theme_color_override("font_color", UiTheme.GOLD)
+	UiTheme.caption(tr("Sprache") + " / Language", v)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	v.add_child(h)
+	var group := ButtonGroup.new()
+	for lang in Loc.LANGUAGES:
+		var code: String = lang[0]
+		var b := Button.new()
+		b.text = lang[1]
+		b.auto_translate = false
+		b.toggle_mode = true
+		b.button_group = group
+		b.focus_mode = Control.FOCUS_NONE
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 52
+		b.add_theme_font_size_override("font_size", 18)
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 8))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		b.set_pressed_no_signal(code == Loc.language)
+		b.pressed.connect(func():
+			if code != Loc.language:
+				Loc.set_language(code)
+				Session.reopen_settings = true
+				get_tree().reload_current_scene())
+		h.add_child(b)
+	var hint := UiUtil.wrap_label("Gilt sofort für Menüs, Editoren und das Spiel und bleibt gespeichert.", v, 400)
+	hint.add_theme_font_size_override("font_size", 13)
+	hint.add_theme_color_override("font_color", UiTheme.MUTED)
+	v.add_child(_gap(4))
+	var done := UiUtil.button("Fertig", v, func(): settings.hide())
+	done.custom_minimum_size.y = 46
+	UiTheme.accent_button(done, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
+	settings.hide()
+
+
+func _open_settings() -> void:
+	settings.show()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if settings.visible and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		settings.hide()
 
 
 ## Schwierigkeit: drei Umschalter, genau einer aktiv.
@@ -86,7 +158,7 @@ func _difficulty_row(parent: Node) -> void:
 		b.button_group = group
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size.y = 36
-		b.tooltip_text = "Gegner: Leben und Rüstung ×%s" % str(d.factor)
+		b.tooltip_text = tr("Gegner: Leben und Rüstung ×%s") % str(d.factor)
 		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.GOLD, Color.TRANSPARENT, 4))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		b.set_pressed_no_signal(i == Session.difficulty)
@@ -144,11 +216,11 @@ func _map_card(i: int) -> Button:
 	var info := ""
 	if md != null:
 		var waves: int = (Database.wave_sets.get(md.wave_set, {}).get("waves", []) as Array).size()
-		info = "%d×%d · %d Wellen · %d Leben · %d Checkpoints" % [md.width, md.height, waves, md.lives, md.checkpoints.size()]
+		info = tr("%d×%d · %d Wellen · %d Leben · %d Checkpoints") % [md.width, md.height, waves, md.lives, md.checkpoints.size()]
 		var rocks := int(md.variance.get("random_rocks", 0))
-		info += "\nWeg ohne Labyrinth: %d Felder" % preview.path_length()
+		info += "\n" + tr("Weg ohne Labyrinth: %d Felder") % preview.path_length()
 		if rocks > 0:
-			info += " · %d zufällige Steine" % rocks
+			info += " · " + tr("%d zufällige Steine") % rocks
 	var l := UiUtil.label(info, v, 13)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_color_override("font_color", UiTheme.MUTED)
@@ -171,7 +243,7 @@ func _update_selection() -> void:
 		cards[i].add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD, 10, 2))
 		cards[i].add_theme_stylebox_override("hover", UiTheme.box(Color("232836"), UiTheme.GOLD if on else UiTheme.BORDER_2, 10, 2))
 	play_button.disabled = maps.is_empty()
-	play_button.text = "Spielen: " + maps[selected].name if not maps.is_empty() else "Spielen"
+	play_button.text = tr("Spielen: %s") % maps[selected].name if not maps.is_empty() else tr("Spielen")
 
 
 func _play() -> void:

@@ -1,0 +1,23 @@
+{
+	"Spielen": "Play",
+	"Spielen: %s": "Play: %s",
+	"Gems setzen, kombinieren, Labyrinth bauen": "Place gems, combine them, build the maze",
+	"Map-Editor": "Map editor",
+	"Tower-Editor": "Tower editor",
+	"Einstellungen": "Settings",
+	"Daten neu laden": "Reload data",
+	"JSON-Dateien unter data/ neu einlesen": "Re-read the JSON files under data/",
+	"Beenden": "Quit",
+	"Map wählen": "Choose a map",
+	"Doppelklick auf eine Map startet sie direkt.": "Double-click a map to start it right away.",
+	"Einfach": "Easy",
+	"Normal": "Normal",
+	"Schwer": "Hard",
+	"Gegner: Leben und Rüstung ×%s": "Enemies: health and armor ×%s",
+	"%d×%d · %d Wellen · %d Leben · %d Checkpoints": "%d×%d · %d waves · %d lives · %d checkpoints",
+	"Weg ohne Labyrinth: %d Felder": "Path without maze: %d tiles",
+	"%d zufällige Steine": "%d random rocks",
+	"Sprache": "Language",
+	"Gilt sofort für Menüs, Editoren und das Spiel und bleibt gespeichert.": "Applies right away to menus, editors and the game, and is saved.",
+	"Fertig": "Done"
+}

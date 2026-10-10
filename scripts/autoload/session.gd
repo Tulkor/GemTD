@@ -27,6 +27,8 @@ const DIFFICULTIES := [
 var difficulty := 1
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
+## Hauptmenü nach dem Sprachwechsel mit offenen Einstellungen neu aufbauen.
+var reopen_settings := false
 ## Wohin "Zurück" im Spiel führt.
 var return_scene := MAIN_MENU
 
