@@ -934,6 +934,11 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 		if not o.consume.is_empty():
 			hint += " " + tr("Verbraucht vom Feld: ") + ", ".join(o.consume.map(func(c): return c.label()))
 		v.hint = hint.strip_edges()
+	elif o.action == "upgrade":
+		# Name des Upgrades, darunter die Goldkosten
+		v.label = Database.tower_label(o.id, o.tier)
+		if int(o.cost) > 0:
+			v.sub = tr("%d Gold") % int(o.cost)
 	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
 		v.style = "primary"
 		v.label = tr("Behalten")

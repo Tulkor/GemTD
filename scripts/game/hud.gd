@@ -598,10 +598,33 @@ func set_options(options: Array) -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.custom_minimum_size = Vector2(260, 40)
+		if o.has("sub"):
+			_two_line(b, o.label, o.sub)
 		if o.get("style", "normal") == "oneshot":
 			b.add_theme_stylebox_override("normal", UiTheme.box(Color("241a38"), UiTheme.PURPLE_LIGHT))
 	actions_col.visible = not options.is_empty()
 	_update_layout()
+
+
+## Knopf mit Name oben und kleiner goldener Zeile darunter (z. B. Upgrade und Goldkosten).
+func _two_line(b: Button, title: String, sub: String) -> void:
+	b.text = ""
+	b.tooltip_text = title + " · " + sub
+	b.custom_minimum_size.y = 54
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 0)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	v.offset_left = 12
+	v.offset_right = -12
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	b.add_child(v)
+	var t := UiUtil.label(title, v, 15)
+	t.clip_text = true
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var g := UiUtil.label(sub, v, 13)
+	g.add_theme_color_override("font_color", UiTheme.GOLD)
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func set_options_enabled(enabled: bool) -> void:

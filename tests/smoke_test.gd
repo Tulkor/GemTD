@@ -273,6 +273,8 @@ func _ready() -> void:
 	check(field_sapphire.tower_id == "silver" and game.phase == game.Phase.WAVE and not game.ground_path.is_empty(), "während der Welle kombiniert, Welle läuft weiter")
 	labels = game.tower_options(topaz).map(func(o): return o.label)
 	check(labels.any(func(l): return l.begins_with("Aufwerten → Sterlingsilber")), "Upgrade während der Welle: %s" % [labels])
+	var up_views: Array = game.tower_options(topaz).filter(func(o): return o.action == "upgrade").map(func(o): return game._option_view(topaz, o))
+	check(not up_views.is_empty() and up_views[0].label == "Sterlingsilber" and str(up_views[0].get("sub", "")).ends_with("Gold"), "Upgrade-Knopf: nur Name, darunter Goldkosten: %s" % [up_views])
 
 	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
 	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle
