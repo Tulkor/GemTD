@@ -8,7 +8,10 @@ const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
 ## Deckkraft für Modelle mit eigener Textur ("model_tint": false)
 const GEM_OPACITY_TEXTURED := 0.85
 ## Helligkeit der Lichtscheibe im Sockel (über 1 = leuchtet im Glow)
-const BASE_LIGHT_ENERGY := 1.5
+const BASE_LIGHT_ENERGY := 1.3
+## Drehgeschwindigkeit der Gems (rad/s): zur Auswahl in dieser Runde, und fixiert
+const SPIN_NEW := 0.425
+const SPIN_FIXED := 0.325
 const BASE_HEIGHT := 0.12
 const BASE_HEIGHT_SPECIAL := 0.18
 ## Höchstens so hoch (Towerbreiten) wird ein Special, auch wenn das Modell schmal und lang ist
@@ -617,7 +620,7 @@ func _ring(radius: float, thickness: float, col: Color) -> MeshInstance3D:
 func _animate(delta: float) -> void:
 	_time += delta
 	if _gem:
-		_gem.rotation.y += delta * 0.5
+		_gem.rotation.y += delta * (SPIN_NEW if is_new else SPIN_FIXED)
 	if _new_ring:
 		_new_ring.visible = is_new
 		if is_new:

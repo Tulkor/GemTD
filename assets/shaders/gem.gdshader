@@ -9,7 +9,7 @@ uniform float opacity = 0.62;
 uniform float glow = 0.25;
 /// Höhe der Sockel-Oberseite (Welt-Y); darüber wird der Stein von unten angestrahlt.
 uniform float base_top = 0.14;
-uniform float under_light = 1.1;
+uniform float under_light = 0.85;
 uniform float under_height = 0.45;
 
 varying float world_y;
