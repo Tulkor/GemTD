@@ -19,8 +19,13 @@ uniform float edge_energy = 2.6;
 uniform float major_every = 5.0;
 /// Ursprung des Gitters in Feldern (erstes freies Feld), damit die hellen Linien am Feldrand liegen
 uniform vec2 grid_origin = vec2(0.0);
-uniform float minor_energy = 0.3;
-uniform float minor_alpha = 0.38;
+/// helle Linien über der Glow-Schwelle, damit sie wie der Außenrand leicht scheinen
+uniform float major_energy = 2.0;
+uniform float minor_energy = 0.5;
+uniform float minor_alpha = 0.6;
+/// Raster der einzelnen Felder (halbe Towerbreite, Tower lassen sich darauf versetzen), noch dunkler
+uniform float cell_energy = 0.28;
+uniform float cell_alpha = 0.32;
 /// Linienbreite in Einheiten (1 = Towerbreite)
 uniform float line_width = 0.014;
 uniform float halo_width = 0.08;
@@ -64,6 +69,11 @@ void fragment() {
 	if (b < 0.5) {
 		// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
 		vec2 go = g - grid_origin;
+		vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
+		vec4 cl = tube(min(dc.x, dc.y), line_width * 0.8, line_color.rgb, line_energy * cell_energy, aa);
+		cl.a *= cell_alpha;
+		col = mix(col, cl.rgb, cl.a);
+		alpha = max(alpha, cl.a);
 		vec2 gg = go / grid_cells;
 		vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
 		vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
@@ -72,7 +82,7 @@ void fragment() {
 		alpha = max(alpha, l.a);
 		vec2 gm = go / (grid_cells * major_every);
 		vec2 dm = abs(fract(gm + 0.5) - 0.5) * grid_cells * major_every * cell;
-		vec4 m = tube(min(dm.x, dm.y), line_width, line_color.rgb, line_energy, aa);
+		vec4 m = tube(min(dm.x, dm.y), line_width * 1.2, line_color.rgb, line_energy * major_energy, aa);
 		col = mix(col, m.rgb, m.a);
 		alpha = max(alpha, m.a);
 		if (fine_strength > 0.0) {
