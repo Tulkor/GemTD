@@ -433,5 +433,6 @@
 	"Dein Anschluss hat keine eigene öffentliche Adresse (CGNAT), Mitspieler aus dem Internet erreichen dich so nicht. Nutzt ein virtuelles LAN wie Tailscale oder ZeroTier.": "Your connection has no public address of its own (CGNAT), so players on the internet can't reach you this way. Use a virtual LAN such as Tailscale or ZeroTier.",
 	"UDP-Port %d ist im Router freigegeben, Mitspieler aus dem Internet können beitreten.": "UDP port %d is open in the router, players on the internet can join.",
 	"Der Router hat UDP-Port %d nicht automatisch freigegeben (UPnP aus?). Gib ihn im Router von Hand für diesen PC frei, oder nutzt Tailscale oder ZeroTier.": "The router did not open UDP port %d automatically (UPnP off?). Forward it to this PC manually in the router, or use Tailscale or ZeroTier.",
-	"Im selben Netzwerk: %s": "Same network: %s"
+	"Im selben Netzwerk: %s": "Same network: %s",
+	"Stufe %d jetzt": "Level %d now"
 }

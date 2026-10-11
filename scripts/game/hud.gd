@@ -502,8 +502,29 @@ func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:
 ## level: aktuelle Chance-Stufe, next_wave: ab dieser Welle gilt die nächste (-1 = schon maximal).
 func set_chance(level: int, next_wave: int) -> void:
 	chance_value.text = tr("Stufe %d") % level
-	chance_value.get_parent().get_parent().tooltip_text = tr("Bessere Gems: die Chance-Stufe steigt automatisch.") + "\n" + \
-		(tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht"))
+	var tip := tr("Bessere Gems: die Chance-Stufe steigt automatisch.") + "\n\n" + tr("Stufe %d jetzt") % level + "\n" + chance_lines(level)
+	tip += "\n\n" + (tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht"))
+	if next_wave >= 0:
+		tip += "\n" + chance_lines(level + 1)
+	chance_value.get_parent().get_parent().tooltip_text = tip
+
+
+## Chance pro Qualität in einer Chance-Stufe, z. B. "Splitter        70 %".
+static func chance_lines(level: int) -> String:
+	var levels: Array = Database.balance.get("chance_levels", [])
+	if levels.is_empty():
+		return ""
+	var weights: Array = levels[clampi(level, 0, levels.size() - 1)].get("weights", [])
+	var total := 0.0
+	for w in weights:
+		total += float(w)
+	var lines := []
+	for i in weights.size():
+		if float(weights[i]) <= 0.0 or total <= 0.0:
+			continue
+		var tier_name: String = TranslationServer.translate(Database.TIER_NAMES[mini(i, Database.TIER_NAMES.size() - 1)])
+		lines.append("  %-13s %3d %%" % [tier_name, roundi(100.0 * float(weights[i]) / total)])
+	return "\n".join(lines)
 
 
 ## oneshot: Text für die lila Markierung, leer = keine.
@@ -544,7 +565,7 @@ func set_round_gems(gems: Array, hint := "") -> void:
 	for i in gems.size():
 		var g: Dictionary = gems[i]
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(50, 50)
+		b.custom_minimum_size = Vector2(50, 60)
 		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = g.label
 		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
@@ -558,17 +579,39 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		var sw := ColorRect.new()
 		sw.color = g.color
 		sw.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		sw.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		sw.anchor_left = 0.5
+		sw.anchor_right = 0.5
 		sw.custom_minimum_size = Vector2(26, 26)
 		sw.offset_left = -13
-		sw.offset_top = -13
+		sw.offset_top = 8
 		sw.offset_right = 13
-		sw.offset_bottom = 13
+		sw.offset_bottom = 34
 		b.add_child(sw)
+		_quality_squares(b, int(g.get("tier", 0)), int(g.get("tiers", 0)), g.color)
 		b.pressed.connect(func(): round_gem_selected.emit(i))
 		strip_row.add_child(b)
 	strip_col.visible = not gems.is_empty()
 	_update_layout()
+
+
+## Qualitätsanzeige unter dem Gem: so viele Kästchen wie es Qualitäten gibt, gefüllt bis zur aktuellen.
+func _quality_squares(b: Control, tier: int, tiers: int, color: Color) -> void:
+	if tiers <= 1:
+		return
+	var size := 6
+	var gap := 2
+	var width := tiers * size + (tiers - 1) * gap
+	for q in tiers:
+		var sq := ColorRect.new()
+		sq.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sq.color = color if q <= tier else UiTheme.BORDER_2
+		sq.anchor_left = 0.5
+		sq.anchor_right = 0.5
+		sq.offset_left = -width / 2.0 + q * (size + gap)
+		sq.offset_right = sq.offset_left + size
+		sq.offset_top = 42
+		sq.offset_bottom = 42 + size
+		b.add_child(sq)
 
 
 ## info: {title, color, body, used_in (Array von Rezept-IDs, null = Abschnitt ausblenden)} oder {} für nichts.
