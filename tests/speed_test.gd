@@ -6,7 +6,7 @@ extends Node
 ## Flugwelle bekommen riesige Leben, damit keiner stirbt: gemessen wird reiner Schaden über die gleiche Strecke.
 
 const SPEEDS := [1.0, 2.0, 4.0]
-const CORNER := Vector2i(9, 27)
+const CORNER := Vector2i(11, 19)
 const TOLERANCE := 0.05
 
 var failures := 0

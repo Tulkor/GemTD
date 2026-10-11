@@ -140,9 +140,9 @@ Dateien unter `user://data/<typ>/` werden zusätzlich geladen und überschreiben
 
 ```json
 {
-  "format": 2, "id": "classic", "name": "Klassisch", "width": 64, "height": 64,
+  "format": 2, "id": "classic", "name": "Klassisch", "width": 44, "height": 44,
   "tiles": ["#####…", "#....…", …],
-  "spawn": [7, 7], "goal": [56, 56], "checkpoints": [[7, 31], [56, 31], …],
+  "spawn": [3, 6], "goal": [40, 35], "checkpoints": [[9, 6], [9, 23], …],
   "marker_radius": 1, "waves": "classic", "lives": 50, "start_gold": 0,
   "variance": {"random_rocks": 25, "seed": -1}
 }
