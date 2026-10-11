@@ -26,7 +26,7 @@ const ROCK_OUTLINE_SHADER := preload("res://assets/shaders/outline.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
-const COL_WAYPOINT := Color("22c4ee")
+const COL_WAYPOINT := Color("ff36d8")
 const COL_PATH := Color("2ef2e0")
 ## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
 ## um Spawn, Ziel und Checkpoints und auf "_"-Feldern; sonst Gras.
