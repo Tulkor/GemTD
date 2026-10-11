@@ -338,7 +338,7 @@ func _build_bottom() -> void:
 	strip_row.add_theme_constant_override("separation", 8)
 	strip_col.add_child(strip_row)
 	strip_hint = UiUtil.label("", strip_col, 12)
-	strip_hint.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	strip_hint.add_theme_color_override("font_color", UiTheme.CYAN)
 	_vsep(h)
 
 	info_col = VBoxContainer.new()
@@ -629,7 +629,7 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		b.custom_minimum_size = Vector2(50, 50)
 		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = g.label
-		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
+		var border := UiTheme.GOLD if g.selected else (UiTheme.CYAN if g.oneshot else UiTheme.BORDER_2)
 		var st := UiTheme.box(Color("030108"), border, 6, 2, 0)
 		b.add_theme_stylebox_override("normal", st)
 		var hover := st.duplicate() as StyleBoxFlat
