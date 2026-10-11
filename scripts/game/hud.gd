@@ -4,6 +4,8 @@ extends CanvasLayer
 ## Auswahlkarte unten (neue Gems, Werte, "Wird gebraucht für", Aktionen) und Rezeptbuch.
 
 signal option_chosen(index: int)
+## Hover über eine Aktion mit neuer Reichweite (Upgrade, Kombinieren …); 0 = Vorschau aus
+signal preview_range_requested(radius: float)
 signal round_gem_selected(index: int)
 signal speed_selected(factor: float)
 signal menu_requested
@@ -73,6 +75,17 @@ var info_col: VBoxContainer
 var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
+var info_kills: TooltipHost
+var info_kills_label: Label
+var info_sub: Label
+var info_main: HBoxContainer
+var info_left: VBoxContainer
+var info_tiles: GridContainer
+var abil_panel: PanelContainer
+var abil_box: VBoxContainer
+var _tiles: Array = []  ## je Kachel {host, caption, value, normal, hover}
+var _stats: Dictionary = {}  ## TowerStats.view des gewählten Towers
+var _abil_key: Variant = null
 var used_col: VBoxContainer
 var used_row: HBoxContainer
 var used_prev: Button
@@ -191,6 +204,29 @@ func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
 	var v := UiUtil.label("", h, 16)
 	v.add_theme_color_override("font_color", color)
 	return v
+
+
+## Kachel im Infofenster (Reichweite, Tempo, Schaden, Schadensart) mit Tooltip, woher der Wert kommt.
+func _stat_tile() -> Dictionary:
+	var host := TooltipHost.new()
+	host.custom_minimum_size.x = 128
+	var normal := UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2, 8)
+	var hover := UiTheme.box(UiTheme.PANEL_2, UiTheme.CYAN, 0, 2, 8)
+	host.add_theme_stylebox_override("panel", normal)
+	host.mouse_entered.connect(func(): host.add_theme_stylebox_override("panel", hover))
+	host.mouse_exited.connect(func(): host.add_theme_stylebox_override("panel", normal))
+	info_tiles.add_child(host)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 0)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.add_child(v)
+	var caption := UiUtil.label("", v, 11)
+	caption.uppercase = true
+	caption.add_theme_color_override("font_color", UiTheme.MUTED)
+	var value := UiUtil.label("", v, 18)
+	var tile := {"host": host, "caption": caption, "value": value}
+	host.make = func(): return _stat_tooltip(_tiles.find(tile))
+	return tile
 
 
 func _vsep(parent: Node) -> void:
@@ -343,19 +379,52 @@ func _build_bottom() -> void:
 
 	info_col = VBoxContainer.new()
 	info_col.custom_minimum_size.x = 250
-	info_col.add_theme_constant_override("separation", 4)
+	info_col.add_theme_constant_override("separation", 6)
 	h.add_child(info_col)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	info_col.add_child(head)
 	info_swatch = ColorRect.new()
-	info_swatch.custom_minimum_size = Vector2(26, 26)
+	info_swatch.custom_minimum_size = Vector2(22, 22)
 	info_swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(info_swatch)
-	info_title = UiUtil.label("", head, 20)
-	info_body = UiUtil.wrap_label("", info_col, 250)
+	info_title = UiUtil.label("", head, 18)
+	info_title.uppercase = true
+	info_title.add_theme_font_override("font", UiTheme.font(true))
+	# Kills neben dem Namen, Hover zeigt den Kill-Rang
+	info_kills = TooltipHost.new()
+	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
+	info_kills.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_kills.make = _kills_tooltip
+	head.add_child(info_kills)
+	info_kills_label = UiUtil.label("", info_kills, 12)
+	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
+	info_sub = UiUtil.label("", info_col, 12)
+	info_sub.add_theme_color_override("font_color", UiTheme.MUTED)
+	info_main = HBoxContainer.new()
+	info_main.add_theme_constant_override("separation", 12)
+	info_col.add_child(info_main)
+	info_left = VBoxContainer.new()
+	info_left.add_theme_constant_override("separation", 6)
+	info_main.add_child(info_left)
+	info_tiles = GridContainer.new()
+	info_tiles.columns = 2
+	info_tiles.add_theme_constant_override("h_separation", 6)
+	info_tiles.add_theme_constant_override("v_separation", 6)
+	info_left.add_child(info_tiles)
+	for i in 4:
+		_tiles.append(_stat_tile())
+	info_body = UiUtil.wrap_label("", info_left, 262)
 	info_body.add_theme_font_size_override("font_size", 13)
 	info_body.add_theme_color_override("font_color", UiTheme.DIM)
+	# Fähigkeiten in einem eigenen kleinen Fenster rechts neben den Werten
+	abil_panel = PanelContainer.new()
+	abil_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BG, UiTheme.CYAN, 0, 2, 10))
+	abil_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	info_main.add_child(abil_panel)
+	abil_box = VBoxContainer.new()
+	abil_box.add_theme_constant_override("separation", 4)
+	abil_panel.add_child(abil_box)
 	_vsep(h)
 
 	used_col = VBoxContainer.new()
@@ -659,7 +728,9 @@ func set_selection(info: Dictionary) -> void:
 	info_title.text = info.title
 	info_title.add_theme_color_override("font_color", (info.color as Color).lerp(Color.WHITE, 0.25))
 	info_swatch.color = info.color
-	info_body.text = info.body
+	info_body.text = info.get("body", "")
+	info_body.visible = info_body.text != ""
+	_show_stats(info.get("stats", {}))
 	_refresh_used_in()
 	_update_layout()
 
@@ -671,6 +742,7 @@ func set_options(options: Array) -> void:
 		return
 	_options = options
 	_main_button = null
+	preview_range_requested.emit(0.0)  # Knöpfe werden neu gebaut, ihr mouse_exited kommt nicht mehr
 	for c in actions_col.get_children():
 		actions_col.remove_child(c)
 		c.queue_free()
@@ -686,7 +758,7 @@ func set_options(options: Array) -> void:
 	if _main_index >= 0:
 		var o: Dictionary = options[_main_index]
 		var main := _main_index
-		var big := _button(o.label, actions_col, func(): option_chosen.emit(main))
+		var big := _option_button(o, o.label, actions_col, func(): option_chosen.emit(main))
 		_main_button = big
 		big.tooltip_text = o.label + " " + tr("(Leertaste)")
 		big.clip_text = true
@@ -703,7 +775,7 @@ func set_options(options: Array) -> void:
 		if i == _main_index:
 			continue
 		var o: Dictionary = options[i]
-		var b := _button(o.label, actions_col, func(): option_chosen.emit(i))
+		var b := _option_button(o, o.label, actions_col, func(): option_chosen.emit(i))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.custom_minimum_size = Vector2(260, 40)
@@ -713,10 +785,28 @@ func set_options(options: Array) -> void:
 			_set_icon(b, o)
 		if o.has("tooltip"):
 			b.tooltip_text = o.tooltip
+		if o.has("diff") and b.tooltip_text == "":
+			b.tooltip_text = o.label
 		if o.get("style", "normal") == "oneshot":
 			b.add_theme_stylebox_override("normal", UiTheme.box(Color("241a38"), UiTheme.PURPLE_LIGHT))
 	actions_col.visible = not options.is_empty()
 	_update_layout()
+
+
+## Aktionsknopf; mit Vorschau (o.diff, o.preview_range) zeigt Hover die neuen Werte und die neue Reichweite.
+func _option_button(o: Dictionary, text: String, parent: Node, on_pressed: Callable) -> Button:
+	var b := TooltipButton.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(on_pressed)
+	parent.add_child(b)
+	if o.has("diff"):
+		b.make = _diff_tooltip.bind(o)
+	if o.has("preview_range"):
+		var r: float = o.preview_range
+		b.mouse_entered.connect(func(): preview_range_requested.emit(r))
+		b.mouse_exited.connect(func(): preview_range_requested.emit(0.0))
+	return b
 
 
 ## Symbol links im Knopf (Pfeil hoch/runter, Kombinieren), siehe UiTheme.icon.
@@ -759,6 +849,171 @@ func _two_line(b: Button, title: String, sub: String, icon: Texture2D = null) ->
 	var g := UiUtil.label(sub, v, 13)
 	g.add_theme_color_override("font_color", UiTheme.COIN)
 	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+# --- Infofenster des gewählten Towers ------------------------------------------
+
+## st: TowerStats.view(), {} = keine Werte (Stein, Verschieben).
+func _show_stats(st: Dictionary) -> void:
+	_stats = st
+	var has := not st.is_empty()
+	info_sub.visible = has
+	info_tiles.visible = has
+	info_kills.visible = has and not (st.kills as Dictionary).is_empty()
+	abil_panel.visible = has and not ((st.abilities as Array).is_empty() and str(st.description) == "")
+	if not has:
+		return
+	info_sub.text = st.subtitle
+	var tiles: Array = st.tiles
+	for i in _tiles.size():
+		var w: Dictionary = _tiles[i]
+		w.host.visible = i < tiles.size()
+		if i >= tiles.size():
+			continue
+		var d: Dictionary = tiles[i]
+		w.caption.text = d.caption
+		w.value.text = d.value
+		var col := UiTheme.HAVE if d.mod else (UiTheme.PURPLE_LIGHT if d.key == "type" else UiTheme.TEXT)
+		w.value.add_theme_color_override("font_color", col)
+		# Text-Fallback; ohne Text zeigt Godot auch den eigenen Tooltip nicht
+		w.host.tooltip_text = "\n".join((d.rows as Array).map(func(r): return "%s  %s" % [r[0], r[1]]))
+	if info_kills.visible:
+		var k: Dictionary = st.kills
+		info_kills_label.text = "✖ " + tr("%d Kills") % int(k.kills)
+		info_kills.tooltip_text = tr("Kills: %d   Schaden gesamt: %d") % [int(k.kills), int(k.total_damage)]
+	var key := [st.abilities, st.description]
+	if key == _abil_key:
+		return
+	_abil_key = key
+	for c in abil_box.get_children():
+		abil_box.remove_child(c)
+		c.queue_free()
+	var head := UiUtil.label("◆ " + (tr("Fähigkeiten") if not (st.abilities as Array).is_empty() else tr("Beschreibung")), abil_box, 12)
+	head.uppercase = true
+	head.add_theme_font_override("font", UiTheme.font(true))
+	head.add_theme_color_override("font_color", UiTheme.CYAN)
+	for text in st.abilities:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		abil_box.add_child(row)
+		var dot := UiUtil.label("✦", row, 12)
+		dot.add_theme_color_override("font_color", UiTheme.GOLD)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		UiUtil.wrap_label(text, row, 250).add_theme_font_size_override("font_size", 12)
+	if str(st.description) != "":
+		var d := UiUtil.wrap_label(st.description, abil_box, 266)
+		d.add_theme_font_size_override("font_size", 12)
+		d.add_theme_color_override("font_color", UiTheme.MUTED)
+
+
+## Tooltip-Grundgerüst: Titel im Arcade-Stil, darunter Zeilen.
+func _tip_box(title: String, width := 300.0) -> VBoxContainer:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	v.custom_minimum_size.x = width
+	UiTheme.title(UiUtil.label(title, v, 15))
+	return v
+
+
+## Zeile links Text, rechts Wert.
+func _tip_row(parent: Node, left: String, right: String, color := UiTheme.TEXT, left_color := UiTheme.DIM) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	parent.add_child(h)
+	var l := UiUtil.label(left, h, 13)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.add_theme_color_override("font_color", left_color)
+	if right != "":
+		UiUtil.label(right, h, 13).add_theme_color_override("font_color", color)
+	return h
+
+
+func _tip_line(parent: Node) -> void:
+	var r := ColorRect.new()
+	r.color = UiTheme.BORDER_2
+	r.custom_minimum_size.y = 1
+	parent.add_child(r)
+
+
+func _tip_note(parent: Node, text: String, width: float) -> void:
+	var l := UiUtil.wrap_label(text, parent, width)
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", UiTheme.MUTED)
+
+
+## Woher ein Wert kommt: Grundwert, Kill-Rang, Auren anderer Tower, darunter die Summe.
+func _stat_tooltip(i: int) -> Control:
+	if _stats.is_empty() or i < 0 or i >= (_stats.tiles as Array).size():
+		return null
+	var d: Dictionary = _stats.tiles[i]
+	if (d.rows as Array).is_empty():
+		return null
+	var v := _tip_box(d.caption, 280)
+	for r in d.rows:
+		_tip_row(v, r[0], r[1], UiTheme.HAVE if r[2] == "up" else UiTheme.TEXT)
+	if (d.rows as Array).size() > 1 and not (d.total as Array).is_empty():
+		_tip_line(v)
+		_tip_row(v, d.total[0], d.total[1], UiTheme.HAVE, UiTheme.TEXT)
+	else:
+		_tip_note(v, tr("Gerade verändert ihn nichts."), 280)
+	return v
+
+
+## Kill-Rang: Bonus jetzt, Fortschritt zum nächsten Rang und wie viele Kills noch fehlen.
+func _kills_tooltip() -> Control:
+	if _stats.is_empty() or (_stats.kills as Dictionary).is_empty():
+		return null
+	var k: Dictionary = _stats.kills
+	var v := _tip_box("✖ " + tr("%d Kills · Rang %d") % [int(k.kills), int(k.rank)], 330)
+	_tip_row(v, tr("Schadensbonus jetzt"), TowerStats.pct(k.bonus), UiTheme.HAVE)
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 2)
+	v.add_child(bar)
+	var filled := 10 if k.maxed else roundi(10.0 * float(k.progress) / float(k.per_rank))
+	for s in 10:
+		var seg := ColorRect.new()
+		seg.custom_minimum_size = Vector2(12, 8)
+		seg.color = UiTheme.COIN if s < filled else UiTheme.BORDER
+		bar.add_child(seg)
+	if k.maxed:
+		_tip_row(v, tr("Höchster Rang erreicht"), "", UiTheme.TEXT, UiTheme.HAVE)
+	else:
+		var h := _tip_row(v, tr("Rang %d bei %d Kills") % [int(k.rank) + 1, int(k.next_at)], tr("noch %d") % int(k.missing), UiTheme.COIN)
+		UiUtil.label("→ " + TowerStats.pct(k.next_bonus), h, 13).add_theme_color_override("font_color", UiTheme.HAVE)
+	_tip_row(v, tr("Schaden gesamt"), "%d" % int(k.total_damage), UiTheme.COIN)
+	_tip_line(v)
+	_tip_note(v, tr("Je %d Kills %s Schaden, höchstens %s.") % [int(k.per_rank), TowerStats.pct(k.step), TowerStats.pct(k.max)], 330)
+	return v
+
+
+## Was sich bei dieser Aktion an den Werten ändert (alt → neu, grün besser, rot schlechter).
+func _diff_tooltip(o: Dictionary) -> Control:
+	var v := _tip_box(str(o.label), 330)
+	if o.has("sub"):
+		UiUtil.label(str(o.sub), v, 12).add_theme_color_override("font_color", UiTheme.COIN)
+	elif o.has("tooltip"):
+		UiUtil.label(str(o.tooltip), v, 12).add_theme_color_override("font_color", UiTheme.MUTED)
+	var rows: Array = o.diff
+	if rows.is_empty():
+		_tip_note(v, tr("Die Werte bleiben gleich."), 330)
+	for r in rows:
+		var col := UiTheme.HAVE if int(r.dir) > 0 else (UiTheme.MISSING if int(r.dir) < 0 else UiTheme.TEXT)
+		if str(r.label) == "":
+			# Fähigkeit: neu/weg in einer Zeile, geändert als alt (grau) und darunter → neu
+			if str(r.old) != "":
+				var was := UiUtil.wrap_label(str(r.old), v, 330)
+				was.add_theme_font_size_override("font_size", 12)
+				was.add_theme_color_override("font_color", UiTheme.MUTED)
+			var l := UiUtil.wrap_label(("→ " if str(r.old) != "" else "") + str(r.new), v, 330)
+			l.add_theme_font_size_override("font_size", 12)
+			l.add_theme_color_override("font_color", UiTheme.CYAN if str(r.old) != "" else col)
+			continue
+		var h := _tip_row(v, str(r.label), str(r.old), UiTheme.MUTED)
+		UiUtil.label("→", h, 13).add_theme_color_override("font_color", UiTheme.MUTED)
+		UiUtil.label(str(r.new), h, 13).add_theme_color_override("font_color", col)
+	_tip_line(v)
+	_tip_note(v, tr("Grundwerte, ohne Aura- und Kill-Bonus."), 330)
+	return v
 
 
 func set_options_enabled(enabled: bool) -> void:
@@ -1053,6 +1308,10 @@ func _update_layout() -> void:
 			separators[i - 1].visible = any_before and cols[i].visible
 		any_before = any_before or cols[i].visible
 	bottom.visible = any_before
+	# Mit den neuen Gems daneben wird es zu breit: Fähigkeiten dann unter die Werte
+	var abil_parent: Node = info_left if strip_col.visible else info_main
+	if abil_panel.get_parent() != abil_parent:
+		abil_panel.reparent(abil_parent)
 	_recenter.call_deferred()
 
 

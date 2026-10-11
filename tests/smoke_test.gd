@@ -295,6 +295,40 @@ func _ready() -> void:
 	check(labels.any(func(l): return l.begins_with("Aufwerten → Sterlingsilber")), "Upgrade während der Welle: %s" % [labels])
 	var up_views: Array = game.tower_options(topaz).filter(func(o): return o.action == "upgrade").map(func(o): return game._option_view(topaz, o))
 	check(not up_views.is_empty() and up_views[0].label == "Sterlingsilber" and str(up_views[0].get("sub", "")).ends_with("Gold"), "Upgrade-Knopf: nur Name, darunter Goldkosten: %s" % [up_views])
+	check(not (up_views[0].diff as Array).is_empty() and float(up_views[0].preview_range) > 0.0, "Upgrade-Knopf mit Werte-Vergleich und neuer Reichweite: %s" % [up_views[0].get("diff")])
+	# Infofenster: Kacheln, Kills mit Rang, Herkunft der Boni, Upgrade-Vorschau
+	var ki := TowerStats.kill_info(23)
+	check(ki.rank == 2 and ki.missing == 7 and is_equal_approx(ki.next_bonus, 0.3) and not ki.maxed, "Kill-Rang bei 23 Kills: %s" % [ki])
+	check(TowerStats.kill_info(500).maxed, "Kill-Rang gedeckelt")
+	var old_kills: int = topaz.kills
+	topaz.kills = 23
+	topaz.damage_bonus = 0.1
+	topaz.damage_source = "Kraftplatte"
+	var tv := TowerStats.view(topaz)
+	var tkeys: Array = tv.tiles.map(func(x): return x.key)
+	check(tkeys == ["range", "speed", "damage", "type"], "Kacheln: %s" % [tkeys])
+	var dtile: Dictionary = tv.tiles[2]
+	check(dtile.mod and dtile.rows.any(func(r): return "Kraftplatte" in r[0]) and dtile.rows.any(func(r): return "Rang 2" in r[0]), "Schaden grün, Tooltip nennt Kraftplatte und Kill-Rang: %s" % [dtile.rows])
+	game._select(topaz)
+	game._refresh_hud()
+	var hud = game.hud
+	check(hud.info_kills.visible and "23" in hud.info_kills_label.text, "Kills neben dem Namen: " + hud.info_kills_label.text)
+	check(hud._tiles[2].value.get_theme_color("font_color") == UiTheme.HAVE, "veränderter Schaden ist grün")
+	var tips := [hud._kills_tooltip(), hud._stat_tooltip(2), hud._diff_tooltip(up_views[0])]
+	check(tips.all(func(x): return x != null), "Tooltips für Kills, Schaden und Upgrade")
+	var tip_text := func(n: Node) -> String:
+		return " ".join(n.find_children("*", "Label", true, false).map(func(l): return l.text))
+	check("noch 7" in tip_text.call(tips[0]), "Kill-Tooltip: noch 7 Kills bis Rang 3: " + tip_text.call(tips[0]))
+	for x in tips:
+		x.free()
+	check(hud.abil_panel.visible == not topaz.abilities().is_empty(), "Fähigkeiten-Fenster nur mit Fähigkeiten")
+	hud.preview_range_requested.emit(float(up_views[0].preview_range))
+	check(topaz._preview_ring != null, "Hover auf Upgrade zeigt die neue Reichweite")
+	hud.preview_range_requested.emit(0.0)
+	check(topaz._preview_ring == null, "Reichweiten-Vorschau wieder aus")
+	topaz.kills = old_kills
+	topaz.damage_bonus = 0.0
+	topaz.damage_source = ""
 
 	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
 	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle
