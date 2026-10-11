@@ -79,7 +79,6 @@
 	" (%d Gold)": " (%d gold)",
 	"One-Shot möglich: ": "One-Shot possible: ",
 	"Spezial möglich: ": "Special possible: ",
-	"Lila Rand: Zutat für ": "Purple border: ingredient for ",
 	"Bauphase": "Build phase",
 	"Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen": "Gems placed: %d / %d · Click rocks to remove them",
 	"Wahlphase": "Choose phase",
@@ -445,5 +444,6 @@
 	"Weglänge am Ende: %d Felder": "Final path length: %d cells",
 	"Wer durchkommt, kostet Leben. Bei 0 ist das Spiel verloren.": "Every enemy that gets through costs lives. At 0 the game is lost.",
 	"Kills geben Punkte, späte Wellen mehr als frühe. Wer durchkommt, kostet die Hälfte seines Werts. Gespielt wird bis zur letzten Welle.": "Kills give points, late waves more than early ones. An enemy that gets through costs half its value. You play until the last wave.",
-	"Punkte-Modus: jeder Kill gibt Punkte, späte Wellen mehr als frühe. Ein Gegner, der durchkommt, kostet die Hälfte seines Werts.": "Score mode: every kill gives points, late waves more than early ones. An enemy that gets through costs half its value."
+	"Punkte-Modus: jeder Kill gibt Punkte, späte Wellen mehr als frühe. Ein Gegner, der durchkommt, kostet die Hälfte seines Werts.": "Score mode: every kill gives points, late waves more than early ones. An enemy that gets through costs half its value.",
+	"Hellblauer Rand: Zutat für ": "Light blue border: ingredient for "
 }

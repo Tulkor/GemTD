@@ -19,7 +19,7 @@ Leertaste: große Aktion unten rechts (Behalten, bzw. lila One-Shot). R: Rezeptb
 **Oberfläche:** Leiste oben (Welle, Leben, Gold, Chance-Stufe, Tempo), darunter das Phasenbanner. Die Chance-Stufe (bessere Gems) steigt automatisch mit der Welle: Stufe 1 ab Welle 3, dann ab 6, 10, 13, 17, 20, 23 und 27 (`"wave"` in `chance_levels` in `data/balance.json`). Dafür gibt es bis Welle 28 nur 70 % des Golds aus Kills und Fähigkeiten (`gold_income_factor`), danach steigt der Anteil linear bis Welle 35 auf 135 % (`gold_income_ramp`). Der Menü-Knopf fragt vorher nach („Spiel verlassen?“), das Spiel ist solange pausiert.
 
 **Einstellungen** (Hauptmenü): Sprache Deutsch/Englisch, Fenster oder Vollbild, Auflösung. Gespeichert in `user://settings.cfg`. Englische Texte stehen in `data/i18n/en.json` (deutscher Text → englischer Text); neue Texte im Code mit `tr("…")` umschließen und dort eintragen.
-Unten die Auswahlkarte: die neuen Gems der Runde (lila Rand = Zutat für einen One-Shot/Spezial-Tower),
+Unten die Auswahlkarte: die neuen Gems der Runde (hellblauer Rand = Zutat für einen One-Shot/Spezial-Tower),
 Werte des angeklickten Towers, „Wird gebraucht für“ mit allen Rezepten, in denen er vorkommt, und die Aktionen.
 Im Rezeptbuch (R) stehen alle Spezial-Rezepte, Zutaten grün (✓ vorhanden) oder rot (✗ fehlt).
 Mit „Pin“ angepinnte Rezepte erscheinen links oben und zeigen, was noch fehlt.

@@ -934,7 +934,7 @@ func _refresh_hud() -> void:
 	var shot_text := ""
 	if not specials.is_empty():
 		shot_text = tr("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
-	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], tr("Lila Rand: Zutat für ") + ", ".join(specials) if not specials.is_empty() else "")
+	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], tr("Hellblauer Rand: Zutat für ") + ", ".join(specials) if not specials.is_empty() else "")
 
 	match phase:
 		Phase.BUILD:
