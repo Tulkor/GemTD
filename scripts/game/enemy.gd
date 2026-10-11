@@ -44,6 +44,7 @@ var net_traveled := 0.0   ## zuletzt gemeldete Strecke
 var net_speed := 0.0      ## zuletzt gemeldetes Tempo (Towerbreiten pro Sekunde des Mitspielers)
 var net_age := 0.0        ## Spielzeit des Mitspielers seit der letzten Meldung
 
+var group: Dictionary = {}  ## Wellengruppe, aus der der Gegner stammt (für Spielstände)
 var shape_name := ""
 var boss := false
 var def_model := ""
@@ -55,6 +56,7 @@ var _body: MeshInstance3D
 
 func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 	game = g
+	group = o
 	enemy_id = str(def.get("id", ""))
 	max_hp = float(o.get("hp", def.get("hp", 10)))
 	hp = max_hp
@@ -174,6 +176,30 @@ func _remote_step(delta: float) -> void:
 	if step.length_squared() > 0.000001:
 		rotation.y = atan2(-step.x, -step.y)
 	pos = p
+	_sync_position()
+	_update_visual()
+
+
+## Spielstand: Gegner an die Stelle setzen, die dist Towerbreiten nach dem Start liegt.
+func place_on_path(dist: float) -> void:
+	traveled = 0.0
+	path_index = 1
+	if path.is_empty():
+		return
+	pos = path[0]
+	var left := dist
+	while path_index < path.size():
+		var seg := pos.distance_to(path[path_index])
+		if seg > left:
+			var dir := (path[path_index] - pos).normalized()
+			pos += dir * left
+			traveled += left
+			rotation.y = atan2(-dir.x, -dir.y)
+			break
+		pos = path[path_index]
+		left -= seg
+		traveled += seg
+		path_index += 1
 	_sync_position()
 	_update_visual()
 

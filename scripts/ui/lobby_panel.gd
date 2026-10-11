@@ -1,24 +1,31 @@
 class_name LobbyPanel
 extends Control
-## Mehrspieler-Fenster im Hauptmenü: Name, Hosten, Beitreten per IP, Spielerliste.
-## Modus 1: jeder spielt sein eigenes Feld und startet unabhängig über „Spielen“;
-## der Host kann zusätzlich alle gleichzeitig auf der gewählten Map starten.
+## Mehrspieler-Lobby im Hauptmenü. Ohne Verbindung: Name, Sitzung hosten, per IP beitreten.
+## Als Host: Sitzung mit allen Plätzen (auch gespeicherte von Mitspielern, die gerade fehlen) und „Starten“.
+## Als Mitspieler: Stand der Sitzung und „Mitspielen“, auch später noch zum Wiedereinsteigen.
+## Gespeicherte Sitzungen lädt der Host über „Spiel laden“ (load_panel.gd).
 
-signal start_all_requested
+signal start_requested
+
+## Name der im Hauptmenü gewählten Map (für eine neue Sitzung).
+var selected_map := ""
 
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
 var _status: Label
+var _offline: VBoxContainer
+var _online: VBoxContainer
 var _addresses: Label
+var _session_text: Label
 var _list: VBoxContainer
-var _host_button: Button
-var _join_button: Button
-var _leave_button: Button
 var _start_button: Button
+var _play_button: Button
+var _leave_button: Button
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.6)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -27,17 +34,15 @@ func _ready() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER_2, 12, 1, 24))
-	panel.custom_minimum_size.x = 560
+	panel.add_theme_stylebox_override("panel", UiTheme.panel(24.0))
+	panel.custom_minimum_size.x = 600
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
 
-	var title := UiUtil.label("Mehrspieler", v, 26)
-	title.add_theme_color_override("font_color", UiTheme.GOLD)
-	var hint := UiUtil.wrap_label("Jeder spielt sein eigenes Feld und startet, wann er will. Im Spiel kannst du über „Zuschauen“ die Felder der anderen ansehen.", v, 500)
-	hint.add_theme_color_override("font_color", UiTheme.MUTED)
+	UiTheme.title(UiUtil.label("Mehrspieler", v, 26))
+	_muted(UiUtil.wrap_label("Jeder spielt sein eigenes Feld. Im Spiel kannst du über „Zuschauen“ die Felder der anderen ansehen. Nur der Host speichert, dabei sichert er die Felder aller Mitspieler.", v, 540))
 
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 10)
@@ -50,52 +55,63 @@ func _ready() -> void:
 	_name_edit.text_changed.connect(func(t): Net.set_my_name(t))
 	name_row.add_child(_name_edit)
 
-	var host_row := HBoxContainer.new()
-	host_row.add_theme_constant_override("separation", 10)
-	v.add_child(host_row)
-	_host_button = UiUtil.button("Spiel hosten", host_row, func(): Net.host())
-	_addresses = UiUtil.label("", host_row, 13)
-	_addresses.add_theme_color_override("font_color", UiTheme.MUTED)
-	_addresses.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
+	# Ohne Verbindung: hosten oder beitreten
+	_offline = VBoxContainer.new()
+	_offline.add_theme_constant_override("separation", 10)
+	v.add_child(_offline)
+	var host := UiUtil.button("Neue Sitzung hosten", _offline, func(): Net.host())
+	host.custom_minimum_size.y = 44
+	_muted(UiUtil.wrap_label("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 540)).add_theme_font_size_override("font_size", 13)
 	var join_row := HBoxContainer.new()
 	join_row.add_theme_constant_override("separation", 10)
-	v.add_child(join_row)
+	_offline.add_child(join_row)
 	_ip_edit = LineEdit.new()
 	_ip_edit.text = Net.last_ip
 	_ip_edit.placeholder_text = "IP-Adresse des Hosts"
 	_ip_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_ip_edit.text_submitted.connect(func(_t): _join())
 	join_row.add_child(_ip_edit)
-	_join_button = UiUtil.button("Beitreten", join_row, _join)
+	UiUtil.button("Beitreten", join_row, _join).custom_minimum_size.x = 130
+	var port_hint := _muted(UiUtil.wrap_label(tr("Im selben Netzwerk reicht die angezeigte Adresse. Übers Internet muss der Host UDP-Port %d am Router freigeben, oder ihr nutzt ein virtuelles LAN wie Tailscale oder ZeroTier.") % Net.DEFAULT_PORT, _offline, 540))
+	port_hint.add_theme_font_size_override("font_size", 12)
 
 	_status = UiUtil.label("", v, 14)
-	_status.add_theme_color_override("font_color", UiTheme.GOLD)
+	_status.add_theme_color_override("font_color", UiTheme.CYAN)
 
-	UiTheme.caption("Spieler", v)
+	# Verbunden: Sitzung und Plätze
+	_online = VBoxContainer.new()
+	_online.add_theme_constant_override("separation", 10)
+	v.add_child(_online)
+	_addresses = _muted(UiUtil.label("", _online, 13))
+	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiTheme.caption("Sitzung", _online)
+	_session_text = UiUtil.wrap_label("", _online, 540)
+	_session_text.add_theme_color_override("font_color", UiTheme.DIM)
+	UiTheme.caption("Spieler", _online)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 6)
-	v.add_child(_list)
-
-	var port_hint := UiUtil.wrap_label(tr("Im selben Netzwerk reicht die angezeigte Adresse. Übers Internet muss der Host UDP-Port %d am Router freigeben, oder ihr nutzt ein virtuelles LAN wie Tailscale oder ZeroTier.") % Net.DEFAULT_PORT, v, 500)
-	port_hint.add_theme_color_override("font_color", UiTheme.MUTED)
-	port_hint.add_theme_font_size_override("font_size", 12)
+	_online.add_child(_list)
 
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	v.add_child(buttons)
-	_start_button = UiUtil.button("Alle starten", buttons, func(): start_all_requested.emit())
-	_start_button.tooltip_text = "Startet alle Verbundenen gleichzeitig auf der gewählten Map"
-	UiTheme.accent_button(_start_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
+	_start_button = UiUtil.button("Starten", buttons, func(): start_requested.emit())
+	_start_button.custom_minimum_size = Vector2(150, 46)
+	UiTheme.accent_button(_start_button, UiTheme.GOLD, UiTheme.GOLD_DARK)
+	_play_button = UiUtil.button("Mitspielen", buttons, func(): Net.join_session())
+	_play_button.custom_minimum_size = Vector2(150, 46)
+	UiTheme.accent_button(_play_button, UiTheme.GOLD, UiTheme.GOLD_DARK)
 	_leave_button = UiUtil.button("Trennen", buttons, func(): Net.leave())
+	_leave_button.custom_minimum_size.y = 46
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(fill)
-	UiUtil.button("Schließen", buttons, hide)
+	UiUtil.button("Schließen", buttons, hide).custom_minimum_size.y = 46
 
 	Net.players_changed.connect(_refresh)
 	Net.connection_changed.connect(_refresh)
+	Net.session_changed.connect(_refresh)
+	visibility_changed.connect(_refresh)
 	_refresh()
 
 
@@ -105,6 +121,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _muted(l: Label) -> Label:
+	l.add_theme_color_override("font_color", UiTheme.MUTED)
+	return l
+
+
 func _join() -> void:
 	var ip := _ip_edit.text.strip_edges()
 	if ip != "":
@@ -112,34 +133,79 @@ func _join() -> void:
 
 
 func _refresh() -> void:
-	if _list == null:
+	if _list == null or not visible:
 		return
-	var online := Net.is_active() or Net.is_connecting()
-	_host_button.disabled = online
-	_join_button.disabled = online
-	_ip_edit.editable = not online
-	_leave_button.disabled = not online
-	_start_button.visible = Net.is_host()
-	_start_button.disabled = Net.players.is_empty()
+	var online := Net.is_active()
+	var busy := online or Net.is_connecting()
+	_offline.visible = not busy
+	_online.visible = online
+	_leave_button.visible = busy
 	_status.text = Net.status_text
 	_status.visible = Net.status_text != ""
+	_start_button.visible = false
+	_play_button.visible = false
+	if not online:
+		return
+
+	var started := false
 	if Net.is_host():
 		var addrs := Net.local_addresses()
 		_addresses.text = tr("Deine Adresse: %s") % ", ".join(addrs) if not addrs.is_empty() else ""
+		_addresses.visible = _addresses.text != ""
+		var s := Net.session
+		started = bool(s.get("started", false))
+		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(selected_map)
+		if started:
+			_session_text.text = tr("Die Sitzung läuft auf %s. Wer dazukommt, steigt über „Mitspielen“ ein, mit seinem gespeicherten Stand, falls es einen gibt.") % map_name
+		elif s.get("loaded", false):
+			_session_text.text = tr("Gespeicherte Sitzung auf %s. „Starten“ setzt für jeden Verbundenen seinen Stand fort, wer fehlt, kann später einsteigen.") % map_name
+		else:
+			_session_text.text = tr("Neue Sitzung auf %s (Map im Hauptmenü wählen). „Starten“ startet alle Verbundenen gleichzeitig.") % map_name
+		_start_button.visible = not started
+		_play_button.visible = started
 	else:
-		_addresses.text = ""
+		_addresses.visible = false
+		var info := Net.session_info
+		started = bool(info.get("started", false))
+		var own := tr("Dein gespeicherter Stand: Welle %d.") % int(info.get("wave", 0)) if info.get("has_state", false) else tr("Du startest neu.")
+		if info.is_empty():
+			_session_text.text = tr("Warte auf den Host …")
+		elif started:
+			_session_text.text = tr("Die Sitzung läuft auf %s.") % tr(str(info.get("map", ""))) + " " + own
+		else:
+			_session_text.text = tr("Warte, bis der Host die Sitzung startet.") + " " + own
+		_play_button.visible = true
+		_play_button.disabled = not started
+
 	for c in _list.get_children():
 		_list.remove_child(c)
 		c.queue_free()
-	if not Net.is_active():
-		UiUtil.label("Nicht verbunden", _list, 13).add_theme_color_override("font_color", UiTheme.MUTED)
-		return
-	UiUtil.label(Net.my_name + "  " + tr("(du)"), _list, 14)
-	var ids := Net.players.keys()
-	ids.sort()
-	for id in ids:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		_list.add_child(row)
-		UiUtil.label(Net.player_name(id), row, 14)
-		UiUtil.label(NetPanel.status_text(Net.player_status(id)), row, 13).add_theme_color_override("font_color", UiTheme.MUTED)
+	for slot in Net.session_slots():
+		_slot_row(slot)
+
+
+func _slot_row(slot: Dictionary) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	_list.add_child(row)
+	var dot := ColorRect.new()
+	dot.custom_minimum_size = Vector2(10, 10)
+	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	dot.color = UiTheme.HAVE if slot.get("online", false) else UiTheme.BORDER_2
+	row.add_child(dot)
+	var peer := int(slot.get("peer", -1))
+	var me := peer == Net.my_id()
+	var n := UiUtil.label(str(slot.get("name", "?")) + ("  " + tr("(du)") if me else ""), row, 14)
+	n.custom_minimum_size.x = 200
+	n.clip_text = true
+	var parts := []
+	if not slot.get("online", false):
+		parts.append(tr("nicht verbunden"))
+	elif Net.players.has(peer):
+		parts.append(NetPanel.status_text(Net.player_status(peer)))
+	if slot.get("has_state", false):
+		parts.append(tr("gespeichert: Welle %d") % int(slot.get("wave", 0)))
+	var info := UiUtil.label(" · ".join(parts), row, 13)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_theme_color_override("font_color", UiTheme.MUTED)

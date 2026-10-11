@@ -57,7 +57,10 @@ var _next_enemy_id := 1
 
 func _ready() -> void:
 	rng.randomize()
-	map = _load_map()
+	# Spielstand fortsetzen (save_game.gd) oder neues Spiel
+	var saved: Dictionary = Session.load_state
+	Session.load_state = {}
+	map = MapData.from_dict(saved.map) if saved.has("map") else _load_map()
 	if map == null:
 		push_error("Keine Map gefunden")
 		Session.goto(Session.MAIN_MENU)
@@ -85,7 +88,12 @@ func _ready() -> void:
 	hud.speed_selected.connect(func(f): Engine.time_scale = f)
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
-	hud.restart_requested.connect(func(): Session.goto(Session.GAME))
+	hud.restart_requested.connect(func():
+		Session.save_id = ""
+		Session.goto(Session.GAME))
+	hud.save_mode = save_mode
+	hud.save_and_leave_requested.connect(func(quit): leave(true, quit))
+	hud.leave_requested.connect(func(quit): leave(false, quit))
 	hud.debug_tower_changed.connect(func(k): debug_tower = k)
 	hud.debug_immortal_changed.connect(func(on): Session.debug_immortal = on)
 	hud.immortal_button.set_pressed_no_signal(Session.debug_immortal)
@@ -101,10 +109,15 @@ func _ready() -> void:
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
 
-	_apply_variance()
-	_update_paths()
-	board.refresh_rocks()
-	_enter_build()
+	if saved.is_empty():
+		_apply_variance()
+		_update_paths()
+		board.refresh_rocks()
+		_enter_build()
+	else:
+		SaveGame.apply(self, saved)
+	get_tree().auto_accept_quit = false
+	Net.game = self
 	if Net.is_active():
 		net_sync = NetSync.new()
 		net_sync.game = self
@@ -116,6 +129,61 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	get_tree().auto_accept_quit = true
+	if Net.game == self:
+		Net.game = null
+
+
+## Fenster schließen: mitten in der Partie erst fragen, ob gespeichert werden soll.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if phase < Phase.GAME_OVER and hud != null:
+			hud.open_leave_confirm(true)
+		else:
+			get_tree().quit()
+
+
+# --- Speichern -----------------------------------------------------------------
+
+## Was die Rückfrage beim Verlassen anbietet: "single" (selbst speichern), "host" (speichert alle Felder),
+## "client" (nur der Host speichert) oder "none" (Partie vorbei).
+func save_mode() -> String:
+	if phase >= Phase.GAME_OVER:
+		return "none"
+	if Net.is_active():
+		return "host" if Net.is_host() else "client"
+	return "single"
+
+
+## Einzelspiel speichern; dieselbe Partie überschreibt ihren Spielstand.
+func save_game() -> bool:
+	var st := SaveGame.capture(self)
+	if st.is_empty():
+		return false
+	if Session.save_id == "":
+		Session.save_id = SaveGame.new_id()
+	return SaveGame.write({"id": Session.save_id, "kind": "single", "meta": SaveGame.meta_for(self), "state": st})
+
+
+## Partie verlassen (quit: Fenster schließen), vorher auf Wunsch speichern.
+## Im Mehrspieler geht der Stand an die Sitzung des Hosts, damit man später wieder einsteigen kann.
+func leave(save: bool, quit := false) -> void:
+	if save:
+		hud.set_leave_busy(tr("Speichere …"))
+		var ok := false
+		if save_mode() == "host":
+			ok = await Net.save_session(self)
+		elif save_mode() == "single":
+			ok = save_game()
+		if not ok:
+			hud.set_leave_busy(tr("Speichern fehlgeschlagen"), true)
+			return
+	elif Net.is_active():
+		Net.report_state(SaveGame.capture(self))
+	if quit:
+		get_tree().quit()
+	else:
+		Session.goto(Session.return_scene)
 
 
 func _load_map() -> MapData:

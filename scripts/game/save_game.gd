@@ -1,0 +1,195 @@
+class_name SaveGame
+extends RefCounted
+## Spielstände: der komplette Zustand eines Felds (auch mitten in einer Welle) als Dictionary,
+## verschlüsselt in user://saves/*.gtd. Godot verschlüsselt mit AES-256 und prüft eine MD5-Summe,
+## eine geänderte Datei lässt sich also nicht mehr laden.
+##
+## Datei: {version, kind ("single"/"multi"), id, meta {name, map, wave, waves, lives, difficulty, time, players},
+##         state (single) oder players {uid: {name, state}} und map (multi)}
+
+const DIR := "user://saves"
+const EXT := ".gtd"
+const VERSION := 1
+const KEY := "GemTD:7f3c9a51-e0b4-4d2e-9c61-5b8d2a4f6e13"
+
+const ENEMY_FIELDS := ["slow_factor", "slow_time", "poison_dps", "poison_time", "armor_reduction",
+	"armor_reduction_time", "stun_time", "stacks", "stack_time"]
+
+
+# --- Zustand eines Felds ---------------------------------------------------------
+
+## Alles, was man braucht, um das Spiel genau so fortzusetzen. Leer, wenn das Spiel vorbei ist.
+static func capture(game) -> Dictionary:
+	if game.phase >= game.Phase.GAME_OVER:
+		return {}
+	var list: Array = game.all_towers()
+	var ts := []
+	for t in list:
+		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills,
+			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left})
+	var es := []
+	for e in game.enemies:
+		if e.dead:
+			continue
+		var d := {"group": e.group, "traveled": e.traveled, "hp": e.hp, "max_hp": e.max_hp, "id": e.net_id}
+		for f in ENEMY_FIELDS:
+			d[f] = e.get(f)
+		es.append(d)
+	return {
+		"map": game.map.to_dict(),
+		"difficulty": Session.difficulty,
+		"phase": game.phase,
+		"wave_index": game.wave_index,
+		"lives": game.lives,
+		"gold": game.gold,
+		"gold_frac": game._gold_frac,
+		"rocks": game.rocks.keys(),
+		"towers": ts,
+		"round": game.round_towers.map(func(t): return list.find(t)),
+		"path_start": game.round_path_start,
+		"killed": game.enemies_killed,
+		"spawn_queue": game.spawn_queue.duplicate(true),
+		"spawn_timer": game.spawn_timer,
+		"enemies": es,
+		"next_enemy_id": game._next_enemy_id,
+		"rng_seed": game.rng.seed,
+		"rng_state": game.rng.state,
+	}
+
+
+## Zustand in ein frisch aufgebautes Spiel (Map, Board, HUD stehen schon) übernehmen.
+static func apply(game, s: Dictionary) -> void:
+	Session.difficulty = int(s.get("difficulty", Session.difficulty))
+	game.wave_index = int(s.get("wave_index", 0))
+	game.lives = int(s.get("lives", game.lives))
+	game.gold = int(s.get("gold", 0))
+	game._gold_frac = float(s.get("gold_frac", 0.0))
+	game.enemies_killed = int(s.get("killed", 0))
+	game._next_enemy_id = int(s.get("next_enemy_id", 1))
+	game.rng.seed = int(s.get("rng_seed", game.rng.seed))
+	game.rng.state = int(s.get("rng_state", game.rng.state))
+	for c in s.get("rocks", []):
+		game.rocks[c] = true
+		game._occupy(c, true, true)
+	var made := []
+	for d in s.get("towers", []):
+		if not Database.towers.has(str(d.id)):
+			made.append(null)
+			continue
+		var t := Tower.new()
+		t.is_new = bool(d.get("new", false))
+		game.board.add_child(t)
+		t.setup(game, d.cell, str(d.id), int(d.tier))
+		t.kills = int(d.get("kills", 0))
+		t.total_damage = float(d.get("dmg", 0.0))
+		t.cooldown_left = float(d.get("cd", 0.0))
+		t.moves_left = int(d.get("moves", 0))
+		game._register(t)
+		made.append(t)
+	game._update_paths()
+	game._update_auras()
+	game.board.refresh_rocks()
+	game.round_path_start = int(s.get("path_start", game.path_length))
+
+	var phase := int(s.get("phase", game.Phase.BUILD))
+	game.chance_level = game.chance_level_for(game.current_wave())
+	game.round_towers.clear()
+	for i in s.get("round", []):
+		if i >= 0 and i < made.size() and made[i] != null:
+			game.round_towers.append(made[i])
+	if phase == game.Phase.WAVE:
+		game.phase = game.Phase.WAVE
+		game.spawn_queue = s.get("spawn_queue", []).duplicate(true)
+		game.spawn_timer = float(s.get("spawn_timer", 0.5))
+		for d in s.get("enemies", []):
+			var g: Dictionary = d.get("group", {})
+			var def: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
+			if def.is_empty():
+				continue
+			var e := Enemy.new()
+			e.net_id = int(d.get("id", 0))
+			game.board.add_child(e)
+			e.setup(game, def, g, game.air_path if def.get("flying", false) else game.ground_path)
+			e.apply_difficulty(Session.difficulty_factor())
+			e.max_hp = float(d.get("max_hp", e.max_hp))
+			e.hp = float(d.get("hp", e.hp))
+			for f in ENEMY_FIELDS:
+				if d.has(f):
+					e.set(f, d[f])
+			e.place_on_path(float(d.get("traveled", 0.0)))
+			game.enemies.append(e)
+	elif phase == game.Phase.CHOOSE and not game.round_towers.is_empty():
+		game.phase = game.Phase.CHOOSE
+		game._select(game.round_towers[-1])
+	else:
+		game.phase = game.Phase.BUILD
+	game._refresh_hud()
+
+
+## Kurzinfo für Listen.
+static func meta_for(game, extra := {}) -> Dictionary:
+	var m := {
+		"map": game.map.name,
+		"wave": mini(game.current_wave(), game.waves.size()),
+		"waves": game.waves.size(),
+		"lives": game.lives,
+		"difficulty": Session.difficulty,
+		"time": int(Time.get_unix_time_from_system()),
+	}
+	m.merge(extra, true)
+	return m
+
+
+# --- Dateien ---------------------------------------------------------------------
+
+static func new_id() -> String:
+	return "%d_%06d" % [int(Time.get_unix_time_from_system()), randi() % 1000000]
+
+
+static func path_for(id: String) -> String:
+	return DIR.path_join(id + EXT)
+
+
+static func write(data: Dictionary) -> bool:
+	DirAccess.make_dir_recursive_absolute(DIR)
+	data["version"] = VERSION
+	var f := FileAccess.open_encrypted_with_pass(path_for(str(data.id)), FileAccess.WRITE, KEY)
+	if f == null:
+		push_error("Spielstand konnte nicht geschrieben werden: %s" % FileAccess.get_open_error())
+		return false
+	f.store_var(data)
+	f.close()
+	return true
+
+
+## Leeres Dictionary, wenn die Datei fehlt, beschädigt oder verändert ist.
+static func read(path: String) -> Dictionary:
+	var f := FileAccess.open_encrypted_with_pass(path, FileAccess.READ, KEY)
+	if f == null:
+		return {}
+	var data = f.get_var()
+	f.close()
+	if not data is Dictionary or int(data.get("version", 0)) != VERSION:
+		return {}
+	return data
+
+
+static func remove(id: String) -> void:
+	DirAccess.remove_absolute(path_for(id))
+
+
+## Alle Spielstände, neueste zuerst: [{id, kind, meta}]
+static func list() -> Array:
+	var out := []
+	var dir := DirAccess.open(DIR)
+	if dir == null:
+		return out
+	for name in dir.get_files():
+		if not name.ends_with(EXT):
+			continue
+		var d := read(DIR.path_join(name))
+		if d.is_empty():
+			continue
+		out.append({"id": str(d.get("id", name.get_basename())), "kind": str(d.get("kind", "single")), "meta": d.get("meta", {})})
+	out.sort_custom(func(a, b): return int(a.meta.get("time", 0)) > int(b.meta.get("time", 0)))
+	return out

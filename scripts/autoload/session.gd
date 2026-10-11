@@ -29,6 +29,10 @@ var difficulty := 1
 var pinned_recipes: Array = []
 ## Hauptmenü nach dem Sprachwechsel mit offenen Einstellungen neu aufbauen.
 var reopen_settings := false
+## Spielstand, mit dem das nächste Spiel startet (leer = neues Spiel), siehe save_game.gd.
+var load_state: Dictionary = {}
+## Datei des laufenden Einzelspiels (leer = noch nie gespeichert); erneutes Speichern überschreibt sie.
+var save_id := ""
 ## Wohin "Zurück" im Spiel führt.
 var return_scene := MAIN_MENU
 

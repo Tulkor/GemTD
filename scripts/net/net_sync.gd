@@ -1,6 +1,7 @@
 class_name NetSync
 extends Node
-## Mehrspieler: meldet den Stand des eigenen Spiels an alle (für die Spielerliste) und schickt,
+## Mehrspieler: meldet den Stand des eigenen Spiels an alle (für die Spielerliste), gibt dem Host
+## zu Beginn jeder Bauphase einen Spielstand (zum Wiedereinsteigen) und schickt,
 ## solange jemand zuschaut, den Abzug des Felds an die Zuschauer:
 ##   Map einmal pro Zuschauer, Feld (Tower, Steine, Wege, Werte) bei jeder Änderung,
 ##   Gegner und Schüsse etwa 15 Mal pro Sekunde. Der Zuschauer lässt die Gegner dazwischen
@@ -21,6 +22,7 @@ var _field_timer := 0.0
 var _enemy_timer := 0.0
 var _sent_enemies := true   ## beim Start einmal leer schicken (Neustart mitten in einer Welle)
 var _beams: Array = []
+var _last_phase := -1
 
 
 func _ready() -> void:
@@ -48,6 +50,11 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 func _process(delta: float) -> void:
 	# Takt in echter Zeit, unabhängig vom Spieltempo
 	var dt := delta / maxf(Engine.time_scale, 0.01)
+	# Zwischenstand für die Sitzung des Hosts: zu Beginn jeder Bauphase und wenn die Partie endet
+	if game.phase != _last_phase:
+		_last_phase = game.phase
+		if game.phase == game.Phase.BUILD or game.phase >= game.Phase.GAME_OVER:
+			Net.report_state(SaveGame.capture(game))
 	_status_timer -= dt
 	if _status_timer <= 0.0:
 		_status_timer = STATUS_INTERVAL

@@ -7,6 +7,9 @@ signal option_chosen(index: int)
 signal round_gem_selected(index: int)
 signal speed_selected(factor: float)
 signal menu_requested
+## Rückfrage beim Verlassen: speichern und verlassen / ohne Speichern verlassen (quit: Fenster schließen)
+signal save_and_leave_requested(quit: bool)
+signal leave_requested(quit: bool)
 signal main_menu_requested
 signal restart_requested
 signal debug_tower_changed(key: String)
@@ -27,6 +30,14 @@ var gold_value: Label
 var path_value: Label
 var game_over: Control
 var leave_confirm: Control
+## Liefert "single", "host", "client" oder "none" (vom Spiel gesetzt): bestimmt die Knöpfe der Rückfrage.
+var save_mode: Callable = func(): return "single"
+var _leave_quit := false
+var _leave_text: Label
+var _leave_status: Label
+var _save_leave: Button
+var _leave_plain: Button
+var _leave_stay: Button
 var game_over_title: Label
 var game_over_stats: Label
 var editor_button: Button
@@ -138,7 +149,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if game_over != null and game_over.visible:
 		return
 	if leave_confirm != null and leave_confirm.visible:
-		if event.keycode == KEY_ESCAPE:
+		if event.keycode == KEY_ESCAPE and not _leave_stay.disabled:
 			close_leave_confirm()
 		get_viewport().set_input_as_handled()
 		return
@@ -799,29 +810,58 @@ func _build_leave_confirm() -> void:
 	panel.add_child(v)
 	var title := UiTheme.title(UiUtil.label("Spiel verlassen?", v, 26))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var text := UiUtil.label("Die laufende Partie geht dabei verloren.", v, 15)
-	text.add_theme_color_override("font_color", UiTheme.DIM)
-	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_text = UiUtil.wrap_label("", v, 380)
+	_leave_text.add_theme_color_override("font_color", UiTheme.DIM)
+	_leave_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_spacer(0))
-	var stay := _button("Weiterspielen", v, close_leave_confirm)
-	stay.custom_minimum_size.y = 52
-	stay.add_theme_font_size_override("font_size", 18)
-	UiTheme.accent_button(stay, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
-	var leave := _button("Verlassen", v, func():
-		leave_confirm.hide()
-		menu_requested.emit())
-	leave.custom_minimum_size.y = 44
-	leave.add_theme_color_override("font_color", UiTheme.MISSING)
-	leave.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
+	_save_leave = _button("Speichern und verlassen", v, func(): save_and_leave_requested.emit(_leave_quit))
+	_save_leave.custom_minimum_size.y = 52
+	_save_leave.add_theme_font_size_override("font_size", 18)
+	UiTheme.accent_button(_save_leave, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	_leave_plain = _button("Ohne Speichern verlassen", v, func(): leave_requested.emit(_leave_quit))
+	_leave_plain.custom_minimum_size.y = 44
+	_leave_plain.add_theme_color_override("font_color", UiTheme.MISSING)
+	_leave_plain.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
+	_leave_stay = _button("Weiterspielen", v, close_leave_confirm)
+	_leave_stay.custom_minimum_size.y = 44
+	_leave_status = UiUtil.label("", v, 14)
+	_leave_status.add_theme_color_override("font_color", UiTheme.CYAN)
+	_leave_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_status.hide()
 	var hint := UiUtil.label("Esc: weiterspielen", v, 12)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	leave_confirm.hide()
 
 
-func open_leave_confirm() -> void:
+## quit: das Fenster wird geschlossen statt ins Menü zu gehen.
+func open_leave_confirm(quit := false) -> void:
+	_leave_quit = quit
+	var mode: String = save_mode.call()
+	_save_leave.visible = mode == "single" or mode == "host"
+	_leave_plain.text = tr("Ohne Speichern verlassen") if _save_leave.visible else (tr("Beenden") if quit else tr("Verlassen"))
+	match mode:
+		"single":
+			_leave_text.text = tr("Willst du vorher speichern? Über „Spiel laden“ im Hauptmenü geht es später genau hier weiter.")
+		"host":
+			_leave_text.text = tr("Willst du vorher speichern? Als Host sicherst du die Felder aller Mitspieler, sie können später wieder einsteigen.")
+		"client":
+			_leave_text.text = tr("Nur der Host speichert. Dein Stand bleibt beim Host, du kannst später wieder einsteigen.")
+		_:
+			_leave_text.text = tr("Die Partie ist vorbei.")
+	set_leave_busy("")
 	leave_confirm.show()
 	get_tree().paused = true
+
+
+## Während gespeichert wird: Knöpfe sperren und Hinweis zeigen (leer = wieder freigeben).
+func set_leave_busy(text: String, error := false) -> void:
+	_leave_status.text = text
+	_leave_status.visible = text != ""
+	_leave_status.add_theme_color_override("font_color", UiTheme.MISSING if error else UiTheme.CYAN)
+	var busy := text != "" and not error
+	for b in [_save_leave, _leave_plain, _leave_stay]:
+		b.disabled = busy
 
 
 func close_leave_confirm() -> void:

@@ -3,6 +3,11 @@ extends Node
 ## Übers Netz gehen nur der Stand jedes Spielers (für die Liste) und, solange jemand zuschaut,
 ## der Abzug seines Felds (net_sync.gd sendet, remote_field.gd zeigt an).
 ## Die Verbindung bleibt über Szenenwechsel bestehen; jeder kann unabhängig starten und neu starten.
+##
+## Sitzung (Lobby): Der Host führt eine Sitzung mit dem Stand jedes Mitspielers, erkannt an einer
+## festen Spieler-ID (uid). Nur der Host speichert, dabei holt er die Felder aller Mitspieler ein
+## (save_session). Mitspieler melden ihren Stand außerdem zu Beginn jeder Bauphase und beim Verlassen,
+## so kann jeder später wieder einsteigen (_join_game) und spielt genau dort weiter.
 
 signal players_changed
 signal connection_changed
@@ -10,14 +15,25 @@ signal field_received(peer: int, data: Dictionary)
 signal map_received(peer: int, data: Dictionary)
 signal enemies_received(peer: int, data: Dictionary)
 signal watchers_changed
+signal session_changed
 
 const DEFAULT_PORT := 24565
 const MAX_PLAYERS := 8
 const SETTINGS := "user://settings.cfg"
+const SAVE_TIMEOUT := 2.5   ## Sekunden, die der Host beim Speichern auf die Felder der Mitspieler wartet
 
-## peer_id -> {"name": String, "status": Dictionary}
+## peer_id -> {"name": String, "status": Dictionary, "uid": String}
 var players: Dictionary = {}
 var my_name := ""
+## Feste Spieler-ID dieses Rechners, damit der Host einen Mitspieler beim Wiederkommen erkennt.
+var uid := ""
+## Laufendes Spiel (game.gd) oder null.
+var game = null
+## Nur beim Host: {id, map, map_name, started, loaded, players {uid: {name, state}}}
+var session: Dictionary = {}
+## Nur beim Mitspieler: was der Host über die Sitzung meldet (siehe _info_for).
+var session_info: Dictionary = {}
+var _reports: Dictionary = {}   ## Host beim Speichern: peer -> true, sobald der Stand da ist
 var last_ip := ""
 ## Stand des eigenen Spiels: in_game, wave, waves, lives, phase, difficulty
 var my_status: Dictionary = {}
@@ -31,8 +47,12 @@ func _ready() -> void:
 	if cfg.load(SETTINGS) == OK:
 		my_name = str(cfg.get_value("net", "name", ""))
 		last_ip = str(cfg.get_value("net", "ip", ""))
+		uid = str(cfg.get_value("net", "uid", ""))
 	if my_name == "":
 		my_name = tr("Spieler") + " %d" % (randi() % 900 + 100)
+	if uid == "":
+		uid = _random_uid()
+		save_settings()
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -45,6 +65,7 @@ func save_settings() -> void:
 	cfg.load(SETTINGS)
 	cfg.set_value("net", "name", my_name)
 	cfg.set_value("net", "ip", last_ip)
+	cfg.set_value("net", "uid", uid)
 	cfg.save(SETTINGS)
 
 
@@ -76,6 +97,7 @@ func host(port := DEFAULT_PORT) -> Error:
 		_set_status(tr("Hosten fehlgeschlagen (Port %d belegt?)") % port)
 		return err
 	multiplayer.multiplayer_peer = peer
+	session = {"id": SaveGame.new_id(), "map": {}, "map_name": "", "started": false, "loaded": false, "players": {}}
 	_set_status(tr("Hoste auf Port %d") % port)
 	connection_changed.emit()
 	return OK
@@ -102,7 +124,11 @@ func leave() -> void:
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 	players.clear()
 	watchers.clear()
+	session = {}
+	session_info = {}
+	_reports.clear()
 	_set_status("")
+	session_changed.emit()
 	players_changed.emit()
 	watchers_changed.emit()
 	connection_changed.emit()
@@ -141,7 +167,7 @@ func set_my_name(n: String) -> void:
 	my_name = n.left(24)
 	save_settings()
 	if is_active():
-		_hello.rpc(my_name, my_status)
+		_hello.rpc(my_name, my_status, uid)
 
 
 # --- Zuschauen -----------------------------------------------------------------
@@ -164,18 +190,200 @@ func send_enemies(peer: int, data: Dictionary) -> void:
 	_enemies.rpc_id(peer, data)
 
 
-## Host startet alle gleichzeitig auf derselben Map (jeder mit seiner eigenen Schwierigkeit).
-func start_all(map_data: Dictionary) -> void:
+# --- Sitzung -------------------------------------------------------------------
+
+## Host: Sitzung aus einem Mehrspieler-Spielstand übernehmen (vorher host()).
+func load_session(data: Dictionary) -> void:
+	if not is_host():
+		return
+	var ps: Dictionary = data.get("players", {}).duplicate(true)
+	# Der eigene Stand liegt unter der uid, mit der gespeichert wurde.
+	var old := str(data.get("host_uid", uid))
+	if old != uid and ps.has(old):
+		ps[uid] = ps[old]
+		ps.erase(old)
+	session = {
+		"id": str(data.get("id", SaveGame.new_id())),
+		"map": data.get("map", {}),
+		"map_name": str(data.get("meta", {}).get("map", "")),
+		"started": false,
+		"loaded": true,
+		"players": ps,
+	}
+	for peer in players:
+		players[peer].uid = _resolve_uid(peer, str(players[peer].get("asked_uid", "")))
+	_push_info()
+
+
+## Host: Sitzung starten. Jeder Verbundene, der gerade nicht spielt, steigt ein:
+## mit seinem gespeicherten Stand, sonst neu auf der Map. map_data gilt nur für neue Sitzungen.
+func start_session(map_data: Dictionary) -> void:
+	if not is_host():
+		return
+	if session.get("map", {}).is_empty():
+		session.map = map_data
+		session.map_name = str(map_data.get("name", ""))
+	session.started = true
+	_push_info()
+	for peer in players:
+		if not player_status(peer).get("in_game", false):
+			_begin.rpc_id(peer, session.map, _state_of(str(players[peer].uid)))
+	_begin_local(session.map, _state_of(uid))
+
+
+## Einer laufenden Sitzung (wieder) beitreten.
+func join_session() -> void:
 	if is_host():
-		_start.rpc(map_data)
+		if session.get("started", false):
+			_begin_local(session.map, _state_of(uid))
+	elif is_active():
+		_join_game.rpc_id(1)
+
+
+## Eigenen Stand dem Host geben (beim Verlassen und zu Beginn jeder Bauphase). Leer = Partie vorbei.
+func report_state(state: Dictionary) -> void:
+	if is_host():
+		_store_state(uid, my_name, state)
+	elif is_active():
+		_state_report.rpc_id(1, state, true)
+		var p := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+		if p != null and p.host != null:
+			p.host.flush()   # vor einem sofortigen Beenden noch rausschicken
+
+
+## Host: Felder aller Mitspieler einholen und zusammen mit dem eigenen verschlüsselt speichern.
+## Wer nicht rechtzeitig antwortet, behält seinen zuletzt gemeldeten Stand.
+func save_session(g) -> bool:
+	if not is_host():
+		return false
+	_reports.clear()
+	var waiting := []
+	for peer in players:
+		if player_status(peer).get("in_game", false):
+			waiting.append(peer)
+			_request_state.rpc_id(peer)
+	var deadline := Time.get_ticks_msec() + int(SAVE_TIMEOUT * 1000.0)
+	while Time.get_ticks_msec() < deadline \
+			and waiting.any(func(p): return players.has(p) and not _reports.has(p)):
+		await get_tree().create_timer(0.05, true, false, true).timeout
+	if g != null:
+		_store_state(uid, my_name, SaveGame.capture(g))
+		if session.map.is_empty():
+			session.map = g.map.to_dict()
+			session.map_name = g.map.name
+	var names := []
+	for u in session.players:
+		names.append(str(session.players[u].get("name", "?")))
+	var meta := SaveGame.meta_for(g, {"players": names}) if g != null else {"map": session.map_name, "players": names, "time": int(Time.get_unix_time_from_system())}
+	var ok := SaveGame.write({"id": session.id, "kind": "multi", "meta": meta, "map": session.map,
+		"host_uid": uid, "players": session.players})
+	_push_info()
+	return ok
+
+
+## Sitzungsplätze für die Lobby: [{uid, name, online, peer, wave, has_state}], der Host (peer 1) zuerst.
+func session_slots() -> Array:
+	var out := []
+	if is_host():
+		var online := {uid: 1}
+		for peer in players:
+			online[str(players[peer].uid)] = peer
+		var uids := [uid]
+		for peer in players:
+			if not uids.has(players[peer].uid):
+				uids.append(str(players[peer].uid))
+		for u in session.get("players", {}):
+			if not uids.has(u):
+				uids.append(u)
+		for u in uids:
+			var entry: Dictionary = session.get("players", {}).get(u, {})
+			var st: Dictionary = entry.get("state", {})
+			var name := my_name if u == uid else (player_name(online[u]) if online.has(u) else str(entry.get("name", "?")))
+			out.append({"uid": u, "name": name, "online": online.has(u), "peer": int(online.get(u, -1)),
+				"has_state": not st.is_empty(), "wave": int(st.get("wave_index", 0)) + 1 if not st.is_empty() else 0})
+	else:
+		out = session_info.get("slots", [])
+	return out
+
+
+func _state_of(u: String) -> Dictionary:
+	return session.get("players", {}).get(u, {}).get("state", {})
+
+
+func _store_state(u: String, n: String, state: Dictionary) -> void:
+	if session.is_empty():
+		return
+	var ps: Dictionary = session.players
+	if not ps.has(u):
+		ps[u] = {}
+	ps[u].name = n
+	ps[u].state = state
+	_push_info()
+
+
+## Host: Spieler-ID eines Mitspielers festlegen. Eine schon vergebene ID (zwei Fenster auf einem
+## Rechner) bekommt einen freien Platz mit gleichem Namen oder eine neue ID.
+func _resolve_uid(peer: int, asked: String) -> String:
+	var taken := {uid: true}
+	for p in players:
+		if p != peer and players[p].has("uid"):
+			taken[str(players[p].uid)] = true
+	if asked != "" and not taken.has(asked):
+		return asked
+	var n := player_name(peer)
+	for u in session.get("players", {}):
+		if not taken.has(u) and str(session.players[u].get("name", "")) == n:
+			return u
+	return _random_uid()
+
+
+## Host: was ein Mitspieler über die Sitzung sieht.
+func _info_for(u: String) -> Dictionary:
+	var st := _state_of(u)
+	return {
+		"started": session.get("started", false),
+		"loaded": session.get("loaded", false),
+		"map": str(session.get("map_name", "")),
+		"has_state": not st.is_empty(),
+		"wave": int(st.get("wave_index", 0)) + 1 if not st.is_empty() else 0,
+		"slots": session_slots(),
+	}
+
+
+func _push_info() -> void:
+	if not is_host():
+		return
+	for peer in players:
+		if players[peer].has("uid"):
+			_session_info.rpc_id(peer, _info_for(str(players[peer].uid)))
+	session_changed.emit()
+
+
+func _begin_local(map_data: Dictionary, state: Dictionary) -> void:
+	Session.load_state = state.duplicate(true)
+	Session.save_id = ""
+	Session.map_override = MapData.from_dict(state.get("map", map_data))
+	Session.test_tower = ""
+	Session.return_scene = Session.MAIN_MENU
+	Session.goto(Session.GAME)
+
+
+static func _random_uid() -> String:
+	return Crypto.new().generate_random_bytes(12).hex_encode()
 
 
 # --- RPCs ------------------------------------------------------------------------
 
 @rpc("any_peer", "reliable")
-func _hello(n: String, status: Dictionary) -> void:
+func _hello(n: String, status: Dictionary, their_uid: String) -> void:
 	var id := multiplayer.get_remote_sender_id()
-	players[id] = {"name": n, "status": status}
+	var known: Dictionary = players.get(id, {})
+	players[id] = {"name": n, "status": status, "asked_uid": their_uid}
+	if is_host():
+		players[id].uid = str(known.uid) if known.has("uid") else _resolve_uid(id, their_uid)
+		if session.players.has(players[id].uid):
+			session.players[players[id].uid].name = n
+		_push_info()
 	players_changed.emit()
 
 
@@ -212,24 +420,58 @@ func _enemies(data: Dictionary) -> void:
 	enemies_received.emit(multiplayer.get_remote_sender_id(), data)
 
 
-@rpc("authority", "call_local", "reliable")
-func _start(map_data: Dictionary) -> void:
-	Session.map_override = MapData.from_dict(map_data)
-	Session.test_tower = ""
-	Session.return_scene = Session.MAIN_MENU
-	Session.goto(Session.GAME)
+## Host → Mitspieler: Spiel starten, mit gespeichertem Stand oder neu auf der Map.
+@rpc("authority", "reliable")
+func _begin(map_data: Dictionary, state: Dictionary) -> void:
+	_begin_local(map_data, state)
+
+
+## Mitspieler → Host: in die laufende Sitzung einsteigen.
+@rpc("any_peer", "reliable")
+func _join_game() -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if is_host() and session.get("started", false) and players.has(id):
+		_begin.rpc_id(id, session.map, _state_of(str(players[id].uid)))
+
+
+## Host → Mitspieler: aktuellen Stand fürs Speichern schicken.
+@rpc("authority", "reliable")
+func _request_state() -> void:
+	if game != null and is_instance_valid(game):
+		_state_report.rpc_id(1, SaveGame.capture(game), true)
+	else:
+		_state_report.rpc_id(1, {}, false)
+
+
+## Mitspieler → Host: Stand des eigenen Felds (in_game false: spielt gerade nicht, nichts ändern).
+@rpc("any_peer", "reliable")
+func _state_report(state: Dictionary, in_game: bool) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if not is_host() or not players.has(id):
+		return
+	_reports[id] = true
+	if in_game:
+		_store_state(str(players[id].uid), player_name(id), state)
+
+
+@rpc("authority", "reliable")
+func _session_info(info: Dictionary) -> void:
+	session_info = info
+	session_changed.emit()
 
 
 # --- Verbindung ----------------------------------------------------------------
 
 func _on_peer_connected(id: int) -> void:
-	_hello.rpc_id(id, my_name, my_status)
+	_hello.rpc_id(id, my_name, my_status, uid)
 
 
 func _on_peer_disconnected(id: int) -> void:
 	players.erase(id)
+	_reports.erase(id)
 	if watchers.erase(id):
 		watchers_changed.emit()
+	_push_info()
 	players_changed.emit()
 
 

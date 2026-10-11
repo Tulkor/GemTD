@@ -8,6 +8,7 @@ var play_button: Button
 var cards: Array[Button] = []
 var settings: Control
 var lobby: LobbyPanel
+var loader: LoadPanel
 var net_button: Button
 
 
@@ -47,6 +48,7 @@ func _ready() -> void:
 	play_button.clip_text = true
 	UiTheme.accent_button(play_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
 	_difficulty_row(left)
+	_menu_button("Spiel laden", left, func(): loader.show())
 	net_button = _menu_button("Mehrspieler", left, func(): lobby.show())
 	_menu_button("Map-Editor", left, _open_map_editor)
 	_menu_button("Tower-Editor", left, _open_tower_editor)
@@ -80,10 +82,19 @@ func _ready() -> void:
 	lobby = LobbyPanel.new()
 	add_child(lobby)
 	lobby.hide()
-	lobby.start_all_requested.connect(_start_all)
+	lobby.start_requested.connect(_start_session)
+	if not maps.is_empty():
+		lobby.selected_map = maps[selected].name
+	loader = LoadPanel.new()
+	add_child(loader)
+	loader.hide()
+	loader.load_requested.connect(_load_save)
 	Net.players_changed.connect(_update_net_button)
 	Net.connection_changed.connect(_update_net_button)
 	_update_net_button()
+	# Zurück aus einer Sitzung: Lobby gleich zeigen, dort geht es mit „Mitspielen“ weiter
+	if Net.is_active():
+		lobby.show()
 	if Session.reopen_settings:
 		Session.reopen_settings = false
 		settings.show()
@@ -273,6 +284,8 @@ func _update_selection() -> void:
 		cards[i].add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD if on else UiTheme.BORDER, 10, 2))
 		cards[i].add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD, 10, 2))
 		cards[i].add_theme_stylebox_override("hover", UiTheme.box(Color("1f1036"), UiTheme.GOLD if on else UiTheme.BORDER_2, 10, 2))
+	if lobby != null and not maps.is_empty():
+		lobby.selected_map = maps[selected].name
 	play_button.disabled = maps.is_empty()
 	play_button.text = tr("Spielen: %s") % tr(maps[selected].name) if not maps.is_empty() else tr("Spielen")
 
@@ -282,6 +295,8 @@ func _play() -> void:
 		return
 	Session.map_path = maps[selected].path
 	Session.map_override = null
+	Session.load_state = {}
+	Session.save_id = ""
 	Session.test_tower = ""
 	Session.return_scene = Session.MAIN_MENU
 	Session.goto(Session.GAME)
@@ -291,13 +306,27 @@ func _update_net_button() -> void:
 	net_button.text = tr("Mehrspieler · %d verbunden") % (Net.players.size() + 1) if Net.is_active() else tr("Mehrspieler")
 
 
-## Host: alle Verbundenen starten gleichzeitig auf der gewählten Map.
-func _start_all() -> void:
-	if maps.is_empty():
+## Host: Sitzung starten, eine neue auf der gewählten Map.
+func _start_session() -> void:
+	var m := MapData.load_file(maps[selected].path) if not maps.is_empty() else null
+	if m != null or not Net.session.get("map", {}).is_empty():
+		Net.start_session(m.to_dict() if m != null else {})
+
+
+## Spielstand laden: Einzelspiel geht direkt weiter, eine Mehrspieler-Sitzung wird gehostet.
+func _load_save(data: Dictionary) -> void:
+	if data.get("kind", "") == "multi":
+		if Net.host() == OK:
+			Net.load_session(data)
+		lobby.show()
 		return
-	var m := MapData.load_file(maps[selected].path)
-	if m != null:
-		Net.start_all(m.to_dict())
+	var st: Dictionary = data.get("state", {})
+	Session.load_state = st
+	Session.save_id = str(data.get("id", ""))
+	Session.map_override = MapData.from_dict(st.get("map", {}))
+	Session.test_tower = ""
+	Session.return_scene = Session.MAIN_MENU
+	Session.goto(Session.GAME)
 
 
 func _open_map_editor() -> void:

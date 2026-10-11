@@ -440,6 +440,8 @@ func _ready() -> void:
 	game._finish(game.Phase.GAME_OVER)
 	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
 
+	await _save_test()
+
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
 		var def: Dictionary = Database.towers[id]
@@ -455,3 +457,78 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	print("FERTIG, Fehler: ", failures)
 	get_tree().quit(1 if failures > 0 else 0)
+
+
+## Spielstände: Zustand mitten in einer Welle sichern, in ein neues Spiel laden, gleich weiter;
+## Datei ist verschlüsselt und eine geänderte Datei lädt nicht mehr.
+func _save_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var tries := 0
+	while g.phase == g.Phase.BUILD and tries < 5000:
+		tries += 1
+		var p: Vector2 = g.ground_path[rng.randi_range(0, g.ground_path.size() - 1)]
+		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
+		if g.can_place(c):
+			g.place_gem(c)
+	g._select(g.round_towers[0])
+	g._on_option_chosen(0)
+	Engine.time_scale = 4.0
+	var frames := 0
+	while g.phase == g.Phase.WAVE and (g.enemies.size() < 3 or frames < 40) and frames < 2000:
+		await get_tree().process_frame
+		frames += 1
+	Engine.time_scale = 1.0
+	var a: Dictionary = SaveGame.capture(g)
+	check(a.phase == g.Phase.WAVE and not a.enemies.is_empty(), "Spielstand mitten in der Welle: %d Gegner, %d Tower, %d Steine" % [a.enemies.size(), a.towers.size(), a.rocks.size()])
+
+	Session.load_state = a.duplicate(true)
+	var g2: Node = load(Session.GAME).instantiate()
+	add_child(g2)
+	var b: Dictionary = SaveGame.capture(g2)
+	var same := true
+	for k in ["phase", "wave_index", "lives", "gold", "rocks", "towers", "round", "killed", "spawn_queue", "next_enemy_id", "rng_state", "difficulty"]:
+		if str(a[k]) != str(b[k]):
+			same = false
+			print("  Unterschied bei ", k, ": ", a[k], " / ", b[k])
+	check(same and is_equal_approx(a.spawn_timer, b.spawn_timer), "Geladenes Spiel hat denselben Stand")
+	var close: bool = a.enemies.size() == b.enemies.size()
+	for i in mini(a.enemies.size(), b.enemies.size()):
+		var ea: Dictionary = a.enemies[i]
+		var eb: Dictionary = b.enemies[i]
+		close = close and absf(ea.traveled - eb.traveled) < 0.01 and is_equal_approx(ea.hp, eb.hp) \
+			and ea.id == eb.id and is_equal_approx(ea.slow_time, eb.slow_time)
+	check(close, "Gegner stehen nach dem Laden an derselben Stelle mit denselben Leben")
+	check(g2.ground_path == g.ground_path and g2.map.name == g.map.name, "Weg und Map nach dem Laden gleich")
+
+	# Datei: verschlüsselt, Änderung wird erkannt
+	var data := {"id": "smoke_test_save", "kind": "single", "meta": SaveGame.meta_for(g), "state": a}
+	check(SaveGame.write(data), "Spielstand geschrieben")
+	var path := SaveGame.path_for("smoke_test_save")
+	var raw := FileAccess.get_file_as_bytes(path)
+	var text := raw.get_string_from_ascii()
+	check(raw.size() > 100 and not ("towers" in text) and not (g.map.name in text) and not ("gold" in text), "Datei ist nicht im Klartext lesbar (%d Bytes)" % raw.size())
+	var back := SaveGame.read(path)
+	check(str(back.get("state", {})) == str(a), "Datei lädt verlustfrei")
+	check(SaveGame.list().any(func(e): return e.id == "smoke_test_save" and e.meta.map == g.map.name), "Spielstand erscheint in der Liste")
+	raw[raw.size() / 2] = raw[raw.size() / 2] ^ 0x55
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_buffer(raw)
+	f.close()
+	check(SaveGame.read(path).is_empty(), "Veränderte Datei wird abgelehnt")
+	SaveGame.remove("smoke_test_save")
+	check(not FileAccess.file_exists(path), "Spielstand gelöscht")
+
+	# Rückfrage beim Verlassen bietet im Einzelspiel Speichern an
+	g2.hud.open_leave_confirm()
+	check(g2.save_mode() == "single" and g2.hud._save_leave.visible and not g2.hud._save_leave.disabled, "Verlassen fragt nach Speichern")
+	g2.hud.close_leave_confirm()
+	Session.save_id = ""
+	g.queue_free()
+	g2.queue_free()
+	await get_tree().process_frame
