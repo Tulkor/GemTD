@@ -500,12 +500,17 @@ func _save_test() -> void:
 		var c := Vector2i(p / Board3D.CELL) + Vector2i(rng.randi_range(-3, 1), rng.randi_range(-3, 1))
 		if g.can_place(c):
 			g.place_gem(c)
+	# Gegner dieser Welle unsterblich machen, damit der Stand nicht davon abhängt, wie schnell der Tower tötet
+	g.waves = g.waves.duplicate(true)
+	for grp in g.waves[g.wave_index].groups:
+		grp.hp = 1.0e7
 	g._select(g.round_towers[0])
 	g._on_option_chosen(0)
-	Engine.time_scale = 4.0
+	Engine.time_scale = 1.0
 	var frames := 0
 	# mitten in der Welle: Gegner unterwegs und noch welche in der Warteschlange
-	while g.phase == g.Phase.WAVE and (g.enemies.size() < 2 or g.spawn_queue.is_empty() or frames < 40) and frames < 2000:
+	# (ohne Mindestzahl an Bildern: bei niedriger Bildrate wäre die Warteschlange sonst schon leer)
+	while g.phase == g.Phase.WAVE and (g.enemies.size() < 2 or g.spawn_queue.is_empty()) and frames < 5000:
 		await get_tree().process_frame
 		frames += 1
 	Engine.time_scale = 1.0
