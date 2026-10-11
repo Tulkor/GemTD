@@ -59,6 +59,9 @@ var path_color := COL_PATH
 var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
 var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
 var hover_ok := true
+## Ausgewählte Steine (Anker), werden türkis umrandet.
+var selected_rocks: Array = []
+var _selection: MultiMeshInstance3D
 ## Deckkraft des Gras-/Erdbodens unter dem Gitter: 0 = aus.
 var ground_alpha := 0.0:
 	set(v):
@@ -323,6 +326,17 @@ func refresh_rocks() -> void:
 			mm.set_instance_transform(j, place * _rock_fits[i])
 			if om != null:
 				om.set_instance_transform(j, place * _rock_fits[i])
+
+
+func refresh_selection() -> void:
+	if _selection == null:
+		_selection = _multimesh(_box(Vector3(TOWER_CELLS * CELL, 0.04, TOWER_CELLS * CELL)), false, Color(0.13, 0.77, 0.93, 0.45), true)
+		var mat := _selection.material_override as StandardMaterial3D
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var mm := _selection.multimesh
+	mm.instance_count = selected_rocks.size()
+	for i in selected_rocks.size():
+		mm.set_instance_transform(i, Transform3D(Basis(), to_3d(footprint_center(selected_rocks[i]), 0.03)))
 
 
 func refresh_path() -> void:

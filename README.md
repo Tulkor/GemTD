@@ -12,7 +12,7 @@ Getestet mit Godot 4.3, sollte in jeder neueren 4.x-Version laufen.
 Godot öffnen → *Importieren* → `project.godot` wählen → F5.
 Im Hauptmenü Map wählen und *Spielen*.
 
-**Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, Rechtsklick/Esc hebt die Auswahl auf.
+**Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, links ziehen spannt einen Auswahlrahmen für bis zu 5 Steine auf, Rechtsklick/Esc hebt die Auswahl auf.
 Kamera: WASD/Pfeile, Maus an den Fensterrand oder mit gedrückter rechter Maustaste ziehen verschiebt, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
 Leertaste: große Aktion unten rechts (Behalten, bzw. lila One-Shot). R: Rezeptbuch.
 
@@ -54,6 +54,8 @@ Weitere Regeln:
   man mit einem zweiten Klick aus. Jede Falle lässt sich zweimal verschieben („Verschieben“, dann
   Ziel anklicken), auch auf Checkpoints, Spawn und Ziel.
 - **Steine** jederzeit anklicken und kostenlos entfernen (Bau-, Auswahlphase und während der Welle).
+  In der Bauphase kann ein ausgewählter Stein auch gleich durch einen neuen Gem ersetzt werden; mit dem
+  Auswahlrahmen gehen bis zu 5 Steine auf einmal (so viele, wie in der Runde noch Gems übrig sind).
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).
@@ -140,9 +142,9 @@ Dateien unter `user://data/<typ>/` werden zusätzlich geladen und überschreiben
 
 ```json
 {
-  "format": 2, "id": "classic", "name": "Klassisch", "width": 44, "height": 44,
+  "format": 2, "id": "classic", "name": "Klassisch", "width": 56, "height": 56,
   "tiles": ["#####…", "#....…", …],
-  "spawn": [3, 6], "goal": [40, 35], "checkpoints": [[9, 6], [9, 23], …],
+  "spawn": [3, 8], "goal": [52, 45], "checkpoints": [[11, 8], [11, 29], …],
   "marker_radius": 1, "waves": "classic", "lives": 50, "start_gold": 0,
   "variance": {"random_rocks": 25, "seed": -1}
 }

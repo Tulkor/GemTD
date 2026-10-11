@@ -26,6 +26,7 @@ const LEFT_TOP := 120.0
 const SPEEDS := [1.0, 2.0, 4.0]
 
 var root: Control
+var _drag_box: Panel   ## Auswahlrahmen beim Ziehen mit der linken Maustaste
 var wave_value: Label
 var lives_value: Label
 var gold_value: Label
@@ -464,7 +465,7 @@ func _build_help() -> void:
 	help_panel.offset_right = -16
 	help_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	root.add_child(help_panel)
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen: bis zu 5 Steine auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
 	help_panel.hide()
 
 
@@ -1014,6 +1015,18 @@ func _diff_tooltip(o: Dictionary) -> Control:
 	_tip_line(v)
 	_tip_note(v, tr("Grundwerte, ohne Aura- und Kill-Bonus."), 330)
 	return v
+
+
+## Auswahlrahmen (Bildschirmkoordinaten) zeigen; leeres Rechteck blendet ihn aus.
+func show_drag_box(r: Rect2) -> void:
+	if _drag_box == null:
+		_drag_box = Panel.new()
+		_drag_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_drag_box.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.CYAN, 0.12), UiTheme.CYAN, 0, 2, 0))
+		root.add_child(_drag_box)
+	_drag_box.visible = r.size != Vector2.ZERO
+	_drag_box.position = r.position
+	_drag_box.size = r.size
 
 
 func set_options_enabled(enabled: bool) -> void:

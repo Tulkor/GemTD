@@ -34,7 +34,7 @@
 	"Menü": "Menu",
 	"Neue Gems dieser Runde": "New gems this round",
 	"Wird gebraucht für": "Used in",
-	"Linksklick: Gem setzen / Tower oder Stein auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo": "Left click: place gem / select tower or rock\nRight click, Esc: clear selection\nSpace: main action (Keep / One-Shot)\nR: recipe book\nWASD/arrows, screen edge, right-drag: move camera\nQ/E or middle mouse: rotate, mouse wheel: zoom\n1, 2, 3: speed",
+	"Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen: bis zu 5 Steine auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo": "Left click: place gem / select tower or rock\nLeft-drag: select up to 5 rocks\nRight click, Esc: clear selection\nSpace: main action (Keep / One-Shot)\nR: recipe book\nWASD/arrows, screen edge, right-drag: move camera\nQ/E or middle mouse: rotate, mouse wheel: zoom\n1, 2, 3: speed",
 	"Gems pro Runde": "Gems per round",
 	"Nächster Gem": "Next gem",
 	"Welcher Gem als nächstes gesetzt wird": "Which gem gets placed next",
@@ -80,7 +80,7 @@
 	"One-Shot möglich: ": "One-Shot possible: ",
 	"Spezial möglich: ": "Special possible: ",
 	"Bauphase": "Build phase",
-	"Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen": "Gems placed: %d / %d · Click rocks to remove them",
+	"Gems gesetzt: %d / %d · Steine anklicken: ersetzen oder entfernen": "Gems placed: %d / %d · Click rocks to replace or remove them",
 	"Wahlphase": "Choose phase",
 	"Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen.": "Pick one of the new gems to keep. The others turn into rocks.",
 	"noch %d Gegner": "%d enemies left",
@@ -474,5 +474,11 @@
 	"Je %d Kills %s Schaden, höchstens %s.": "Every %d kills %s damage, at most %s.",
 	"Die Werte bleiben gleich.": "Stats stay the same.",
 	"Grundwerte, ohne Aura- und Kill-Bonus.": "Base stats, without aura and kill bonus.",
-	"Spezialtower": "Special tower"
+	"Spezialtower": "Special tower",
+	"Gem hierher setzen": "Place gem here",
+	"%d Gems setzen": "Place %d gems",
+	"%d Steine entfernen": "Remove %d rocks",
+	"%d Steine": "%d rocks",
+	"Linke Maustaste ziehen wählt bis zu %d Steine auf einmal aus.": "Drag with the left mouse button to select up to %d rocks at once.",
+	"Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.": "%d gems are left this round, the first %d rocks get replaced."
 }
