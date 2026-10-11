@@ -33,7 +33,16 @@ var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewä
 var enemies: Array = []
 var round_towers: Array = []
 var selected: Tower = null
-var selected_rock := NO_CELL
+## Ausgewählte Steine (Anker), per Klick einer oder per Rahmen bis zu MAX_ROCK_SELECTION.
+var selected_rocks: Array = []
+var selected_rock: Vector2i:
+	get:
+		return selected_rocks[0] if not selected_rocks.is_empty() else NO_CELL
+const MAX_ROCK_SELECTION := 5
+const DRAG_THRESHOLD := 8.0
+var _left_down := false
+var _press_pos := Vector2.ZERO
+var _dragging := false
 
 var phase := Phase.BUILD
 var wave_index := 0
@@ -261,9 +270,25 @@ func _update_hover() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Linke Maustaste: Klick beim Loslassen, Ziehen spannt einen Auswahlrahmen für Steine auf (wie in RTS-Spielen)
+	if event is InputEventMouseMotion and _left_down and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		if not _dragging and event.position.distance_to(_press_pos) >= DRAG_THRESHOLD and moving == null:
+			_dragging = true
+		if _dragging:
+			hud.show_drag_box(Rect2(_press_pos, Vector2.ZERO).expand(event.position))
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera))
+			_left_down = true
+			_dragging = false
+			_press_pos = event.position
+		elif event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and _left_down:
+			_left_down = false
+			if _dragging:
+				_dragging = false
+				hud.show_drag_box(Rect2())
+				_box_select(Rect2(_press_pos, Vector2.ZERO).expand(event.position))
+			else:
+				_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera))
 		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed and not camera_rig.right_dragged:
 			# Rechtsklick hebt die Auswahl auf, rechts ziehen verschiebt nur die Kamera
 			_select(null)
@@ -389,11 +414,18 @@ func _occupy(a: Vector2i, on: bool, solid: bool) -> void:
 
 
 func _select(t: Tower, rock := NO_CELL) -> void:
+	_select_rocks([rock] if rock != NO_CELL else [], t)
+
+
+## Mehrere Steine auswählen (oder einen Tower t, dann ist rocks leer).
+func _select_rocks(list: Array, t: Tower = null) -> void:
 	moving = null
 	if selected != null and is_instance_valid(selected):
 		selected.set_selected(false)
 	selected = t
-	selected_rock = rock
+	selected_rocks = list.slice(0, MAX_ROCK_SELECTION)
+	board.selected_rocks = selected_rocks
+	board.refresh_selection()
 	if t != null:
 		t.set_selected(true)
 	_refresh_hud()
@@ -470,6 +502,47 @@ func place_gem(c: Vector2i) -> Tower:
 		_select(t)
 	_refresh_hud()
 	return t
+
+
+## Steine im Auswahlrahmen (Bildschirmkoordinaten), die nächsten zum Startpunkt zuerst, höchstens 5.
+func _box_select(r: Rect2) -> void:
+	var cam: Camera3D = camera_rig.camera
+	var found := []
+	for c in rocks:
+		var p3 := Board3D.to_3d(Board3D.footprint_center(c))
+		if cam.is_position_behind(p3):
+			continue
+		var p := cam.unproject_position(p3)
+		if r.has_point(p):
+			found.append([p.distance_squared_to(_press_pos), c])
+	found.sort_custom(func(a, b): return a[0] < b[0])
+	_select_rocks(found.map(func(f): return f[1]))
+
+
+## Wie viele Gems in dieser Bauphase noch gesetzt werden dürfen.
+func gems_left() -> int:
+	return maxi(gems_per_round() - round_towers.size(), 0) if phase == Phase.BUILD else 0
+
+
+## Steine direkt durch neue Gems ersetzen (so viele, wie in der Runde noch übrig sind). Gibt die Anzahl zurück.
+func replace_rocks(list: Array) -> int:
+	var done := 0
+	for c in list.duplicate():
+		if gems_left() <= 0 or not can_remove_rock(c):
+			break
+		remove_rock(c)
+		if can_place(c):
+			place_gem(c)
+			done += 1
+		else:
+			# sollte nicht vorkommen (gleiche Felder wie der Stein), sonst Stein zurücklegen
+			rocks[c] = true
+			_occupy(c, true, true)
+			_update_paths()
+			board.refresh_rocks()
+	if phase == Phase.BUILD:
+		_select(null)
+	return done
 
 
 ## Stein entfernen (in jeder Phase, kostet rock_remove_cost Gold).
@@ -639,8 +712,13 @@ func upgrade_options(t: Tower) -> Array:
 
 
 func _on_option_chosen(index: int) -> void:
-	if selected_rock != NO_CELL:
-		remove_rock(selected_rock)
+	if not selected_rocks.is_empty():
+		var list := selected_rocks.duplicate()
+		if index == 0 and gems_left() > 0:
+			replace_rocks(list)
+		else:
+			for c in list:
+				remove_rock(c)
 		return
 	if moving != null:
 		# einzige Option im Verschiebe-Modus: abbrechen
@@ -906,6 +984,10 @@ func _finish(p: Phase) -> void:
 
 # --- HUD ---------------------------------------------------------------------
 
+func _gold_text(cost: int) -> String:
+	return tr(" (%d Gold)") % cost if cost > 0 else ""
+
+
 func _refresh_hud() -> void:
 	if hud == null:
 		return
@@ -938,7 +1020,7 @@ func _refresh_hud() -> void:
 
 	match phase:
 		Phase.BUILD:
-			hud.set_phase(tr("Bauphase"), tr("Gems gesetzt: %d / %d · Steine anklicken, um sie zu entfernen") % [round_towers.size(), gems_per_round()], shot_text)
+			hud.set_phase(tr("Bauphase"), tr("Gems gesetzt: %d / %d · Steine anklicken: ersetzen oder entfernen") % [round_towers.size(), gems_per_round()], shot_text)
 		Phase.CHOOSE:
 			hud.set_phase(tr("Wahlphase"), tr("Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen."), shot_text)
 		Phase.WAVE:
@@ -950,12 +1032,21 @@ func _refresh_hud() -> void:
 
 	hud.set_chance(chance_level, next_chance_wave())
 
-	if selected_rock != NO_CELL:
-		var cost := rock_remove_cost()
-		hud.set_selection({"title": tr("Stein"), "color": Color("6d6a63"), "used_in": null,
-				"body": ""})
-		hud.set_options([{"label": tr("Stein entfernen") + (tr(" (%d Gold)") % cost if cost > 0 else ""), "style": "normal"}])
-		hud.set_options_enabled(can_remove_rock(selected_rock))
+	if not selected_rocks.is_empty():
+		var n := selected_rocks.size()
+		var each := rock_remove_cost()
+		var free := gems_left()
+		var k := mini(n, free)
+		var body := tr("Linke Maustaste ziehen wählt bis zu %d Steine auf einmal aus.") % MAX_ROCK_SELECTION
+		if free > 0 and n > free:
+			body = tr("Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.") % [free, free]
+		hud.set_selection({"title": tr("Stein") if n == 1 else tr("%d Steine") % n, "color": Color("6d6a63"), "used_in": null, "body": body})
+		var opts := []
+		if free > 0:
+			opts.append({"label": (tr("Gem hierher setzen") if n == 1 else tr("%d Gems setzen") % k) + _gold_text(each * k), "style": "primary"})
+		opts.append({"label": (tr("Stein entfernen") if n == 1 else tr("%d Steine entfernen") % n) + _gold_text(each * n), "style": "normal"})
+		hud.set_options(opts)
+		hud.set_options_enabled(phase < Phase.GAME_OVER and gold >= each * (k if free > 0 else n))
 		return
 	if moving != null and is_instance_valid(moving):
 		hud.set_selection({"title": tr("%s verschieben") % moving.label(), "color": moving.color, "used_in": null,

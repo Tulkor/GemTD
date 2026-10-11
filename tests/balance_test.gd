@@ -7,8 +7,8 @@ extends Node
 
 const GEMS := ["amethyst", "aquamarine", "diamond", "emerald", "opal", "ruby", "sapphire", "topaz"]
 const RUNS := 10
-const POSITIONS := {"Ecke": Vector2i(11, 19), "Gerade": Vector2i(10, 14)}
-const ROCKS_AT := [Vector2i(12, 28), Vector2i(15, 28), Vector2i(12, 31), Vector2i(15, 31)]
+const POSITIONS := {"Ecke": Vector2i(13, 25), "Gerade": Vector2i(12, 18)}
+const ROCKS_AT := [Vector2i(15, 35), Vector2i(18, 35), Vector2i(15, 38), Vector2i(18, 38)]
 
 
 func _ready() -> void:

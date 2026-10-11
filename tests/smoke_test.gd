@@ -465,6 +465,7 @@ func _ready() -> void:
 
 	await _save_test()
 	await _score_test()
+	await _rock_select_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -603,5 +604,50 @@ func _score_test() -> void:
 	g._finish(g.Phase.VICTORY)
 	check("Punkte: %d" % roundi(g.score) in g.hud.game_over_stats.text, "Endbildschirm zeigt die Punkte")
 	Session.score_mode = false
+	g.queue_free()
+	await get_tree().process_frame
+
+
+## Steine: per Rahmen bis zu 5 auswählen, direkt durch Gems ersetzen (nur so viele, wie die Runde noch hat), Rest entfernen.
+func _rock_select_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	g.gold = 10000
+	var gem_cells := [Vector2i(14, 40), Vector2i(18, 40), Vector2i(22, 40)]
+	for c in gem_cells:
+		g.place_gem(c)
+	var rock_cells := []
+	for i in 3:
+		for j in 2:
+			var c := Vector2i(14 + 4 * i, 32 + 4 * j)
+			if g.can_place(c):
+				g.rocks[c] = true
+				g._occupy(c, true, true)
+				rock_cells.append(c)
+	g._update_paths()
+	g.board.refresh_rocks()
+	check(rock_cells.size() == 6 and g.gems_left() == 2, "6 Steine liegen, noch %d Gems in der Runde" % g.gems_left())
+	var cam: Camera3D = g.camera_rig.camera
+	var r := Rect2()
+	for i in rock_cells.size():
+		var p := cam.unproject_position(Board3D.to_3d(Board3D.footprint_center(rock_cells[i])))
+		r = Rect2(p, Vector2.ZERO) if i == 0 else r.expand(p)
+	g._press_pos = cam.unproject_position(Board3D.to_3d(Board3D.footprint_center(rock_cells[0])))
+	g._box_select(r.grow(4.0))
+	check(g.selected_rocks.size() == 5 and g.selected_rocks[0] == rock_cells[0] and g.board.selected_rocks.size() == 5,
+		"Auswahlrahmen markiert höchstens 5 Steine (%d)" % g.selected_rocks.size())
+	var picked: Array = g.selected_rocks.duplicate()
+	g._on_option_chosen(0)
+	var replaced := picked.slice(0, 2)
+	check(g.round_towers.size() == 5 and g.phase == g.Phase.CHOOSE and replaced.all(func(c): return g.towers.has(c) and not g.rocks.has(c)),
+		"Ersetzen setzt nur die 2 übrigen Gems, dann Auswahlphase")
+	check(g.rocks.size() == 4, "die anderen Steine bleiben liegen (%d)" % g.rocks.size())
+	var gold_before: int = g.gold
+	g._select_rocks(g.rocks.keys())
+	g._on_option_chosen(0)
+	check(g.rocks.is_empty() and g.gold == gold_before - 4 * g.rock_remove_cost(), "ohne freie Gems entfernt die Auswahl alle 4 Steine")
 	g.queue_free()
 	await get_tree().process_frame
