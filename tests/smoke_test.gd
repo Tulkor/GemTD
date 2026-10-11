@@ -359,10 +359,14 @@ func _ready() -> void:
 	var chance_tip: String = Hud.chance_lines(1)
 	check("Splitter" in chance_tip and "70 %" in chance_tip and "30 %" in chance_tip, "Chance-Tooltip zeigt Prozente pro Qualität: %s" % chance_tip)
 	check("Splitter" in game.hud.chance_value.get_parent().get_parent().tooltip_text, "Tooltip hängt am Chance-Feld")
-	var probe := Button.new()
-	game.hud._quality_squares(probe, 2, 6, Color.RED)
-	check(probe.get_child_count() == 6 and probe.get_child(2).color == Color.RED and probe.get_child(3).color == UiTheme.BORDER_2, "Qualitätskästchen: 6 Stück, 3 gefüllt")
-	probe.free()
+	var chance_host: TooltipHost = game.hud.chance_value.get_parent().get_parent()
+	var chance_tt = chance_host._make_custom_tooltip("")
+	check(chance_tt is Control and chance_tt.get_child_count() >= 5, "Chance-Tooltip mit Titel, Balken und nächster Stufe")
+	if chance_tt != null:
+		chance_tt.free()
+	var badge := QualityBadge.new(Color.RED, 2, 6)
+	check(badge.tier == 2 and badge.tiers == 6 and badge.custom_minimum_size.x > 0, "Qualitätssymbol: 6 Quadrate, 3 gefüllt")
+	badge.free()
 
 	# DPS-Meter rechts: Top 5 je Welle, letzte Welle je Typ, Gesamt
 	var meter: DpsMeter = game.hud.dps_meter

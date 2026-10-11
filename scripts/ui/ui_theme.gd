@@ -46,6 +46,17 @@ static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_wid
 	return s
 
 
+## Kasten mit schräg abgeschnittenen Ecken oben links und unten rechts (Tooltips).
+static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBoxFlat:
+	var s := box(bg, border, 0, 2, pad)
+	s.corner_radius_top_left = cut
+	s.corner_radius_bottom_right = cut
+	s.corner_detail = 1
+	s.content_margin_top = pad
+	s.content_margin_bottom = pad
+	return s
+
+
 ## Hauptpanel: dicker rosa Rahmen, harter türkiser Schatten nach rechts unten.
 static func panel(pad := 14.0, alpha := 0.95, border := GOLD) -> StyleBoxFlat:
 	var s := box(Color(PANEL, alpha), border, 0, 3, pad)
@@ -87,7 +98,7 @@ static func get_theme() -> Theme:
 	t.set_stylebox("panel", "PopupMenu", box(BAR, GOLD, 0, 2, 6))
 	t.set_stylebox("hover", "PopupMenu", box(PANEL_2, CYAN, 0, 0, 4))
 	t.set_color("font_separator_color", "PopupMenu", CYAN)
-	t.set_stylebox("panel", "TooltipPanel", box(BAR, CYAN, 0, 2, 8))
+	t.set_stylebox("panel", "TooltipPanel", chamfer(BAR, CYAN, 14, 12))
 	t.set_stylebox("separator", "HSeparator", box(BORDER, Color.TRANSPARENT, 0, 0, 0))
 	t.set_constant("separation", "HSeparator", 2)
 	t.set_stylebox("panel", "TabContainer", box(PANEL, BORDER, 0, 2, 12))

@@ -181,7 +181,7 @@ func _button(text: String, parent: Node, on_pressed: Callable) -> Button:
 
 
 func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
-	var p := PanelContainer.new()
+	var p := TooltipHost.new()
 	p.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2, 10))
 	parent.add_child(p)
 	var h := HBoxContainer.new()
@@ -506,7 +506,63 @@ func set_chance(level: int, next_wave: int) -> void:
 	tip += "\n\n" + (tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht"))
 	if next_wave >= 0:
 		tip += "\n" + chance_lines(level + 1)
-	chance_value.get_parent().get_parent().tooltip_text = tip
+	var host: TooltipHost = chance_value.get_parent().get_parent()
+	host.tooltip_text = tip
+	host.make = _chance_tooltip.bind(level, next_wave)
+
+
+## Verzierter Tooltip der Chance-Stufe: Prozent pro Qualität als Balken, darunter die nächste Stufe.
+func _chance_tooltip(level: int, next_wave: int) -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	v.custom_minimum_size.x = 330
+	UiTheme.title(UiUtil.label("◆ " + tr("Chance · Stufe %d") % level + " ◆", v, 18))
+	var sub := UiUtil.label("Steigt automatisch mit den Wellen.", v, 12)
+	sub.add_theme_color_override("font_color", UiTheme.MUTED)
+	_chance_rows(v, level, 1.0)
+	var divider := UiUtil.label("━━ " + (tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht")) + " ━━", v, 13)
+	divider.uppercase = true
+	divider.add_theme_font_override("font", UiTheme.font(true))
+	divider.add_theme_color_override("font_color", UiTheme.CYAN)
+	divider.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if next_wave >= 0:
+		_chance_rows(v, level + 1, 0.6)
+	return v
+
+
+## Eine Zeile pro Qualität mit Chance > 0: Qualitätssymbol, Name, 10er-Balken, Prozent.
+func _chance_rows(parent: Node, level: int, alpha: float) -> void:
+	var levels: Array = Database.balance.get("chance_levels", [])
+	if levels.is_empty():
+		return
+	var weights: Array = levels[clampi(level, 0, levels.size() - 1)].get("weights", [])
+	var total := 0.0
+	for w in weights:
+		total += float(w)
+	for i in weights.size():
+		if float(weights[i]) <= 0.0 or total <= 0.0:
+			continue
+		var pct := roundi(100.0 * float(weights[i]) / total)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 8)
+		h.modulate.a = alpha
+		parent.add_child(h)
+		h.add_child(QualityBadge.new(UiTheme.GOLD, i, Database.TIER_NAMES.size(), 20.0))
+		var n := UiUtil.label(Database.TIER_NAMES[mini(i, Database.TIER_NAMES.size() - 1)], h, 13)
+		n.custom_minimum_size.x = 120
+		var bar := HBoxContainer.new()
+		bar.add_theme_constant_override("separation", 2)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.alignment = BoxContainer.ALIGNMENT_CENTER
+		h.add_child(bar)
+		for k in 10:
+			var seg := ColorRect.new()
+			seg.custom_minimum_size = Vector2(7, 10)
+			seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			seg.color = UiTheme.CYAN if k < roundi(pct / 10.0) else UiTheme.BORDER
+			bar.add_child(seg)
+		var p := UiUtil.label("%3d %%" % pct, h, 13)
+		p.add_theme_color_override("font_color", UiTheme.COIN)
 
 
 ## Chance pro Qualität in einer Chance-Stufe, z. B. "Splitter        70 %".
@@ -565,7 +621,7 @@ func set_round_gems(gems: Array, hint := "") -> void:
 	for i in gems.size():
 		var g: Dictionary = gems[i]
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(50, 60)
+		b.custom_minimum_size = Vector2(50, 50)
 		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = g.label
 		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
@@ -576,42 +632,17 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		hover.border_color = UiTheme.GOLD
 		b.add_theme_stylebox_override("hover", hover)
 		b.add_theme_stylebox_override("pressed", hover)
-		var sw := ColorRect.new()
-		sw.color = g.color
-		sw.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		sw.anchor_left = 0.5
-		sw.anchor_right = 0.5
-		sw.custom_minimum_size = Vector2(26, 26)
-		sw.offset_left = -13
-		sw.offset_top = 8
-		sw.offset_right = 13
-		sw.offset_bottom = 34
-		b.add_child(sw)
-		_quality_squares(b, int(g.get("tier", 0)), int(g.get("tiers", 0)), g.color)
+		var badge := QualityBadge.new(g.color, int(g.get("tier", 0)), int(g.get("tiers", 1)), 38.0)
+		badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		badge.offset_left = -19
+		badge.offset_top = -19
+		badge.offset_right = 19
+		badge.offset_bottom = 19
+		b.add_child(badge)
 		b.pressed.connect(func(): round_gem_selected.emit(i))
 		strip_row.add_child(b)
 	strip_col.visible = not gems.is_empty()
 	_update_layout()
-
-
-## Qualitätsanzeige unter dem Gem: so viele Kästchen wie es Qualitäten gibt, gefüllt bis zur aktuellen.
-func _quality_squares(b: Control, tier: int, tiers: int, color: Color) -> void:
-	if tiers <= 1:
-		return
-	var size := 6
-	var gap := 2
-	var width := tiers * size + (tiers - 1) * gap
-	for q in tiers:
-		var sq := ColorRect.new()
-		sq.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		sq.color = color if q <= tier else UiTheme.BORDER_2
-		sq.anchor_left = 0.5
-		sq.anchor_right = 0.5
-		sq.offset_left = -width / 2.0 + q * (size + gap)
-		sq.offset_right = sq.offset_left + size
-		sq.offset_top = 42
-		sq.offset_bottom = 42 + size
-		b.add_child(sq)
 
 
 ## info: {title, color, body, used_in (Array von Rezept-IDs, null = Abschnitt ausblenden)} oder {} für nichts.
