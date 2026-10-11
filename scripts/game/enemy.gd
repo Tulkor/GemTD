@@ -86,6 +86,13 @@ func _process(delta: float) -> void:
 		return
 	if dead:
 		return
+	# Wirkungen laufen zeitgenau aus, auch wenn sie mitten im Bild enden: bei 2× und 4× sind die Bilder
+	# länger, sonst würden Betäubung, Verlangsamung und Gift dort länger (oder kürzer) wirken als bei 1×.
+	var stunned := clampf(stun_time, 0.0, delta)
+	var slowed := clampf(slow_time - stunned, 0.0, delta - stunned)
+	var move := slowed_speed() * slowed + speed * (delta - stunned - slowed)
+	if stun_time > 0.0:
+		stun_time -= delta
 	if slow_time > 0.0:
 		slow_time -= delta
 		if slow_time <= 0.0:
@@ -95,8 +102,8 @@ func _process(delta: float) -> void:
 		if armor_reduction_time <= 0.0:
 			armor_reduction = 0.0
 	if poison_time > 0.0:
+		var dealt := take_raw_damage(poison_dps * minf(poison_time, delta))
 		poison_time -= delta
-		var dealt := take_raw_damage(poison_dps * delta)
 		if is_instance_valid(poison_source):
 			poison_source.total_damage += dealt
 			if dead:
@@ -107,9 +114,6 @@ func _process(delta: float) -> void:
 		stack_time -= delta
 		if stack_time <= 0.0:
 			stacks = 0.0
-	var move := current_speed() * delta
-	if stun_time > 0.0:
-		stun_time -= delta
 	while move > 0.0 and path_index < path.size():
 		var target := path[path_index]
 		var dist := pos.distance_to(target)
@@ -136,6 +140,11 @@ func _process(delta: float) -> void:
 func current_speed() -> float:
 	if stun_time > 0.0:
 		return 0.0
+	return slowed_speed() if slow_time > 0.0 else speed
+
+
+## Tempo unter der aktuellen Verlangsamung (nie unter min_slowed_speed).
+func slowed_speed() -> float:
 	var min_speed := minf(speed, float(Database.balance.get("min_slowed_speed", 0.0)))
 	return maxf(speed * (1.0 - slow_factor), min_speed)
 

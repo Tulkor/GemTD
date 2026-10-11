@@ -14,10 +14,10 @@ extends Node
 ## Spezial-Tower in jeder Stufe, Grund-Gems als Vergleich in den Stufen 4 und 5 (Perfekt, Groß)
 const GEM_TIERS := [4, 5]
 const WAVES := [30, 31, 32, 33, 34, 35, 39, 42, 43, 48, 50]
-const TOWER_AT := Vector2i(10, 32)
+const TOWER_AT := Vector2i(9, 27)
 const MASS_COUNT := 30
 const MASS_INTERVAL := 0.25
-const ROCKS_AT := [Vector2i(40, 50), Vector2i(44, 50), Vector2i(48, 50), Vector2i(52, 50)]
+const ROCKS_AT := [Vector2i(36, 44), Vector2i(40, 44), Vector2i(44, 44), Vector2i(48, 44)]
 
 var absolute := false
 var trap_passes := 1

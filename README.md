@@ -140,9 +140,9 @@ Dateien unter `user://data/<typ>/` werden zusätzlich geladen und überschreiben
 
 ```json
 {
-  "format": 2, "id": "classic", "name": "Klassisch", "width": 74, "height": 74,
+  "format": 2, "id": "classic", "name": "Klassisch", "width": 64, "height": 64,
   "tiles": ["#####…", "#....…", …],
-  "spawn": [8, 8], "goal": [65, 65], "checkpoints": [[8, 36], [65, 36], …],
+  "spawn": [7, 7], "goal": [56, 56], "checkpoints": [[7, 31], [56, 31], …],
   "marker_radius": 1, "waves": "classic", "lives": 50, "start_gold": 0,
   "variance": {"random_rocks": 25, "seed": -1}
 }
@@ -189,6 +189,7 @@ Jede Treffer-Fähigkeit kann `"chance"` haben.
 `flying`, `boss`, `color`, `size`, optional `shape` und `model`.
 Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyramide = Massenwelle (`"shape": "pyramid"`).
 Wellenrhythmus (classic): Boden, Masse, Boden, Flieger; Massenwellen ab Welle 10 (10, 14 … 46), Flieger 4, 8 … 48; Bosse 42 und 50.
+Eine Bosswelle ist ein einzelner Gegner mit zehnfachen Leben, Gold und Schaden (Gruppe mit `"count": 1`).
 Eine Massenwelle hat 25 statt 10 Gegner mit je 40 % Leben, Gold und Leben-Schaden und kürzerem Abstand.
 Dafür überschreibt die Gruppe in der Wellendatei `hp`, `bounty`, `damage`, `shape` und `size`.
 
@@ -201,9 +202,11 @@ godot --headless --path . res://tests/net_test.tscn -- --role=host &
 godot --headless --path . res://tests/net_test.tscn -- --role=client
 godot --headless --path . res://tests/session_test.tscn -- --role=host &
 godot --headless --path . res://tests/session_test.tscn -- --role=client
+godot --headless --fixed-fps 60 --path . res://tests/speed_test.tscn -- --runs=3
 ```
 Der Netz-Test startet zwei Spiele auf demselben Rechner: der Host spielt eine Runde, der Client schaut zu und prüft
 Feld, Gegner und dass sie ohne Sprünge laufen.
+Der Tempo-Test lässt jeden Tower bei 1×, 2× und 4× gegen unsterbliche Gegner schießen und vergleicht den Schaden.
 Der Sitzungs-Test: beide spielen eine Runde, der Host speichert, beendet und lädt die Sitzung neu,
 der Client tritt wieder bei und steigt an seinem gespeicherten Stand ein.
 Der Balance-Test stellt jeden Gem einzeln an den Laufweg (Ecke und Gerade, ohne Labyrinth) und zählt,
