@@ -885,7 +885,7 @@ func _refresh_hud() -> void:
 				if not specials.has(Database.tower_label(o.id, o.tier)):
 					specials.append(Database.tower_label(o.id, o.tier))
 		gems.append({"label": t.label(), "color": t.color, "selected": t == selected, "oneshot": shot,
-				"tier": t.tier, "tiers": Database.tier_count(t.tower_id)})
+				"tier": t.tier, "tiers": Database.tier_count(t.tower_id), "id": t.tower_id})
 	var shot_text := ""
 	if not specials.is_empty():
 		shot_text = tr("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)

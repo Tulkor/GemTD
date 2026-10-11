@@ -547,7 +547,7 @@ func _chance_rows(parent: Node, level: int, alpha: float) -> void:
 		h.add_theme_constant_override("separation", 8)
 		h.modulate.a = alpha
 		parent.add_child(h)
-		h.add_child(QualityBadge.new(UiTheme.GOLD, i, Database.TIER_NAMES.size(), 20.0))
+		h.add_child(QualityBadge.new(UiTheme.GOLD, i, Database.TIER_NAMES.size(), 22.0))
 		var n := UiUtil.label(Database.TIER_NAMES[mini(i, Database.TIER_NAMES.size() - 1)], h, 13)
 		n.custom_minimum_size.x = 120
 		var bar := HBoxContainer.new()
@@ -625,18 +625,17 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = g.label
 		var border := UiTheme.GOLD if g.selected else (UiTheme.PURPLE_LIGHT if g.oneshot else UiTheme.BORDER_2)
-		var bg := Color("241a38") if g.oneshot else (Color("2a0f2e") if g.selected else UiTheme.PANEL_2)
-		var st := UiTheme.box(bg, border, 6, 2, 0)
+		var st := UiTheme.box(Color("030108"), border, 6, 2, 0)
 		b.add_theme_stylebox_override("normal", st)
 		var hover := st.duplicate() as StyleBoxFlat
 		hover.border_color = UiTheme.GOLD
 		b.add_theme_stylebox_override("hover", hover)
 		b.add_theme_stylebox_override("pressed", hover)
-		var badge := QualityBadge.new(g.color, int(g.get("tier", 0)), int(g.get("tiers", 1)), 38.0)
+		var badge := QualityBadge.new(g.color, int(g.get("tier", 0)), int(g.get("tiers", 1)), 38.0, str(g.get("id", "")))
 		badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-		badge.offset_left = -19
+		badge.offset_left = -13
 		badge.offset_top = -19
-		badge.offset_right = 19
+		badge.offset_right = 13
 		badge.offset_bottom = 19
 		b.add_child(badge)
 		b.pressed.connect(func(): round_gem_selected.emit(i))

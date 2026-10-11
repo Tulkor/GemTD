@@ -365,7 +365,17 @@ func _ready() -> void:
 	if chance_tt != null:
 		chance_tt.free()
 	var badge := QualityBadge.new(Color.RED, 2, 6)
-	check(badge.tier == 2 and badge.tiers == 6 and badge.custom_minimum_size.x > 0, "Qualitätssymbol: 6 Quadrate, 3 gefüllt")
+	check(badge.tier == 2 and badge.tiers == 5 and not badge.is_perfect() and badge.custom_minimum_size.y > badge.custom_minimum_size.x,
+		"Facetten-Gem: 5 Stufen (Splitter bis Perfekt), Normal füllt 3 Facetten")
+	badge.free()
+	badge = QualityBadge.new(Color.RED, 4, 6)
+	check(badge.is_perfect(), "Facetten-Gem: Perfekt füllt die Mitte")
+	badge.free()
+	badge = QualityBadge.new(Color.RED, 5, 6)
+	check(badge.tier == 4 and badge.is_perfect(), "Facetten-Gem: Großartig zählt wie Perfekt")
+	badge.free()
+	badge = QualityBadge.new(Color("f1c40f"), 1, 6, 36.0, "topaz")
+	check(badge.color == Color("ffe600"), "Facetten-Gem: Topas in grellerem Gelb")
 	badge.free()
 
 	# DPS-Meter rechts: Top 5 je Welle, letzte Welle je Typ, Gesamt
