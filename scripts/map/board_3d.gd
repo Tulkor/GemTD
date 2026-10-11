@@ -26,7 +26,7 @@ const ROCK_OUTLINE_SHADER := preload("res://assets/shaders/outline.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
-const COL_WAYPOINT := Color("22c4ee")
+const COL_WAYPOINT := Color("ff36d8")
 const COL_PATH := Color("2ef2e0")
 ## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
 ## um Spawn, Ziel und Checkpoints und auf "_"-Feldern; sonst Gras.
@@ -276,7 +276,8 @@ func _rebuild_ground() -> void:
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
 
-## Neon-Feld: Fläche über die ganze Map, blockierte Felder als Maske (ein Pixel pro Feld).
+## Neon-Feld: Fläche über die ganze Map, blockierte Felder (R) und Sperrzonen um die
+## Wegpunkte (G) als Maske, ein Pixel pro Feld.
 func _rebuild_floor() -> void:
 	var size := Vector2(map.width, map.height) * CELL
 	var plane := PlaneMesh.new()
@@ -287,10 +288,14 @@ func _rebuild_floor() -> void:
 	var origin := Vector2i(map.width, map.height)  # erstes freies Feld (oben links)
 	for y in map.height:
 		for x in map.width:
-			if map.get_tile(Vector2i(x, y)) == MapData.BLOCKED:
+			var c := Vector2i(x, y)
+			if map.get_tile(c) == MapData.BLOCKED:
 				img.set_pixel(x, y, Color.WHITE)
 			else:
-				origin = origin.min(Vector2i(x, y))
+				origin = origin.min(c)
+				# G = Sperrzone um Spawn, Ziel und Checkpoints (nicht bebaubar)
+				if map.is_marker_zone(c):
+					img.set_pixel(x, y, Color(0, 1, 0))
 	_floor_mat.set_shader_parameter("grid_origin", Vector2(origin))
 	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
 	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
