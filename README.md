@@ -67,6 +67,8 @@ Der Schalter „Unsterblich“ daneben lässt die Leben ins Minus gehen, ohne da
 
 Hauptmenü → „Mehrspieler“: einer klickt „Neue Sitzung hosten“, die anderen geben seine IP ein und klicken „Beitreten“
 (UDP-Port 24565; im LAN direkt, übers Internet mit Portfreigabe beim Host oder über Tailscale/ZeroTier).
+Die Lobby zeigt dem Host seine öffentliche IP (über api.ipify.org) zum Kopieren und gibt den Port per UPnP im Router frei;
+klappt das nicht oder hat der Anschluss keine eigene öffentliche Adresse (CGNAT), steht dort, was zu tun ist.
 Modus „jeder sein Feld“ wie im alten GemTD: jeder spielt sein eigenes Feld mit eigener Schwierigkeit.
 In der Lobby startet der Host mit „Starten“ alle gleichzeitig auf der gewählten Map; wer später kommt oder
 zwischendurch weg war, steigt mit „Mitspielen“ ein, mit seinem letzten Stand.

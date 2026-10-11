@@ -16,6 +16,8 @@ var _status: Label
 var _offline: VBoxContainer
 var _online: VBoxContainer
 var _addresses: Label
+var _internet: Label
+var _copy_button: Button
 var _session_text: Label
 var _list: VBoxContainer
 var _start_button: Button
@@ -82,8 +84,18 @@ func _ready() -> void:
 	_online = VBoxContainer.new()
 	_online.add_theme_constant_override("separation", 10)
 	v.add_child(_online)
+	var net_row := HBoxContainer.new()
+	net_row.add_theme_constant_override("separation", 10)
+	_online.add_child(net_row)
+	_internet = UiUtil.label("", net_row, 15)
+	_internet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_internet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_copy_button = UiUtil.button("Kopieren", net_row, func(): DisplayServer.clipboard_set(Net.public_ip))
+	_copy_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_copy_button.tooltip_text = "Adresse in die Zwischenablage kopieren, um sie den Mitspielern zu schicken"
 	_addresses = _muted(UiUtil.label("", _online, 13))
 	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_addresses.custom_minimum_size.x = 540
 	UiTheme.caption("Sitzung", _online)
 	_session_text = UiUtil.wrap_label("", _online, 540)
 	_session_text.add_theme_color_override("font_color", UiTheme.DIM)
@@ -149,9 +161,7 @@ func _refresh() -> void:
 
 	var started := false
 	if Net.is_host():
-		var addrs := Net.local_addresses()
-		_addresses.text = tr("Deine Adresse: %s") % ", ".join(addrs) if not addrs.is_empty() else ""
-		_addresses.visible = _addresses.text != ""
+		_show_addresses()
 		var s := Net.session
 		started = bool(s.get("started", false))
 		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(selected_map)
@@ -165,6 +175,7 @@ func _refresh() -> void:
 		_play_button.visible = started
 	else:
 		_addresses.visible = false
+		_internet.get_parent().visible = false
 		var info := Net.session_info
 		started = bool(info.get("started", false))
 		var own := tr("Dein gespeicherter Stand: Welle %d.") % int(info.get("wave", 0)) if info.get("has_state", false) else tr("Du startest neu.")
@@ -182,6 +193,34 @@ func _refresh() -> void:
 		c.queue_free()
 	for slot in Net.session_slots():
 		_slot_row(slot)
+
+
+## Host: Adresse fürs Internet (öffentliche IP, Portfreigabe per UPnP) und fürs eigene Netzwerk.
+func _show_addresses() -> void:
+	_internet.get_parent().visible = true
+	if Net.public_ip != "":
+		_internet.text = tr("Internet: %s") % Net.public_ip
+	else:
+		_internet.text = tr("Internet: Adresse nicht ermittelbar") if Net.public_ip_failed else tr("Internet: Adresse wird ermittelt …")
+	_internet.add_theme_color_override("font_color", UiTheme.TEXT)
+	_copy_button.visible = Net.public_ip != ""
+	var port := Net.host_port
+	var lines := []
+	match Net.upnp_state:
+		"busy":
+			lines.append(tr("Router wird gefragt, ob er UDP-Port %d freigibt …") % port)
+		"open":
+			if Net.behind_cgnat():
+				lines.append(tr("Dein Anschluss hat keine eigene öffentliche Adresse (CGNAT), Mitspieler aus dem Internet erreichen dich so nicht. Nutzt ein virtuelles LAN wie Tailscale oder ZeroTier."))
+			else:
+				lines.append(tr("UDP-Port %d ist im Router freigegeben, Mitspieler aus dem Internet können beitreten.") % port)
+		"failed":
+			lines.append(tr("Der Router hat UDP-Port %d nicht automatisch freigegeben (UPnP aus?). Gib ihn im Router von Hand für diesen PC frei, oder nutzt Tailscale oder ZeroTier.") % port)
+	var addrs := Net.local_addresses()
+	if not addrs.is_empty():
+		lines.append(tr("Im selben Netzwerk: %s") % ", ".join(addrs))
+	_addresses.text = "\n".join(lines)
+	_addresses.visible = not lines.is_empty()
 
 
 func _slot_row(slot: Dictionary) -> void:

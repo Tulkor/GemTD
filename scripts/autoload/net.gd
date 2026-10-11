@@ -34,6 +34,18 @@ var session: Dictionary = {}
 ## Nur beim Mitspieler: was der Host über die Sitzung meldet (siehe _info_for).
 var session_info: Dictionary = {}
 var _reports: Dictionary = {}   ## Host beim Speichern: peer -> true, sobald der Stand da ist
+
+## Host: Adresse fürs Internet. public_ip kommt von api.ipify.org, upnp_state sagt, ob der Router
+## den Port per UPnP freigegeben hat: "" (noch nicht), "busy", "open", "failed".
+var public_ip := ""
+var public_ip_failed := false
+var upnp_ip := ""      ## Adresse, die der Router per UPnP meldet (weicht bei CGNAT von public_ip ab)
+var upnp_state := ""
+var host_port := DEFAULT_PORT
+var _upnp: UPNP
+var _upnp_port := 0
+var _upnp_thread: Thread
+var _ip_request: HTTPRequest
 var last_ip := ""
 ## Stand des eigenen Spiels: in_game, wave, waves, lives, phase, difficulty
 var my_status: Dictionary = {}
@@ -99,6 +111,9 @@ func host(port := DEFAULT_PORT) -> Error:
 	multiplayer.multiplayer_peer = peer
 	session = {"id": SaveGame.new_id(), "map": {}, "map_name": "", "started": false, "loaded": false, "players": {}}
 	_set_status(tr("Hoste auf Port %d") % port)
+	host_port = port
+	_open_port(port)
+	_fetch_public_ip()
 	connection_changed.emit()
 	return OK
 
@@ -119,6 +134,7 @@ func join(ip: String, port := DEFAULT_PORT) -> Error:
 
 
 func leave() -> void:
+	_close_port()
 	if multiplayer.multiplayer_peer != null and not multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
@@ -132,6 +148,97 @@ func leave() -> void:
 	players_changed.emit()
 	watchers_changed.emit()
 	connection_changed.emit()
+
+
+# --- Erreichbarkeit übers Internet -------------------------------------------------
+
+## Port im Router per UPnP freigeben (im Hintergrund, die Suche dauert bis zu zwei Sekunden).
+func _open_port(port: int) -> void:
+	if OS.has_feature("headless") or _upnp_thread != null:
+		return
+	upnp_state = "busy"
+	upnp_ip = ""
+	_upnp_thread = Thread.new()
+	_upnp_thread.start(_upnp_work.bind(port))
+
+
+func _upnp_work(port: int) -> void:
+	var u := UPNP.new()
+	var ok := u.discover(2000, 2) == UPNP.UPNP_RESULT_SUCCESS and u.get_gateway() != null and u.get_gateway().is_valid_gateway()
+	if ok:
+		ok = u.add_port_mapping(port, port, "GemTD", "UDP", 0) == UPNP.UPNP_RESULT_SUCCESS
+	var ext := u.query_external_address() if ok else ""
+	call_deferred("_upnp_done", u if ok else null, port, ext)
+
+
+func _upnp_done(u: UPNP, port: int, ext: String) -> void:
+	if _upnp_thread != null:
+		_upnp_thread.wait_to_finish()
+		_upnp_thread = null
+	if not is_host():
+		# Inzwischen getrennt: Freigabe gleich wieder entfernen
+		if u != null:
+			u.delete_port_mapping(port, "UDP")
+		upnp_state = ""
+		return
+	_upnp = u
+	_upnp_port = port
+	upnp_ip = ext
+	upnp_state = "open" if u != null else "failed"
+	connection_changed.emit()
+
+
+func _close_port() -> void:
+	if _upnp != null:
+		_upnp.delete_port_mapping(_upnp_port, "UDP")
+		_upnp = null
+	upnp_state = ""
+	upnp_ip = ""
+
+
+func _fetch_public_ip() -> void:
+	if OS.has_feature("headless"):
+		return
+	if _ip_request == null:
+		_ip_request = HTTPRequest.new()
+		_ip_request.timeout = 6.0
+		add_child(_ip_request)
+		_ip_request.request_completed.connect(_on_public_ip)
+	if public_ip == "":
+		public_ip_failed = false
+		_ip_request.cancel_request()
+		_ip_request.request("https://api.ipify.org")
+
+
+func _on_public_ip(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	var ip := body.get_string_from_utf8().strip_edges()
+	if result == HTTPRequest.RESULT_SUCCESS and code == 200 and ip.count(".") == 3:
+		public_ip = ip
+	else:
+		public_ip_failed = true
+	connection_changed.emit()
+
+
+## Hat der Anschluss keine eigene öffentliche Adresse (Carrier-Grade-NAT, oft bei Mobilfunk und Glasfaser)?
+## Dann hilft auch eine Portfreigabe nicht, nur ein virtuelles LAN.
+func behind_cgnat() -> bool:
+	if upnp_ip == "":
+		return false
+	return _is_private(upnp_ip) or (public_ip != "" and upnp_ip != public_ip)
+
+
+static func _is_private(ip: String) -> bool:
+	var p := ip.split(".")
+	if p.size() != 4:
+		return false
+	var a := int(p[0])
+	var b := int(p[1])
+	return a == 10 or (a == 172 and b >= 16 and b < 32) or (a == 192 and b == 168) or (a == 100 and b >= 64 and b < 128)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:   # beim Beenden die Freigabe im Router wieder entfernen
+		_close_port()
 
 
 ## Eigene IPv4-Adressen im LAN, damit der Host sie weitergeben kann.
