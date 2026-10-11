@@ -26,6 +26,10 @@ uniform float minor_alpha = 0.6;
 /// Raster der einzelnen Felder (halbe Towerbreite, Tower lassen sich darauf versetzen), noch dunkler
 uniform float cell_energy = 0.42;
 uniform float cell_alpha = 0.5;
+/// Sperrzone um Spawn, Ziel und Checkpoints: durchsichtig rot mit Neonrand
+uniform vec4 zone_color : source_color = vec4(1.0, 0.12, 0.22, 1.0);
+uniform float zone_alpha = 0.34;
+uniform float zone_edge_energy = 3.0;
 /// Linienbreite in Einheiten (1 = Towerbreite)
 uniform float line_width = 0.014;
 uniform float halo_width = 0.08;
@@ -54,6 +58,13 @@ vec4 tube(float d, float width, vec3 col, float energy, float aa) {
 	vec3 c = mix(col, vec3(1.0), core_) * energy;
 	float a = max(body, halo);
 	return vec4(mix(col * energy * 0.6, c, body), a);
+}
+
+float is_zone(ivec2 c) {
+	if (c.x < 0 || c.y < 0 || c.x >= int(cells.x) || c.y >= int(cells.y)) {
+		return 0.0;
+	}
+	return step(0.5, texelFetch(blocked, c, 0).g);
 }
 
 void fragment() {
@@ -90,6 +101,19 @@ void fragment() {
 			float fl = (1.0 - clamp(min(df.x, df.y), 0.0, 1.0)) * fine_strength;
 			col = mix(col, line_color.rgb, fl);
 			alpha = max(alpha, fl);
+		}
+		// Sperrzone um die Wegpunkte: rote Fläche, Neonrand zu bebaubaren Feldern
+		if (is_zone(c) > 0.5) {
+			col = mix(col, zone_color.rgb, zone_alpha);
+			alpha = max(alpha, zone_alpha + floor_alpha * 0.5);
+			float dz = 10.0;
+			if (is_zone(c + ivec2(-1, 0)) < 0.5) dz = min(dz, f.x);
+			if (is_zone(c + ivec2(1, 0)) < 0.5) dz = min(dz, 1.0 - f.x);
+			if (is_zone(c + ivec2(0, -1)) < 0.5) dz = min(dz, f.y);
+			if (is_zone(c + ivec2(0, 1)) < 0.5) dz = min(dz, 1.0 - f.y);
+			vec4 z = tube(dz * cell, line_width * 1.8, zone_color.rgb, zone_edge_energy, aa);
+			col = mix(col, z.rgb, z.a);
+			alpha = max(alpha, z.a);
 		}
 		// Ränder zu blockierten Feldern
 		float de = 10.0;
