@@ -4,6 +4,41 @@ extends Node3D
 ## cell ist das Feld oben links der 2×2 belegten Felder. Logische Position `pos` in Einheiten
 ## (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
+const GEM_SHADER := preload("res://assets/shaders/gem.gdshader")
+## Deckkraft für Modelle mit eigener Textur ("model_tint": false)
+const GEM_OPACITY_TEXTURED := 0.85
+## Helligkeit der Lichtscheibe im Sockel (über 1 = leuchtet im Glow)
+const BASE_LIGHT_ENERGY := 1.3
+## Drehgeschwindigkeit der Gems (rad/s): zur Auswahl in dieser Runde, und fixiert
+const SPIN_NEW := 0.425
+const SPIN_FIXED := 0.325
+const BASE_HEIGHT := 0.12
+const BASE_HEIGHT_SPECIAL := 0.18
+## Höchstens so hoch (Towerbreiten) wird ein Special, auch wenn das Modell schmal und lang ist
+const GEM_MAX_HEIGHT := 1.3
+## Gems je Qualität (Splitter … Großartig): Anzahl Kristalle auf dem Sockel und die Kiste
+## (Breite, Höhe in Sockelbreiten), in die jeder Kristall passt. Splitter sind viele kleine,
+## mit jeder Stufe werden es weniger, dafür größere.
+const GEM_CLUSTERS := [
+	[5, 0.26, 0.34],
+	[4, 0.34, 0.46],
+	[3, 0.44, 0.6],
+	[2, 0.56, 0.78],
+	[1, 0.78, 1.0],
+	[1, 0.92, 1.25],
+]
+## Platz der Kristalle auf dem Sockel (in Sockelbreiten) je Anzahl
+const CLUSTER_SPOTS := {
+	1: [Vector2.ZERO],
+	2: [Vector2(-0.17, 0.15), Vector2(0.17, -0.15)],
+	3: [Vector2(0.0, -0.22), Vector2(-0.19, 0.11), Vector2(0.19, 0.11)],
+	4: [Vector2(-0.18, -0.18), Vector2(0.18, -0.18), Vector2(0.18, 0.18), Vector2(-0.18, 0.18)],
+	5: [Vector2.ZERO, Vector2(-0.21, -0.21), Vector2(0.21, -0.21), Vector2(0.21, 0.21), Vector2(-0.21, 0.21)],
+}
+## Größenunterschiede innerhalb eines Clusters, damit es natürlicher aussieht
+const CLUSTER_VARY := [1.0, 0.86, 0.94, 0.8, 0.9]
+static var _slab_cache := {}
+
 var game  # game.gd
 var cell := Vector2i.ZERO
 var pos := Vector2.ZERO
@@ -328,13 +363,11 @@ func _build_visual() -> void:
 		_visual.queue_free()
 	_visual = Node3D.new()
 	add_child(_visual)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.metallic = 0.35
-	mat.roughness = 0.2
-	mat.emission_enabled = true
-	mat.emission = color
-	mat.emission_energy_multiplier = 0.25
+	var mat := ShaderMaterial.new()
+	mat.shader = GEM_SHADER
+	mat.set_shader_parameter("color", color)
+	# "model_tint": false behält die Farben/Texturen des Modells (nur leicht durchsichtig gemacht)
+	var tint: Material = mat if bool(def.get("model_tint", true)) else null
 
 	var category := str(def.get("category", "gem"))
 	_gem = null
@@ -359,39 +392,204 @@ func _build_visual() -> void:
 				_visual.add_child(_gem)
 		_finish_visual()
 		return
+	# Sockel: eckige Glasplatte mit runden Ecken über die ganzen 2×2 Felder, von innen beleuchtet
+	var foot := footprint_size() * Board3D.CELL
+	var base_h := BASE_HEIGHT_SPECIAL if category == "special" else BASE_HEIGHT
 	var base := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.radial_segments = 6
-	if category == "special":
-		cyl.top_radius = 0.34
-		cyl.bottom_radius = 0.42
-		cyl.height = 0.35
-	else:
-		cyl.top_radius = 0.28
-		cyl.bottom_radius = 0.36
-		cyl.height = 0.2
-	base.material_override = Board3D.make_material(Color("4a4a52"))
-	base.mesh = cyl
-	base.position.y = cyl.height / 2.0
+	base.mesh = rounded_slab(foot * 0.96, base_h, 0.1)
+	base.material_override = _glass_material()
+	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_visual.add_child(base)
-	var default_size := (0.75 + 0.05 * tier) if category == "special" else (0.5 + 0.06 * tier)
-	var size := float(stats.get("model_scale", def.get("model_scale", default_size)))
-	if model_path != "":
-		_gem = ModelLoader.instantiate(model_path, size, mat)
+	ModelLoader.add_outline(base)
+	var light := MeshInstance3D.new()
+	light.mesh = rounded_slab(foot * 0.5, 0.012, 0.07)
+	var light_mat := Board3D.make_material(color.lerp(Color.WHITE, 0.4) * BASE_LIGHT_ENERGY, true)
+	light_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	light.material_override = light_mat
+	light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	light.position.y = base_h - 0.025
+	_visual.add_child(light)
+	if mat is ShaderMaterial:
+		mat.set_shader_parameter("base_top", base_h)
+	# Special füllt die Sockelfläche: Breite (nicht Höhe) wird angepasst, höhere Stufen etwas breiter
+	var width := minf(0.86 + 0.02 * tier, 0.92) * foot
+	if category == "gem" and model_path != "":
+		_gem = _gem_cluster(model_path, tint, foot, base_h)
+		width = float(GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)][1]) * foot
 		if _gem:
-			_gem.position.y = cyl.height
+			if tint == null:
+				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
 			_visual.add_child(_gem)
+	elif model_path != "":
+		if stats.has("model_scale") or def.has("model_scale"):
+			_gem = ModelLoader.instantiate(model_path, float(stats.get("model_scale", def.get("model_scale"))), tint)
+		else:
+			_gem = ModelLoader.instantiate_fit(model_path, width, GEM_MAX_HEIGHT, tint)
+		if _gem:
+			if tint == null:
+				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
+			_gem.position.y = base_h
+			_visual.add_child(_gem)
+	var size := width
 	if _gem == null:
 		var oct := MeshInstance3D.new()
 		oct.mesh = _gem_mesh()
 		oct.material_override = mat
 		var s := size * 0.45
 		oct.scale = Vector3(s, s * 1.4, s)
-		oct.position.y = cyl.height + s * 1.4 + 0.05
+		oct.position.y = base_h + s * 1.4 + 0.05
 		_gem = Node3D.new()
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
+	ModelLoader.add_outline(_gem)
 	_finish_visual()
+
+
+## Mehrere Kristalle auf dem Sockel, Anzahl und Größe nach Qualität (GEM_CLUSTERS).
+## Jeder Kristall passt in seine Kiste, schmale Modelle werden so nicht übermäßig hoch.
+func _gem_cluster(model_path: String, tint: Material, foot: float, base_h: float) -> Node3D:
+	var cfg: Array = GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)]
+	var n := int(cfg[0])
+	var layout := _splinter_layout(tower_id, n) if tier <= 1 else []
+	if layout.is_empty():
+		# äußere Kristalle leicht nach außen geneigt wie bei einer Druse
+		for i in n:
+			var spot: Vector2 = CLUSTER_SPOTS[n][i]
+			layout.append([spot, CLUSTER_VARY[i % CLUSTER_VARY.size()], 0.0 if spot == Vector2.ZERO else 12.0, -1.0])
+	var cluster := Node3D.new()
+	for i in layout.size():
+		var entry: Array = layout[i]
+		var k := float(entry[1])
+		var crystal := ModelLoader.instantiate_fit(model_path, float(cfg[1]) * foot * k, float(cfg[2]) * foot * k, tint)
+		if crystal == null:
+			break
+		var spot: Vector2 = entry[0] * foot
+		var tilt := deg_to_rad(float(entry[2]))
+		var basis := Basis(Vector3.UP, i * 2.4)
+		var lift := 0.0
+		if tilt > 0.0:
+			var dir := Vector3(spot.x, 0.0, spot.y)
+			if float(entry[3]) >= 0.0 or dir.is_zero_approx():
+				var a := deg_to_rad(maxf(float(entry[3]), 0.0))
+				dir = Vector3(cos(a), 0.0, sin(a))
+			basis = Basis(Vector3.UP.cross(dir.normalized()).normalized(), tilt) * basis
+			# geneigte Kristalle anheben, damit die Unterkante nicht im Sockel verschwindet
+			var box := ModelLoader.aabb(crystal, Transform3D())
+			lift = maxf(box.size.x, box.size.z) * 0.5 * sin(tilt) * 0.8
+		crystal.position = Vector3(spot.x, base_h + lift, spot.y)
+		crystal.basis = basis
+		cluster.add_child(crystal)
+	if cluster.get_child_count() == 0:
+		cluster.free()
+		return null
+	return cluster
+
+
+## Anordnung der Splitter (Stufe 0 und 1, n Kristalle), je Grundgem eine eigene.
+## Je Kristall: [Platz in Sockelbreiten, Größe, Neigung in Grad, Neigungsrichtung in Grad
+## (0 = +X, 90 = +Z, nach vorne zur Kamera) oder -1 = vom Sockelmittelpunkt weg].
+## Leer = Standardanordnung aus CLUSTER_SPOTS.
+static func _splinter_layout(id: String, n: int) -> Array:
+	var out := []
+	match id:
+		"ruby":  # Krone: Ring mit freier Mitte, alle nach außen geneigt
+			for i in n:
+				var a := deg_to_rad(-90.0 + 360.0 * i / n)
+				out.append([Vector2(cos(a), sin(a)) * 0.21, 1.0 - 0.1 * (i % 2), 22.0, -1.0])
+		"sapphire":  # Reihe quer über den Sockel, nach hinten größer
+			for i in n:
+				var t := float(i) / (n - 1)
+				out.append([Vector2(-0.28, 0.28).lerp(Vector2(0.28, -0.28), t), 0.75 + 0.4 * t, 6.0, 270.0])
+		"emerald":  # Druse: ein großer in der Mitte, kleine rundherum stark geneigt
+			out.append([Vector2.ZERO, 1.4, 0.0, -1.0])
+			for i in n - 1:
+				var a := deg_to_rad(45.0 + 360.0 * i / (n - 1))
+				out.append([Vector2(cos(a), sin(a)) * 0.24, 0.7, 34.0, -1.0])
+		"diamond":  # zwei Grüppchen in gegenüberliegenden Ecken
+			var back := n - floori(n / 2.0)
+			for i in n:
+				var group := Vector2(-0.16, -0.15) if i < back else Vector2(0.19, 0.17)
+				var j := i if i < back else i - back
+				var a := deg_to_rad(200.0 + 120.0 * j)
+				out.append([group + Vector2(cos(a), sin(a)) * 0.1, (0.95 if i < back else 0.78) - 0.06 * j, 10.0, -1.0])
+		"topaz":  # Bogen hinten, nach vorne offen, die Mitte am größten
+			for i in n:
+				var t := float(i) / (n - 1)
+				var a := deg_to_rad(lerpf(195.0, 345.0, t))
+				out.append([Vector2(cos(a), sin(a)) * 0.25 + Vector2(0.0, 0.06), 0.8 + 0.35 * sin(t * PI), 14.0, -1.0])
+		"amethyst":  # wie aus einer Wand gewachsen: hinten aufgereiht, alle nach vorne geneigt
+			var spots := [Vector2(-0.26, -0.2), Vector2(0.24, -0.24), Vector2(-0.04, -0.27), Vector2(0.06, 0.02), Vector2(-0.2, 0.12)]
+			var sizes := [1.0, 0.95, 1.1, 0.8, 0.72]
+			for i in n:
+				out.append([spots[i], sizes[i], 30.0, 70.0])
+		"aquamarine":  # Strauß: alle aus der Mitte, nach außen gefächert
+			out.append([Vector2.ZERO, 1.15, 0.0, -1.0])
+			for i in n - 1:
+				var a := deg_to_rad(20.0 + 360.0 * i / (n - 1))
+				out.append([Vector2(cos(a), sin(a)) * 0.07, 0.95, 38.0, -1.0])
+		"opal":  # verstreut liegend, einer steht
+			var spots := [Vector2(0.02, -0.02), Vector2(-0.22, -0.19), Vector2(0.21, -0.2), Vector2(0.22, 0.19), Vector2(-0.2, 0.2)]
+			var dirs := [0.0, 20.0, 150.0, 250.0, 300.0]
+			for i in n:
+				out.append([spots[i], 1.1 if i == 0 else 0.9, 0.0 if i == 0 else 62.0, dirs[i]])
+	return out
+
+
+## Quader mit abgerundeten senkrechten Kanten, Unterseite auf Y = 0, Mitte auf X/Z = 0.
+static func rounded_slab(size: float, height: float, radius: float, segments := 6) -> ArrayMesh:
+	var key := "%.3f/%.3f/%.3f" % [size, height, radius]
+	if _slab_cache.has(key):
+		return _slab_cache[key]
+	var h := size / 2.0 - radius
+	var outline: Array[Vector2] = []  # Umriss gegen den Uhrzeigersinn (von oben gesehen)
+	var normals: Array[Vector2] = []
+	var corners := [Vector2(h, h), Vector2(-h, h), Vector2(-h, -h), Vector2(h, -h)]
+	for i in 4:
+		for k in segments + 1:
+			var a := (i + float(k) / segments) * PI / 2.0
+			var n := Vector2(cos(a), sin(a))
+			outline.append(corners[i] + n * radius)
+			normals.append(n)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count := outline.size()
+	for i in count:
+		var j := (i + 1) % count
+		var p0 := outline[i]
+		var p1 := outline[j]
+		var n0 := Vector3(normals[i].x, 0, normals[i].y)
+		var n1 := Vector3(normals[j].x, 0, normals[j].y)
+		# Seite
+		for v in [[p0, n0, 0.0], [p1, n1, height], [p1, n1, 0.0], [p0, n0, 0.0], [p0, n0, height], [p1, n1, height]]:
+			st.set_normal(v[1])
+			st.add_vertex(Vector3(v[0].x, v[2], v[0].y))
+		# Deckel und Boden als Fächer um die Mitte
+		for v in [[Vector2.ZERO, height], [p0, height], [p1, height]]:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(v[0].x, v[1], v[0].y))
+		for v in [[Vector2.ZERO, 0.0], [p1, 0.0], [p0, 0.0]]:
+			st.set_normal(Vector3.DOWN)
+			st.add_vertex(Vector3(v[0].x, v[1], v[0].y))
+	var mesh := st.commit()
+	_slab_cache[key] = mesh
+	return mesh
+
+
+func _glass_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS  # damit die Kontur innen verdeckt wird
+	m.roughness = 0.05
+	m.metallic_specular = 0.9
+	m.rim_enabled = true
+	m.rim = 0.7
+	m.rim_tint = 0.2
+	m.emission_enabled = true
+	m.emission = color.lerp(Color.WHITE, 0.5)
+	m.emission_energy_multiplier = 0.35
+	return m
 
 
 func _finish_visual() -> void:
@@ -422,7 +620,7 @@ func _ring(radius: float, thickness: float, col: Color) -> MeshInstance3D:
 func _animate(delta: float) -> void:
 	_time += delta
 	if _gem:
-		_gem.rotation.y += delta * 0.5
+		_gem.rotation.y += delta * (SPIN_NEW if is_new else SPIN_FIXED)
 	if _new_ring:
 		_new_ring.visible = is_new
 		if is_new:

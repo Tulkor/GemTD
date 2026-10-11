@@ -98,17 +98,17 @@ Reichweite in Towerbreiten. **DPS** ist der Schaden pro Sekunde gegen ein einzel
 
 | Tower | Stufe | Schadensart | Schaden | Abklingzeit | DPS | Reichweite | Besonderheiten | Rezept / Upgrade |
 |---|---|---|---:|---:|---:|---:|---|---|
-| Aeltestenplatte |  | Zauber | 100 | 0,33 | 303 | 0,9 | 5 % Chance: Nova 300 Zauberschaden im Radius 1,95, verlangsamt 20 %; 5 % Chance: Nova 150 Zauberschaden im Radius 1,95; 5 % Chance: Nova 150 Zauberschaden im Radius 2,34; 7 % Chance: Rüstung −7 für 25 s; 5 % Chance: Nova 200 Zauberschaden im Radius 2,34; 5 % Chance: 5 Gold; 5 % Chance: Nova 200 Zauberschaden im Radius 1,17; 8 % Chance: Gift 20/s für 2 s | Zauberplatte + Giftplatte |
+| Ahnenplatte |  | Zauber | 100 | 0,33 | 303 | 0,9 | 5 % Chance: Nova 300 Zauberschaden im Radius 1,95, verlangsamt 20 %; 5 % Chance: Nova 150 Zauberschaden im Radius 1,95; 5 % Chance: Nova 150 Zauberschaden im Radius 2,34; 7 % Chance: Rüstung −7 für 25 s; 5 % Chance: Nova 200 Zauberschaden im Radius 2,34; 5 % Chance: 5 Gold; 5 % Chance: Nova 200 Zauberschaden im Radius 1,17; 8 % Chance: Gift 20/s für 2 s | Zauberplatte + Giftplatte |
+| Bremsplatte |  | Durchbohrend | 100 | 0,5 | 200 | 1,02 | nur Boden; verlangsamt 15 % für 3600 s | Saphir Normal + Diamant Fehlerhaft oder Smaragd Fehlerhaft oder Aquamarin Fehlerhaft (gleiche Runde) |
 | Geisterplatte |  | Held | 200 | 0,3 | 667 | 1,02 | nur Boden; Aura: Tower +10 % Tempo (Radius 7,81); +35 Schaden pro Treffer am selben Ziel (5 s) | Opalplatte + Bremsplatte |
 | Giftplatte |  | Belagerung | 1 | 1 | 1 | 1,02 | Gift 10/s für 20 s; verlangsamt 25 % für 20 s | Smaragd Normal + Topas Fehlerhaft oder Opal Fehlerhaft oder Aquamarin Fehlerhaft (gleiche Runde) |
 | Halteplatte |  | Chaos | 160 | 2 | 80 | 1,02 | nur Boden; betäubt 1,5 s | Topas Normal + Amethyst Fehlerhaft oder Saphir Fehlerhaft (gleiche Runde) |
+| Kraftplatte |  | Durchbohrend | – | – | – | 1,02 | nur Boden; +20 Schaden pro Welle; Aura: Tower +10 % Schaden (Radius 1,95) | Diamant Normal + Saphir Fehlerhaft oder Opal Fehlerhaft (gleiche Runde) |
 | Luftplatte |  | Durchbohrend | 40 | 0,5 | 80 | 1,02 | Fläche 100 % im Radius 0,78; Reichweite Luft 6,64 | Amethyst Normal + Smaragd Fehlerhaft oder Opal Fehlerhaft oder Rubin Fehlerhaft (gleiche Runde) |
 | Opalplatte |  | Magie | 80 | 0,5 | 160 | 1,02 | nur Boden; Aura: Tower +10 % Tempo (Radius 5,47) | Opal Normal + Topas Fehlerhaft oder Rubin Fehlerhaft (gleiche Runde) |
-| Weitplatte |  | Held | 15 | 0,5 | 30 | 4,69 | 99 Ziele gleichzeitig | Rubin Normal + Topas Fehlerhaft oder Amethyst Fehlerhaft oder Rubin Fehlerhaft (gleiche Runde) |
-| Kraftplatte |  | Durchbohrend | – | – | – | 1,02 | nur Boden; +20 Schaden pro Welle; Aura: Tower +10 % Schaden (Radius 1,95) | Diamant Normal + Saphir Fehlerhaft oder Opal Fehlerhaft (gleiche Runde) |
 | Urplatte |  | Durchbohrend | 50 | 2,5 | 20 | 1,02 | betäubt 1 s; Rüstung −12 für 2,5 s; +20 Schaden pro Welle | Halteplatte + Luftplatte |
-| Bremsplatte |  | Durchbohrend | 100 | 0,5 | 200 | 1,02 | nur Boden; verlangsamt 15 % für 3600 s | Saphir Normal + Diamant Fehlerhaft oder Smaragd Fehlerhaft oder Aquamarin Fehlerhaft (gleiche Runde) |
 | Viperplatte |  | Held | 30 | 0,5 | 60 | 5,86 | 99 Ziele gleichzeitig; Brand-Aura 50/s ohne Rüstung (Radius 3,12); Aura: Tower +10 % Schaden (Radius 3,12) | Kraftplatte + Weitplatte |
+| Weitplatte |  | Held | 15 | 0,5 | 30 | 4,69 | 99 Ziele gleichzeitig | Rubin Normal + Topas Fehlerhaft oder Amethyst Fehlerhaft oder Rubin Fehlerhaft (gleiche Runde) |
 | Zauberplatte |  | Magie | 30–40 | 0,5 | 70 | 0,86 | 5 % Chance: Nova 100 Zauberschaden im Radius 1,95, verlangsamt 20 %; 5 % Chance: Nova 80 Zauberschaden im Radius 2,34; 5 % Chance: Nova 85 Zauberschaden im Radius 0,78; 5 % Chance: Nova 125 Zauberschaden im Radius 2,34; 5 % Chance: Rüstung −5 für 15 s; 5 % Chance: 3 Gold | Aquamarin Normal + Diamant Fehlerhaft oder Amethyst Fehlerhaft (gleiche Runde) |
 
 ## Schadensart gegen Rüstungsart

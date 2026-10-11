@@ -7,6 +7,8 @@ extends RefCounted
 ## Fehlt das Modell, zeichnet das Spiel eine eingebaute einfache Form.
 
 static var _cache := {}
+static var _smooth_cache := {}  ## Mesh -> Mesh mit geglätteten Normalen (für Konturen)
+static var _outline_mat: ShaderMaterial
 
 
 static func _load(path: String) -> PackedScene:
@@ -42,9 +44,30 @@ static func instantiate(path: String, size := 1.0, tint: Material = null) -> Nod
 	return holder
 
 
+## Wie instantiate, aber auf eine Grundfläche skaliert: breiteste waagrechte Kante = width,
+## höchstens max_height hoch.
+static func instantiate_fit(path: String, width: float, max_height: float, tint: Material = null) -> Node3D:
+	var holder := instantiate(path, 1.0, tint)
+	if holder == null:
+		return null
+	var model: Node3D = holder.get_child(0)
+	var box := aabb(holder, Transform3D())
+	var flat := maxf(box.size.x, box.size.z)
+	if flat <= 0.0:
+		return holder
+	var f := width / flat
+	if box.size.y * f > max_height:
+		f = max_height / box.size.y
+	model.scale *= f
+	model.position *= f
+	return holder
+
+
 ## Erstes Mesh eines Modells, normalisiert (für MultiMesh, z. B. Steine).
 ## Rückgabe: [Mesh, Transform3D] oder [] wenn nicht vorhanden.
-static func mesh_with_transform(path: String, size := 1.0) -> Array:
+## flat = true: breiteste waagrechte Kante = size (füllt die Grundfläche), sonst längste Kante.
+## max_height > 0 begrenzt die Höhe durch Stauchen in Y (Breite bleibt).
+static func mesh_with_transform(path: String, size := 1.0, flat := false, max_height := 0.0) -> Array:
 	var scene := _load(path)
 	if scene == null:
 		return []
@@ -56,9 +79,13 @@ static func mesh_with_transform(path: String, size := 1.0) -> Array:
 	var mesh: Mesh = mi[0]
 	var xf: Transform3D = mi[1]
 	var box: AABB = xf * mesh.get_aabb()
-	var longest := maxf(box.size.x, maxf(box.size.y, box.size.z))
+	var longest := maxf(box.size.x, box.size.z) if flat else maxf(box.size.x, maxf(box.size.y, box.size.z))
 	var s := size / longest if longest > 0.0 else 1.0
-	var fit := Transform3D(Basis().scaled(Vector3.ONE * s), -Vector3(box.get_center().x, box.position.y, box.get_center().z) * s)
+	var sy := s
+	if max_height > 0.0 and box.size.y * s > max_height:
+		sy = max_height / box.size.y
+	var scale := Vector3(s, sy, s)
+	var fit := Transform3D(Basis().scaled(scale), -Vector3(box.get_center().x, box.position.y, box.get_center().z) * scale)
 	return [mesh, fit * xf]
 
 
@@ -93,3 +120,93 @@ static func _apply_material(n: Node, mat: Material) -> void:
 		n.material_override = mat
 	for c in n.get_children():
 		_apply_material(c, mat)
+
+
+## Alle Materialien des Modells leicht durchsichtig machen, Farben und Texturen bleiben.
+## glow: Farbe des Lichts von unten (Sockel), schwach als Eigenleuchten.
+static func make_translucent(n: Node, alpha: float, glow := Color.BLACK) -> void:
+	if n is MeshInstance3D and n.mesh != null:
+		for i in n.mesh.get_surface_count():
+			var src: Material = n.get_active_material(i)
+			if src is BaseMaterial3D:
+				var m: BaseMaterial3D = src.duplicate()
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS  # damit die Kontur innen verdeckt wird
+				m.albedo_color.a = alpha
+				m.roughness = minf(m.roughness, 0.25)
+				m.rim_enabled = true
+				m.rim = 0.4
+				if glow != Color.BLACK:
+					m.emission_enabled = true
+					m.emission = glow
+					m.emission_energy_multiplier = 0.35
+				n.set_surface_override_material(i, m)
+	for c in n.get_children():
+		make_translucent(c, alpha, glow)
+
+
+## Kopie des Meshes mit geglätteten Normalen: Ecken an derselben Position bekommen dieselbe
+## Normale (Summe der angrenzenden Flächennormalen). Für Konturen per aufgeblähter Hülle,
+## die an harten Kanten sonst aufreißen. Braucht keine Normalen im Original.
+static func smooth_normals(mesh: Mesh) -> ArrayMesh:
+	var out := ArrayMesh.new()
+	for si in mesh.get_surface_count():
+		if mesh.surface_get_primitive_type(si) != Mesh.PRIMITIVE_TRIANGLES:
+			continue
+		var arrays := mesh.surface_get_arrays(si)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var indices := PackedInt32Array()
+		if arrays[Mesh.ARRAY_INDEX] != null:
+			indices = arrays[Mesh.ARRAY_INDEX]
+		else:
+			indices.resize(verts.size())
+			for i in verts.size():
+				indices[i] = i
+		var sums := {}
+		for t in range(0, indices.size() - 2, 3):
+			var a := verts[indices[t]]
+			var b := verts[indices[t + 1]]
+			var c := verts[indices[t + 2]]
+			# Godot: Vorderseite im Uhrzeigersinn, daher (c - a) × (b - a) zeigt nach außen
+			var n := (c - a).cross(b - a)
+			for v in [a, b, c]:
+				var key: Vector3 = (v * 1000.0).round()
+				sums[key] = sums.get(key, Vector3.ZERO) + n
+		var smooth := PackedVector3Array()
+		smooth.resize(verts.size())
+		for i in verts.size():
+			var sum: Vector3 = sums.get((verts[i] * 1000.0).round(), Vector3.UP)
+			smooth[i] = sum.normalized() if sum.length() > 0.0 else Vector3.UP
+		var keep := []
+		keep.resize(Mesh.ARRAY_MAX)
+		keep[Mesh.ARRAY_VERTEX] = verts
+		keep[Mesh.ARRAY_NORMAL] = smooth
+		keep[Mesh.ARRAY_INDEX] = indices
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, keep)
+	return out
+
+
+## Leuchtende Kontur um alle Meshes unter n (gleiche wie bei den Felsbrocken): je Mesh eine
+## aufgeblähte Hülle als Kind. Das Material darunter muss Tiefe schreiben (opak oder DEPTH_DRAW_ALWAYS).
+static func add_outline(n: Node) -> void:
+	if _outline_mat == null:
+		_outline_mat = ShaderMaterial.new()
+		_outline_mat.shader = preload("res://assets/shaders/outline.gdshader")
+		_outline_mat.render_priority = 1
+	var targets: Array[MeshInstance3D] = []
+	_collect_meshes(n, targets)
+	for mi in targets:
+		if not _smooth_cache.has(mi.mesh):
+			_smooth_cache[mi.mesh] = smooth_normals(mi.mesh)
+		var hull := MeshInstance3D.new()
+		hull.mesh = _smooth_cache[mi.mesh]
+		hull.material_override = _outline_mat
+		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.add_child(hull)
+
+
+static func _collect_meshes(n: Node, out: Array[MeshInstance3D]) -> void:
+	if n is MeshInstance3D and n.mesh != null:
+		out.append(n)
+	for c in n.get_children():
+		_collect_meshes(c, out)

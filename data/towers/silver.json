@@ -3,7 +3,8 @@
 	"name": "Silber",
 	"category": "special",
 	"color": "#c8d0d8",
-	"model": "res://assets/models/crystals/crystal_09.glb",
+	"model": "res://assets/models/special/platonic.glb",
+	"model_tint": false,
 	"damage_type": "spells",
 	"targets": "both",
 	"tiers": [

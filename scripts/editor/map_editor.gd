@@ -42,6 +42,7 @@ func _ready() -> void:
 	CameraRig.add_environment(self)
 	board = Board3D.new()
 	board.map = map
+	board.grid_strength = 0.25
 	add_child(board)
 	camera_rig = CameraRig.new()
 	add_child(camera_rig)

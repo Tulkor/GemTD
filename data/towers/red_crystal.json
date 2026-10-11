@@ -3,7 +3,8 @@
 	"name": "Roter Kristall",
 	"category": "special",
 	"color": "#d6304f",
-	"model": "res://assets/models/crystals/crystal_20.glb",
+	"model": "res://assets/models/special/crystal_tree_2.glb",
+	"model_tint": false,
 	"damage_type": "pierce",
 	"targets": "air",
 	"tiers": [
