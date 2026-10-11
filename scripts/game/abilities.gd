@@ -72,6 +72,8 @@ static func describe(ab: Dictionary) -> String:
 		"air_bonus":
 			return str(TranslationServer.translate("%.1fx Schaden gegen Flieger")) % float(ab.multiplier)
 		"gold_on_hit":
+			if float(ab.get("gold_per_wave", 0)) > 0.0:
+				return str(TranslationServer.translate("%d%% Chance auf Gold pro Treffer (%s × Welle)")) % [float(ab.chance) * 100, str(snappedf(float(ab.gold_per_wave), 0.01))]
 			return str(TranslationServer.translate("%d%% Chance auf %d Gold pro Treffer")) % [float(ab.chance) * 100, int(ab.gold)]
 		"speed_aura":
 			return str(TranslationServer.translate("Aura: +%d%% Angriffstempo für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]

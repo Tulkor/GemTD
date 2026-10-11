@@ -88,6 +88,7 @@ func _ready() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	hud.option_chosen.connect(_on_option_chosen)
+	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
 	hud.speed_selected.connect(func(f): Engine.time_scale = f)
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
@@ -755,6 +756,8 @@ func _update_auras() -> void:
 	for t in all_towers():
 		t.speed_bonus = 0.0
 		t.damage_bonus = 0.0
+		t.speed_source = ""
+		t.damage_source = ""
 	for src in all_towers():
 		for ab in src.abilities():
 			var type := str(ab.get("type", ""))
@@ -763,10 +766,12 @@ func _update_auras() -> void:
 			for t in all_towers():
 				if t == src or t.pos.distance_to(src.pos) > float(ab.radius):
 					continue
-				if type == "speed_aura":
-					t.speed_bonus = maxf(t.speed_bonus, float(ab.bonus))
-				else:
-					t.damage_bonus = maxf(t.damage_bonus, float(ab.bonus))
+				if type == "speed_aura" and float(ab.bonus) > t.speed_bonus:
+					t.speed_bonus = float(ab.bonus)
+					t.speed_source = src.label()
+				elif type == "damage_aura" and float(ab.bonus) > t.damage_bonus:
+					t.damage_bonus = float(ab.bonus)
+					t.damage_source = src.label()
 
 
 # --- Welle -------------------------------------------------------------------
@@ -967,12 +972,12 @@ func _refresh_hud() -> void:
 		hud.set_selection({})
 		hud.set_options([])
 		return
-	var lines := selected.info_text().split("\n")
 	var used := Recipes.used_in(selected.tower_id, selected.tier)
-	var body := "\n".join(lines.slice(1))
+	var body := ""
 	if not selected.is_new and phase <= Phase.CHOOSE and _field_recipe_complete(used):
-		body += "\n" + tr("Kombinieren geht erst wieder während der Welle.")
-	hud.set_selection({"title": lines[0], "color": selected.color, "body": body, "used_in": used})
+		body = tr("Kombinieren geht erst wieder während der Welle.")
+	hud.set_selection({"title": selected.label(), "color": selected.color, "body": body, "used_in": used,
+			"stats": TowerStats.view(selected)})
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
 
@@ -1073,4 +1078,9 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	if v.has("icon"):
 		v.tooltip = o.label
 		v.label = Database.tower_label(o.id, o.tier)
+	# Vorschau beim Hover: neue Reichweite als Ring und was sich an den Werten ändert
+	if o.action in ["upgrade", "keep", "combine"] and (o.id != t.tower_id or o.tier != t.tier):
+		var trap := str(Database.towers.get(o.id, {}).get("kind", "tower")) == "trap"
+		v.preview_range = Tower.ring_radius(Database.tower_tier(o.id, o.tier), trap)
+		v.diff = TowerStats.diff(t, o.id, o.tier)
 	return v

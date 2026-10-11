@@ -52,6 +52,8 @@ var is_new := false   ## in dieser Runde gesetzt, noch nicht ausgewählt
 var selected := false
 var speed_bonus := 0.0   ## von Tempo-Auren anderer Tower
 var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
+var speed_source := ""   ## Name des Towers, dessen Tempo-Aura gerade wirkt (fürs Infofenster)
+var damage_source := ""  ## Name des Towers, dessen Schadens-Aura gerade wirkt
 var cooldown_left := 0.0
 var kills := 0
 var moves_left := 0  ## wie oft eine Falle noch verschoben werden darf
@@ -62,6 +64,7 @@ var _gem: Node3D
 var _new_ring: MeshInstance3D
 var _select_ring: MeshInstance3D
 var _range_ring: MeshInstance3D
+var _preview_ring: MeshInstance3D  ## Reichweite nach einem Upgrade (Hover über den Knopf)
 var _time := 0.0
 
 static var _octahedron: ArrayMesh
@@ -344,6 +347,29 @@ func set_selected(value: bool) -> void:
 	if _select_ring:
 		_select_ring.visible = value
 		_range_ring.visible = value and (can_attack() or _aura_radius() > 0.0)
+	if not value:
+		show_preview_range(0.0)
+
+
+## Türkiser Ring mit der Reichweite nach einem Upgrade; 0 blendet ihn aus.
+func show_preview_range(radius: float) -> void:
+	if _preview_ring != null and is_instance_valid(_preview_ring):
+		_preview_ring.queue_free()
+	_preview_ring = null
+	if radius > 0.0 and _visual != null:
+		_preview_ring = _ring(radius, 0.07, UiTheme.CYAN)
+
+
+## Radius des Reichweitenrings für bestimmte Werte: Fallen mit Fläche zeigen nur Luft- oder Aurareichweite.
+static func ring_radius(s: Dictionary, trap: bool) -> float:
+	var aura := 0.0
+	for ab in s.get("abilities", []):
+		if str(ab.get("type", "")).ends_with("_aura"):
+			aura = maxf(aura, float(ab.radius))
+	var r := float(s.get("range", 3.0))
+	if trap and r <= Board3D.TRAP_CELLS * Board3D.CELL:
+		return maxf(float(s.get("range_air", 0.0)), aura)
+	return maxf(r, aura)
 
 
 func _square_hitbox() -> bool:
@@ -361,6 +387,7 @@ func _aura_radius() -> float:
 func _build_visual() -> void:
 	if _visual:
 		_visual.queue_free()
+	_preview_ring = null
 	_visual = Node3D.new()
 	add_child(_visual)
 	var mat := ShaderMaterial.new()
@@ -597,8 +624,7 @@ func _finish_visual() -> void:
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)
 	# Fallen zeigen ihre Fläche über die Platte, der Ring nur Luft- oder Aurareichweite
-	var ring := maxf(float(stats.get("range_air", 0.0)), _aura_radius()) if _square_hitbox() else maxf(range_cells(), _aura_radius())
-	_range_ring = _ring(ring, 0.05, Color(1, 1, 1, 0.6))
+	_range_ring = _ring(ring_radius(stats, is_trap()), 0.05, Color(1, 1, 1, 0.6))
 	set_selected(selected)
 
 
