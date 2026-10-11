@@ -12,7 +12,8 @@ Getestet mit Godot 4.3, sollte in jeder neueren 4.x-Version laufen.
 Godot öffnen → *Importieren* → `project.godot` wählen → F5.
 Im Hauptmenü Map wählen und *Spielen*.
 
-**Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, links ziehen spannt einen Auswahlrahmen für bis zu 5 Steine auf, Rechtsklick/Esc hebt die Auswahl auf.
+**Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, links ziehen spannt einen Auswahlrahmen für bis zu 5 Steine auf (Strg+Klick wählt einzelne dazu oder ab),
+Strg+Z nimmt den zuletzt gesetzten Gem zurück, Rechtsklick/Esc hebt die Auswahl auf.
 Kamera: WASD/Pfeile, Maus an den Fensterrand oder mit gedrückter rechter Maustaste ziehen verschiebt, Q/E oder mittlere Maustaste drehen, Mausrad zoomt. Tasten 1/2/3: Tempo.
 Leertaste: große Aktion unten rechts (Behalten, bzw. lila One-Shot). R: Rezeptbuch.
 
@@ -56,6 +57,10 @@ Weitere Regeln:
 - **Steine** jederzeit anklicken und kostenlos entfernen (Bau-, Auswahlphase und während der Welle).
   In der Bauphase kann ein ausgewählter Stein auch gleich durch einen neuen Gem ersetzt werden; mit dem
   Auswahlrahmen gehen bis zu 5 Steine auf einmal (so viele, wie in der Runde noch Gems übrig sind).
+- **Zurücknehmen:** Gesetzte Gems der laufenden Runde lassen sich in der Bau- und Auswahlphase zurücknehmen
+  (Button oder Strg+Z), aus der Auswahlphase geht es dann zurück in die Bauphase. Das korrigiert nur
+  Fehlklicks: der nächste gesetzte Gem ist genau der zurückgenommene (kein Neuwürfeln, auch nicht über
+  Speichern/Laden), ein ersetzter Stein kommt zurück und seine Kosten werden erstattet.
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).

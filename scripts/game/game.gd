@@ -32,6 +32,9 @@ var trap_cells: Dictionary = {}  ## jedes Feld unter einer Falle -> Anker
 var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewählt wird
 var enemies: Array = []
 var round_towers: Array = []
+## Zurückgenommene Gems dieser Runde als [id, tier]: die nächsten Setzungen bekommen genau diese wieder,
+## damit Zurücknehmen nur Fehlklicks korrigiert und nicht neu würfelt.
+var undo_gems: Array = []
 var selected: Tower = null
 ## Ausgewählte Steine (Anker), per Klick einer oder per Rahmen bis zu MAX_ROCK_SELECTION.
 var selected_rocks: Array = []
@@ -287,13 +290,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _dragging:
 				_dragging = false
 				hud.show_drag_box(Rect2())
-				_box_select(Rect2(_press_pos, Vector2.ZERO).expand(event.position))
+				_box_select(Rect2(_press_pos, Vector2.ZERO).expand(event.position), event.ctrl_pressed or event.meta_pressed)
 			else:
-				_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera))
+				_on_click(board.mouse_cell(camera_rig.camera), board.mouse_anchor(camera_rig.camera), event.ctrl_pressed or event.meta_pressed)
 		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed and not camera_rig.right_dragged:
 			# Rechtsklick hebt die Auswahl auf, rechts ziehen verschiebt nur die Kamera
 			_select(null)
 	elif event is InputEventKey and event.pressed:
+		if event.keycode == KEY_Z and (event.ctrl_pressed or event.meta_pressed) and not round_towers.is_empty():
+			take_back(round_towers[-1])
+			return
 		match event.keycode:
 			KEY_ESCAPE:
 				_select(null)
@@ -305,14 +311,17 @@ func _unhandled_input(event: InputEvent) -> void:
 				Engine.time_scale = 4.0
 
 
-## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme.
-func _on_click(c: Vector2i, anchor: Vector2i) -> void:
+## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme. add (Strg): Stein zur Auswahl hinzufügen/abwählen.
+func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 	if moving != null:
 		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
 		if can_move_trap(moving, target):
 			move_trap(moving, target)
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
+	if add and rocks.has(a):
+		toggle_rock(a)
+		return
 	var trap: Tower = traps.get(trap_cells.get(c, NO_CELL), null)
 	# Liegt eine Falle unter einem Tower/Stein, wählt ein zweiter Klick die Falle
 	var on_top_selected: bool = (towers.has(a) and selected == towers[a]) or (rocks.has(a) and selected_rock == a)
@@ -470,6 +479,7 @@ func _enter_build() -> void:
 	phase = Phase.BUILD
 	chance_level = chance_level_for(current_wave())
 	round_towers.clear()
+	undo_gems.clear()
 	round_path_start = path_length
 	_refresh_hud()
 
@@ -477,7 +487,11 @@ func _enter_build() -> void:
 func place_gem(c: Vector2i) -> Tower:
 	var id := ""
 	var tier := 0
-	if debug_tower != "":
+	if not undo_gems.is_empty():
+		var back: Array = undo_gems.pop_back()
+		id = back[0]
+		tier = back[1]
+	elif debug_tower != "":
 		var parts := debug_tower.split(":")
 		id = parts[0]
 		tier = int(parts[1]) if parts.size() > 1 else 0
@@ -505,8 +519,19 @@ func place_gem(c: Vector2i) -> Tower:
 	return t
 
 
+## Strg+Klick wie bei Dateien: Stein zur Auswahl hinzufügen oder wieder abwählen (höchstens 5).
+func toggle_rock(a: Vector2i) -> void:
+	var list: Array = selected_rocks.duplicate() if selected == null else []
+	if list.has(a):
+		list.erase(a)
+	elif list.size() < MAX_ROCK_SELECTION:
+		list.append(a)
+	_select_rocks(list)
+
+
 ## Steine im Auswahlrahmen (Bildschirmkoordinaten), die nächsten zum Startpunkt zuerst, höchstens 5.
-func _box_select(r: Rect2) -> void:
+## add (Strg): zur bisherigen Auswahl hinzufügen.
+func _box_select(r: Rect2, add := false) -> void:
 	var cam: Camera3D = camera_rig.camera
 	var found := []
 	for c in rocks:
@@ -517,7 +542,11 @@ func _box_select(r: Rect2) -> void:
 		if r.has_point(p):
 			found.append([p.distance_squared_to(_press_pos), c])
 	found.sort_custom(func(a, b): return a[0] < b[0])
-	_select_rocks(found.map(func(f): return f[1]))
+	var list: Array = selected_rocks.duplicate() if add and selected == null else []
+	for f in found:
+		if not list.has(f[1]):
+			list.append(f[1])
+	_select_rocks(list)
 
 
 ## Wie viele Gems in dieser Bauphase noch gesetzt werden dürfen.
@@ -533,7 +562,9 @@ func replace_rocks(list: Array) -> int:
 			break
 		remove_rock(c)
 		if can_place(c):
-			place_gem(c)
+			var t := place_gem(c)
+			if t != null:
+				t.set_meta("on_rock", true)
 			done += 1
 		else:
 			# sollte nicht vorkommen (gleiche Felder wie der Stein), sonst Stein zurücklegen
@@ -563,16 +594,45 @@ func remove_rock(c: Vector2i) -> bool:
 	return true
 
 
+## Gesetzten Gem dieser Runde zurücknehmen (Fehlklick), in Bau- und Auswahlphase. Aus der Auswahlphase geht es
+## zurück in die Bauphase. Der Gem wird nicht neu gewürfelt (siehe undo_gems), ein ersetzter Stein kommt zurück.
+func can_take_back(t: Tower) -> bool:
+	return phase <= Phase.CHOOSE and t != null and is_instance_valid(t) and t.is_new and round_towers.has(t)
+
+
+func take_back(t: Tower) -> bool:
+	if not can_take_back(t):
+		return false
+	undo_gems.append([t.tower_id, t.tier])
+	round_towers.erase(t)
+	_unregister(t)
+	if t.get_meta("on_rock", false) and not pathfinder.would_block_cells(Board3D.footprint(t.cell)):
+		rocks[t.cell] = true
+		_occupy(t.cell, true, true)
+		gold += rock_remove_cost()
+	t.queue_free()
+	phase = Phase.BUILD
+	_update_paths()
+	_update_auras()
+	board.refresh_rocks()
+	_select(null)
+	return true
+
+
 ## Was man mit dem ausgewählten Tower machen kann.
 ## Rückgabe: [{label, action, id, tier, consume: [Tower], cost}]
 ##   action "keep":    Runde abschließen, ausgewählter Gem wird zu id/tier, Rest der Runde wird zu Steinen
 ##   action "combine": Kombination aus fertigen Towern auf dem Feld, ohne die Runde zu beenden
 ##   action "upgrade": Spezial-Tower gegen Gold aufwerten
+##   action "take_back": gesetzten Gem dieser Runde zurücknehmen
 func tower_options(t: Tower) -> Array:
 	if t == null or not is_instance_valid(t) or phase >= Phase.GAME_OVER:
 		return []
 	if t.is_new:
-		return choice_options(t)
+		var choice := choice_options(t)
+		if can_take_back(t):
+			choice.append({"label": tr("Zurücknehmen"), "action": "take_back", "id": t.tower_id, "tier": t.tier, "consume": [], "cost": 0})
+		return choice
 	var opts := []
 	var field := all_towers().filter(func(o): return o != t and not o.is_new)
 	# Fertige Tower auf dem Feld kombinieren geht nur während der Welle, nicht beim Setzen und Auswählen
@@ -731,6 +791,9 @@ func _on_option_chosen(index: int) -> void:
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
+	if o.action == "take_back":
+		take_back(selected)
+		return
 	if o.action == "move":
 		moving = selected
 		board.hover_cell = NO_CELL
@@ -1042,7 +1105,7 @@ func _refresh_hud() -> void:
 		var each := rock_remove_cost()
 		var free := gems_left()
 		var k := mini(n, free)
-		var body := tr("Linke Maustaste ziehen wählt bis zu %d Steine auf einmal aus.") % MAX_ROCK_SELECTION
+		var body := tr("Ziehen oder Strg+Klick wählt bis zu %d Steine auf einmal aus.") % MAX_ROCK_SELECTION
 		if free > 0 and n > free:
 			body = tr("Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.") % [free, free]
 		hud.set_selection({"title": tr("Stein") if n == 1 else tr("%d Steine") % n, "color": Color("6d6a63"), "used_in": null, "body": body})

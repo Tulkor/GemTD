@@ -34,7 +34,7 @@
 	"Menü": "Menu",
 	"Neue Gems dieser Runde": "New gems this round",
 	"Wird gebraucht für": "Used in",
-	"Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen: bis zu 5 Steine auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo": "Left click: place gem / select tower or rock\nLeft-drag: select up to 5 rocks\nRight click, Esc: clear selection\nSpace: main action (Keep / One-Shot)\nR: recipe book\nWASD/arrows, screen edge, right-drag: move camera\nQ/E or middle mouse: rotate, mouse wheel: zoom\n1, 2, 3: speed",
+	"Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo": "Left click: place gem / select tower or rock\nLeft-drag, Ctrl+click: select up to 5 rocks\nCtrl+Z: take back the last placed gem\nRight click, Esc: clear selection\nSpace: main action (Keep / One-Shot)\nR: recipe book\nWASD/arrows, screen edge, right-drag: move camera\nQ/E or middle mouse: rotate, mouse wheel: zoom\n1, 2, 3: speed",
 	"Gems pro Runde": "Gems per round",
 	"Nächster Gem": "Next gem",
 	"Welcher Gem als nächstes gesetzt wird": "Which gem gets placed next",
@@ -479,6 +479,7 @@
 	"%d Gems setzen": "Place %d gems",
 	"%d Steine entfernen": "Remove %d rocks",
 	"%d Steine": "%d rocks",
-	"Linke Maustaste ziehen wählt bis zu %d Steine auf einmal aus.": "Drag with the left mouse button to select up to %d rocks at once.",
+	"Ziehen oder Strg+Klick wählt bis zu %d Steine auf einmal aus.": "Drag or Ctrl+click to select up to %d rocks at once.",
+	"Zurücknehmen": "Take back",
 	"Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.": "%d gems are left this round, the first %d rocks get replaced."
 }

@@ -465,7 +465,7 @@ func _build_help() -> void:
 	help_panel.offset_right = -16
 	help_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	root.add_child(help_panel)
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen: bis zu 5 Steine auswählen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
 	help_panel.hide()
 
 

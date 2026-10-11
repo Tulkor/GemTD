@@ -247,7 +247,8 @@ func _ready() -> void:
 	labels = opts.map(func(o): return o.label)
 	check(labels == ["One-Shot → Silber"], "Bauphase bietet nur das Rezept an: %s" % [labels])
 	game._refresh_hud()
-	check(game.hud._options.size() == 1 and game.hud._options[0].style == "oneshot", "One-Shot-Button ist lila: %s" % [game.hud._options])
+	check(game.hud._options.size() == 2 and game.hud._options[0].style == "oneshot" and game.hud._options[1].label == "Zurücknehmen",
+		"One-Shot-Button ist lila, daneben Zurücknehmen: %s" % [game.hud._options.map(func(o): return o.label)])
 	check(game.hud.oneshot_pill.visible and "Silber" in game.hud.oneshot_label.text, "Banner zeigt One-Shot: " + game.hud.oneshot_label.text)
 	check(game.hud._gems.all(func(g): return g.oneshot), "alle drei Zutaten lila markiert")
 	game.hud.toggle_recipe_book()
@@ -500,6 +501,7 @@ func _ready() -> void:
 	await _save_test()
 	await _score_test()
 	await _rock_select_test()
+	await _take_back_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -685,3 +687,91 @@ func _rock_select_test() -> void:
 	check(g.rocks.is_empty() and g.gold == gold_before - 4 * g.rock_remove_cost(), "ohne freie Gems entfernt die Auswahl alle 4 Steine")
 	g.queue_free()
 	await get_tree().process_frame
+
+
+## Strg+Klick: Steine einzeln zur Auswahl hinzufügen/abwählen. Gesetzte Gems zurücknehmen, ohne neu zu würfeln.
+func _take_back_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	g.gold = 10000
+	var rock_cells := []
+	for i in 7:
+		var c := Vector2i(14 + 4 * (i % 4), 32 + 4 * (i / 4))
+		if g.can_place(c):
+			g.rocks[c] = true
+			g._occupy(c, true, true)
+			rock_cells.append(c)
+	g._update_paths()
+	g.board.refresh_rocks()
+	for i in 6:
+		g.toggle_rock(rock_cells[i])
+	check(g.selected_rocks.size() == 5 and not g.selected_rocks.has(rock_cells[5]), "Strg+Klick wählt Steine dazu, höchstens 5")
+	g.toggle_rock(rock_cells[1])
+	check(g.selected_rocks.size() == 4 and not g.selected_rocks.has(rock_cells[1]), "Strg+Klick auf markierten Stein wählt ihn ab")
+	g._select(null)
+
+	# Ersetzen und wieder zurücknehmen: Stein kommt zurück, Kosten werden erstattet
+	var cost_before = Database.balance.get("rock_remove_cost", 0)
+	Database.balance["rock_remove_cost"] = 7
+	var gold0: int = g.gold
+	g.replace_rocks([rock_cells[0]])
+	var on_rock: Tower = g.towers.get(rock_cells[0])
+	check(on_rock != null and g.gold == gold0 - 7, "Stein durch Gem ersetzt")
+	var rock_gem := "%s:%d" % [on_rock.tower_id, on_rock.tier]
+	check(g.take_back(on_rock) and g.rocks.has(rock_cells[0]) and g.gold == gold0 and g.round_towers.is_empty(),
+		"Zurücknehmen legt den Stein wieder hin und erstattet die Kosten")
+	Database.balance["rock_remove_cost"] = cost_before
+
+	# 5 Gems setzen, Auswahlphase, einen zurücknehmen → Bauphase, nächster Gem ist derselbe
+	var cells := [Vector2i(14, 40), Vector2i(18, 40), Vector2i(22, 40), Vector2i(26, 40), Vector2i(30, 40)]
+	var first: Tower = g.place_gem(Vector2i(34, 40))   # der zurückgenommene Gem von oben kommt wieder
+	check(first != null and _gem_key(first) == rock_gem, "zurückgenommener Gem wird beim nächsten Setzen wiederverwendet")
+	for c in cells.slice(0, 4):
+		g.place_gem(c)
+	check(g.phase == g.Phase.CHOOSE, "5 Gems gesetzt, Auswahlphase")
+	var gems: Array = g.round_towers.map(_gem_key)
+	var rng_state: int = g.rng.state
+	var mid: Tower = g.round_towers[2]
+	var mid_gem := _gem_key(mid)
+	var mid_cell := mid.cell
+	var opts: Array = g.tower_options(mid)
+	check(opts.any(func(o): return o.action == "take_back"), "Auswahlphase bietet Zurücknehmen")
+	g._select(mid)
+	g._on_option_chosen(opts.find(opts.filter(func(o): return o.action == "take_back")[0]))
+	check(g.phase == g.Phase.BUILD and g.round_towers.size() == 4 and not g.towers.has(mid_cell), "Zurücknehmen in der Auswahlphase führt zurück in die Bauphase")
+	# Spielstand mitten drin: auch nach dem Laden kommt derselbe Gem wieder
+	var st := SaveGame.capture(g)
+	var h: Node = load(Session.GAME).instantiate()
+	add_child(h)
+	await get_tree().process_frame
+	SaveGame.apply(h, st)
+	var again: Tower = h.place_gem(cells[4])
+	check(again != null and _gem_key(again) == mid_gem and h.phase == h.Phase.CHOOSE, "nach Laden: derselbe Gem, nicht neu gewürfelt")
+	h.queue_free()
+	var re: Tower = g.place_gem(cells[4])
+	check(_gem_key(re) == mid_gem and g.rng.state == rng_state, "Neusetzen würfelt nicht neu (gleicher Gem, Zufall unverändert)")
+	# Alle zurücknehmen und neu setzen: genau dieselben Gems
+	while not g.round_towers.is_empty():
+		g.take_back(g.round_towers[-1])
+	for c in cells:
+		g.place_gem(c)
+	var a1 := gems.duplicate()
+	a1.sort()
+	var a2: Array = g.round_towers.map(_gem_key)
+	a2.sort()
+	check(a1 == a2 and g.rng.state == rng_state, "alle zurücknehmen und neu setzen ergibt dieselben 5 Gems")
+	# Nach dem Behalten (Welle) lässt sich nichts mehr zurücknehmen
+	var kept: Tower = g.round_towers[0]
+	g._select(kept)
+	g._on_option_chosen(0)
+	check(g.phase == g.Phase.WAVE and not g.can_take_back(kept) and g.round_towers.is_empty(), "nach Behalten kein Zurücknehmen mehr")
+	check(not g.tower_options(kept).any(func(o): return o.action == "take_back"), "fertige Tower bieten kein Zurücknehmen")
+	g.queue_free()
+	await get_tree().process_frame
+
+
+func _gem_key(t: Tower) -> String:
+	return "%s:%d" % [t.tower_id, t.tier]

@@ -26,7 +26,7 @@ static func capture(game) -> Dictionary:
 	var ts := []
 	for t in list:
 		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills,
-			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left})
+			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left, "on_rock": t.get_meta("on_rock", false)})
 	var es := []
 	for e in game.enemies:
 		if e.dead:
@@ -49,6 +49,7 @@ static func capture(game) -> Dictionary:
 		"towers": ts,
 		"round": game.round_towers.map(func(t): return list.find(t)),
 		"path_start": game.round_path_start,
+		"undo_gems": game.undo_gems.duplicate(true),
 		"killed": game.enemies_killed,
 		"spawn_queue": game.spawn_queue.duplicate(true),
 		"spawn_timer": game.spawn_timer,
@@ -89,6 +90,8 @@ static func apply(game, s: Dictionary) -> void:
 		t.total_damage = float(d.get("dmg", 0.0))
 		t.cooldown_left = float(d.get("cd", 0.0))
 		t.moves_left = int(d.get("moves", 0))
+		if d.get("on_rock", false):
+			t.set_meta("on_rock", true)
 		game._register(t)
 		made.append(t)
 	game._update_paths()
@@ -99,6 +102,10 @@ static func apply(game, s: Dictionary) -> void:
 	var phase := int(s.get("phase", game.Phase.BUILD))
 	game.chance_level = game.chance_level_for(game.current_wave())
 	game.round_towers.clear()
+	game.undo_gems = []
+	for ug in s.get("undo_gems", []):
+		if ug is Array and ug.size() == 2 and Database.towers.has(str(ug[0])):
+			game.undo_gems.append([str(ug[0]), int(ug[1])])
 	for i in s.get("round", []):
 		if i >= 0 and i < made.size() and made[i] != null:
 			game.round_towers.append(made[i])
