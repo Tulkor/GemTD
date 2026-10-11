@@ -504,7 +504,8 @@ func _save_test() -> void:
 	g._on_option_chosen(0)
 	Engine.time_scale = 4.0
 	var frames := 0
-	while g.phase == g.Phase.WAVE and (g.enemies.size() < 3 or frames < 40) and frames < 2000:
+	# mitten in der Welle: Gegner unterwegs und noch welche in der Warteschlange
+	while g.phase == g.Phase.WAVE and (g.enemies.size() < 2 or g.spawn_queue.is_empty() or frames < 40) and frames < 2000:
 		await get_tree().process_frame
 		frames += 1
 	Engine.time_scale = 1.0

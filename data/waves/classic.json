@@ -415,8 +415,12 @@
 			"groups": [
 				{
 					"enemy": "extreme_bryvx",
-					"count": 10,
-					"interval": 1.61
+					"count": 1,
+					"interval": 1.61,
+					"hp": 402000,
+					"bounty": 160,
+					"damage": 160,
+					"size": 2.2
 				}
 			]
 		},
@@ -492,8 +496,12 @@
 			"groups": [
 				{
 					"enemy": "extreme_bryvx_boss",
-					"count": 10,
-					"interval": 1.61
+					"count": 1,
+					"interval": 1.61,
+					"hp": 850000,
+					"bounty": 200,
+					"damage": 200,
+					"size": 2.4
 				}
 			]
 		}
