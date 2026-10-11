@@ -9,6 +9,11 @@
 	},
 	"min_slowed_speed": 1.72,
 	"gold_income_factor": 0.7,
+	"score": {
+		"wave_base": 100,
+		"wave_step": 10,
+		"leak_factor": 0.5
+	},
 	"gold_income_ramp": {
 		"from_wave": 28,
 		"to_wave": 35,

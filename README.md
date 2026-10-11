@@ -79,6 +79,14 @@ Technik: `scripts/autoload/net.gd` (Verbindung, Spielerliste, Sitzung), `scripts
 Feld (bei Änderung) und Gegner/Schüsse etwa 15 Mal pro Sekunde. `scripts/net/remote_field.gd` zeigt das Feld;
 die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur sanft nachkorrigiert.
 
+## Wertung
+
+Im Hauptmenü unter der Schwierigkeit: „Leben“ (wie im Original, bei 0 Leben verloren) oder „Punkte“.
+Im Punkte-Modus ist jede Welle `wave_base + wave_step × (Welle − 1)` Punkte wert (`data/balance.json` → `score`;
+Welle 1: 100, Welle 40: 490, Welle 50: 590), verteilt nach Lebenspunkten auf ihre Gegner. Ein Kill bringt den Anteil,
+ein Durchbruch kostet die Hälfte davon (`leak_factor`). Ein Gegner aus Welle 40 kostet beim Durchbruch also 24,5 Punkte,
+eine ganz durchgelassene Welle 1 dagegen 50. Gespielt wird bis zur letzten Welle. Einfach ×0,8, Normal ×1, Schwer ×1,25.
+
 ## Speichern
 
 Wer eine Partie mittendrin verlässt (Menü-Knopf oder Fenster schließen), wird gefragt, ob gespeichert werden soll.

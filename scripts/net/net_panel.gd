@@ -183,7 +183,10 @@ static func status_text(s: Dictionary) -> String:
 	else:
 		parts.append(TranslationServer.translate(PHASE_NAMES[clampi(phase, 0, PHASE_NAMES.size() - 1)]))
 		parts.append(TranslationServer.translate("Welle %d/%d") % wave)
-	parts.append(TranslationServer.translate("Leben %d") % int(s.get("lives", 0)))
+	if s.get("score_mode", false):
+		parts.append(TranslationServer.translate("Punkte %d") % int(s.get("score", 0)))
+	else:
+		parts.append(TranslationServer.translate("Leben %d") % int(s.get("lives", 0)))
 	return " · ".join(parts)
 
 

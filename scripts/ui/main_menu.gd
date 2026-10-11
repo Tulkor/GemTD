@@ -48,6 +48,7 @@ func _ready() -> void:
 	play_button.clip_text = true
 	UiTheme.accent_button(play_button, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
 	_difficulty_row(left)
+	_mode_row(left)
 	_menu_button("Spiel laden", left, func(): loader.show())
 	net_button = _menu_button("Mehrspieler", left, func(): lobby.show())
 	_menu_button("Map-Editor", left, _open_map_editor)
@@ -202,6 +203,29 @@ func _difficulty_row(parent: Node) -> void:
 		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		b.set_pressed_no_signal(i == Session.difficulty)
+
+
+## Wertung: Leben (wie bisher) oder Punkte.
+func _mode_row(parent: Node) -> void:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	parent.add_child(h)
+	var group := ButtonGroup.new()
+	var modes := [
+		["Leben", false, "Wer durchkommt, kostet Leben. Bei 0 ist das Spiel verloren."],
+		["Punkte", true, "Kills geben Punkte, späte Wellen mehr als frühe. Wer durchkommt, kostet die Hälfte seines Werts. Gespielt wird bis zur letzten Welle."],
+	]
+	for m in modes:
+		var on: bool = m[1]
+		var b := UiUtil.button(str(m[0]), h, func(): Session.score_mode = on)
+		b.toggle_mode = true
+		b.button_group = group
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 36
+		b.tooltip_text = str(m[2])
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		b.set_pressed_no_signal(on == Session.score_mode)
 
 
 func _gap(h: float) -> Control:

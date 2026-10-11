@@ -19,12 +19,14 @@ var debug_immortal := false
 var debug_gems_per_round := 0   ## Debug: Gems pro Runde, 0 = Wert aus balance.json
 ## Schwierigkeitsstufen: Faktor auf Leben und Rüstung der Gegner.
 const DIFFICULTIES := [
-	{"name": "Einfach", "factor": 0.8},
-	{"name": "Normal", "factor": 0.9},
-	{"name": "Schwer", "factor": 1.15},
+	{"name": "Einfach", "factor": 0.8, "score": 0.8},
+	{"name": "Normal", "factor": 0.9, "score": 1.0},
+	{"name": "Schwer", "factor": 1.15, "score": 1.25},
 ]
 ## Gewählte Stufe (Index in DIFFICULTIES), Standard „Normal“.
 var difficulty := 1
+## Wertung: false = Leben (Spiel endet bei 0), true = Punkte (Kills geben Punkte, Durchbrüche kosten welche).
+var score_mode := false
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Hauptmenü nach dem Sprachwechsel mit offenen Einstellungen neu aufbauen.
@@ -45,6 +47,11 @@ func goto(scene: String) -> void:
 
 func difficulty_factor() -> float:
 	return float(DIFFICULTIES[clampi(difficulty, 0, DIFFICULTIES.size() - 1)].factor)
+
+
+## Punkte-Faktor der gewählten Schwierigkeit.
+func score_factor() -> float:
+	return float(DIFFICULTIES[clampi(difficulty, 0, DIFFICULTIES.size() - 1)].get("score", 1.0))
 
 
 func difficulty_name() -> String:

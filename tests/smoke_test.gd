@@ -464,6 +464,7 @@ func _ready() -> void:
 	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
 
 	await _save_test()
+	await _score_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -554,4 +555,47 @@ func _save_test() -> void:
 	Session.save_id = ""
 	g.queue_free()
 	g2.queue_free()
+	await get_tree().process_frame
+
+
+## Punkte-Modus: späte Wellen zählen mehr, ein Durchbruch kostet die Hälfte, kein Leben geht verloren.
+func _score_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	Session.score_mode = true
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	check(g.score_mode and g.hud.lives_value.get_parent().get_child(0).text == "Punkte", "Punkte-Modus: Leiste zeigt Punkte")
+	var w1: Dictionary = g.waves[0]
+	var sum := 0.0
+	for grp in w1.groups:
+		sum += g.score_for(grp) * int(grp.get("count", 1))
+	check(is_equal_approx(sum, g.wave_points(1)), "Welle 1 ist insgesamt %.0f Punkte wert" % sum)
+	var v1: float = g.score_for(w1.groups[0])
+	g.wave_index = 39
+	var v40: float = g.score_for(g.waves[39].groups[0])
+	var full_leak_1 := 0.0
+	for grp in w1.groups:
+		full_leak_1 += g.leak_penalty(v1) * int(grp.get("count", 1))
+	check(v40 > v1 * 3.0, "Gegner aus Welle 40 zählt mehr als aus Welle 1 (%.1f gegen %.1f)" % [v40, v1])
+	check(g.leak_penalty(v40) < full_leak_1, "Durchbruch eines Gegners aus Welle 40 (−%.1f) kostet weniger als eine ganze frühe Welle (−%.1f)" % [g.leak_penalty(v40), full_leak_1])
+	var e := Enemy.new()
+	e.score_value = v40
+	g.enemies.append(e)
+	var lives_before: int = g.lives
+	g.on_enemy_killed(e)
+	check(is_equal_approx(g.score, v40), "Kill gibt %.1f Punkte" % v40)
+	var e2 := Enemy.new()
+	e2.score_value = v40
+	e2.damage = 5
+	g.enemies.append(e2)
+	g.on_enemy_leaked(e2)
+	check(is_equal_approx(g.score, v40 * 0.5) and g.lives == lives_before and g.phase < g.Phase.GAME_OVER, "Durchbruch kostet die Hälfte, keine Leben")
+	var st := SaveGame.capture(g)
+	check(st.score_mode and is_equal_approx(st.score, g.score), "Spielstand enthält Punkte")
+	g._finish(g.Phase.VICTORY)
+	check("Punkte: %d" % roundi(g.score) in g.hud.game_over_stats.text, "Endbildschirm zeigt die Punkte")
+	Session.score_mode = false
+	g.queue_free()
 	await get_tree().process_frame

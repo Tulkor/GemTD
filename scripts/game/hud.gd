@@ -493,9 +493,14 @@ func setup_debug(gems_per_round: int, wave_count: int) -> void:
 	debug_wave.max_value = maxi(wave_count, 1)
 
 
-func set_resources(wave: int, waves: int, lives: int, gold: int) -> void:
+## lives: im Punkte-Modus (score) die Punkte.
+func set_resources(wave: int, waves: int, lives: int, gold: int, score := false) -> void:
 	wave_value.text = "%d / %d" % [wave, waves]
 	lives_value.text = str(lives)
+	var cap: Label = lives_value.get_parent().get_child(0)
+	cap.text = tr("Punkte") if score else tr("Leben")
+	lives_value.add_theme_color_override("font_color", (UiTheme.CYAN if lives >= 0 else UiTheme.MISSING) if score else UiTheme.MISSING)
+	lives_value.get_parent().get_parent().tooltip_text = tr("Punkte-Modus: jeder Kill gibt Punkte, späte Wellen mehr als frühe. Ein Gegner, der durchkommt, kostet die Hälfte seines Werts.") if score else ""
 	gold_value.text = str(gold)
 
 
@@ -813,12 +818,17 @@ func set_path_length(cells: int, delta: int) -> void:
 	path_value.add_theme_color_override("font_color", UiTheme.HAVE if delta > 0 else (UiTheme.MISSING if delta < 0 else UiTheme.TEXT))
 
 
-func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int, path_cells: int) -> void:
+## score: Punkte im Punkte-Modus, sonst null.
+func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int, path_cells: int, score = null) -> void:
 	recipe_book.hide()
 	help_panel.hide()
 	game_over_title.text = "Gewonnen!" if victory else "Verloren"
 	game_over_title.add_theme_color_override("font_color", UiTheme.GOLD if victory else UiTheme.MISSING)
 	game_over_stats.text = tr("Schwierigkeit: ") + tr(Session.difficulty_name()) + "\n" + tr("Welle %d von %d\nLeben übrig: %d\nGegner besiegt: %d\nWeglänge am Ende: %d Felder") % [wave, waves, lives, kills, path_cells]
+	if score != null:
+		game_over_title.text = "Geschafft!"
+		game_over_stats.text = tr("Punkte: %d") % int(score) + "\n" + tr("Schwierigkeit: ") + tr(Session.difficulty_name()) + "\n" \
+			+ tr("Gegner besiegt: %d") % kills + "\n" + tr("Weglänge am Ende: %d Felder") % path_cells
 	editor_button.visible = Session.return_scene != Session.MAIN_MENU
 	editor_button.text = "Zurück zum Map-Editor" if Session.return_scene == Session.MAP_EDITOR else "Zurück zum Tower-Editor"
 	game_over.show()

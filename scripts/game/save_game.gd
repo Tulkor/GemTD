@@ -41,6 +41,8 @@ static func capture(game) -> Dictionary:
 		"phase": game.phase,
 		"wave_index": game.wave_index,
 		"lives": game.lives,
+		"score_mode": game.score_mode,
+		"score": game.score,
 		"gold": game.gold,
 		"gold_frac": game._gold_frac,
 		"rocks": game.rocks.keys(),
@@ -62,6 +64,9 @@ static func apply(game, s: Dictionary) -> void:
 	Session.difficulty = int(s.get("difficulty", Session.difficulty))
 	game.wave_index = int(s.get("wave_index", 0))
 	game.lives = int(s.get("lives", game.lives))
+	game.score_mode = bool(s.get("score_mode", false))
+	Session.score_mode = game.score_mode
+	game.score = float(s.get("score", 0.0))
 	game.gold = int(s.get("gold", 0))
 	game._gold_frac = float(s.get("gold_frac", 0.0))
 	game.enemies_killed = int(s.get("killed", 0))
@@ -116,6 +121,7 @@ static func apply(game, s: Dictionary) -> void:
 			for f in ENEMY_FIELDS:
 				if d.has(f):
 					e.set(f, d[f])
+			e.score_value = game.score_for(g)
 			e.place_on_path(float(d.get("traveled", 0.0)))
 			game.enemies.append(e)
 	elif phase == game.Phase.CHOOSE and not game.round_towers.is_empty():
@@ -133,6 +139,8 @@ static func meta_for(game, extra := {}) -> Dictionary:
 		"wave": mini(game.current_wave(), game.waves.size()),
 		"waves": game.waves.size(),
 		"lives": game.lives,
+		"score_mode": game.score_mode,
+		"score": roundi(game.score),
 		"difficulty": Session.difficulty,
 		"time": int(Time.get_unix_time_from_system()),
 	}

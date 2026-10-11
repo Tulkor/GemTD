@@ -102,6 +102,8 @@ func status() -> Dictionary:
 		"wave": mini(game.current_wave(), game.waves.size()),
 		"waves": game.waves.size(),
 		"lives": game.lives,
+		"score_mode": game.score_mode,
+		"score": roundi(game.score),
 		"difficulty": Session.difficulty,
 	}
 

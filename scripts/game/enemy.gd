@@ -14,6 +14,7 @@ var speed := 2.0     ## Towerbreiten pro Sekunde
 var armor := 0.0
 var bounty := 1.0   ## Gold pro Kill, bei Massenwellen auch Bruchteile
 var damage := 1      ## Leben, die der Spieler verliert, wenn der Gegner durchkommt
+var score_value := 0.0  ## Punkte-Modus: Punkte für den Kill (game.gd → score_for)
 var flying := false
 var armor_type := ""
 var size := 1.0

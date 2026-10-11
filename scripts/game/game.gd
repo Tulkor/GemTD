@@ -38,6 +38,9 @@ var selected_rock := NO_CELL
 var phase := Phase.BUILD
 var wave_index := 0
 var lives := 50
+## Punkte-Modus (Session.score_mode): statt Leben zählen Punkte, das Spiel endet erst nach der letzten Welle.
+var score_mode := false
+var score := 0.0
 var gold := 0
 var chance_level := 0
 var _gold_frac := 0.0
@@ -67,6 +70,7 @@ func _ready() -> void:
 		return
 	waves = Database.wave_sets.get(map.wave_set, {}).get("waves", [])
 	lives = map.lives
+	score_mode = Session.score_mode
 	gold = map.start_gold
 	pathfinder = Pathfinder.new(map)
 
@@ -811,6 +815,7 @@ func _spawn_enemy(g: Dictionary) -> void:
 	board.add_child(e)
 	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
 	e.apply_difficulty(Session.difficulty_factor())
+	e.score_value = score_for(g)
 	enemies.append(e)
 
 
@@ -833,11 +838,18 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
 	earn_gold(e.bounty)
+	if score_mode:
+		score += e.score_value
 	_remove_enemy(e)
 	_refresh_hud()
 
 
 func on_enemy_leaked(e: Enemy) -> void:
+	if score_mode:
+		score -= leak_penalty(e.score_value)
+		_remove_enemy(e)
+		_refresh_hud()
+		return
 	lives -= e.damage
 	_remove_enemy(e)
 	# Debug „Unsterblich“: Leben gehen ins Minus, das Spiel läuft weiter
@@ -845,6 +857,38 @@ func on_enemy_leaked(e: Enemy) -> void:
 		lives = 0
 		_finish(Phase.GAME_OVER)
 	_refresh_hud()
+
+
+# --- Punkte-Modus ----------------------------------------------------------------
+# Jede Welle ist wave_base + wave_step × (Welle − 1) Punkte wert (Welle 1: 100, Welle 40: 490),
+# verteilt nach Lebenspunkten auf ihre Gegner: ein Boss allein bekommt alles, bei einer Massenwelle
+# zählt jeder der 25 Gegner wenig. Ein Durchbruch kostet leak_factor (50 %) des Werts.
+# Die Schwierigkeit multipliziert alles (Session.score_factor).
+
+## Punkte, die eine ganze Welle wert ist (wave: 1-basiert).
+func wave_points(wave: int) -> float:
+	var cfg: Dictionary = Database.balance.get("score", {})
+	return (float(cfg.get("wave_base", 100)) + float(cfg.get("wave_step", 10)) * (wave - 1)) * Session.score_factor()
+
+
+## Punkte für einen Gegner der Gruppe g in der aktuellen Welle.
+func score_for(g: Dictionary) -> float:
+	if wave_index >= waves.size():
+		return 0.0
+	var total := 0.0
+	for grp in waves[wave_index].get("groups", []):
+		total += _group_hp(grp) * int(grp.get("count", 1))
+	if total <= 0.0:
+		return 0.0
+	return wave_points(wave_index + 1) * _group_hp(g) / total
+
+
+func leak_penalty(value: float) -> float:
+	return value * float(Database.balance.get("score", {}).get("leak_factor", 0.5))
+
+
+func _group_hp(g: Dictionary) -> float:
+	return float(g.get("hp", Database.enemies.get(str(g.get("enemy", "")), {}).get("hp", 10)))
 
 
 func _remove_enemy(e: Enemy) -> void:
@@ -855,7 +899,8 @@ func _remove_enemy(e: Enemy) -> void:
 func _finish(p: Phase) -> void:
 	phase = p
 	Engine.time_scale = 1.0
-	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length)
+	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
+		roundi(score) if score_mode else null)
 	_refresh_hud()
 
 
@@ -864,7 +909,7 @@ func _finish(p: Phase) -> void:
 func _refresh_hud() -> void:
 	if hud == null:
 		return
-	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), lives, gold)
+	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), roundi(score) if score_mode else lives, gold, score_mode)
 	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
 	hud.set_waves(_upcoming_waves(4))
 	# Baubar: in der Welle aus fertigen Towern, beim Setzen und Auswählen nur aus den Gems der Runde
