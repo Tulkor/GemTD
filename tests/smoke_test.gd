@@ -368,7 +368,7 @@ func _ready() -> void:
 	tl.sort = "damage"
 	tl.focus(listed[0])
 	check(Vector2(game.camera_rig.target.x, game.camera_rig.target.z).distance_to(Vector2(listed[0].position.x, listed[0].position.z)) < 0.5, "Doppelklick fährt die Kamera zum Tower")
-	# Kombinierbare Tower haben einen hellblauen Rahmen: dafür kurz die Tower zu Zutaten eines Rezepts machen
+	# Kombinierbare Tower sind hellblau unterstrichen: dafür kurz die Tower zu Zutaten eines Rezepts machen
 	var combo_def := {}
 	for sid in Database.special_ids():
 		var cdef: Dictionary = Database.towers[sid]
@@ -386,12 +386,11 @@ func _ready() -> void:
 		tl.refresh()
 		var crow: Dictionary = tl.rows[listed[0].get_instance_id()]
 		var cname := Database.tower_label(combo_def.id, 0)
-		var cstyle: StyleBoxFlat = crow.button.get_theme_stylebox("normal")
-		check(crow.combinable and cstyle.border_color == UiTheme.CYAN and cname in tl.combos(listed[0]), "Tower-Liste: kombinierbarer Tower hat blauen Rahmen (%s)" % cname)
+		check(crow.combinable and crow.name.get_meta("combinable", false) and cname in tl.combos(listed[0]), "Tower-Liste: kombinierbarer Tower ist blau unterstrichen (%s)" % cname)
 		check(game.tower_options(listed[0]).any(func(o): return o.action == "combine" and o.id == combo_def.id), "Markierung passt zu den Kombinieren-Optionen")
 		listed[0].tower_id = "__none__"
 		tl.refresh()
-		check(not crow.combinable and not tl.rows[listed[1].get_instance_id()].combinable, "ohne passende Zutat kein blauer Rahmen")
+		check(not crow.combinable and not tl.rows[listed[1].get_instance_id()].combinable, "ohne passende Zutat nicht unterstrichen")
 		for i in listed.size():
 			listed[i].tower_id = saved[i][0]
 			listed[i].tier = saved[i][1]

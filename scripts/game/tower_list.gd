@@ -2,7 +2,7 @@ class_name TowerList
 extends PanelContainer
 ## Tower-Liste rechts unter dem Gegner-Fenster: alle fertigen Tower auf dem Feld, scrollbar und sortierbar.
 ## Klick wählt den Tower aus, Doppelklick fährt die Kamera hin. Einklappbar.
-## Tower, die mit anderen fertigen Towern auf dem Feld ein Rezept ergeben, haben einen hellblauen Rahmen.
+## Tower, die mit anderen fertigen Towern auf dem Feld ein Rezept ergeben, haben einen hellblau unterstrichenen Namen.
 
 const SORTS := [["damage", "Sortieren: Schaden"], ["kills", "Sortieren: Kills"], ["name", "Sortieren: Name"]]
 
@@ -145,11 +145,12 @@ func refresh() -> void:
 		r.gem.add_theme_color_override("font_color", t.color)
 		r.kills.text = "✖ %d" % t.kills if t.can_attack() else "–"
 		r.damage.text = DpsMeter._fmt(t.total_damage) if t.can_attack() else tr("Aura")
-		# Ausgewählt: hellerer Grund und pinker Rand; kombinierbar: hellblauer Rand (gewinnt beim Rand)
 		var on: bool = sel == t
-		var border := UiTheme.CYAN if combinable.has(t) else (UiTheme.GOLD if on else Color.TRANSPARENT)
-		r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, border, 0, 2, 4))
-		r.combinable = combinable.has(t)
+		r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, UiTheme.CYAN if on else Color.TRANSPARENT, 0, 2, 4))
+		if r.combinable != combinable.has(t):
+			r.combinable = combinable.has(t)
+			r.name.set_meta("combinable", r.combinable)
+			r.name.queue_redraw()
 
 
 ## Spezial-Tower, die t zusammen mit anderen fertigen Towern auf dem Feld ergeben würde (Namen).
@@ -209,6 +210,7 @@ func _row(t) -> Dictionary:
 	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n.clip_text = true
 	n.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	n.draw.connect(_draw_underline.bind(n))
 	var k := UiUtil.label("", h, 11)
 	k.custom_minimum_size.x = 38
 	k.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -220,6 +222,17 @@ func _row(t) -> Dictionary:
 	for c in h.get_children():
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return {"button": b, "gem": gem, "name": n, "kills": k, "damage": d, "combinable": false}
+
+
+## Kombinierbar: Name hellblau unterstrichen, so breit wie der sichtbare Text.
+func _draw_underline(n: Label) -> void:
+	if not n.get_meta("combinable", false):
+		return
+	var font := n.get_theme_font("font")
+	var fs := n.get_theme_font_size("font_size")
+	var w := minf(font.get_string_size(n.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x, n.size.x)
+	var y := minf((n.size.y + font.get_height(fs)) * 0.5, n.size.y - 2.0)  # clip_text schneidet alles außerhalb ab
+	n.draw_rect(Rect2(0, y, w, 2), UiTheme.CYAN)
 
 
 ## Kamera auf den Tower fahren.
