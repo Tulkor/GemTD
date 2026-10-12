@@ -35,6 +35,8 @@ var reopen_settings := false
 var load_state: Dictionary = {}
 ## Datei des laufenden Einzelspiels (leer = noch nie gespeichert); erneutes Speichern überschreibt sie.
 var save_id := ""
+## Koop (gemeinsames Feld), nur fürs nächste Spiel: {role: "host"/"client", player: Spielernummer, names: [..]}.
+var coop: Dictionary = {}
 ## Wohin "Zurück" im Spiel führt.
 var return_scene := MAIN_MENU
 

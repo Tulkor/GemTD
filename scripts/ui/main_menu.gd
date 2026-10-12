@@ -370,13 +370,17 @@ func _update_net_button() -> void:
 ## Host: Sitzung starten, eine neue auf der gewählten Map.
 func _start_session() -> void:
 	var m := MapData.load_file(maps[selected].path) if not maps.is_empty() else null
-	if m != null or not Net.session.get("map", {}).is_empty():
+	if Net.session.has("coop"):
+		Net.start_coop({})
+	elif lobby.coop_mode and m != null and not Net.session.get("loaded", false):
+		Net.start_coop(m.to_dict())
+	elif m != null or not Net.session.get("map", {}).is_empty():
 		Net.start_session(m.to_dict() if m != null else {})
 
 
 ## Spielstand laden: Einzelspiel geht direkt weiter, eine Mehrspieler-Sitzung wird gehostet.
 func _load_save(data: Dictionary) -> void:
-	if data.get("kind", "") == "multi":
+	if data.get("kind", "") in ["multi", "coop"]:
 		if Net.host() == OK:
 			Net.load_session(data)
 		lobby.show()

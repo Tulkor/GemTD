@@ -77,7 +77,7 @@ func refresh() -> void:
 func _row(s: Dictionary) -> void:
 	var id := str(s.id)
 	var m: Dictionary = s.meta
-	var multi: bool = s.kind == "multi"
+	var multi: bool = s.kind in ["multi", "coop"]
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2, 12))
 	_list.add_child(card)
@@ -92,7 +92,7 @@ func _row(s: Dictionary) -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 10)
 	texts.add_child(top)
-	var kind := UiUtil.label(tr("Mehrspieler") if multi else tr("Einzelspiel"), top, 12)
+	var kind := UiUtil.label(tr("Koop") if s.kind == "coop" else tr("Mehrspieler") if multi else tr("Einzelspiel"), top, 12)
 	kind.add_theme_color_override("font_color", UiTheme.CYAN if multi else UiTheme.PURPLE_LIGHT)
 	kind.uppercase = true
 	UiUtil.label(tr(str(m.get("map", "?"))), top, 17)

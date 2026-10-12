@@ -100,8 +100,12 @@ var debug_tower := ""
 var rng := RandomNumberGenerator.new()
 ## Mehrspieler (nur wenn verbunden): Stand senden und Mitspielern zuschauen.
 var net_sync: NetSync = null
-## Spieler, für den dieser Rechner Befehle abschickt (Koop-Vorbereitung; solo immer 0)
+## Spieler, für den dieser Rechner Befehle abschickt (solo immer 0)
 var local_player := 0
+## Koop (coop_sync.gd): gemeinsames Feld. mirror: dieser Rechner ist Mitspieler, rechnet nichts selbst,
+## schickt Befehle an den Host und zeigt dessen Stand.
+var coop: CoopSync = null
+var mirror := false
 var net_panel: NetPanel = null
 var _next_enemy_id := 1
 
@@ -111,6 +115,12 @@ func _ready() -> void:
 	# Spielstand fortsetzen (save_game.gd) oder neues Spiel
 	var saved: Dictionary = Session.load_state
 	Session.load_state = {}
+	var coop_info: Dictionary = Session.coop
+	Session.coop = {}
+	if not coop_info.is_empty():
+		local_player = int(coop_info.get("player", 0))
+		acting = local_player
+		mirror = coop_info.get("role", "") == "client"
 	map = MapData.from_dict(saved.map) if saved.has("map") else _load_map()
 	if map == null:
 		push_error("Keine Map gefunden")
@@ -119,8 +129,10 @@ func _ready() -> void:
 	waves = Database.wave_sets.get(map.wave_set, {}).get("waves", [])
 	lives = map.lives
 	score_mode = Session.score_mode
-	for p in players:
-		p.gold = map.start_gold
+	if coop_info.is_empty():
+		players[0].gold = map.start_gold
+	else:
+		setup_players(coop_info.get("names", []))
 	pathfinder = Pathfinder.new(map)
 
 	CameraRig.add_environment(self)
@@ -139,12 +151,13 @@ func _ready() -> void:
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
-	hud.speed_selected.connect(func(f): Engine.time_scale = f)
+	hud.speed_selected.connect(func(f): submit({"type": "speed", "factor": f}))
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
 	hud.restart_requested.connect(func():
 		Session.save_id = ""
-		Session.goto(Session.GAME))
+		# Koop neu starten geht nur gemeinsam über die Lobby
+		Session.goto(Session.GAME if coop == null else Session.MAIN_MENU))
 	hud.save_mode = save_mode
 	hud.save_and_leave_requested.connect(func(quit): leave(true, quit))
 	hud.leave_requested.connect(func(quit): leave(false, quit))
@@ -164,7 +177,9 @@ func _ready() -> void:
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
 
 	if saved.is_empty():
-		_apply_variance()
+		# Mitspieler bekommen die zufälligen Steine mit dem ersten Stand vom Host
+		if not mirror:
+			_apply_variance()
 		_update_paths()
 		board.refresh_rocks()
 		_enter_build()
@@ -172,6 +187,11 @@ func _ready() -> void:
 		SaveGame.apply(self, saved)
 	get_tree().auto_accept_quit = false
 	Net.game = self
+	if not coop_info.is_empty():
+		coop = CoopSync.new()
+		coop.game = self
+		coop.host = not mirror
+		add_child(coop)
 	if Net.is_active():
 		net_sync = NetSync.new()
 		net_sync.game = self
@@ -186,6 +206,8 @@ func _exit_tree() -> void:
 	get_tree().auto_accept_quit = true
 	if Net.game == self:
 		Net.game = null
+	if coop != null and not mirror:
+		Net.end_coop()
 
 
 ## Fenster schließen: mitten in der Partie erst fragen, ob gespeichert werden soll.
@@ -204,6 +226,10 @@ func _notification(what: int) -> void:
 func save_mode() -> String:
 	if phase >= Phase.GAME_OVER:
 		return "none"
+	if mirror:
+		return "client"
+	if coop != null:
+		return "host" if Net.is_active() else "single"
 	if Net.is_active():
 		return "host" if Net.is_host() else "client"
 	return "single"
@@ -219,20 +245,33 @@ func save_game() -> bool:
 	return SaveGame.write({"id": Session.save_id, "kind": "single", "meta": SaveGame.meta_for(self), "state": st})
 
 
+## Koop (Host): das gemeinsame Feld mit allen Spielern speichern, Spielernummern bleiben an den Spieler-IDs.
+func save_coop() -> bool:
+	var st := SaveGame.capture(self)
+	if st.is_empty():
+		return false
+	var names: Array = players.map(func(p): return p.name)
+	return SaveGame.write({"id": str(Net.session.get("id", SaveGame.new_id())), "kind": "coop",
+		"meta": SaveGame.meta_for(self, {"players": names}), "map": map.to_dict(), "host_uid": Net.uid,
+		"coop": Net.session.get("coop", []), "state": st})
+
+
 ## Partie verlassen (quit: Fenster schließen), vorher auf Wunsch speichern.
 ## Im Mehrspieler geht der Stand an die Sitzung des Hosts, damit man später wieder einsteigen kann.
 func leave(save: bool, quit := false) -> void:
 	if save:
 		hud.set_leave_busy(tr("Speichere …"))
 		var ok := false
-		if save_mode() == "host":
+		if save_mode() == "host" and coop != null:
+			ok = save_coop()
+		elif save_mode() == "host":
 			ok = await Net.save_session(self)
 		elif save_mode() == "single":
 			ok = save_game()
 		if not ok:
 			hud.set_leave_busy(tr("Speichern fehlgeschlagen"), true)
 			return
-	elif Net.is_active():
+	elif Net.is_active() and coop == null:
 		Net.report_state(SaveGame.capture(self))
 	if quit:
 		get_tree().quit()
@@ -293,7 +332,7 @@ func _process(delta: float) -> void:
 	if phase < Phase.GAME_OVER:
 		play_time += delta / maxf(Engine.time_scale, 0.001)
 	_update_hover()
-	if phase == Phase.WAVE:
+	if phase == Phase.WAVE and not mirror:
 		_process_wave(delta)
 
 
@@ -343,11 +382,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				_select(null)
 			KEY_1:
-				Engine.time_scale = 1.0
+				submit({"type": "speed", "factor": 1.0})
 			KEY_2:
-				Engine.time_scale = 2.0
+				submit({"type": "speed", "factor": 2.0})
 			KEY_3:
-				Engine.time_scale = 4.0
+				submit({"type": "speed", "factor": 4.0})
 
 
 ## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme. add (Strg): Stein zur Auswahl hinzufügen/abwählen.
@@ -858,6 +897,7 @@ func _on_option_chosen(index: int) -> void:
 #   take_back      {tower}                gesetzten Gem der Runde zurücknehmen
 #   option         {tower, index, action, id, tier}  Behalten, Kombinieren, Aufwerten …
 #   move_trap      {tower, to}            Falle verschieben
+#   speed          {factor}               Spieltempo 1×, 2× oder 4× (im Koop für alle)
 
 # --- Spieler ------------------------------------------------------------------
 
@@ -868,6 +908,8 @@ func pl(p := -1) -> PlayerState:
 
 ## Spieler für ein neues Spiel festlegen (Reihenfolge = Spielernummer), jeder mit dem Startgold der Map.
 func setup_players(names: Array) -> void:
+	if names.is_empty():
+		names = [""]
 	players = []
 	for i in names.size():
 		var ps := PlayerState.new(i, str(names[i]))
@@ -896,7 +938,7 @@ func stage(p := -1) -> int:
 func _set_stage(s: int) -> void:
 	var me := pl()
 	if phase <= Phase.CHOOSE:
-		var all_chosen := players.all(func(ps): return (s if ps == me else ps.stage) >= Phase.CHOOSE)
+		var all_chosen := players.all(func(ps): return (s if ps == me else ps.stage) >= Phase.CHOOSE or ps.away)
 		phase = Phase.CHOOSE if all_chosen else Phase.BUILD
 	# erst danach: solo setzt die Phase die Stufe mit (siehe phase)
 	me.stage = s
@@ -905,16 +947,42 @@ func _set_stage(s: int) -> void:
 ## Runde des handelnden Spielers ist fertig (Gem behalten). Die Welle startet, wenn alle fertig sind.
 func _finish_round() -> void:
 	_set_stage(Phase.WAVE)
-	if players.all(func(ps): return ps.stage == Phase.WAVE):
+	if players.all(func(ps): return ps.stage == Phase.WAVE or ps.away):
 		_start_wave()
 	else:
 		_refresh_hud()
 
 
-## Befehl des lokalen Spielers abschicken.
+## Koop (Host): Spieler p ist weg (away) oder wieder da. Wer geht, hält die Runde nicht auf: seine gesetzten
+## Gems bleiben, behalten wird der erste, der Rest wird zu Steinen. Wer ohne gesetzte Gems geht und noch in der
+## Bauphase zurückkommt, setzt gleich mit, sonst ab der nächsten Runde.
+func set_player_away(p: int, away: bool) -> void:
+	if p < 0 or p >= players.size() or players[p].away == away:
+		return
+	var ps: PlayerState = players[p]
+	ps.away = away
+	if phase > Phase.CHOOSE:
+		return
+	acting = p
+	if away and not ps.round_towers.is_empty() and ps.stage != Phase.WAVE:
+		var t: Tower = ps.round_towers[0]
+		_apply_option(t, _keep_option("", t.tower_id, t.tier))
+	elif away and players.all(func(o): return o.stage == Phase.WAVE or o.away):
+		_start_wave()
+	else:
+		_set_stage(ps.stage)
+		_refresh_hud()
+	acting = local_player
+
+
+## Befehl des lokalen Spielers abschicken. Als Mitspieler im Koop geht er an den Host (true heißt dann nur:
+## abgeschickt), das Ergebnis kommt mit dem nächsten Stand.
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	if mirror:
+		coop.send(cmd)
+		return true
 	return execute(cmd)
 
 
@@ -948,6 +1016,12 @@ func _execute(cmd: Dictionary) -> bool:
 			return take_back(tower_from_ref(cmd.get("tower", {})))
 		"move_trap":
 			return move_trap(tower_from_ref(cmd.get("tower", {})), cmd.get("to", NO_CELL))
+		"speed":
+			var f := float(cmd.get("factor", 1.0))
+			if not f in [1.0, 2.0, 4.0]:
+				return false
+			Engine.time_scale = f
+			return true
 		"option":
 			var t := tower_from_ref(cmd.get("tower", {}))
 			var opts := tower_options(t)
@@ -1164,6 +1238,8 @@ func enemies_in_radius(p: Vector2, radius: float) -> Array:
 
 func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 	effects.add_beam(from, to, col)
+	if coop != null and not mirror:
+		coop.add_beam(from, to, col)
 	if net_sync:
 		net_sync.add_beam(from, to, col)
 

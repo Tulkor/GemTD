@@ -583,6 +583,7 @@ func _ready() -> void:
 	await _final_boss_test()
 	await _command_test()
 	await _coop_test()
+	await _coop_sync_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -998,6 +999,81 @@ func _coop_test() -> void:
 	check(h.players.size() == 2 and h.stage(0) == h.Phase.WAVE and h.stage(1) == h.Phase.CHOOSE and h.phase == h.Phase.CHOOSE
 		and h.players[1].round_towers.size() == 5 and h.towers[b_cells[0]].owner_player == 1 and h.players[1].name == "Ben",
 		"Koop-Spielstand: Spieler, Runden und Besitz geladen")
+	h.queue_free()
+	g.queue_free()
+	await get_tree().process_frame
+
+
+## Koop übers Netz, hier ohne Netz verbunden: der Host rechnet, der Mitspieler schickt Befehle und
+## übernimmt den Stand (coop_sync.gd).
+func _coop_sync_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	Session.coop = {"role": "client", "player": 1, "names": ["Anna", "Ben"]}
+	var h: Node = load(Session.GAME).instantiate()
+	add_child(h)
+	await get_tree().process_frame
+	check(g.coop != null and g.coop.host and not g.mirror and h.mirror and h.local_player == 1, "Koop-Netz: Host rechnet, Ben spiegelt")
+	h.coop.command_sink = func(cmd): g.coop.receive(1, cmd)
+	h.coop.apply_state(g.coop.snapshot())
+	check(h.rocks.keys().all(func(c): return g.rocks.has(c)) and h.rocks.size() == g.rocks.size() and h.players.size() == 2,
+		"Koop-Netz: Steine und Spieler vom Host übernommen")
+	var b_cells := [Vector2i(14, 30), Vector2i(18, 30), Vector2i(22, 30), Vector2i(26, 30), Vector2i(30, 30)]
+	for c in b_cells:
+		h.submit({"type": "place", "cell": c})
+	check(g.players[1].round_towers.size() == 5 and h.towers.is_empty(), "Koop-Netz: Bens Befehle laufen beim Host")
+	h.coop.apply_state(g.coop.snapshot())
+	check(b_cells.all(func(c): return h.towers.has(c) and h.towers[c].owner_player == 1) and h.stage() == h.Phase.CHOOSE,
+		"Koop-Netz: Ben sieht seine Gems und wählt")
+	check(h.selected == h.round_towers[-1], "Koop-Netz: letzter Gem ausgewählt")
+	var keep: Tower = h.round_towers[0]
+	h._select(keep)
+	h._on_option_chosen(0)
+	h.coop.apply_state(g.coop.snapshot())
+	check(h.stage() == h.Phase.WAVE and g.phase == g.Phase.BUILD and h.towers.has(keep.cell) and not h.towers[keep.cell].is_new,
+		"Koop-Netz: Ben hat behalten und wartet, Anna setzt noch")
+	check(b_cells.slice(1).all(func(c): return h.rocks.has(c)), "Koop-Netz: Bens übrige Gems sind auch bei Ben Steine")
+	check(h.hud.phase_title.text == tr("Warten"), "Koop-Netz: Ben sieht Warten")
+	check(not g.coop.receive(1, {"type": "place", "cell": Vector2i(14, 50)}) and not g.coop.receive(1, {"type": "debug_gold"}),
+		"Koop-Netz: Ben kann nach dem Behalten nicht mehr setzen, fremde Befehle werden verworfen")
+	h.submit({"type": "speed", "factor": 2.0})
+	check(Engine.time_scale == 2.0, "Koop-Netz: Tempo-Befehl gilt beim Host")
+	h.submit({"type": "speed", "factor": 1.0})
+	for c in [Vector2i(14, 40), Vector2i(18, 40), Vector2i(22, 40), Vector2i(26, 40), Vector2i(30, 40)]:
+		g.submit({"type": "place", "cell": c})
+	var a0: Tower = g.round_towers[0]
+	g.submit({"type": "option", "tower": g.tower_ref(a0), "index": 0, "action": "keep", "id": a0.tower_id, "tier": a0.tier})
+	check(g.phase == g.Phase.WAVE, "Koop-Netz: Welle startet beim Host")
+	h.coop.apply_state(g.coop.snapshot())
+	check(h.phase == h.Phase.WAVE and h.spawn_queue.size() == g.spawn_queue.size(), "Koop-Netz: Ben sieht die Welle (%d Gegner)" % h.spawn_queue.size())
+	g._process_wave(3.0)
+	h.coop.apply_enemies(g.coop.enemy_packet())
+	check(h.enemies.size() == g.enemies.size() and h.enemies.size() > 0 and h.spawn_queue.size() == g.spawn_queue.size(),
+		"Koop-Netz: Gegner gespiegelt (%d)" % h.enemies.size())
+	check(h.enemies.all(func(e): return e.remote), "Koop-Netz: Bens Gegner laufen nur nach")
+	# Ben verlässt das Spiel mitten in der Bauphase: seine Runde blockiert nicht
+	for e in g.enemies.duplicate():
+		g._remove_enemy(e)
+	g.spawn_queue.clear()
+	g._process_wave(0.1)
+	check(g.phase == g.Phase.BUILD, "Koop-Netz: nächste Bauphase")
+	g.execute({"type": "place", "cell": Vector2i(14, 20), "player": 1})
+	g.set_player_away(1, true)
+	check(g.players[1].stage == g.Phase.WAVE and g.players[1].round_towers.is_empty() and not g.towers[Vector2i(14, 20)].is_new,
+		"Koop-Netz: wer geht, behält seinen gesetzten Gem automatisch")
+	var x := 10
+	while g.gems_left() > 0 and x < 80:
+		g.submit({"type": "place", "cell": Vector2i(x, 46)})
+		x += 3
+	var a1: Tower = g.round_towers[0]
+	g.submit({"type": "option", "tower": g.tower_ref(a1), "index": 0, "action": "keep", "id": a1.tower_id, "tier": a1.tier})
+	check(g.phase == g.Phase.WAVE, "Koop-Netz: ohne Ben startet die Welle, sobald Anna fertig ist")
+	h.coop.apply_state(g.coop.snapshot())
+	check(h.phase == h.Phase.WAVE and h.towers.has(Vector2i(14, 20)), "Koop-Netz: Ben sieht den Stand nach dem Wiederkommen")
+	Engine.time_scale = 1.0
 	h.queue_free()
 	g.queue_free()
 	await get_tree().process_frame

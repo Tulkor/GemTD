@@ -176,7 +176,8 @@ func cooldown() -> float:
 
 func _process(delta: float) -> void:
 	_animate(delta)
-	if game == null or not game.is_wave_running():
+	# Koop-Mitspieler: geschossen wird nur beim Host
+	if game == null or game.mirror or not game.is_wave_running():
 		return
 	_apply_enemy_auras(delta)
 	if not can_attack():

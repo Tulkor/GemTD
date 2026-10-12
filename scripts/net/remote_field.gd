@@ -115,6 +115,16 @@ func _clear_units() -> void:
 	enemies.clear()
 
 
+## Koop: Wege vom eigenen Feld übernehmen (coop_sync.gd nutzt nur die Wege, keine Map).
+func set_paths(ground: PackedVector2Array, air: PackedVector2Array) -> void:
+	_set_path(false, ground)
+	_set_path(true, air)
+
+
+func path_for(flying: bool) -> PackedVector2Array:
+	return _paths[flying]
+
+
 func _set_path(flying: bool, p: PackedVector2Array) -> void:
 	_paths[flying] = p
 	var cum := PackedFloat32Array()

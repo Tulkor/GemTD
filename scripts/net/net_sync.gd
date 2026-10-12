@@ -54,7 +54,8 @@ func _process(delta: float) -> void:
 	if game.phase != _last_phase:
 		_last_phase = game.phase
 		# (zurück in die Bauphase durch Zurücknehmen eines Gems zählt nicht als neue Runde)
-		if (game.phase == game.Phase.BUILD and game.round_towers.is_empty()) or game.phase >= game.Phase.GAME_OVER:
+		# (im Koop speichert nur der Host das gemeinsame Feld)
+		if game.coop == null and ((game.phase == game.Phase.BUILD and game.round_towers.is_empty()) or game.phase >= game.Phase.GAME_OVER):
 			Net.report_state(SaveGame.capture(game))
 	_status_timer -= dt
 	if _status_timer <= 0.0:

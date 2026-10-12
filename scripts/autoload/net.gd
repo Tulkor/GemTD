@@ -4,6 +4,8 @@ extends Node
 ## der Abzug seines Felds (net_sync.gd sendet, remote_field.gd zeigt an).
 ## Die Verbindung bleibt über Szenenwechsel bestehen; jeder kann unabhängig starten und neu starten.
 ##
+## Modus 2 (Koop): alle spielen auf einem gemeinsamen Feld, der Host rechnet (start_coop, coop_sync.gd).
+##
 ## Sitzung (Lobby): Der Host führt eine Sitzung mit dem Stand jedes Mitspielers, erkannt an einer
 ## festen Spieler-ID (uid). Nur der Host speichert, dabei holt er die Felder aller Mitspieler ein
 ## (save_session). Mitspieler melden ihren Stand außerdem zu Beginn jeder Bauphase und beim Verlassen,
@@ -16,6 +18,10 @@ signal map_received(peer: int, data: Dictionary)
 signal enemies_received(peer: int, data: Dictionary)
 signal watchers_changed
 signal session_changed
+signal coop_command(peer: int, cmd: Dictionary)
+signal coop_ready(peer: int)
+signal coop_state(data: Dictionary)
+signal coop_enemies(data: Dictionary)
 
 const DEFAULT_PORT := 24565
 const MAX_PLAYERS := 8
@@ -29,7 +35,8 @@ var my_name := ""
 var uid := ""
 ## Laufendes Spiel (game.gd) oder null.
 var game = null
-## Nur beim Host: {id, map, map_name, started, loaded, players {uid: {name, state}}}
+## Nur beim Host: {id, map, map_name, started, loaded, players {uid: {name, state}}},
+## im Koop dazu coop: [uid, ...] (Index = Spielernummer, der Host ist 0) und settings
 var session: Dictionary = {}
 ## Nur beim Mitspieler: was der Host über die Sitzung meldet (siehe _info_for).
 var session_info: Dictionary = {}
@@ -303,6 +310,9 @@ func send_enemies(peer: int, data: Dictionary) -> void:
 func load_session(data: Dictionary) -> void:
 	if not is_host():
 		return
+	if str(data.get("kind", "")) == "coop":
+		_load_coop(data)
+		return
 	var ps: Dictionary = data.get("players", {}).duplicate(true)
 	# Der eigene Stand liegt unter der uid, mit der gespeichert wurde.
 	var old := str(data.get("host_uid", uid))
@@ -331,6 +341,7 @@ func start_session(map_data: Dictionary) -> void:
 		session.map = map_data
 		session.map_name = str(map_data.get("name", ""))
 	session.started = true
+	session.erase("coop")
 	_push_info()
 	for peer in players:
 		if not player_status(peer).get("in_game", false):
@@ -447,7 +458,7 @@ func _resolve_uid(peer: int, asked: String) -> String:
 ## Host: was ein Mitspieler über die Sitzung sieht.
 func _info_for(u: String) -> Dictionary:
 	var st := _state_of(u)
-	return {
+	var info := {
 		"started": session.get("started", false),
 		"loaded": session.get("loaded", false),
 		"map": str(session.get("map_name", "")),
@@ -455,6 +466,9 @@ func _info_for(u: String) -> Dictionary:
 		"wave": int(st.get("wave_index", 0)) + 1 if not st.is_empty() else 0,
 		"slots": session_slots(),
 	}
+	if session.has("coop"):
+		info.coop = true
+	return info
 
 
 func _push_info() -> void:
@@ -466,7 +480,138 @@ func _push_info() -> void:
 	session_changed.emit()
 
 
+# --- Koop -------------------------------------------------------------------------
+
+func is_coop() -> bool:
+	return session.has("coop") or session_info.has("coop")
+
+
+## Host: Koop-Partie starten. Neu: alle Verbundenen spielen mit, in der Reihenfolge ihres Beitritts;
+## Schwierigkeit und Wertung des Hosts gelten für alle. Gespeichert (_load_coop): jeder bekommt seine alte
+## Spielernummer, wer fehlt, steigt später über „Mitspielen“ ein.
+func start_coop(map_data: Dictionary) -> void:
+	if not is_host():
+		return
+	var peers := players.keys()
+	peers.sort()
+	var state: Dictionary = session.get("coop_state", {})
+	if state.is_empty():
+		session.map = map_data
+		session.map_name = str(map_data.get("name", ""))
+		session.coop = [uid]
+		for peer in peers:
+			session.coop.append(str(players[peer].uid))
+		session.settings = {"difficulty": Session.difficulty, "score_mode": Session.score_mode}
+	else:
+		session.settings = {"difficulty": int(state.get("difficulty", 1)), "score_mode": bool(state.get("score_mode", false))}
+		session.erase("coop_state")
+	session.started = true
+	_push_info()
+	for peer in peers:
+		if coop_player_of(peer) > 0:
+			_begin_coop.rpc_id(peer, session.map, coop_player_of(peer), _coop_names(), session.settings)
+	_begin_coop_local(session.map, 0, _coop_names(), "host", state)
+
+
+## Host: gespeicherten Koop übernehmen (vorher host()). Der Host ist immer Spieler 0.
+func _load_coop(data: Dictionary) -> void:
+	var uids: Array = data.get("coop", []).duplicate()
+	if uids.is_empty():
+		uids = [uid]
+	uids[0] = uid
+	var names: Array = data.get("meta", {}).get("players", [])
+	var ps := {}
+	for i in uids.size():
+		ps[str(uids[i])] = {"name": str(names[i]) if i < names.size() else "?"}
+	session = {
+		"id": str(data.get("id", SaveGame.new_id())),
+		"map": data.get("map", {}),
+		"map_name": str(data.get("meta", {}).get("map", "")),
+		"started": false,
+		"loaded": true,
+		"players": ps,
+		"coop": uids,
+		"coop_state": data.get("state", {}),
+	}
+	for peer in players:
+		players[peer].uid = _resolve_uid(peer, str(players[peer].get("asked_uid", "")))
+	_push_info()
+
+
+## Host hat die Koop-Partie verlassen: sie ist für alle vorbei (gespeichert wurde vorher, falls gewünscht).
+func end_coop() -> void:
+	if not is_host() or not session.has("coop"):
+		return
+	for peer in _coop_peers_all():
+		_coop_end.rpc_id(peer)
+	session.erase("coop")
+	session.started = false
+	session.loaded = false
+	session.map = {}
+	session.map_name = ""
+	_push_info()
+
+
+func _coop_peers_all() -> Array:
+	return players.keys().filter(func(p): return coop_player_of(p) > 0)
+
+
+## Spielernummer eines Verbundenen im Koop (-1 = spielt nicht mit).
+func coop_player_of(peer: int) -> int:
+	if peer == 1 or (peer == my_id() and is_host()):
+		return 0
+	if not players.has(peer):
+		return -1
+	return session.get("coop", []).find(str(players[peer].get("uid", "")))
+
+
+func _coop_names() -> Array:
+	var names := []
+	for u in session.get("coop", []):
+		var n := my_name if u == uid else str(session.get("players", {}).get(u, {}).get("name", ""))
+		for peer in players:
+			if str(players[peer].get("uid", "")) == u:
+				n = player_name(peer)
+		names.append(n)
+	return names
+
+
+func _begin_coop_local(map_data: Dictionary, player: int, names: Array, role: String, state := {}) -> void:
+	_begin_local(map_data, state)
+	Session.coop = {"role": role, "player": player, "names": names}
+
+
+## Mitspieler → Host: Befehl fürs gemeinsame Feld.
+func send_coop_command(cmd: Dictionary) -> void:
+	if is_active() and not is_host():
+		_coop_cmd.rpc_id(1, cmd)
+
+
+## Mitspieler → Host: Spiel ist geladen, bitte den vollen Stand schicken.
+func send_coop_ready() -> void:
+	if is_active() and not is_host():
+		_coop_hello.rpc_id(1)
+
+
+## Host → Mitspieler (peer 0 = alle, die mitspielen).
+func send_coop_state(peer: int, data: Dictionary) -> void:
+	for p in ([peer] if peer != 0 else _coop_peers()):
+		_coop_state.rpc_id(p, data)
+
+
+func send_coop_enemies(data: Dictionary) -> void:
+	for p in _coop_peers():
+		_coop_enemies.rpc_id(p, data)
+
+
+func _coop_peers() -> Array:
+	if not is_host():
+		return []
+	return players.keys().filter(func(p): return coop_player_of(p) > 0 and player_status(p).get("in_game", false))
+
+
 func _begin_local(map_data: Dictionary, state: Dictionary) -> void:
+	Session.coop = {}
 	Session.load_state = state.duplicate(true)
 	Session.save_id = ""
 	Session.map_override = MapData.from_dict(state.get("map", map_data))
@@ -533,12 +678,55 @@ func _begin(map_data: Dictionary, state: Dictionary) -> void:
 	_begin_local(map_data, state)
 
 
-## Mitspieler → Host: in die laufende Sitzung einsteigen.
+## Mitspieler → Host: in die laufende Sitzung einsteigen (im Koop mit seiner Spielernummer, wer neu ist,
+## schaut nur zu, bis die nächste Partie startet).
 @rpc("any_peer", "reliable")
 func _join_game() -> void:
 	var id := multiplayer.get_remote_sender_id()
-	if is_host() and session.get("started", false) and players.has(id):
-		_begin.rpc_id(id, session.map, _state_of(str(players[id].uid)))
+	if not is_host() or not session.get("started", false) or not players.has(id):
+		return
+	if session.has("coop"):
+		if coop_player_of(id) > 0:
+			_begin_coop.rpc_id(id, session.map, coop_player_of(id), _coop_names(), session.settings)
+		return
+	_begin.rpc_id(id, session.map, _state_of(str(players[id].uid)))
+
+
+## Host → Mitspieler: Koop-Partie starten.
+@rpc("authority", "reliable")
+func _begin_coop(map_data: Dictionary, player: int, names: Array, settings: Dictionary) -> void:
+	Session.difficulty = int(settings.get("difficulty", Session.difficulty))
+	Session.score_mode = bool(settings.get("score_mode", false))
+	_begin_coop_local(map_data, player, names, "client")
+
+
+@rpc("any_peer", "reliable")
+func _coop_cmd(cmd: Dictionary) -> void:
+	if is_host():
+		coop_command.emit(multiplayer.get_remote_sender_id(), cmd)
+
+
+@rpc("any_peer", "reliable")
+func _coop_hello() -> void:
+	if is_host():
+		coop_ready.emit(multiplayer.get_remote_sender_id())
+
+
+@rpc("authority", "reliable")
+func _coop_end() -> void:
+	if game != null and is_instance_valid(game) and game.coop != null:
+		_set_status(tr("Der Host hat die Koop-Partie beendet."))
+		Session.goto(Session.MAIN_MENU)
+
+
+@rpc("authority", "reliable")
+func _coop_state(data: Dictionary) -> void:
+	coop_state.emit(data)
+
+
+@rpc("authority", "unreliable_ordered")
+func _coop_enemies(data: Dictionary) -> void:
+	coop_enemies.emit(data)
 
 
 ## Host → Mitspieler: aktuellen Stand fürs Speichern schicken.

@@ -82,9 +82,22 @@ zwischendurch weg war, steigt mit „Mitspielen“ ein, mit seinem letzten Stand
 Im Spiel zeigt die Liste „Mitspieler“ rechts unten Welle und Leben der anderen; „Zuschauen“ zeigt ihr Feld, Esc führt zurück.
 Das eigene Spiel läuft beim Zuschauen weiter.
 
+Modus „Koop: ein gemeinsames Feld“ (in der Lobby vor dem Start wählen): alle bauen zusammen ein Labyrinth.
+Jeder setzt und wählt seine eigenen Gems pro Runde, die Welle startet, sobald alle einen Gem behalten haben
+(bis dahin steht oben „Warten“). Tower gehören dem, der sie gesetzt hat: nur er wählt, kombiniert, wertet auf
+und nimmt zurück, Rezepte nur mit eigenen Towern. Jeder hat eigenes Gold; Kopfgeld bekommt der Spieler, dessen
+Tower zuletzt getroffen hat. Leben bzw. Punkte, Wellen und Tempo sind gemeinsam, Schwierigkeit und Wertung vom Host.
+Wer das Spiel verlässt, hält die Runde nicht auf (von seinen gesetzten Gems bleibt der erste) und steigt über
+„Mitspielen“ wieder ein. Verlässt der Host, ist die Partie für alle vorbei; vorher kann er sie speichern.
+
 Technik: `scripts/autoload/net.gd` (Verbindung, Spielerliste, Sitzung), `scripts/net/net_sync.gd` schickt Zuschauern Map,
 Feld (bei Änderung) und Gegner/Schüsse etwa 15 Mal pro Sekunde. `scripts/net/remote_field.gd` zeigt das Feld;
 die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur sanft nachkorrigiert.
+Koop: nur der Host rechnet. Jede Spieleraktion ist ein Befehl (`game.gd` → `submit`/`execute`, Tower über ihren Platz
+benannt); Mitspieler schicken ihn an den Host, der ihn mit ihrer Spielernummer prüft und ausführt.
+`scripts/net/coop_sync.gd` schickt den Stand (Tower, Steine, Spieler, Phase) bei jeder Änderung und Gegner etwa
+15 Mal pro Sekunde; beim Mitspieler läuft dasselbe Spiel mit `mirror = true`, ohne eigene Simulation.
+Was jedem Spieler gehört, steht in `scripts/game/player_state.gd`.
 
 ## Wertung
 
@@ -109,7 +122,8 @@ Warteschlange, Zufallsgenerator). „Spiel laden“ im Hauptmenü listet alle Sp
 Im Mehrspieler speichert nur der Host. Er holt dabei die Felder aller Mitspieler ein; jeder Mitspieler meldet seinen Stand
 außerdem zu Beginn jeder Bauphase und beim Verlassen. Eine gespeicherte Sitzung lädt der Host über „Spiel laden“ → „Hosten“,
 die Mitspieler treten bei und spielen dort weiter, wo sie waren. Erkannt werden sie an einer festen Spieler-ID
-(`user://settings.cfg`), notfalls am Namen.
+(`user://settings.cfg`), notfalls am Namen. Ein Koop-Spielstand enthält das gemeinsame Feld mit allen Spielern,
+beim Laden bekommt jeder seine alte Spielernummer zurück.
 
 Die Dateien liegen in `user://saves/*.gtd`, binär und mit AES-256 verschlüsselt samt Prüfsumme (`scripts/game/save_game.gd`).
 Eine veränderte Datei lässt sich nicht mehr laden. Der Schlüssel steckt im Spiel, gegen gezieltes Auslesen schützt das nicht,
@@ -215,10 +229,13 @@ godot --headless --path . res://tests/net_test.tscn -- --role=host &
 godot --headless --path . res://tests/net_test.tscn -- --role=client
 godot --headless --path . res://tests/session_test.tscn -- --role=host &
 godot --headless --path . res://tests/session_test.tscn -- --role=client
+godot --headless --path . res://tests/coop_test.tscn -- --role=host &
+godot --headless --path . res://tests/coop_test.tscn -- --role=client
 godot --headless --fixed-fps 60 --path . res://tests/speed_test.tscn -- --runs=3
 ```
 Der Netz-Test startet zwei Spiele auf demselben Rechner: der Host spielt eine Runde, der Client schaut zu und prüft
-Feld, Gegner und dass sie ohne Sprünge laufen.
+Feld, Gegner und dass sie ohne Sprünge laufen. Der Koop-Test spielt mit zwei Prozessen auf einem gemeinsamen Feld:
+beide setzen und behalten, der Mitspieler sieht die Welle, verlässt das Spiel und hält die nächste Runde nicht auf.
 Der Tempo-Test lässt jeden Tower bei 1×, 2× und 4× gegen unsterbliche Gegner schießen und vergleicht den Schaden.
 Der Sitzungs-Test: beide spielen eine Runde, der Host speichert, beendet und lädt die Sitzung neu,
 der Client tritt wieder bei und steigt an seinem gespeicherten Stand ein.

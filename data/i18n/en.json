@@ -391,7 +391,6 @@
 	"Alle Wellen · %d s Kampfzeit": "All waves · %d s of combat",
 	"Welle %d · %d s": "Wave %d · %d s",
 	"Noch keine Welle dieser Art": "No wave of this kind yet",
-	"Jeder spielt sein eigenes Feld. Im Spiel kannst du über „Zuschauen“ die Felder der anderen ansehen. Nur der Host speichert, dabei sichert er die Felder aller Mitspieler.": "Everyone plays their own field. In game you can watch the others' fields via “Spectate”. Only the host saves, and that saves every player's field.",
 	"Neue Sitzung hosten": "Host new session",
 	"Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.": "To continue a saved session, use “Load game” in the main menu.",
 	"Sitzung": "Session",
@@ -530,5 +529,17 @@
 	"Lauf löschen": "Delete run",
 	"Kombinierbar zu: %s": "Can combine into: %s",
 	"Warten": "Waiting",
-	"Dein Gem ist gewählt. Die Welle startet, sobald alle Mitspieler fertig sind.": "Your gem is chosen. The wave starts once all teammates are done."
+	"Dein Gem ist gewählt. Die Welle startet, sobald alle Mitspieler fertig sind.": "Your gem is chosen. The wave starts once all teammates are done.",
+	"Zwei Spielarten: jeder auf seinem eigenen Feld (über „Zuschauen“ siehst du die anderen) oder Koop auf einem gemeinsamen Feld. Nur der Host speichert, für alle.": "Two modes: everyone on their own field (use “Watch” to see the others) or co-op on one shared field. Only the host saves, for everyone.",
+	"Spielart": "Mode",
+	"Koop: ein gemeinsames Feld": "Co-op: one shared field",
+	"Jeder sein eigenes Feld": "Everyone their own field",
+	"Alle bauen zusammen ein Labyrinth: jeder setzt und wählt seine eigenen Gems, hat eigenes Gold und kombiniert nur eigene Tower. Die Leben sind gemeinsam.": "Everyone builds one maze together: each player places and picks their own gems, has their own gold and only combines their own towers. Lives are shared.",
+	"Jeder spielt sein eigenes Feld, über „Zuschauen“ sieht man die anderen.": "Everyone plays their own field, use “Watch” to see the others.",
+	"Koop auf %s läuft. Mitspieler, die das Spiel verlassen haben, steigen über „Mitspielen“ wieder ein.": "Co-op on %s is running. Players who left rejoin with “Join game”.",
+	"Koop auf %s (Map im Hauptmenü wählen). „Starten“ startet alle Verbundenen auf einem gemeinsamen Feld, Schwierigkeit und Wertung vom Host.": "Co-op on %s (choose the map in the main menu). “Start” starts everyone connected on one shared field, with the host's difficulty and scoring.",
+	"Gespeicherter Koop auf %s. „Starten“ setzt das gemeinsame Feld fort, wer fehlt, kann später einsteigen.": "Saved co-op on %s. “Start” continues the shared field, anyone missing can join later.",
+	"Koop: ihr spielt zusammen auf einem Feld.": "Co-op: you play together on one field.",
+	"Koop": "Co-op",
+	"Der Host hat die Koop-Partie beendet.": "The host ended the co-op game."
 }

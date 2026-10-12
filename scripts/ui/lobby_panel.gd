@@ -1,6 +1,7 @@
 class_name LobbyPanel
 extends Control
 ## Mehrspieler-Lobby im Hauptmenü. Ohne Verbindung: Name, Sitzung hosten, per IP beitreten.
+## Spielart (Host, vor dem Start): jeder auf seinem eigenen Feld, oder Koop auf einem gemeinsamen Feld.
 ## Als Host: Sitzung mit allen Plätzen (auch gespeicherte von Mitspielern, die gerade fehlen) und „Starten“.
 ## Als Mitspieler: Stand der Sitzung und „Mitspielen“, auch später noch zum Wiedereinsteigen.
 ## Gespeicherte Sitzungen lädt der Host über „Spiel laden“ (load_panel.gd).
@@ -9,6 +10,8 @@ signal start_requested
 
 ## Name der im Hauptmenü gewählten Map (für eine neue Sitzung).
 var selected_map := ""
+## Koop gewählt: alle spielen zusammen auf einem Feld (der Host rechnet, siehe coop_sync.gd).
+var coop_mode := false
 
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
@@ -21,6 +24,8 @@ var _copy_button: Button
 var _session_text: Label
 var _list: VBoxContainer
 var _start_button: Button
+var _mode_box: VBoxContainer
+var _mode_buttons: Array[Button] = []
 var _play_button: Button
 var _leave_button: Button
 
@@ -44,7 +49,7 @@ func _ready() -> void:
 	panel.add_child(v)
 
 	UiTheme.title(UiUtil.label("Mehrspieler", v, 26))
-	_muted(UiUtil.wrap_label("Jeder spielt sein eigenes Feld. Im Spiel kannst du über „Zuschauen“ die Felder der anderen ansehen. Nur der Host speichert, dabei sichert er die Felder aller Mitspieler.", v, 540))
+	_muted(UiUtil.wrap_label("Zwei Spielarten: jeder auf seinem eigenen Feld (über „Zuschauen“ siehst du die anderen) oder Koop auf einem gemeinsamen Feld. Nur der Host speichert, für alle.", v, 540))
 
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 10)
@@ -96,6 +101,29 @@ func _ready() -> void:
 	_addresses = _muted(UiUtil.label("", _online, 13))
 	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_addresses.custom_minimum_size.x = 540
+	_mode_box = VBoxContainer.new()
+	_mode_box.add_theme_constant_override("separation", 6)
+	_online.add_child(_mode_box)
+	UiTheme.caption("Spielart", _mode_box)
+	var modes := HBoxContainer.new()
+	modes.add_theme_constant_override("separation", 6)
+	_mode_box.add_child(modes)
+	var group := ButtonGroup.new()
+	for coop in [false, true]:
+		var on: bool = coop
+		var b := UiUtil.button("Koop: ein gemeinsames Feld" if coop else "Jeder sein eigenes Feld", modes, func():
+			coop_mode = on
+			_refresh())
+		b.toggle_mode = true
+		b.button_group = group
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 36
+		b.tooltip_text = tr("Alle bauen zusammen ein Labyrinth: jeder setzt und wählt seine eigenen Gems, hat eigenes Gold und kombiniert nur eigene Tower. Die Leben sind gemeinsam.") if coop \
+			else tr("Jeder spielt sein eigenes Feld, über „Zuschauen“ sieht man die anderen.")
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		b.set_pressed_no_signal(coop == coop_mode)
+		_mode_buttons.append(b)
 	UiTheme.caption("Sitzung", _online)
 	_session_text = UiUtil.wrap_label("", _online, 540)
 	_session_text.add_theme_color_override("font_color", UiTheme.DIM)
@@ -165,7 +193,15 @@ func _refresh() -> void:
 		var s := Net.session
 		started = bool(s.get("started", false))
 		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(selected_map)
-		if started:
+		# Spielart wählt man nur für eine neue Sitzung, eine gespeicherte bringt ihre mit
+		_mode_box.visible = not started and not s.get("loaded", false)
+		if not started and s.has("coop"):
+			_session_text.text = tr("Gespeicherter Koop auf %s. „Starten“ setzt das gemeinsame Feld fort, wer fehlt, kann später einsteigen.") % map_name
+		elif started and s.has("coop"):
+			_session_text.text = tr("Koop auf %s läuft. Mitspieler, die das Spiel verlassen haben, steigen über „Mitspielen“ wieder ein.") % map_name
+		elif not started and coop_mode and not s.get("loaded", false):
+			_session_text.text = tr("Koop auf %s (Map im Hauptmenü wählen). „Starten“ startet alle Verbundenen auf einem gemeinsamen Feld, Schwierigkeit und Wertung vom Host.") % map_name
+		elif started:
 			_session_text.text = tr("Die Sitzung läuft auf %s. Wer dazukommt, steigt über „Mitspielen“ ein, mit seinem gespeicherten Stand, falls es einen gibt.") % map_name
 		elif s.get("loaded", false):
 			_session_text.text = tr("Gespeicherte Sitzung auf %s. „Starten“ setzt für jeden Verbundenen seinen Stand fort, wer fehlt, kann später einsteigen.") % map_name
@@ -176,9 +212,12 @@ func _refresh() -> void:
 	else:
 		_addresses.visible = false
 		_internet.get_parent().visible = false
+		_mode_box.visible = false
 		var info := Net.session_info
 		started = bool(info.get("started", false))
 		var own := tr("Dein gespeicherter Stand: Welle %d.") % int(info.get("wave", 0)) if info.get("has_state", false) else tr("Du startest neu.")
+		if info.get("coop", false):
+			own = tr("Koop: ihr spielt zusammen auf einem Feld.")
 		if info.is_empty():
 			_session_text.text = tr("Warte auf den Host …")
 		elif started:
