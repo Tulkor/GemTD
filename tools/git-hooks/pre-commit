@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Hält docs/tower-werte.md aktuell: Werden Tower-Daten committet, wird die Tabelle neu erzeugt,
+# mit in den Commit genommen und nach /mnt/project-files/balance/ kopiert.
+# Einschalten (macht der Session-Start-Hook automatisch): git config core.hooksPath tools/git-hooks
+if git diff --cached --name-only | grep -qE '^data/(towers/|balance\.json)'; then
+  python3 tools/tower_tabelle.py --kopieren >/dev/null || exit 1
+  git add docs/tower-werte.md
+fi
