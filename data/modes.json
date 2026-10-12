@@ -1,0 +1,35 @@
+{
+	"_info": "TD-Modi im Hauptmenü und in der Lobby. ready: schon spielbar. min_players/max_players: erlaubte Spielerzahl (Lobby: nur diese Modi sind wählbar). scene: Einstieg des Modus, dort steht der Modus in Session.game_kind. Maps gehören über ihr Feld \"game\" zu einem Modus (ohne Feld: gemtd). needs_map false: der Modus wählt seine Karte selbst, die Map-Auswahl entfällt.",
+	"modes": [
+		{
+			"id": "gemtd",
+			"name": "GemTD",
+			"ready": true,
+			"min_players": 1,
+			"max_players": 8,
+			"scene": "res://scenes/game.tscn",
+			"hint": "Gems setzen, kombinieren, Labyrinth bauen. 50 Wellen, Rezepte und Spezial-Tower.",
+			"needs_map": true
+		},
+		{
+			"id": "eevetd",
+			"name": "eeveTD",
+			"ready": false,
+			"min_players": 1,
+			"max_players": 1,
+			"scene": "res://scenes/eeve_game.tscn",
+			"hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level (noch solo)",
+			"needs_map": true
+		},
+		{
+			"id": "shoppingmaul",
+			"name": "Shopping Maul",
+			"ready": false,
+			"min_players": 1,
+			"max_players": 1,
+			"scene": "res://scenes/maul_game.tscn",
+			"hint": "Filiale eröffnen, Tower kaufen und aufwerten (solo im Zentrum)",
+			"needs_map": false
+		}
+	]
+}

@@ -323,6 +323,7 @@ func load_session(data: Dictionary) -> void:
 		"id": str(data.get("id", SaveGame.new_id())),
 		"map": data.get("map", {}),
 		"map_name": str(data.get("meta", {}).get("map", "")),
+		"mode": str(data.get("mode", "")),
 		"started": false,
 		"loaded": true,
 		"players": ps,
@@ -342,6 +343,7 @@ func start_session(map_data: Dictionary) -> void:
 		session.map_name = str(map_data.get("name", ""))
 	session.started = true
 	session.erase("coop")
+	_fix_mode()
 	_push_info()
 	for peer in players:
 		if not player_status(peer).get("in_game", false):
@@ -394,7 +396,7 @@ func save_session(g) -> bool:
 		names.append(str(session.players[u].get("name", "?")))
 	var meta := SaveGame.meta_for(g, {"players": names}) if g != null else {"map": session.map_name, "players": names, "time": int(Time.get_unix_time_from_system())}
 	var ok := SaveGame.write({"id": session.id, "kind": "multi", "meta": meta, "map": session.map,
-		"host_uid": uid, "players": session.players})
+		"host_uid": uid, "players": session.players, "mode": str(session.get("mode", ""))})
 	_push_info()
 	return ok
 
@@ -465,6 +467,8 @@ func _info_for(u: String) -> Dictionary:
 		"has_state": not st.is_empty(),
 		"wave": int(st.get("wave_index", 0)) + 1 if not st.is_empty() else 0,
 		"slots": session_slots(),
+		"votes": session.get("votes", {}),
+		"mode": str(session.get("mode", "")),
 	}
 	if session.has("coop"):
 		info.coop = true
@@ -478,6 +482,110 @@ func _push_info() -> void:
 		if players[peer].has("uid"):
 			_session_info.rpc_id(peer, _info_for(str(players[peer].uid)))
 	session_changed.emit()
+
+
+# --- Abstimmung über den TD-Modus ------------------------------------------------------
+
+## Spieler in der Lobby (Host mitgezählt).
+func player_count() -> int:
+	return players.size() + 1 if is_active() else 1
+
+
+## Eigene Stimme für einen Modus abgeben ("" = zurückziehen). Nur vor dem Start einer neuen Sitzung.
+func vote(mode_id: String) -> void:
+	if is_host():
+		_set_vote(uid, mode_id)
+	elif is_active():
+		_vote.rpc_id(1, mode_id)
+
+
+## Stimmen: uid -> Modus-ID.
+func votes() -> Dictionary:
+	return session.get("votes", {}) if is_host() else session_info.get("votes", {})
+
+
+func my_vote() -> String:
+	return str(votes().get(uid if is_host() else _my_slot_uid(), ""))
+
+
+func _my_slot_uid() -> String:
+	for slot in session_info.get("slots", []):
+		if int(slot.get("peer", -1)) == my_id():
+			return str(slot.get("uid", ""))
+	return ""
+
+
+## Auszählung: [{id, count, names}] nur für Modi, die für die aktuelle Spielerzahl erlaubt sind,
+## und nur Stimmen von Verbundenen. Absteigend nach Stimmen, bei gleicher Zahl in der Reihenfolge von modes.json.
+func vote_tally() -> Array:
+	var online := {}
+	for slot in session_slots():
+		if slot.get("online", false):
+			online[str(slot.uid)] = str(slot.get("name", "?"))
+	var out := []
+	var n := player_count()
+	for m in Database.modes:
+		var id := str(m.get("id", ""))
+		if not Database.mode_allows(id, n):
+			continue
+		var names := []
+		var v := votes()
+		for u in v:
+			if online.has(u) and str(v[u]) == id:
+				names.append(online[u])
+		out.append({"id": id, "count": names.size(), "names": names})
+	var order := out.duplicate()
+	out.sort_custom(func(a, b): return a.count > b.count or (a.count == b.count and order.find(a) < order.find(b)))
+	return out
+
+
+## Modi mit den meisten Stimmen (mehrere bei Gleichstand). Ohne Stimmen: alle erlaubten.
+func vote_leaders() -> Array:
+	var t := vote_tally()
+	if t.is_empty():
+		return []
+	var best: int = t[0].count
+	return t.filter(func(e): return e.count == best).map(func(e): return str(e.id))
+
+
+## Gewinner: bei Gleichstand die Stimme des Hosts, hat er keinen der Gleichauf-Modi gewählt, das Los.
+## Für die Anzeige vor dem Start gibt pick_random false den ersten Gleichauf-Modus zurück.
+func vote_winner(pick_random := true) -> String:
+	var leaders := vote_leaders()
+	if leaders.is_empty():
+		return Session.game_kind
+	if leaders.size() == 1:
+		return leaders[0]
+	if vote_tally()[0].count == 0:
+		return Session.game_kind if leaders.has(Session.game_kind) else leaders[0]
+	var host_vote := ""
+	for slot in session_slots():
+		if int(slot.get("peer", -1)) == 1:
+			host_vote = str(votes().get(str(slot.get("uid", "")), ""))
+	if leaders.has(host_vote):
+		return host_vote
+	return leaders.pick_random() if pick_random else leaders[0]
+
+
+## Host beim Start: Modus der Sitzung festlegen (gespeicherte und laufende behalten ihren).
+func _fix_mode() -> void:
+	if str(session.get("mode", "")) == "":
+		session.mode = vote_winner()
+	Session.game_kind = str(session.mode)
+
+
+func _set_vote(u: String, mode_id: String) -> void:
+	if session.is_empty() or session.get("started", false):
+		return
+	if mode_id != "" and not Database.mode_allows(mode_id, player_count()):
+		return
+	if not session.has("votes"):
+		session.votes = {}
+	if mode_id == "":
+		session.votes.erase(u)
+	else:
+		session.votes[u] = mode_id
+	_push_info()
 
 
 # --- Koop -------------------------------------------------------------------------
@@ -506,6 +614,7 @@ func start_coop(map_data: Dictionary) -> void:
 		session.settings = {"difficulty": int(state.get("difficulty", 1)), "score_mode": bool(state.get("score_mode", false))}
 		session.erase("coop_state")
 	session.started = true
+	_fix_mode()
 	_push_info()
 	for peer in peers:
 		if coop_player_of(peer) > 0:
@@ -527,6 +636,7 @@ func _load_coop(data: Dictionary) -> void:
 		"id": str(data.get("id", SaveGame.new_id())),
 		"map": data.get("map", {}),
 		"map_name": str(data.get("meta", {}).get("map", "")),
+		"mode": str(data.get("mode", "")),
 		"started": false,
 		"loaded": true,
 		"players": ps,
@@ -617,7 +727,7 @@ func _begin_local(map_data: Dictionary, state: Dictionary) -> void:
 	Session.map_override = MapData.from_dict(state.get("map", map_data))
 	Session.test_tower = ""
 	Session.return_scene = Session.MAIN_MENU
-	Session.goto(Session.GAME)
+	Session.goto(Session.game_scene())
 
 
 static func _random_uid() -> String:
@@ -749,9 +859,19 @@ func _state_report(state: Dictionary, in_game: bool) -> void:
 		_store_state(str(players[id].uid), player_name(id), state)
 
 
+## Mitspieler → Host: Stimme für einen Modus.
+@rpc("any_peer", "reliable")
+func _vote(mode_id: String) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if is_host() and players.has(id) and players[id].has("uid"):
+		_set_vote(str(players[id].uid), mode_id)
+
+
 @rpc("authority", "reliable")
 func _session_info(info: Dictionary) -> void:
 	session_info = info
+	if str(info.get("mode", "")) != "":
+		Session.game_kind = str(info.mode)
 	session_changed.emit()
 
 
