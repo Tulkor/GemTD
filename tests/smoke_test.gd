@@ -368,6 +368,36 @@ func _ready() -> void:
 	tl.sort = "damage"
 	tl.focus(listed[0])
 	check(Vector2(game.camera_rig.target.x, game.camera_rig.target.z).distance_to(Vector2(listed[0].position.x, listed[0].position.z)) < 0.5, "Doppelklick fährt die Kamera zum Tower")
+	# Kombinierbare Tower haben einen hellblauen Rahmen: dafür kurz die Tower zu Zutaten eines Rezepts machen
+	var combo_def := {}
+	for sid in Database.special_ids():
+		var cdef: Dictionary = Database.towers[sid]
+		var rec: Array = cdef.get("recipe", [])
+		if not cdef.get("recipe_same_round", false) and not rec.is_empty() and rec.size() <= listed.size() and rec.all(func(i): return i.has("tower")):
+			combo_def = {"id": sid, "recipe": rec}
+			break
+	if not combo_def.is_empty():
+		var saved := listed.map(func(t): return [t.tower_id, t.tier])
+		for t in listed:
+			t.tier = 99  # passt zu keinem Rezept
+		for i in combo_def.recipe.size():
+			listed[i].tower_id = str(combo_def.recipe[i].tower)
+			listed[i].tier = int(combo_def.recipe[i].get("tier", 0))
+		tl.refresh()
+		var crow: Dictionary = tl.rows[listed[0].get_instance_id()]
+		var cname := Database.tower_label(combo_def.id, 0)
+		var cstyle: StyleBoxFlat = crow.button.get_theme_stylebox("normal")
+		check(crow.combinable and cstyle.border_color == UiTheme.CYAN and cname in tl.combos(listed[0]), "Tower-Liste: kombinierbarer Tower hat blauen Rahmen (%s)" % cname)
+		check(game.tower_options(listed[0]).any(func(o): return o.action == "combine" and o.id == combo_def.id), "Markierung passt zu den Kombinieren-Optionen")
+		listed[0].tower_id = "__none__"
+		tl.refresh()
+		check(not crow.combinable and not tl.rows[listed[1].get_instance_id()].combinable, "ohne passende Zutat kein blauer Rahmen")
+		for i in listed.size():
+			listed[i].tower_id = saved[i][0]
+			listed[i].tier = saved[i][1]
+		tl.refresh()
+	else:
+		check(false, "kein Rezept für den Tower-Listen-Test gefunden (%d Tower)" % listed.size())
 
 	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
 	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle

@@ -2,6 +2,7 @@ class_name TowerList
 extends PanelContainer
 ## Tower-Liste rechts unter dem Gegner-Fenster: alle fertigen Tower auf dem Feld, scrollbar und sortierbar.
 ## Klick wählt den Tower aus, Doppelklick fährt die Kamera hin. Einklappbar.
+## Tower, die mit anderen fertigen Towern auf dem Feld ein Rezept ergeben, haben einen hellblauen Rahmen.
 
 const SORTS := [["damage", "Sortieren: Schaden"], ["kills", "Sortieren: Kills"], ["name", "Sortieren: Name"]]
 
@@ -131,6 +132,10 @@ func refresh() -> void:
 			rows[id].button.queue_free()
 			rows.erase(id)
 	var sel = game.selected
+	var combinable := {}
+	for t in ts:
+		if not combos(t, ts).is_empty():
+			combinable[t] = true
 	for i in ts.size():
 		var t = ts[i]
 		var r: Dictionary = rows[t.get_instance_id()]
@@ -140,8 +145,29 @@ func refresh() -> void:
 		r.gem.add_theme_color_override("font_color", t.color)
 		r.kills.text = "✖ %d" % t.kills if t.can_attack() else "–"
 		r.damage.text = DpsMeter._fmt(t.total_damage) if t.can_attack() else tr("Aura")
+		# Ausgewählt: hellerer Grund und pinker Rand; kombinierbar: hellblauer Rand (gewinnt beim Rand)
 		var on: bool = sel == t
-		r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, UiTheme.CYAN if on else Color.TRANSPARENT, 0, 2, 4))
+		var border := UiTheme.CYAN if combinable.has(t) else (UiTheme.GOLD if on else Color.TRANSPARENT)
+		r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, border, 0, 2, 4))
+		r.combinable = combinable.has(t)
+
+
+## Spezial-Tower, die t zusammen mit anderen fertigen Towern auf dem Feld ergeben würde (Namen).
+## Kombinieren geht nur während der Welle, markiert wird aber immer, damit man es planen kann.
+func combos(t, field: Array = []) -> Array:
+	if game == null or not is_instance_valid(t) or t.is_new:
+		return []
+	if field.is_empty():
+		field = towers()
+	var pool := field.filter(func(o): return o != t)
+	var out := []
+	for sid in Database.special_ids():
+		var def: Dictionary = Database.towers[sid]
+		if def.get("recipe_same_round", false):
+			continue
+		if game._match_recipe(def.get("recipe", []), t, pool) != null:
+			out.append(Database.tower_label(sid, 0))
+	return out
 
 
 func _update_summary(ts: Array) -> void:
@@ -193,7 +219,7 @@ func _row(t) -> Dictionary:
 	d.add_theme_color_override("font_color", UiTheme.COIN)
 	for c in h.get_children():
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return {"button": b, "gem": gem, "name": n, "kills": k, "damage": d}
+	return {"button": b, "gem": gem, "name": n, "kills": k, "damage": d, "combinable": false}
 
 
 ## Kamera auf den Tower fahren.
@@ -220,6 +246,15 @@ func _tooltip(t) -> Control:
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l.add_theme_color_override("font_color", UiTheme.DIM)
 		UiUtil.label(row[1], h, 13).add_theme_color_override("font_color", row[2])
+	var made := combos(t)
+	if not made.is_empty():
+		var c := UiUtil.wrap_label(tr("Kombinierbar zu: %s") % ", ".join(made), v, 250)
+		c.add_theme_font_size_override("font_size", 12)
+		c.add_theme_color_override("font_color", UiTheme.CYAN)
+		if not game.is_wave_running():
+			var w := UiUtil.wrap_label(tr("Kombinieren geht erst wieder während der Welle."), v, 250)
+			w.add_theme_font_size_override("font_size", 12)
+			w.add_theme_color_override("font_color", UiTheme.MUTED)
 	var note := UiUtil.wrap_label(tr("Klick wählt den Tower aus, Doppelklick fährt die Kamera hin."), v, 250)
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", UiTheme.MUTED)

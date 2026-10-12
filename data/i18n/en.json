@@ -527,5 +527,6 @@
 	"Top-Tower nach Schaden": "Top towers by damage",
 	"Gebaute Spezial-Tower": "Special towers built",
 	"Map nochmal spielen": "Play map again",
-	"Lauf löschen": "Delete run"
+	"Lauf löschen": "Delete run",
+	"Kombinierbar zu: %s": "Can combine into: %s"
 }
