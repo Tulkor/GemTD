@@ -1,7 +1,9 @@
 extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
-##   --szene=spiel|menu|map_editor|tower_editor   Standard spiel
+##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
+##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
+##                           --welle (nächstes Level starten), --auswahl, --warten=S; Kamera aufs Zentrum
 ##   --map=<id>              Map aus data/maps (Standard classic)
 ##   --runden=N              N Runden automatisch spielen (Gems am Weg setzen, ersten behalten, Welle 8× laufen)
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
@@ -40,6 +42,7 @@ func _ready() -> void:
 		"menu": node = load(Session.MAIN_MENU).instantiate()
 		"map_editor": node = load(Session.MAP_EDITOR).instantiate()
 		"tower_editor": node = load(Session.TOWER_EDITOR).instantiate()
+		"maul": node = load(Session.MAUL).instantiate()
 		_:
 			var path := "res://data/maps/%s.json" % opts.get("map", "classic")
 			Session.map_path = path
@@ -48,6 +51,8 @@ func _ready() -> void:
 	add_child(node)
 	await _frames(5)
 	var angles: PackedStringArray = ["bild"]
+	if scene == "maul":
+		await _prepare_maul(node)
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
@@ -97,6 +102,54 @@ func _prepare(game: Node) -> void:
 			game._select(game.round_towers[0])
 		elif not game.towers.is_empty():
 			game._select(game.towers.values()[0])
+	var t := 0.0
+	var wait := float(opts.get("warten", "1"))
+	while t < wait:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+
+
+## Shopping Maul: Filiale eröffnen, im Zentrum bauen, Level im Zeitraffer spielen.
+func _prepare_maul(game: Node) -> void:
+	game.camera_rig.set_process(false)
+	if not opts.has("filiale"):
+		return
+	var shop: String = opts.filiale
+	game.start_game(shop, 1, "group")
+	var zone: Rect2i = game.map.zones[0].rect
+	var spots := []
+	for y in range(zone.position.y + 1, zone.end.y - 2, 4):
+		for x in range(zone.position.x + 1, zone.end.x - 2, 4):
+			spots.append(Vector2i(x, y))
+	var mid := Vector2(zone.get_center())
+	spots.sort_custom(func(a, b): return Vector2(a).distance_to(mid) < Vector2(b).distance_to(mid))
+	var build := func():
+		var list: Array = MaulData.buyable(shop)
+		for a in spots:
+			var best := ""
+			for t in list:
+				if int(t.cost) <= game.players[0].gold:
+					best = str(t.id)
+			if best == "":
+				break
+			game.submit({"type": "build", "tower": best, "cell": a})
+	build.call()
+	for i in int(opts.get("level", "0")):
+		game.submit({"type": "start_now"})
+		Engine.time_scale = 8.0
+		var frames := 0
+		while game.phase != game.Phase.COUNTDOWN or game.level <= i:
+			await get_tree().process_frame
+			frames += 1
+			if frames > 60000 or game.phase >= game.Phase.GAME_OVER:
+				break
+		Engine.time_scale = 1.0
+		build.call()
+	if opts.has("welle"):
+		game.submit({"type": "start_now"})
+	if opts.has("auswahl") and not game.towers.is_empty():
+		game.select(game.towers.values()[0])
+	game.camera_rig.look_at_point(game.map.zone_center(0), float(opts.get("abstand", "34")))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:

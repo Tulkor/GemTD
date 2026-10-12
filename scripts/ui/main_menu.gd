@@ -232,7 +232,9 @@ func _game_row(parent: Node) -> void:
 	var group := ButtonGroup.new()
 	for g in Session.GAMES:
 		var id: String = g.id
-		var b := UiUtil.button(str(g.name), h, func(): Session.game_kind = id)
+		var b := UiUtil.button(str(g.name), h, func():
+			Session.game_kind = id
+			_update_selection())
 		b.toggle_mode = true
 		b.button_group = group
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -333,9 +335,15 @@ func _update_selection() -> void:
 		lobby.selected_map = maps[selected].name
 	play_button.disabled = maps.is_empty()
 	play_button.text = tr("Spielen: %s") % tr(maps[selected].name) if not maps.is_empty() else tr("Spielen")
+	if Session.game_kind == "shoppingmaul":
+		play_button.text = tr("Spielen: %s") % "Shopping Maul"
+		play_button.disabled = false
 
 
 func _play() -> void:
+	if Session.game_kind == "shoppingmaul":
+		Session.goto(Session.MAUL)
+		return
 	if maps.is_empty():
 		return
 	Session.map_path = maps[selected].path

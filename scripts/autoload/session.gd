@@ -5,6 +5,7 @@ const MAIN_MENU := "res://scenes/main_menu.tscn"
 const GAME := "res://scenes/game.tscn"
 const MAP_EDITOR := "res://scenes/map_editor.tscn"
 const TOWER_EDITOR := "res://scenes/tower_editor.tscn"
+const MAUL := "res://scenes/maul_game.tscn"
 
 ## Pfad der Map, die das Spiel laden soll.
 var map_path := ""
@@ -23,11 +24,11 @@ const DIFFICULTIES := [
 	{"name": "Normal", "factor": 0.9, "score": 1.0},
 	{"name": "Schwer", "factor": 1.15, "score": 1.25},
 ]
-## Spiele im Hauptmenü. ready: schon spielbar (eeveTD und Shopping Maul entstehen gerade).
+## Spiele im Hauptmenü. ready: schon spielbar (eeveTD entsteht gerade, Shopping Maul ist solo spielbar).
 const GAMES := [
 	{"id": "gemtd", "name": "GemTD", "ready": true, "hint": "Gems setzen, kombinieren, Labyrinth bauen"},
 	{"id": "eevetd", "name": "eeveTD", "ready": false, "hint": "Kommt noch: Eevee-Entwicklungen, solo und im Koop zusammen mazen"},
-	{"id": "shoppingmaul", "name": "Shopping Maul", "ready": false, "hint": "Kommt noch: Tower aus Shops kaufen und aufwerten"},
+	{"id": "shoppingmaul", "name": "Shopping Maul", "ready": true, "hint": "Filiale eröffnen, Tower kaufen und aufwerten (solo im Zentrum)"},
 ]
 var game_kind := "gemtd"
 ## Gewählte Stufe (Index in DIFFICULTIES), Standard „Normal“.

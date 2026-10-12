@@ -1,0 +1,667 @@
+{
+	"source": "Shopping Maul 5.44f: Jv[1..50], Einheiten o[1..20], Speziallevel Ip",
+	"levels": [
+		{
+			"level": 1,
+			"unit": "o001",
+			"name": "Official Trainee",
+			"kind": "ground",
+			"jv": 8,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 275,
+			"bounty": 1,
+			"specials": []
+		},
+		{
+			"level": 2,
+			"unit": "o001",
+			"name": "Official Trainee",
+			"kind": "ground",
+			"jv": 22,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 275,
+			"bounty": 1,
+			"specials": []
+		},
+		{
+			"level": 3,
+			"unit": "o001",
+			"name": "Official Trainee",
+			"kind": "ground",
+			"jv": 45,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 275,
+			"bounty": 1,
+			"specials": [
+				"frost"
+			]
+		},
+		{
+			"level": 4,
+			"unit": "o001",
+			"name": "Official Trainee",
+			"kind": "ground",
+			"jv": 80,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 275,
+			"bounty": 1,
+			"specials": []
+		},
+		{
+			"level": 5,
+			"unit": "e008",
+			"name": "Paper Airplane",
+			"kind": "air",
+			"jv": 140,
+			"armor": 12,
+			"armor_type": "small",
+			"speed": 250,
+			"bounty": 2,
+			"specials": []
+		},
+		{
+			"level": 6,
+			"unit": "o021",
+			"name": "Accounting Clerk",
+			"kind": "ground",
+			"jv": 220,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 1,
+			"specials": []
+		},
+		{
+			"level": 7,
+			"unit": "o021",
+			"name": "Accounting Clerk",
+			"kind": "ground",
+			"jv": 300,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 1,
+			"specials": []
+		},
+		{
+			"level": 8,
+			"unit": "o021",
+			"name": "Accounting Clerk",
+			"kind": "ground",
+			"jv": 400,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 1,
+			"specials": [
+				"fast"
+			]
+		},
+		{
+			"level": 9,
+			"unit": "o021",
+			"name": "Accounting Clerk",
+			"kind": "ground",
+			"jv": 500,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 1,
+			"specials": [
+				"spell_resist"
+			]
+		},
+		{
+			"level": 10,
+			"unit": "O02W",
+			"name": "Boss",
+			"kind": "boss",
+			"jv": 650,
+			"armor": 650,
+			"armor_type": "hero",
+			"speed": 350,
+			"bounty": 25,
+			"specials": []
+		},
+		{
+			"level": 11,
+			"unit": "o01A",
+			"name": "Track Hound",
+			"kind": "ground",
+			"jv": 700,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 2,
+			"specials": [
+				"ghost"
+			]
+		},
+		{
+			"level": 12,
+			"unit": "o01A",
+			"name": "Track Hound",
+			"kind": "ground",
+			"jv": 750,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 2,
+			"specials": [
+				"frost"
+			]
+		},
+		{
+			"level": 13,
+			"unit": "o01A",
+			"name": "Track Hound",
+			"kind": "ground",
+			"jv": 800,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 2,
+			"specials": []
+		},
+		{
+			"level": 14,
+			"unit": "o01A",
+			"name": "Track Hound",
+			"kind": "ground",
+			"jv": 900,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 2,
+			"specials": [
+				"fast"
+			]
+		},
+		{
+			"level": 15,
+			"unit": "e00P",
+			"name": "Intelligence Drone",
+			"kind": "air",
+			"jv": 1250,
+			"armor": 12,
+			"armor_type": "small",
+			"speed": 260,
+			"bounty": 4,
+			"specials": []
+		},
+		{
+			"level": 16,
+			"unit": "o022",
+			"name": "File Fighter",
+			"kind": "ground",
+			"jv": 1450,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 350,
+			"bounty": 2,
+			"specials": []
+		},
+		{
+			"level": 17,
+			"unit": "o022",
+			"name": "File Fighter",
+			"kind": "ground",
+			"jv": 1850,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 350,
+			"bounty": 2,
+			"specials": [
+				"invisible"
+			]
+		},
+		{
+			"level": 18,
+			"unit": "o022",
+			"name": "File Fighter",
+			"kind": "ground",
+			"jv": 2000,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 350,
+			"bounty": 2,
+			"specials": [
+				"invisible"
+			]
+		},
+		{
+			"level": 19,
+			"unit": "o022",
+			"name": "File Fighter",
+			"kind": "ground",
+			"jv": 2500,
+			"armor": 50,
+			"armor_type": "small",
+			"speed": 350,
+			"bounty": 2,
+			"specials": [
+				"spell_resist"
+			]
+		},
+		{
+			"level": 20,
+			"unit": "O02X",
+			"name": "Boss",
+			"kind": "boss",
+			"jv": 2775,
+			"armor": 650,
+			"armor_type": "hero",
+			"speed": 375,
+			"bounty": 50,
+			"specials": []
+		},
+		{
+			"level": 21,
+			"unit": "o01B",
+			"name": "Hard-Bitten Auditor",
+			"kind": "ground",
+			"jv": 3000,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 350,
+			"bounty": 3,
+			"specials": [
+				"fast",
+				"ghost"
+			]
+		},
+		{
+			"level": 22,
+			"unit": "o01B",
+			"name": "Hard-Bitten Auditor",
+			"kind": "ground",
+			"jv": 3500,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 350,
+			"bounty": 3,
+			"specials": []
+		},
+		{
+			"level": 23,
+			"unit": "o01B",
+			"name": "Hard-Bitten Auditor",
+			"kind": "ground",
+			"jv": 3775,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 350,
+			"bounty": 3,
+			"specials": []
+		},
+		{
+			"level": 24,
+			"unit": "o01B",
+			"name": "Hard-Bitten Auditor",
+			"kind": "ground",
+			"jv": 4000,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 350,
+			"bounty": 3,
+			"specials": [
+				"frost"
+			]
+		},
+		{
+			"level": 25,
+			"unit": "e00B",
+			"name": "Contract Helicopter",
+			"kind": "air",
+			"jv": 4775,
+			"armor": 12,
+			"armor_type": "small",
+			"speed": 275,
+			"bounty": 6,
+			"specials": [
+				"invisible"
+			]
+		},
+		{
+			"level": 26,
+			"unit": "o020",
+			"name": "Office Tank",
+			"kind": "ground",
+			"jv": 4900,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 375,
+			"bounty": 3,
+			"specials": []
+		},
+		{
+			"level": 27,
+			"unit": "o020",
+			"name": "Office Tank",
+			"kind": "ground",
+			"jv": 5750,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 375,
+			"bounty": 3,
+			"specials": []
+		},
+		{
+			"level": 28,
+			"unit": "o020",
+			"name": "Office Tank",
+			"kind": "ground",
+			"jv": 6000,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 375,
+			"bounty": 3,
+			"specials": [
+				"ghost"
+			]
+		},
+		{
+			"level": 29,
+			"unit": "o020",
+			"name": "Office Tank",
+			"kind": "ground",
+			"jv": 6750,
+			"armor": 50,
+			"armor_type": "medium",
+			"speed": 375,
+			"bounty": 3,
+			"specials": [
+				"spell_resist"
+			]
+		},
+		{
+			"level": 30,
+			"unit": "O02Y",
+			"name": "Boss",
+			"kind": "boss",
+			"jv": 7500,
+			"armor": 650,
+			"armor_type": "hero",
+			"speed": 400,
+			"bounty": 100,
+			"specials": [
+				"invisible"
+			]
+		},
+		{
+			"level": 31,
+			"unit": "o01H",
+			"name": "Awake Appointee",
+			"kind": "ground",
+			"jv": 8500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 375,
+			"bounty": 4,
+			"specials": [
+				"frost",
+				"ghost"
+			]
+		},
+		{
+			"level": 32,
+			"unit": "o01H",
+			"name": "Awake Appointee",
+			"kind": "ground",
+			"jv": 8850,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 375,
+			"bounty": 4,
+			"specials": []
+		},
+		{
+			"level": 33,
+			"unit": "o01H",
+			"name": "Awake Appointee",
+			"kind": "ground",
+			"jv": 9500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 375,
+			"bounty": 4,
+			"specials": [
+				"fast"
+			]
+		},
+		{
+			"level": 34,
+			"unit": "o01H",
+			"name": "Awake Appointee",
+			"kind": "ground",
+			"jv": 10250,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 375,
+			"bounty": 4,
+			"specials": []
+		},
+		{
+			"level": 35,
+			"unit": "e00C",
+			"name": "Department Fairy",
+			"kind": "air",
+			"jv": 11500,
+			"armor": 12,
+			"armor_type": "small",
+			"speed": 300,
+			"bounty": 8,
+			"specials": [
+				"spell_resist"
+			]
+		},
+		{
+			"level": 36,
+			"unit": "o023",
+			"name": "Nominal Member",
+			"kind": "ground",
+			"jv": 12500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 400,
+			"bounty": 4,
+			"specials": [
+				"invisible",
+				"frost"
+			]
+		},
+		{
+			"level": 37,
+			"unit": "o023",
+			"name": "Nominal Member",
+			"kind": "ground",
+			"jv": 13500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 400,
+			"bounty": 4,
+			"specials": []
+		},
+		{
+			"level": 38,
+			"unit": "o023",
+			"name": "Nominal Member",
+			"kind": "ground",
+			"jv": 14500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 400,
+			"bounty": 4,
+			"specials": []
+		},
+		{
+			"level": 39,
+			"unit": "o023",
+			"name": "Nominal Member",
+			"kind": "ground",
+			"jv": 15500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 400,
+			"bounty": 4,
+			"specials": [
+				"fast",
+				"ghost"
+			]
+		},
+		{
+			"level": 40,
+			"unit": "O02Z",
+			"name": "Boss",
+			"kind": "boss",
+			"jv": 18000,
+			"armor": 650,
+			"armor_type": "hero",
+			"speed": 450,
+			"bounty": 200,
+			"specials": [
+				"spell_resist"
+			]
+		},
+		{
+			"level": 41,
+			"unit": "o024",
+			"name": "Paper-Shuffler",
+			"kind": "ground",
+			"jv": 19500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 450,
+			"bounty": 5,
+			"specials": []
+		},
+		{
+			"level": 42,
+			"unit": "o024",
+			"name": "Paper-Shuffler",
+			"kind": "ground",
+			"jv": 20500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 450,
+			"bounty": 5,
+			"specials": [
+				"invisible",
+				"fast"
+			]
+		},
+		{
+			"level": 43,
+			"unit": "o024",
+			"name": "Paper-Shuffler",
+			"kind": "ground",
+			"jv": 22500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 450,
+			"bounty": 5,
+			"specials": []
+		},
+		{
+			"level": 44,
+			"unit": "o024",
+			"name": "Paper-Shuffler",
+			"kind": "ground",
+			"jv": 24500,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 450,
+			"bounty": 5,
+			"specials": [
+				"frost",
+				"ghost"
+			]
+		},
+		{
+			"level": 45,
+			"unit": "e00A",
+			"name": "Application To Nuke",
+			"kind": "air",
+			"jv": 27000,
+			"armor": 12,
+			"armor_type": "small",
+			"speed": 325,
+			"bounty": 10,
+			"specials": []
+		},
+		{
+			"level": 46,
+			"unit": "o01C",
+			"name": "Doc Merciless",
+			"kind": "ground",
+			"jv": 30000,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 475,
+			"bounty": 5,
+			"specials": [
+				"spell_resist",
+				"ghost"
+			]
+		},
+		{
+			"level": 47,
+			"unit": "o01C",
+			"name": "Doc Merciless",
+			"kind": "ground",
+			"jv": 31750,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 475,
+			"bounty": 5,
+			"specials": []
+		},
+		{
+			"level": 48,
+			"unit": "o01C",
+			"name": "Doc Merciless",
+			"kind": "ground",
+			"jv": 34000,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 475,
+			"bounty": 5,
+			"specials": [
+				"invisible",
+				"frost"
+			]
+		},
+		{
+			"level": 49,
+			"unit": "o01C",
+			"name": "Doc Merciless",
+			"kind": "ground",
+			"jv": 37000,
+			"armor": 50,
+			"armor_type": "large",
+			"speed": 475,
+			"bounty": 5,
+			"specials": [
+				"fast"
+			]
+		},
+		{
+			"level": 50,
+			"unit": "O02V",
+			"name": "Boss",
+			"kind": "boss",
+			"jv": 40000,
+			"armor": 650,
+			"armor_type": "hero",
+			"speed": 500,
+			"bounty": 0,
+			"specials": [
+				"spell_resist"
+			]
+		}
+	]
+}
