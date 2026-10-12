@@ -49,6 +49,7 @@ var stats: Dictionary = {}
 var color := Color.WHITE
 
 var is_new := false   ## in dieser Runde gesetzt, noch nicht ausgewählt
+var owner_player := 0  ## Spielernummer (Koop): nur er wählt, kombiniert und wertet auf, bekommt das Kopfgeld
 var selected := false
 var speed_bonus := 0.0   ## von Tempo-Auren anderer Tower
 var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
@@ -209,6 +210,7 @@ func _apply_enemy_auras(delta: float) -> void:
 				continue
 			match type:
 				"burn_aura":
+					e.last_hit_by = owner_player
 					total_damage += e.take_raw_damage(float(ab.dps) * delta)
 					if e.dead:
 						kills += 1
@@ -286,11 +288,12 @@ func _hit(e, dmg: float) -> void:
 			"stun":
 				e.apply_stun(float(ab.duration))
 			"gold_on_hit":
-				game.add_gold(int(ab.get("gold", 0)) + floori(float(ab.get("gold_per_wave", 0)) * game.current_wave()))
+				game.add_gold(int(ab.get("gold", 0)) + floori(float(ab.get("gold_per_wave", 0)) * game.current_wave()), owner_player)
 			"stacking_damage":
 				dmg += e.add_stack(float(ab.per_hit), float(ab.duration))
 			"nova":
 				_nova(e, ab)
+	e.last_hit_by = owner_player
 	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
 		kills += 1
@@ -307,6 +310,7 @@ func _nova(target, ab: Dictionary) -> void:
 			continue
 		if ab.has("slow"):
 			other.apply_slow(float(ab.slow), 3.0)
+		other.last_hit_by = owner_player
 		total_damage += other.take_damage(float(ab.damage) * (1.0 + kill_bonus()), "spells")
 		if other.dead:
 			kills += 1

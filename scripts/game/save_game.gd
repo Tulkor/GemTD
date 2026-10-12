@@ -26,7 +26,8 @@ static func capture(game) -> Dictionary:
 	var ts := []
 	for t in list:
 		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills,
-			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left, "on_rock": t.get_meta("on_rock", false)})
+			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left, "on_rock": t.get_meta("on_rock", false),
+			"owner": t.owner_player})
 	var es := []
 	for e in game.enemies:
 		if e.dead:
@@ -58,6 +59,9 @@ static func capture(game) -> Dictionary:
 		"spawn_queue": game.spawn_queue.duplicate(true),
 		"spawn_timer": game.spawn_timer,
 		"enemies": es,
+		# pro Spieler; gold, round und undo_gems oben sind die von Spieler 0 (ältere Spielstände)
+		"players": game.players.map(func(p): return {"name": p.name, "gold": p.gold, "gold_frac": p.gold_frac,
+			"stage": p.stage, "round": p.round_towers.map(func(t): return list.find(t)), "undo_gems": p.undo_gems.duplicate(true)}),
 		"next_enemy_id": game._next_enemy_id,
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
@@ -99,6 +103,7 @@ static func apply(game, s: Dictionary) -> void:
 			continue
 		var t := Tower.new()
 		t.is_new = bool(d.get("new", false))
+		t.owner_player = int(d.get("owner", 0))
 		game.board.add_child(t)
 		t.setup(game, d.cell, str(d.id), int(d.tier))
 		t.kills = int(d.get("kills", 0))
@@ -116,14 +121,27 @@ static func apply(game, s: Dictionary) -> void:
 
 	var phase := int(s.get("phase", game.Phase.BUILD))
 	game.chance_level = game.chance_level_for(game.current_wave())
-	game.round_towers.clear()
-	game.undo_gems = []
-	for ug in s.get("undo_gems", []):
-		if ug is Array and ug.size() == 2 and Database.towers.has(str(ug[0])):
-			game.undo_gems.append([str(ug[0]), int(ug[1])])
-	for i in s.get("round", []):
-		if i >= 0 and i < made.size() and made[i] != null:
-			game.round_towers.append(made[i])
+	# Ältere Spielstände haben nur einen Spieler, dessen Daten oben stehen
+	var pls: Array = s.get("players", [{"gold": s.get("gold", 0), "gold_frac": s.get("gold_frac", 0.0), "stage": phase,
+		"round": s.get("round", []), "undo_gems": s.get("undo_gems", [])}])
+	game.players = []
+	for i in pls.size():
+		var pd: Dictionary = pls[i]
+		var ps := PlayerState.new(i, str(pd.get("name", "")))
+		ps.gold = int(pd.get("gold", 0))
+		ps.gold_frac = float(pd.get("gold_frac", 0.0))
+		for ug in pd.get("undo_gems", []):
+			if ug is Array and ug.size() == 2 and Database.towers.has(str(ug[0])):
+				ps.undo_gems.append([str(ug[0]), int(ug[1])])
+		for j in pd.get("round", []):
+			if j >= 0 and j < made.size() and made[j] != null:
+				ps.round_towers.append(made[j])
+		# Wahlphase ohne Gems der Runde (z. B. kaputter Stand) heißt: wieder setzen
+		ps.stage = clampi(int(pd.get("stage", phase)), game.Phase.BUILD, game.Phase.WAVE)
+		if ps.stage == game.Phase.CHOOSE and ps.round_towers.is_empty():
+			ps.stage = game.Phase.BUILD
+		game.players.append(ps)
+	game.acting = clampi(game.local_player, 0, game.players.size() - 1)
 	if phase == game.Phase.WAVE:
 		game.phase = game.Phase.WAVE
 		game.spawn_queue = s.get("spawn_queue", []).duplicate(true)
@@ -146,11 +164,11 @@ static func apply(game, s: Dictionary) -> void:
 			game.setup_score(e, g)
 			e.place_on_path(float(d.get("traveled", 0.0)))
 			game.enemies.append(e)
-	elif phase == game.Phase.CHOOSE and not game.round_towers.is_empty():
-		game.phase = game.Phase.CHOOSE
-		game._select(game.round_towers[-1])
 	else:
 		game.phase = game.Phase.BUILD
+		game._set_stage(game.pl().stage)
+		if game.stage() == game.Phase.CHOOSE:
+			game._select(game.round_towers[-1])
 	game._refresh_hud()
 
 

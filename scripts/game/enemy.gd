@@ -32,6 +32,7 @@ var slow_time := 0.0
 var poison_dps := 0.0
 var poison_time := 0.0
 var poison_source = null  ## Tower, dem der Giftschaden gutgeschrieben wird
+var last_hit_by := -1     ## Spieler, dessen Tower zuletzt Schaden gemacht hat (bekommt das Kopfgeld)
 var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
@@ -103,6 +104,8 @@ func _process(delta: float) -> void:
 		if armor_reduction_time <= 0.0:
 			armor_reduction = 0.0
 	if poison_time > 0.0:
+		if is_instance_valid(poison_source):
+			last_hit_by = poison_source.owner_player
 		var dealt := take_raw_damage(poison_dps * minf(poison_time, delta))
 		poison_time -= delta
 		if is_instance_valid(poison_source):

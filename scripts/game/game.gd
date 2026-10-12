@@ -31,10 +31,23 @@ var traps: Dictionary = {}       ## Anker -> Falle
 var trap_cells: Dictionary = {}  ## jedes Feld unter einer Falle -> Anker
 var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewählt wird
 var enemies: Array = []
-var round_towers: Array = []
+## Spieler (solo nur einer). Was jedem allein gehört, steht in PlayerState; Leben, Punkte und Wellen sind gemeinsam.
+var players: Array = [PlayerState.new()]
+## Spieler, dessen Befehl gerade ausgeführt wird (sonst der lokale). round_towers, undo_gems und gold
+## meinen immer diesen Spieler.
+var acting := 0
+var round_towers: Array:
+	get:
+		return pl().round_towers
+	set(v):
+		pl().round_towers = v
 ## Zurückgenommene Gems dieser Runde als [id, tier]: die nächsten Setzungen bekommen genau diese wieder,
 ## damit Zurücknehmen nur Fehlklicks korrigiert und nicht neu würfelt.
-var undo_gems: Array = []
+var undo_gems: Array:
+	get:
+		return pl().undo_gems
+	set(v):
+		pl().undo_gems = v
 var selected: Tower = null
 ## Ausgewählte Steine (Anker), per Klick einer oder per Rahmen bis zu MAX_ROCK_SELECTION.
 var selected_rocks: Array = []
@@ -47,7 +60,12 @@ var _left_down := false
 var _press_pos := Vector2.ZERO
 var _dragging := false
 
-var phase := Phase.BUILD
+## Gemeinsame Phase. Solo folgt die Stufe des Spielers ihr direkt (siehe stage()).
+var phase := Phase.BUILD:
+	set(v):
+		phase = v
+		if players.size() == 1 and v <= Phase.CHOOSE:
+			players[0].stage = v
 var wave_index := 0
 var lives := 50
 ## Punkte-Modus (Session.score_mode): statt Leben zählen Punkte, das Spiel endet erst nach der letzten Welle.
@@ -57,9 +75,17 @@ var score := 0.0
 var score_stats := {}
 ## Endboss (letzte Welle, falls Boss): Schaden, seine Leben gesamt, besiegt, Punkte dafür
 var final_boss := {"damage": 0.0, "hp": 0.0, "kills": 0, "points": 0.0}
-var gold := 0
+var gold: int:
+	get:
+		return pl().gold
+	set(v):
+		pl().gold = v
 var chance_level := 0
-var _gold_frac := 0.0
+var _gold_frac: float:
+	get:
+		return pl().gold_frac
+	set(v):
+		pl().gold_frac = v
 var spawn_queue: Array = []
 ## Laufende Welle fürs Gegner-Fenster: Leben und Schaden der schon entfernten Gegner, Kills, Durchgelassene
 var wave_live := {"gone_hp": 0.0, "gone_dealt": 0.0, "killed": 0, "leaked": 0}
@@ -93,7 +119,8 @@ func _ready() -> void:
 	waves = Database.wave_sets.get(map.wave_set, {}).get("waves", [])
 	lives = map.lives
 	score_mode = Session.score_mode
-	gold = map.start_gold
+	for p in players:
+		p.gold = map.start_gold
 	pathfinder = Pathfinder.new(map)
 
 	CameraRig.add_environment(self)
@@ -276,7 +303,7 @@ func _update_hover() -> void:
 	if moving != null:
 		size = Board3D.TRAP_CELLS
 		c = board.mouse_anchor(camera_rig.camera, size)
-	elif phase == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
+	elif stage() == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
 		c = board.mouse_anchor(camera_rig.camera)
 	if c != board.hover_cell or size != board.hover_size:
 		board.hover_cell = c
@@ -343,7 +370,7 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 		_select(towers[a])
 	elif rocks.has(a):
 		_select(null, a)
-	elif phase == Phase.BUILD and can_place(anchor):
+	elif stage() == Phase.BUILD and can_place(anchor):
 		submit({"type": "place", "cell": anchor})
 	elif trap != null:
 		_select(trap)
@@ -464,8 +491,8 @@ func gems_per_round() -> int:
 func _debug_set_gems(n: int) -> void:
 	Session.debug_gems_per_round = n
 	# Schon genug gesetzt: gleich in die Wahlphase
-	if phase == Phase.BUILD and not round_towers.is_empty() and round_towers.size() >= n:
-		phase = Phase.CHOOSE
+	if stage() == Phase.BUILD and not round_towers.is_empty() and round_towers.size() >= n:
+		_set_stage(Phase.CHOOSE)
 		_select(round_towers[-1])
 	_refresh_hud()
 
@@ -490,8 +517,10 @@ func rock_remove_cost() -> int:
 func _enter_build() -> void:
 	phase = Phase.BUILD
 	chance_level = chance_level_for(current_wave())
-	round_towers.clear()
-	undo_gems.clear()
+	for p in players:
+		p.stage = Phase.BUILD
+		p.round_towers.clear()
+		p.undo_gems.clear()
 	round_path_start = path_length
 	_refresh_hud()
 
@@ -516,6 +545,7 @@ func place_gem(c: Vector2i) -> Tower:
 		return null
 	var t := Tower.new()
 	t.is_new = true
+	t.owner_player = acting
 	board.add_child(t)
 	t.setup(self, c, id, tier)
 	_register(t)
@@ -525,8 +555,9 @@ func place_gem(c: Vector2i) -> Tower:
 	board.hover_ok = false
 	board.refresh_hover()
 	if round_towers.size() >= gems_per_round():
-		phase = Phase.CHOOSE
-		_select(t)
+		_set_stage(Phase.CHOOSE)
+		if _mine():
+			_select(t)
 	_refresh_hud()
 	return t
 
@@ -563,7 +594,7 @@ func _box_select(r: Rect2, add := false) -> void:
 
 ## Wie viele Gems in dieser Bauphase noch gesetzt werden dürfen.
 func gems_left() -> int:
-	return maxi(gems_per_round() - round_towers.size(), 0) if phase == Phase.BUILD else 0
+	return maxi(gems_per_round() - round_towers.size(), 0) if stage() == Phase.BUILD else 0
 
 
 ## Steine direkt durch neue Gems ersetzen (so viele, wie in der Runde noch übrig sind). Gibt die Anzahl zurück.
@@ -584,7 +615,7 @@ func replace_rocks(list: Array) -> int:
 			_occupy(c, true, true)
 			_update_paths()
 			board.refresh_rocks()
-	if phase == Phase.BUILD:
+	if stage() == Phase.BUILD and _mine():
 		_select(null)
 	return done
 
@@ -602,14 +633,15 @@ func remove_rock(c: Vector2i) -> bool:
 	_occupy(c, false, false)
 	_update_paths()
 	board.refresh_rocks()
-	_select(null)
+	if _mine() or selected_rocks.has(c):
+		_select(null)
 	return true
 
 
 ## Gesetzten Gem dieser Runde zurücknehmen (Fehlklick), in Bau- und Auswahlphase. Aus der Auswahlphase geht es
 ## zurück in die Bauphase. Der Gem wird nicht neu gewürfelt (siehe undo_gems), ein ersetzter Stein kommt zurück.
 func can_take_back(t: Tower) -> bool:
-	return phase <= Phase.CHOOSE and t != null and is_instance_valid(t) and t.is_new and round_towers.has(t)
+	return stage() <= Phase.CHOOSE and t != null and is_instance_valid(t) and t.is_new and round_towers.has(t)
 
 
 func take_back(t: Tower) -> bool:
@@ -623,11 +655,12 @@ func take_back(t: Tower) -> bool:
 		_occupy(t.cell, true, true)
 		gold += rock_remove_cost()
 	t.queue_free()
-	phase = Phase.BUILD
+	_set_stage(Phase.BUILD)
 	_update_paths()
 	_update_auras()
 	board.refresh_rocks()
-	_select(null)
+	if _mine() or t == selected:
+		_select(null)
 	return true
 
 
@@ -638,7 +671,7 @@ func take_back(t: Tower) -> bool:
 ##   action "upgrade": Spezial-Tower gegen Gold aufwerten
 ##   action "take_back": gesetzten Gem dieser Runde zurücknehmen
 func tower_options(t: Tower) -> Array:
-	if t == null or not is_instance_valid(t) or phase >= Phase.GAME_OVER:
+	if t == null or not is_instance_valid(t) or phase >= Phase.GAME_OVER or t.owner_player != acting:
 		return []
 	if t.is_new:
 		var choice := choice_options(t)
@@ -646,7 +679,7 @@ func tower_options(t: Tower) -> Array:
 			choice.append({"label": tr("Zurücknehmen"), "action": "take_back", "id": t.tower_id, "tier": t.tier, "consume": [], "cost": 0})
 		return choice
 	var opts := []
-	var field := all_towers().filter(func(o): return o != t and not o.is_new)
+	var field := own_towers().filter(func(o): return o != t and not o.is_new)
 	# Fertige Tower auf dem Feld kombinieren geht nur während der Welle, nicht beim Setzen und Auswählen
 	# der neuen Gems (deren Rezepte siehe choice_options)
 	if phase == Phase.WAVE:
@@ -677,8 +710,8 @@ func _makes_blocked_trap(t: Tower, o: Dictionary) -> bool:
 ## Rezepte gelten in beiden Fällen nur mit den in dieser Runde gesetzten Gems, fertige Tower auf dem
 ## Feld zählen nicht (die lassen sich während der Welle kombinieren, siehe tower_options).
 func choice_options(t: Tower) -> Array:
-	var one_shot := phase == Phase.BUILD
-	if (phase != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
+	var one_shot := stage() == Phase.BUILD
+	if (stage() != Phase.CHOOSE and not one_shot) or t == null or not round_towers.has(t):
 		return []
 	var opts := [] if one_shot else [_keep_option(tr("Behalten: ") + t.label(), t.tower_id, t.tier)]
 	if t.def.get("category", "gem") == "gem" and not one_shot:
@@ -768,7 +801,7 @@ func upgrade_options(t: Tower) -> Array:
 		return []
 	var up: Dictionary = ups[t.tier]
 	var consume := []
-	var pool := all_towers().filter(func(o): return o != t and not o.is_new)
+	var pool := own_towers().filter(func(o): return o != t and not o.is_new)
 	for ing in up.get("recipe", []):
 		var found = null
 		for o in pool:
@@ -826,6 +859,58 @@ func _on_option_chosen(index: int) -> void:
 #   option         {tower, index, action, id, tier}  Behalten, Kombinieren, Aufwerten …
 #   move_trap      {tower, to}            Falle verschieben
 
+# --- Spieler ------------------------------------------------------------------
+
+## Spieler p (-1 = der gerade handelnde).
+func pl(p := -1) -> PlayerState:
+	return players[clampi(acting if p < 0 else p, 0, players.size() - 1)]
+
+
+## Spieler für ein neues Spiel festlegen (Reihenfolge = Spielernummer), jeder mit dem Startgold der Map.
+func setup_players(names: Array) -> void:
+	players = []
+	for i in names.size():
+		var ps := PlayerState.new(i, str(names[i]))
+		ps.gold = map.start_gold if map != null else 0
+		ps.stage = phase if phase <= Phase.CHOOSE else Phase.BUILD
+		players.append(ps)
+	acting = local_player
+
+
+func _mine() -> bool:
+	return acting == local_player
+
+
+## Eigene Tower und Fallen des handelnden Spielers (für Rezepte und Upgrades).
+func own_towers() -> Array:
+	return all_towers().filter(func(t): return t.owner_player == acting)
+
+
+## Wo der Spieler gerade steht: in Bau- und Wahlphase jeder für sich (BUILD, CHOOSE oder WAVE = fertig
+## und wartet auf die anderen), sonst die gemeinsame Phase.
+func stage(p := -1) -> int:
+	return pl(p).stage if phase <= Phase.CHOOSE else phase
+
+
+## Stufe des handelnden Spielers setzen. Die gemeinsame Phase ist CHOOSE, sobald niemand mehr setzt.
+func _set_stage(s: int) -> void:
+	var me := pl()
+	if phase <= Phase.CHOOSE:
+		var all_chosen := players.all(func(ps): return (s if ps == me else ps.stage) >= Phase.CHOOSE)
+		phase = Phase.CHOOSE if all_chosen else Phase.BUILD
+	# erst danach: solo setzt die Phase die Stufe mit (siehe phase)
+	me.stage = s
+
+
+## Runde des handelnden Spielers ist fertig (Gem behalten). Die Welle startet, wenn alle fertig sind.
+func _finish_round() -> void:
+	_set_stage(Phase.WAVE)
+	if players.all(func(ps): return ps.stage == Phase.WAVE):
+		_start_wave()
+	else:
+		_refresh_hud()
+
+
 ## Befehl des lokalen Spielers abschicken.
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
@@ -834,11 +919,22 @@ func submit(cmd: Dictionary) -> bool:
 
 
 ## Befehl ausführen (nur die Simulation, d. h. solo oder auf dem Host). false = verworfen.
+## Während der Ausführung gilt acting = cmd.player: Gold, Runde und Besitz sind die dieses Spielers.
 func execute(cmd: Dictionary) -> bool:
+	var p := int(cmd.get("player", -1))
+	if p < 0 or p >= players.size():
+		return false
+	acting = p
+	var ok := _execute(cmd)
+	acting = local_player
+	return ok
+
+
+func _execute(cmd: Dictionary) -> bool:
 	match str(cmd.get("type", "")):
 		"place":
 			var c: Vector2i = cmd.get("cell", NO_CELL)
-			if phase != Phase.BUILD or gems_left() <= 0 or not can_place(c):
+			if stage() != Phase.BUILD or gems_left() <= 0 or not can_place(c):
 				return false
 			return place_gem(c) != null
 		"remove_rocks":
@@ -906,7 +1002,7 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	board.refresh_rocks()
 	_update_auras()
 	if o.action == "keep":
-		_start_wave()
+		_finish_round()
 	else:
 		_refresh_hud()
 	return true
@@ -960,19 +1056,25 @@ func gold_income_factor(wave: int) -> float:
 
 
 ## Gold aus Kills und Fähigkeiten, gekürzt um gold_income_factor (Reste werden gesammelt).
-func earn_gold(amount: float) -> void:
-	_gold_frac += amount * gold_income_factor(current_wave())
-	var whole := floori(_gold_frac)
-	gold += whole
-	_gold_frac -= whole
+## p: Spieler, der das Gold bekommt; -1 = gleichmäßig auf alle verteilt (z. B. Kill ohne bekannten Tower).
+func earn_gold(amount: float, p := -1) -> void:
+	if p < 0 or p >= players.size():
+		for i in players.size():
+			earn_gold(amount / players.size(), i)
+		return
+	var ps: PlayerState = players[p]
+	ps.gold_frac += amount * gold_income_factor(current_wave())
+	var whole := floori(ps.gold_frac)
+	ps.gold += whole
+	ps.gold_frac -= whole
 
 
 func current_wave() -> int:
 	return wave_index + 1
 
 
-func add_gold(amount: int) -> void:
-	earn_gold(amount)
+func add_gold(amount: int, p := -1) -> void:
+	earn_gold(amount, p)
 	_refresh_hud()
 
 
@@ -1068,7 +1170,8 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
-	earn_gold(e.bounty)
+	# Kopfgeld bekommt der Spieler, dessen Tower zuletzt getroffen hat
+	earn_gold(e.bounty, e.last_hit_by)
 	if e.final_boss:
 		_final_boss_done(e, true)
 	else:
@@ -1209,16 +1312,25 @@ func _gold_text(cost: int) -> String:
 	return tr(" (%d Gold)") % cost if cost > 0 else ""
 
 
+## Die Anzeige zeigt immer den lokalen Spieler, auch wenn gerade der Befehl eines Mitspielers läuft.
 func _refresh_hud() -> void:
 	if hud == null:
 		return
+	var was := acting
+	acting = local_player
+	_refresh_hud_local()
+	acting = was
+
+
+func _refresh_hud_local() -> void:
 	hud.set_resources(mini(wave_index + 1, waves.size()), waves.size(), roundi(score) if score_mode else lives, gold, score_mode)
 	hud.set_path_length(path_length, path_length - round_path_start if phase <= Phase.CHOOSE else 0)
+	var my_stage := stage()
 	hud.set_waves(_upcoming_waves(4))
 	# Baubar: in der Welle aus fertigen Towern, beim Setzen und Auswählen nur aus den Gems der Runde
-	var now_pool: Array = all_towers().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
+	var now_pool: Array = own_towers().filter(func(t): return not t.is_new) if phase == Phase.WAVE else round_towers
 	# Zutaten: fixierte Tower plus nur der ausgewählte neue Gem (pro Runde behält man genau einen)
-	var have: Array = all_towers().filter(func(t): return not t.is_new or t == selected)
+	var have: Array = own_towers().filter(func(t): return not t.is_new or t == selected)
 	hud.set_owned(have.map(func(t): return [t.tower_id, t.tier, t.is_new]),
 			{"pool": now_pool.map(func(t): return [t.tower_id, t.tier, t.is_new]), "wave": phase == Phase.WAVE})
 
@@ -1236,10 +1348,19 @@ func _refresh_hud() -> void:
 				"tier": t.tier, "tiers": Database.tier_count(t.tower_id), "id": t.tower_id})
 	var shot_text := ""
 	if not specials.is_empty():
-		shot_text = tr("One-Shot möglich: " if phase == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
-	hud.set_round_gems(gems if phase <= Phase.CHOOSE else [], tr("Hellblauer Rand: Zutat für ") + ", ".join(specials) if not specials.is_empty() else "")
+		shot_text = tr("One-Shot möglich: " if my_stage == Phase.BUILD else "Spezial möglich: ") + ", ".join(specials)
+	hud.set_round_gems(gems if my_stage <= Phase.CHOOSE else [], tr("Hellblauer Rand: Zutat für ") + ", ".join(specials) if not specials.is_empty() else "")
 
-	match phase:
+	if phase <= Phase.CHOOSE and my_stage == Phase.WAVE:
+		hud.set_phase(tr("Warten"), tr("Dein Gem ist gewählt. Die Welle startet, sobald alle Mitspieler fertig sind."), "")
+	else:
+		_set_phase_banner(my_stage, shot_text)
+	hud.set_chance(chance_level, next_chance_wave())
+	_refresh_selection()
+
+
+func _set_phase_banner(my_stage: int, shot_text: String) -> void:
+	match my_stage:
 		Phase.BUILD:
 			hud.set_phase(tr("Bauphase"), tr("Gems gesetzt: %d / %d · Steine anklicken: ersetzen oder entfernen") % [round_towers.size(), gems_per_round()], shot_text)
 		Phase.CHOOSE:
@@ -1255,8 +1376,8 @@ func _refresh_hud() -> void:
 		Phase.VICTORY:
 			hud.set_phase(tr("Gewonnen"), tr("Alle Wellen geschafft!"))
 
-	hud.set_chance(chance_level, next_chance_wave())
 
+func _refresh_selection() -> void:
 	if not selected_rocks.is_empty():
 		var n := selected_rocks.size()
 		var each := rock_remove_cost()
@@ -1365,7 +1486,7 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	var v := {"label": o.label, "style": "normal"}
 	if _is_special_option(t, o):
 		v.style = "oneshot"
-		var hint := tr("Baut %s sofort und beendet die Runde.") % Database.tower_label(o.id, o.tier) if phase == Phase.BUILD else ""
+		var hint := tr("Baut %s sofort und beendet die Runde.") % Database.tower_label(o.id, o.tier) if stage() == Phase.BUILD else ""
 		hint += " " + tr("Die übrigen neuen Gems werden zu Steinen.")
 		if not o.consume.is_empty():
 			hint += " " + tr("Verbraucht vom Feld: ") + ", ".join(o.consume.map(func(c): return c.label()))

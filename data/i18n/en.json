@@ -528,5 +528,7 @@
 	"Gebaute Spezial-Tower": "Special towers built",
 	"Map nochmal spielen": "Play map again",
 	"Lauf löschen": "Delete run",
-	"Kombinierbar zu: %s": "Can combine into: %s"
+	"Kombinierbar zu: %s": "Can combine into: %s",
+	"Warten": "Waiting",
+	"Dein Gem ist gewählt. Die Welle startet, sobald alle Mitspieler fertig sind.": "Your gem is chosen. The wave starts once all teammates are done."
 }

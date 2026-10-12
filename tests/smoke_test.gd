@@ -582,6 +582,7 @@ func _ready() -> void:
 	await _take_back_test()
 	await _final_boss_test()
 	await _command_test()
+	await _coop_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -936,5 +937,67 @@ func _command_test() -> void:
 	opts = g.tower_options(t)
 	check(g.execute({"type": "option", "tower": ref, "index": 0, "action": opts[0].action, "id": opts[0].id, "tier": opts[0].tier, "player": 0}) and g.phase == g.Phase.WAVE,
 		"Befehl option (Behalten) startet die Welle")
+	g.queue_free()
+	await get_tree().process_frame
+
+
+## Koop: zwei Spieler auf einem Feld. Jeder setzt und wählt seine eigene Runde, die Welle startet erst,
+## wenn beide fertig sind. Fremde Tower lassen sich nicht wählen oder zurücknehmen, das Kopfgeld geht an
+## den Besitzer des Towers, der zuletzt getroffen hat.
+func _coop_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	g.setup_players(["Anna", "Ben"])
+	check(g.players.size() == 2 and g.players[1].gold == g.map.start_gold, "Koop: zwei Spieler, jeder mit Startgold")
+	var a_cells := [Vector2i(14, 40), Vector2i(18, 40), Vector2i(22, 40), Vector2i(26, 40), Vector2i(30, 40)]
+	var b_cells := [Vector2i(14, 30), Vector2i(18, 30), Vector2i(22, 30), Vector2i(26, 30), Vector2i(30, 30)]
+	for c in a_cells:
+		g.execute({"type": "place", "cell": c, "player": 0})
+	check(g.players[0].round_towers.size() == 5 and g.stage(0) == g.Phase.CHOOSE and g.stage(1) == g.Phase.BUILD and g.phase == g.Phase.BUILD,
+		"Koop: Anna wählt schon, Ben setzt noch, gemeinsam bleibt Bauphase")
+	check(g.gems_left() == 0 and not g.submit({"type": "place", "cell": b_cells[0]}), "Koop: Anna kann keinen sechsten Gem setzen")
+	var a0: Tower = g.players[0].round_towers[0]
+	var ref_a: Dictionary = g.tower_ref(a0)
+	check(a0.owner_player == 0, "Koop: Gem gehört Anna")
+	check(not g.execute({"type": "take_back", "tower": ref_a, "player": 1}) and g.towers.has(a0.cell), "Koop: Ben kann Annas Gem nicht zurücknehmen")
+	check(not g.execute({"type": "option", "tower": ref_a, "index": 0, "action": "keep", "id": a0.tower_id, "tier": a0.tier, "player": 1}),
+		"Koop: Ben kann Annas Gem nicht behalten")
+	check(not g.execute({"type": "place", "cell": b_cells[0], "player": 5}), "Koop: unbekannter Spieler wird verworfen")
+	for c in b_cells:
+		check(g.execute({"type": "place", "cell": c, "player": 1}), "Koop: Ben setzt %s" % c)
+	check(g.phase == g.Phase.CHOOSE and g.players[1].round_towers.size() == 5, "Koop: beide in der Wahlphase")
+	check(g.players[1].round_towers.all(func(t): return t.owner_player == 1), "Koop: Bens Gems gehören Ben")
+	check(g.execute({"type": "option", "tower": ref_a, "index": 0, "action": "keep", "id": a0.tower_id, "tier": a0.tier, "player": 0}),
+		"Koop: Anna behält einen Gem")
+	check(g.stage(0) == g.Phase.WAVE and g.phase == g.Phase.CHOOSE and g.players[0].round_towers.is_empty() and g.players[1].round_towers.size() == 5,
+		"Koop: Anna wartet, Ben wählt noch, keine Welle")
+	check(g.hud.phase_title.text == tr("Warten"), "Koop: Anzeige sagt Warten (%s)" % g.hud.phase_title.text)
+	var st := SaveGame.capture(g)
+	var b0: Tower = g.players[1].round_towers[0]
+	check(g.execute({"type": "option", "tower": g.tower_ref(b0), "index": 0, "action": "keep", "id": b0.tower_id, "tier": b0.tier, "player": 1})
+		and g.phase == g.Phase.WAVE, "Koop: Welle startet, wenn auch Ben behalten hat")
+	# Kopfgeld an den Besitzer des treffenden Towers
+	g._spawn_enemy(g.waves[0].groups[0])
+	var e: Enemy = g.enemies[-1]
+	b0._hit(e, 1.0)
+	check(e.last_hit_by == 1, "Koop: Treffer von Bens Tower merkt Ben")
+	var a_before: float = g.players[0].gold + g.players[0].gold_frac
+	var b_before: float = g.players[1].gold + g.players[1].gold_frac
+	e.take_raw_damage(e.hp + 1.0)
+	check(g.players[0].gold + g.players[0].gold_frac == a_before and g.players[1].gold + g.players[1].gold_frac > b_before,
+		"Koop: Kopfgeld geht an Ben")
+	check(g.tower_options(b0).is_empty(), "Koop: Anna sieht keine Optionen für Bens Tower")
+	# Spielstand mitten in der Wahl: beide Spieler, Runden und Besitz kommen zurück
+	var h: Node = load(Session.GAME).instantiate()
+	add_child(h)
+	await get_tree().process_frame
+	SaveGame.apply(h, st)
+	check(h.players.size() == 2 and h.stage(0) == h.Phase.WAVE and h.stage(1) == h.Phase.CHOOSE and h.phase == h.Phase.CHOOSE
+		and h.players[1].round_towers.size() == 5 and h.towers[b_cells[0]].owner_player == 1 and h.players[1].name == "Ben",
+		"Koop-Spielstand: Spieler, Runden und Besitz geladen")
+	h.queue_free()
 	g.queue_free()
 	await get_tree().process_frame
