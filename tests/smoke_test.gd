@@ -587,6 +587,7 @@ func _ready() -> void:
 	await _coop_test()
 	await _coop_sync_test()
 	await _setup_test()
+	await _maul_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -1121,3 +1122,60 @@ func _setup_test() -> void:
 	Session.difficulty = 1
 	Session.score_mode = false
 	Session.skip_setup = true
+
+
+## Maul-Map: zwei Zonen, zwei Bahnen. Jeder baut nur in seiner Zone, jede Welle läuft an jeder Bahn
+## eines mitspielenden Spielers; Solo läuft nur die eigene Bahn.
+func _maul_test() -> void:
+	var path := ""
+	for m in Database.list_maps():
+		if m.id == "maul_2":
+			path = m.path
+	check(path != "", "Maul-Map vorhanden")
+	Session.map_path = path
+	Session.map_override = null
+	var solo: Node = load(Session.GAME).instantiate()
+	add_child(solo)
+	await get_tree().process_frame
+	check(solo.map.lane_count() == 2 and solo.active_lanes() == [0], "Maul solo: nur die eigene Bahn läuft")
+	check(solo.lane_paths.size() == 2 and solo.lane_paths.all(func(l): return l.length > 0), "Maul: beide Bahnen haben einen Weg (%s)" % [solo.lane_paths.map(func(l): return l.length)])
+	solo.queue_free()
+	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	Session.coop = {"role": "client", "player": 1, "names": ["Anna", "Ben"]}
+	var h: Node = load(Session.GAME).instantiate()
+	add_child(h)
+	await get_tree().process_frame
+	h.coop.command_sink = func(cmd): g.coop.receive(1, cmd)
+	check(g.active_lanes() == [0, 1], "Maul Koop: beide Bahnen laufen")
+	check(g.can_place(Vector2i(20, 20)) and not g.can_place(Vector2i(70, 20)), "Maul: Anna baut nur in ihrer Zone")
+	check(not g.execute({"type": "place", "cell": Vector2i(20, 20), "player": 1}) and g.execute({"type": "place", "cell": Vector2i(70, 20), "player": 1}),
+		"Maul: Ben baut nur in seiner Zone")
+	check(g.towers[Vector2i(70, 20)].owner_player == 1, "Maul: Bens Gem in Bens Zone")
+	# Welle: an jeder Bahn erscheint die Gruppe
+	g.phase = g.Phase.WAVE
+	g._spawn_enemy(g.waves[0].groups[0])
+	var lanes: Array = g.enemies.map(func(e): return e.lane)
+	check(g.enemies.size() == 2 and lanes.has(0) and lanes.has(1), "Maul: ein Gegner je Bahn")
+	var e1: Enemy = g.enemies.filter(func(e): return e.lane == 1)[0]
+	check(e1.pos.distance_to(Board3D.cell_center(g.map.lanes[0].spawn)) < 1.0, "Maul: Gegner der Bahn 2 startet an ihrem Spawn")
+	check(is_equal_approx(g.enemies[0].score_value * 2.0, g.score_for(g.waves[0].groups[0])), "Maul: Punkte pro Welle bleiben gleich")
+	# Mitspieler sieht den Gegner auf der richtigen Bahn
+	h.coop.apply_state(g.coop.snapshot())
+	h.coop.apply_enemies(g.coop.enemy_packet())
+	var m1: Array = h.enemies.filter(func(e): return e.lane == 1)
+	check(m1.size() == 1, "Maul Koop: Mitspieler kennt die Bahn")
+	await get_tree().process_frame
+	check(m1.size() == 1 and m1[0].pos.distance_to(e1.pos) < 2.0, "Maul Koop: Gegner läuft beim Mitspieler auf Bahn 2")
+	# Spielstand: Bahn bleibt
+	var st := SaveGame.capture(g)
+	var k: Node = load(Session.GAME).instantiate()
+	add_child(k)
+	await get_tree().process_frame
+	SaveGame.apply(k, st)
+	check(k.enemies.any(func(e): return e.lane == 1) and k.players.size() == 2, "Maul: Spielstand behält die Bahn")
+	for n in [k, h, g]:
+		n.queue_free()
+	await get_tree().process_frame
+	Session.map_path = Database.list_maps()[0].path

@@ -301,6 +301,11 @@ func _map_card(i: int) -> Button:
 		info += "\n" + tr("Weg ohne Labyrinth: %d Felder") % preview.path_length()
 		if rocks > 0:
 			info += " · " + tr("%d zufällige Steine") % rocks
+		if not md.zones.is_empty():
+			var seats := {}
+			for z in md.zones:
+				seats[z.player] = true
+			info += "\n" + tr("Koop: %d Zonen, %d Bahnen") % [seats.size(), md.lane_count()]
 	var l := UiUtil.label(info, v, 12)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size.x = 316

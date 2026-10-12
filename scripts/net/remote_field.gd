@@ -15,8 +15,8 @@ var effects: Effects
 var rocks: Dictionary = {}
 var towers: Dictionary = {}    ## Schlüssel aus Position, Typ, Stufe -> Tower
 var enemies: Dictionary = {}   ## net_id -> Enemy
-var _paths := {false: PackedVector2Array(), true: PackedVector2Array()}
-var _cum := {false: PackedFloat32Array(), true: PackedFloat32Array()}
+## Wege je Bahn (Maul-Maps haben mehrere): {paths: {flying: Punkte}, cum: {flying: Strecke bis Punkt i}}
+var _lanes: Array = [_new_lane()]
 
 
 func has_map() -> bool:
@@ -51,9 +51,14 @@ func apply_field(f: Dictionary) -> void:
 	for i in range(0, rs.size() - 1, 2):
 		rocks[Vector2i(rs[i], rs[i + 1])] = true
 	board.refresh_rocks()
-	_set_path(false, f.get("ground", PackedVector2Array()))
-	_set_path(true, f.get("air", PackedVector2Array()))
-	board.path_points = _paths[false]
+	set_paths(f.get("ground", PackedVector2Array()), f.get("air", PackedVector2Array()))
+	var extra: Array = f.get("lanes", [])
+	_lanes.resize(1 + extra.size())
+	var dots := path_for(false)
+	for i in extra.size():
+		set_paths(extra[i][0], extra[i][1], i + 1)
+		dots.append_array(extra[i][0])
+	board.path_points = dots
 	board.refresh_path()
 
 	var wanted := {}
@@ -93,7 +98,8 @@ func apply_enemies(packet: Dictionary) -> void:
 			e.net_id = id
 			add_child(e)
 			var o := {"shape": str(s[7]), "size": float(s[8])} if s.size() > 8 else {}
-			e.setup(null, def, o, _paths[bool(def.get("flying", false))])
+			e.lane = int(s[9]) if s.size() > 9 else 0
+			e.setup(null, def, o, path_for(bool(def.get("flying", false)), e.lane))
 			e.traveled = float(s[2])
 			enemies[id] = e
 		e.apply_net_state(s)
@@ -115,36 +121,49 @@ func _clear_units() -> void:
 	enemies.clear()
 
 
-## Koop: Wege vom eigenen Feld übernehmen (coop_sync.gd nutzt nur die Wege, keine Map).
-func set_paths(ground: PackedVector2Array, air: PackedVector2Array) -> void:
-	_set_path(false, ground)
-	_set_path(true, air)
+static func _new_lane() -> Dictionary:
+	return {"paths": {false: PackedVector2Array(), true: PackedVector2Array()},
+		"cum": {false: PackedFloat32Array(), true: PackedFloat32Array()}}
 
 
-func path_for(flying: bool) -> PackedVector2Array:
-	return _paths[flying]
+## Wege einer Bahn setzen (Koop: coop_sync.gd übernimmt sie vom eigenen Feld, ohne Map).
+func set_paths(ground: PackedVector2Array, air: PackedVector2Array, lane := 0) -> void:
+	while _lanes.size() <= lane:
+		_lanes.append(_new_lane())
+	if _lanes[lane] == null:
+		_lanes[lane] = _new_lane()
+	_set_path(false, ground, lane)
+	_set_path(true, air, lane)
 
 
-func _set_path(flying: bool, p: PackedVector2Array) -> void:
-	_paths[flying] = p
+func path_for(flying: bool, lane := 0) -> PackedVector2Array:
+	return _lane(lane).paths[flying]
+
+
+func _lane(i: int) -> Dictionary:
+	return _lanes[i] if i >= 0 and i < _lanes.size() and _lanes[i] != null else _lanes[0]
+
+
+func _set_path(flying: bool, p: PackedVector2Array, lane: int) -> void:
+	_lanes[lane].paths[flying] = p
 	var cum := PackedFloat32Array()
 	var total := 0.0
 	for i in p.size():
 		if i > 0:
 			total += p[i - 1].distance_to(p[i])
 		cum.append(total)
-	_cum[flying] = cum
+	_lanes[lane].cum[flying] = cum
 
 
-func path_length(flying: bool) -> float:
-	var cum: PackedFloat32Array = _cum[flying]
+func path_length(flying: bool, lane := 0) -> float:
+	var cum: PackedFloat32Array = _lane(lane).cum[flying]
 	return cum[cum.size() - 1] if not cum.is_empty() else 0.0
 
 
-## Punkt auf dem Weg nach dist Towerbreiten.
-func point_at(flying: bool, dist: float) -> Vector2:
-	var p: PackedVector2Array = _paths[flying]
-	var cum: PackedFloat32Array = _cum[flying]
+## Punkt auf dem Weg (Bahn lane) nach dist Towerbreiten.
+func point_at(flying: bool, dist: float, lane := 0) -> Vector2:
+	var p: PackedVector2Array = _lane(lane).paths[flying]
+	var cum: PackedFloat32Array = _lane(lane).cum[flying]
 	if p.is_empty():
 		return Vector2.ZERO
 	var i := cum.bsearch(dist)

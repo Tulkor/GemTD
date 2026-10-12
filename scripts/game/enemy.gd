@@ -41,6 +41,7 @@ var stack_time := 0.0
 
 ## Mehrspieler: Nummer für den Abgleich, und ob dieser Gegner nur das Feld eines Mitspielers zeigt.
 var net_id := 0
+var lane := 0   ## Bahn auf Maul-Maps (map_data.gd → lanes)
 var remote := false
 var remote_field = null   ## remote_field.gd, liefert Punkt auf dem Weg zu einer Strecke
 var net_traveled := 0.0   ## zuletzt gemeldete Strecke
@@ -153,10 +154,10 @@ func slowed_speed() -> float:
 	return maxf(speed * (1.0 - slow_factor), min_speed)
 
 
-## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt), Form, Größe]
+## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt), Form, Größe, Bahn]
 func net_state() -> Array:
 	var flags := (1 if slow_time > 0.0 else 0) | (2 if poison_time > 0.0 else 0) | (4 if stun_time > 0.0 else 0)
-	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags, shape_name, size]
+	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags, shape_name, size, lane]
 
 
 ## Neue Meldung vom Mitspieler übernehmen; die Position läuft in _remote_step weiter.
@@ -184,8 +185,8 @@ func _remote_step(delta: float) -> void:
 		traveled = predicted
 	else:
 		traveled = lerpf(traveled, predicted, 1.0 - exp(-6.0 * real_dt))
-	traveled = clampf(traveled, 0.0, remote_field.path_length(flying))
-	var p: Vector2 = remote_field.point_at(flying, traveled)
+	traveled = clampf(traveled, 0.0, remote_field.path_length(flying, lane))
+	var p: Vector2 = remote_field.point_at(flying, traveled, lane)
 	var step := p - pos
 	if step.length_squared() > 0.000001:
 		rotation.y = atan2(-step.x, -step.y)

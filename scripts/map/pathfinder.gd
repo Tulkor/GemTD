@@ -1,6 +1,6 @@
 class_name Pathfinder
 extends RefCounted
-## Wegfindung über das Raster: spawn -> alle Checkpoints -> goal.
+## Wegfindung über das Raster: spawn -> alle Checkpoints -> goal, auf Maul-Maps für jede Bahn.
 ## Diagonale Schritte sind erlaubt, aber nicht zwischen zwei Hindernissen hindurch.
 
 var map: MapData
@@ -31,10 +31,10 @@ func set_solid_cells(cells: Array[Vector2i], solid: bool) -> void:
 		set_solid(c, solid)
 
 
-## Kompletter Weg als Liste von Feldern. Leer, wenn irgendein Abschnitt blockiert ist.
-func compute_path() -> Array[Vector2i]:
+## Kompletter Weg einer Bahn als Liste von Feldern. Leer, wenn irgendein Abschnitt blockiert ist.
+func compute_path(lane := 0) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
-	var pts := map.waypoints()
+	var pts := map.waypoints(lane)
 	for i in pts.size() - 1:
 		var a := pts[i]
 		var b := pts[i + 1]
@@ -58,7 +58,7 @@ func would_block(c: Vector2i) -> bool:
 	return would_block_cells(cells)
 
 
-## Würden Hindernisse auf allen diesen Feldern (z. B. ein 2×2-Tower) den Weg versperren?
+## Würden Hindernisse auf allen diesen Feldern (z. B. ein 2×2-Tower) einen der Wege versperren?
 func would_block_cells(cells: Array[Vector2i]) -> bool:
 	var changed: Array[Vector2i] = []
 	for c in cells:
@@ -67,7 +67,11 @@ func would_block_cells(cells: Array[Vector2i]) -> bool:
 			changed.append(c)
 	if changed.is_empty():
 		return false
-	var blocked := compute_path().is_empty()
+	var blocked := false
+	for i in map.lane_count():
+		if compute_path(i).is_empty():
+			blocked = true
+			break
 	for c in changed:
 		astar.set_point_solid(c, false)
 	return blocked

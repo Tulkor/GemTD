@@ -13,8 +13,10 @@ const NO_CELL := Vector2i(-1, -1)
 var map: MapData
 var pathfinder: Pathfinder
 var waves: Array = []
-var ground_path := PackedVector2Array()
+var ground_path := PackedVector2Array()   ## Bahn 0 (siehe lane_paths)
 var air_path := PackedVector2Array()
+## Wege aller Bahnen (Maul-Maps haben mehrere): [{ground, air, length}]
+var lane_paths: Array = []
 
 var board: Board3D
 var camera_rig: CameraRig
@@ -314,23 +316,36 @@ func _apply_variance() -> void:
 		if placed >= count:
 			break
 		var c := Vector2i(vr.randi_range(0, map.width - 2), vr.randi_range(0, map.height - 2))
-		if can_place(c):
+		if can_place(c, true):
 			rocks[c] = true
 			_occupy(c, true, true)
 			placed += 1
 
 
 func _update_paths() -> void:
-	ground_path = PackedVector2Array()
-	var cells := pathfinder.compute_path()
-	path_length = cells.size()
-	for c in cells:
-		ground_path.append(Board3D.cell_center(c))
-	air_path = PackedVector2Array()
-	for c in map.waypoints():
-		air_path.append(Board3D.cell_center(c))
-	board.path_points = ground_path
+	lane_paths = []
+	path_length = 0
+	var dots := PackedVector2Array()
+	for i in map.lane_count():
+		var ground := PackedVector2Array()
+		var cells := pathfinder.compute_path(i)
+		for c in cells:
+			ground.append(Board3D.cell_center(c))
+		var air := PackedVector2Array()
+		for c in map.waypoints(i):
+			air.append(Board3D.cell_center(c))
+		lane_paths.append({"ground": ground, "air": air, "length": cells.size()})
+		path_length += cells.size()
+		dots.append_array(ground)
+	ground_path = lane_paths[0].ground
+	air_path = lane_paths[0].air
+	board.path_points = dots
 	board.refresh_path()
+
+
+## Bahnen, die gerade spawnen: ohne Spieler oder deren Spieler mitspielt.
+func active_lanes() -> Array:
+	return range(map.lane_count()).filter(func(i): return map.lane_player(i) < players.size())
 
 
 # --- Eingabe -----------------------------------------------------------------
@@ -471,7 +486,7 @@ func can_move_trap(t: Tower, a: Vector2i) -> bool:
 	if t == null or not is_instance_valid(t) or not t.is_trap() or t.moves_left <= 0 or a == t.cell:
 		return false
 	for c in Board3D.footprint(a, Board3D.TRAP_CELLS):
-		if not map.is_walkable(c):
+		if not map.is_walkable(c) or not map.can_build_for(c, acting):
 			return false
 	return not _trap_overlaps(t, a)
 
@@ -491,10 +506,11 @@ func move_trap(t: Tower, a: Vector2i) -> bool:
 
 
 ## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren? Fallen darunter stören nicht.
-func can_place(a: Vector2i) -> bool:
+## any_zone: Zonen der Maul-Maps nicht beachten (zufällige Steine beim Start)
+func can_place(a: Vector2i, any_zone := false) -> bool:
 	var cells := Board3D.footprint(a)
 	for c in cells:
-		if not map.is_buildable(c) or occupied.has(c):
+		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or map.can_build_for(c, acting)):
 			return false
 	return not pathfinder.would_block_cells(cells)
 
@@ -670,7 +686,7 @@ func replace_rocks(list: Array) -> int:
 
 ## Stein entfernen (in jeder Phase, kostet rock_remove_cost Gold).
 func can_remove_rock(c: Vector2i) -> bool:
-	return phase < Phase.GAME_OVER and rocks.has(c) and gold >= rock_remove_cost()
+	return phase < Phase.GAME_OVER and rocks.has(c) and gold >= rock_remove_cost() and map.can_build_for(c, acting)
 
 
 func remove_rock(c: Vector2i) -> bool:
@@ -1233,19 +1249,26 @@ func _process_wave(delta: float) -> void:
 			_enter_build()
 
 
-func _spawn_enemy(g: Dictionary) -> void:
+## Gegner der Gruppe g erscheinen an jeder aktiven Bahn (lane < 0) oder nur an Bahn lane.
+func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 	var def: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
 	if def.is_empty():
 		push_warning("Unbekannter Gegner: %s" % g.get("enemy", ""))
 		return
-	var e := Enemy.new()
-	e.net_id = _next_enemy_id
-	_next_enemy_id += 1
-	board.add_child(e)
-	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
-	e.apply_difficulty(Session.difficulty_factor())
-	setup_score(e, g)
-	enemies.append(e)
+	var lanes := active_lanes() if lane < 0 else [lane]
+	for i in lanes:
+		var e := Enemy.new()
+		e.net_id = _next_enemy_id
+		e.lane = i
+		_next_enemy_id += 1
+		board.add_child(e)
+		var lp: Dictionary = lane_paths[i]
+		e.setup(self, def, g, lp.air if def.get("flying", false) else lp.ground)
+		e.apply_difficulty(Session.difficulty_factor())
+		setup_score(e, g)
+		# Eine Welle ist gleich viele Punkte wert, egal an wie vielen Bahnen sie läuft
+		e.score_value /= lanes.size()
+		enemies.append(e)
 
 
 func find_targets(t: Tower, count: int) -> Array:
@@ -1377,7 +1400,7 @@ func queued_hp() -> float:
 	var total := 0.0
 	for g in spawn_queue:
 		total += _group_hp(g)
-	return total * Session.difficulty_factor()
+	return total * Session.difficulty_factor() * active_lanes().size()
 
 
 func _group_hp(g: Dictionary) -> float:

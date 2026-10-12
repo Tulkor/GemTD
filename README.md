@@ -91,6 +91,12 @@ Tower zuletzt getroffen hat. Leben bzw. Punkte, Wellen und Tempo sind gemeinsam,
 Wer das Spiel verlässt, hält die Runde nicht auf (von seinen gesetzten Gems bleibt der erste) und steigt über
 „Mitspielen“ wieder ein. Verlässt der Host, ist die Partie für alle vorbei; vorher kann er sie speichern.
 
+Maul-Maps (z. B. „Maul (2 Spieler)“): jeder Spieler hat eine Zone und baut nur dort; jede Bahn hat ihren eigenen
+Spawn und läuft durch mehrere Zonen ins gemeinsame Ziel. Jede Welle erscheint an jeder Bahn eines mitspielenden
+Spielers (ist eine Welle gleich viele Punkte wert). Solo auf einer Maul-Map läuft nur die eigene Bahn.
+Im Map-JSON: `spawn_player` (Bahn 0), `lanes` [{spawn, checkpoints, player}] und `zones` [{rect [x, y, w, h], player}].
+Der Map-Editor bearbeitet bisher nur Bahn 0; Zonen und weitere Bahnen bleiben beim Speichern erhalten.
+
 Technik: `scripts/autoload/net.gd` (Verbindung, Spielerliste, Sitzung), `scripts/net/net_sync.gd` schickt Zuschauern Map,
 Feld (bei Änderung) und Gegner/Schüsse etwa 15 Mal pro Sekunde. `scripts/net/remote_field.gd` zeigt das Feld;
 die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur sanft nachkorrigiert.

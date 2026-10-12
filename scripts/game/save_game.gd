@@ -32,7 +32,7 @@ static func capture(game) -> Dictionary:
 	for e in game.enemies:
 		if e.dead:
 			continue
-		var d := {"group": e.group, "traveled": e.traveled, "hp": e.hp, "max_hp": e.max_hp, "id": e.net_id}
+		var d := {"group": e.group, "traveled": e.traveled, "hp": e.hp, "max_hp": e.max_hp, "id": e.net_id, "lane": e.lane, "score": e.score_value}
 		for f in ENEMY_FIELDS:
 			d[f] = e.get(f)
 		es.append(d)
@@ -153,8 +153,10 @@ static func apply(game, s: Dictionary) -> void:
 				continue
 			var e := Enemy.new()
 			e.net_id = int(d.get("id", 0))
+			e.lane = clampi(int(d.get("lane", 0)), 0, game.lane_paths.size() - 1)
 			game.board.add_child(e)
-			e.setup(game, def, g, game.air_path if def.get("flying", false) else game.ground_path)
+			var lp: Dictionary = game.lane_paths[e.lane]
+			e.setup(game, def, g, lp.air if def.get("flying", false) else lp.ground)
 			e.apply_difficulty(Session.difficulty_factor())
 			e.max_hp = float(d.get("max_hp", e.max_hp))
 			e.hp = float(d.get("hp", e.hp))
@@ -162,6 +164,8 @@ static func apply(game, s: Dictionary) -> void:
 				if d.has(f):
 					e.set(f, d[f])
 			game.setup_score(e, g)
+			if d.has("score"):
+				e.score_value = float(d.score)
 			e.place_on_path(float(d.get("traveled", 0.0)))
 			game.enemies.append(e)
 	else:

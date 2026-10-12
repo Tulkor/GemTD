@@ -128,6 +128,7 @@ func field() -> Dictionary:
 		"rocks": rs,
 		"ground": game.ground_path,
 		"air": game.air_path,
+		"lanes": game.lane_paths.slice(1).map(func(l): return [l.ground, l.air]),
 		"path_length": game.path_length,
 	})
 	return f

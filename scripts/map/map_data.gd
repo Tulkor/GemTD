@@ -12,6 +12,11 @@ extends RefCounted
 ##   "_"  nur Weg: begehbar, aber nicht bebaubar
 ## Gegner laufen spawn -> checkpoints[0] -> ... -> goal.
 ## Um Spawn, Ziel und Checkpoints herum ist im Umkreis marker_radius nicht bebaubar.
+##
+## Maul-Maps (Koop): weitere Bahnen in "lanes" [{spawn, checkpoints, player}], alle enden im selben goal;
+## Bahn 0 ist spawn/checkpoints oben (Spieler in "spawn_player"). Eine Bahn mit player p spawnt nur, wenn
+## Spieler p mitspielt, -1 heißt immer. "zones" [{rect [x, y, w, h], player}]: gibt es Zonen, baut jeder
+## Spieler nur in seinen (player -1 = alle).
 
 const FLOOR := "."
 const BLOCKED := "#"
@@ -26,6 +31,9 @@ var rows := PackedStringArray()
 var spawn := Vector2i(1, 1)
 var goal := Vector2i(2, 2)
 var checkpoints: Array[Vector2i] = []
+var spawn_player := -1
+var lanes: Array = []   ## weitere Bahnen: {spawn: Vector2i, checkpoints: Array[Vector2i], player: int}
+var zones: Array = []   ## {rect: Rect2i, player: int}
 var marker_radius := 1
 var wave_set := "classic"
 var lives := 50
@@ -66,6 +74,15 @@ static func from_dict(d: Dictionary) -> MapData:
 	m.goal = _vec(d.get("goal", [m.width - 1, m.height - 1]))
 	for c in d.get("checkpoints", []):
 		m.checkpoints.append(_vec(c))
+	m.spawn_player = int(d.get("spawn_player", -1))
+	for l in d.get("lanes", []):
+		var cps: Array[Vector2i] = []
+		for c in l.get("checkpoints", []):
+			cps.append(_vec(c))
+		m.lanes.append({"spawn": _vec(l.get("spawn", [0, 0])), "checkpoints": cps, "player": int(l.get("player", -1))})
+	for z in d.get("zones", []):
+		var r: Array = z.get("rect", [0, 0, 0, 0])
+		m.zones.append({"rect": Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3])), "player": int(z.get("player", -1))})
 	m.marker_radius = int(d.get("marker_radius", 1))
 	m.wave_set = str(d.get("waves", "classic"))
 	m.lives = int(d.get("lives", 50))
@@ -99,7 +116,7 @@ func to_dict() -> Dictionary:
 	var cps := []
 	for c in checkpoints:
 		cps.append([c.x, c.y])
-	return {
+	var d := {
 		"format": FORMAT,
 		"id": id,
 		"name": name,
@@ -115,6 +132,14 @@ func to_dict() -> Dictionary:
 		"start_gold": start_gold,
 		"variance": variance,
 	}
+	if spawn_player >= 0:
+		d.spawn_player = spawn_player
+	if not lanes.is_empty():
+		d.lanes = lanes.map(func(l): return {"spawn": [l.spawn.x, l.spawn.y], "player": l.player,
+			"checkpoints": l.checkpoints.map(func(c): return [c.x, c.y])})
+	if not zones.is_empty():
+		d.zones = zones.map(func(z): return {"rect": [z.rect.position.x, z.rect.position.y, z.rect.size.x, z.rect.size.y], "player": z.player})
+	return d
 
 
 func save_file(path: String) -> bool:
@@ -146,15 +171,44 @@ func set_tile(c: Vector2i, t: String) -> void:
 	rows[c.y] = r.substr(0, c.x) + t + r.substr(c.x + 1)
 
 
-func waypoints() -> Array[Vector2i]:
-	var pts: Array[Vector2i] = [spawn]
-	pts.append_array(checkpoints)
+func lane_count() -> int:
+	return 1 + lanes.size()
+
+
+## Spieler, für den Bahn i spawnt (-1 = immer).
+func lane_player(i: int) -> int:
+	return spawn_player if i == 0 else int(lanes[i - 1].player)
+
+
+func waypoints(lane := 0) -> Array[Vector2i]:
+	var pts: Array[Vector2i] = [spawn if lane == 0 else lanes[lane - 1].spawn]
+	pts.append_array(checkpoints if lane == 0 else lanes[lane - 1].checkpoints)
 	pts.append(goal)
 	return pts
 
 
+## Wegpunkte aller Bahnen (Ziel einmal).
+func all_waypoints() -> Array[Vector2i]:
+	var pts: Array[Vector2i] = waypoints()
+	for i in range(1, lane_count()):
+		for p in waypoints(i):
+			if not pts.has(p):
+				pts.append(p)
+	return pts
+
+
+## Darf Spieler p auf Feld c bauen? Ohne Zonen überall, sonst nur in seinen Zonen (und denen für alle).
+func can_build_for(c: Vector2i, p: int) -> bool:
+	if zones.is_empty():
+		return true
+	for z in zones:
+		if (z.player == p or z.player < 0) and z.rect.has_point(c):
+			return true
+	return false
+
+
 func is_marker_zone(c: Vector2i) -> bool:
-	for p in waypoints():
+	for p in all_waypoints():
 		if maxi(absi(p.x - c.x), absi(p.y - c.y)) <= marker_radius:
 			return true
 	return false
@@ -181,3 +235,7 @@ func resize(w: int, h: int) -> void:
 	goal = clamp_c.call(goal)
 	for i in checkpoints.size():
 		checkpoints[i] = clamp_c.call(checkpoints[i])
+	for l in lanes:
+		l.spawn = clamp_c.call(l.spawn)
+		for i in l.checkpoints.size():
+			l.checkpoints[i] = clamp_c.call(l.checkpoints[i])

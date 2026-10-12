@@ -265,7 +265,8 @@ func apply_state(s: Dictionary) -> void:
 	g._update_paths()
 	g._update_auras()
 	g.board.refresh_rocks()
-	paths.set_paths(g.ground_path, g.air_path)
+	for i in g.lane_paths.size():
+		paths.set_paths(g.lane_paths[i].ground, g.lane_paths[i].air, i)
 	g.board.hover_cell = g.NO_CELL
 	# Auswahl aufräumen: entfernte Steine abwählen, eigene neue Runde fertig gesetzt → letzten Gem wählen
 	if g.moving != null and not is_instance_valid(g.moving):
@@ -311,13 +312,14 @@ func apply_enemies(packet: Dictionary) -> void:
 			e.remote = true
 			e.remote_field = paths
 			e.net_id = id
+			e.lane = int(s[9]) if s.size() > 9 else 0
 			g.board.add_child(e)
 			var grp := _group_for(str(s[1]))
 			if s.size() > 8:
 				grp = grp.duplicate()
 				grp.shape = str(s[7])
 				grp.size = float(s[8])
-			e.setup(g, def, grp, paths.path_for(bool(def.get("flying", false))))
+			e.setup(g, def, grp, paths.path_for(bool(def.get("flying", false)), e.lane))
 			g.setup_score(e, grp)
 			e.traveled = float(s[2])
 			enemies[id] = e

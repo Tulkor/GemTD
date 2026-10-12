@@ -47,6 +47,8 @@ const DIRT_FADE := 2.2
 const DIRT_ZONE_EXTRA := 1.5
 ## Kantenlänge eines Rasterfelds in Einheiten.
 const CELL := 0.5
+## Farben der Spieler (Zonen auf Maul-Maps), Spieler 1 zuerst.
+const PLAYER_COLORS := [Color("22c4ee"), Color("ff4fd8"), Color("5fe08a"), Color("ffd166"), Color("b38cff"), Color("ff8a4f")]
 ## Ein Tower ist so viele Felder breit und tief.
 const TOWER_CELLS := 2
 ## Fallen sind größer (Trefferfläche).
@@ -239,9 +241,11 @@ func _rebuild_ground() -> void:
 	var dist := PackedFloat32Array()
 	dist.resize(w * h)
 	dist.fill(1e6)
-	for c in Pathfinder.new(map).compute_path():
-		dist[c.y * w + c.x] = 0.0
-	for p in map.waypoints():
+	var pf := Pathfinder.new(map)
+	for lane in map.lane_count():
+		for c in pf.compute_path(lane):
+			dist[c.y * w + c.x] = 0.0
+	for p in map.all_waypoints():
 		var r := map.marker_radius
 		for y in range(maxi(p.y - r, 0), mini(p.y + r + 1, h)):
 			for x in range(maxi(p.x - r, 0), mini(p.x + r + 1, w)):
@@ -362,10 +366,42 @@ func refresh_hover() -> void:
 func _rebuild_markers() -> void:
 	for c in _markers.get_children():
 		c.queue_free()
-	_add_marker(map.spawn, "S", COL_WAYPOINT)
-	for i in map.checkpoints.size():
-		_add_marker(map.checkpoints[i], str(i + 1), COL_WAYPOINT)
+	# Maul-Maps: Spawn und Checkpoints jeder Bahn, Spawns mit Nummer ("S2"), Checkpoints z. B. "2.1"
+	# (teilen sich Bahnen einen Punkt, steht dort ein Ring mit beiden Namen)
+	var labels := {}
+	var order: Array[Vector2i] = []
+	var many := map.lane_count() > 1
+	for lane in map.lane_count():
+		var pts := map.waypoints(lane)
+		for i in pts.size() - 1:
+			var text := ("S%d" % (lane + 1) if many else "S") if i == 0 else ("%d.%d" % [lane + 1, i] if many else str(i))
+			if not labels.has(pts[i]):
+				labels[pts[i]] = []
+				order.append(pts[i])
+			labels[pts[i]].append(text)
+	for c in order:
+		_add_marker(c, " / ".join(labels[c]), COL_WAYPOINT)
 	_add_marker(map.goal, "Z", COL_WAYPOINT)
+	for z in map.zones:
+		_add_zone(z.rect, PLAYER_COLORS[z.player % PLAYER_COLORS.size()] if z.player >= 0 else COL_WAYPOINT)
+
+
+## Rand einer Zone (Maul-Maps) als dünne Neonlinie in der Farbe ihres Spielers.
+func _add_zone(r: Rect2i, col: Color) -> void:
+	var a := Vector2(r.position) * CELL
+	var b := Vector2(r.end) * CELL
+	var mat := neon_material(col, 2.4)
+	for side in [[a, Vector2(b.x, a.y)], [Vector2(b.x, a.y), b], [b, Vector2(a.x, b.y)], [Vector2(a.x, b.y), a]]:
+		var from: Vector2 = side[0]
+		var to: Vector2 = side[1]
+		var line := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(maxf(absf(to.x - from.x), 0.12), 0.02, maxf(absf(to.y - from.y), 0.12))
+		line.mesh = box
+		line.material_override = mat
+		line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		line.position = Vector3((from.x + to.x) / 2.0, 0.03, (from.y + to.y) / 2.0)
+		_markers.add_child(line)
 
 
 ## Wegpunkt als Neonröhren-Ring: nur die Kontur, mit überhelltem Kern, der im Glow leuchtet.
