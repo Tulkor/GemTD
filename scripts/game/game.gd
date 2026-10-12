@@ -74,6 +74,8 @@ var debug_tower := ""
 var rng := RandomNumberGenerator.new()
 ## Mehrspieler (nur wenn verbunden): Stand senden und Mitspielern zuschauen.
 var net_sync: NetSync = null
+## Spieler, für den dieser Rechner Befehle abschickt (Koop-Vorbereitung; solo immer 0)
+var local_player := 0
 var net_panel: NetPanel = null
 var _next_enemy_id := 1
 
@@ -308,7 +310,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_select(null)
 	elif event is InputEventKey and event.pressed:
 		if event.keycode == KEY_Z and (event.ctrl_pressed or event.meta_pressed) and not round_towers.is_empty():
-			take_back(round_towers[-1])
+			submit({"type": "take_back", "tower": tower_ref(round_towers[-1])})
 			return
 		match event.keycode:
 			KEY_ESCAPE:
@@ -326,7 +328,7 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 	if moving != null:
 		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
 		if can_move_trap(moving, target):
-			move_trap(moving, target)
+			submit({"type": "move_trap", "tower": tower_ref(moving), "to": target})
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if add and rocks.has(a):
@@ -342,7 +344,7 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 	elif rocks.has(a):
 		_select(null, a)
 	elif phase == Phase.BUILD and can_place(anchor):
-		place_gem(anchor)
+		submit({"type": "place", "cell": anchor})
 	elif trap != null:
 		_select(trap)
 	else:
@@ -786,10 +788,9 @@ func _on_option_chosen(index: int) -> void:
 	if not selected_rocks.is_empty():
 		var list := selected_rocks.duplicate()
 		if index == 0 and gems_left() > 0:
-			replace_rocks(list)
+			submit({"type": "replace_rocks", "cells": list})
 		else:
-			for c in list:
-				remove_rock(c)
+			submit({"type": "remove_rocks", "cells": list})
 		return
 	if moving != null:
 		# einzige Option im Verschiebe-Modus: abbrechen
@@ -801,20 +802,91 @@ func _on_option_chosen(index: int) -> void:
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
-	if o.action == "take_back":
-		take_back(selected)
-		return
 	if o.action == "move":
+		# Platz wählen ist nur Ansicht, der Befehl kommt beim Klick (move_trap)
 		moving = selected
 		board.hover_cell = NO_CELL
 		_refresh_hud()
 		return
-	if gold < int(o.cost):
+	if o.action == "take_back":
+		submit({"type": "take_back", "tower": tower_ref(selected)})
 		return
+	submit({"type": "option", "tower": tower_ref(selected), "index": index, "action": o.action, "id": o.id, "tier": o.tier})
+
+
+# --- Befehle -------------------------------------------------------------------
+# Jede Spieleraktion, die den Spielstand ändert, läuft als Befehl durch submit(). Solo wird er
+# sofort ausgeführt; im Koop schickt ein Mitspieler ihn an den Host, der ihn mit execute() prüft
+# und ausführt. Tower werden über ihren Platz benannt (tower_ref), nie als Objekt, damit ein
+# Befehl auch über das Netz verständlich ist. Ein Befehl, der nicht (mehr) passt, wird verworfen.
+#   place          {cell}                 Gem setzen
+#   remove_rocks   {cells}                Steine entfernen
+#   replace_rocks  {cells}                Steine durch Gems ersetzen
+#   take_back      {tower}                gesetzten Gem der Runde zurücknehmen
+#   option         {tower, index, action, id, tier}  Behalten, Kombinieren, Aufwerten …
+#   move_trap      {tower, to}            Falle verschieben
+
+## Befehl des lokalen Spielers abschicken.
+func submit(cmd: Dictionary) -> bool:
+	if not cmd.has("player"):
+		cmd.player = local_player
+	return execute(cmd)
+
+
+## Befehl ausführen (nur die Simulation, d. h. solo oder auf dem Host). false = verworfen.
+func execute(cmd: Dictionary) -> bool:
+	match str(cmd.get("type", "")):
+		"place":
+			var c: Vector2i = cmd.get("cell", NO_CELL)
+			if phase != Phase.BUILD or gems_left() <= 0 or not can_place(c):
+				return false
+			return place_gem(c) != null
+		"remove_rocks":
+			var done := false
+			for c in cmd.get("cells", []):
+				done = remove_rock(c) or done
+			return done
+		"replace_rocks":
+			return replace_rocks(cmd.get("cells", [])) > 0
+		"take_back":
+			return take_back(tower_from_ref(cmd.get("tower", {})))
+		"move_trap":
+			return move_trap(tower_from_ref(cmd.get("tower", {})), cmd.get("to", NO_CELL))
+		"option":
+			var t := tower_from_ref(cmd.get("tower", {}))
+			var opts := tower_options(t)
+			var i := int(cmd.get("index", -1))
+			if i < 0 or i >= opts.size():
+				return false
+			var o: Dictionary = opts[i]
+			# Optionen können sich inzwischen verschoben haben: nur ausführen, wenn es dieselbe ist
+			if o.action != cmd.get("action") or o.id != cmd.get("id") or o.tier != int(cmd.get("tier", -1)):
+				return false
+			return _apply_option(t, o)
+	return false
+
+
+## Tower oder Falle als Platz (+ ob Falle), damit Befehle ohne Objektverweise auskommen.
+static func tower_ref(t: Tower) -> Dictionary:
+	if t == null or not is_instance_valid(t):
+		return {}
+	return {"cell": t.cell, "trap": t.is_trap()}
+
+
+func tower_from_ref(ref: Dictionary) -> Tower:
+	if ref.is_empty():
+		return null
+	var c: Vector2i = ref.get("cell", NO_CELL)
+	return traps.get(c) if ref.get("trap", false) else towers.get(c)
+
+
+## Option o (aus tower_options(t)) ausführen: Behalten, Kombinieren, Aufwerten.
+func _apply_option(t: Tower, o: Dictionary) -> bool:
+	if t == null or o.action in ["move", "take_back"] or gold < int(o.cost):
+		return false
 	gold -= int(o.cost)
 	for c in o.consume:
 		_consume(c)
-	var t := selected
 	if o.action == "keep":
 		for r in round_towers:
 			if r != t and is_instance_valid(r):
@@ -828,7 +900,8 @@ func _on_option_chosen(index: int) -> void:
 	_register(t)
 	if t.is_trap() and (o.id != old_id or o.action == "keep"):
 		t.moves_left = trap_moves()
-	t.set_selected(true)
+	if t == selected:
+		t.set_selected(true)
 	_update_paths()
 	board.refresh_rocks()
 	_update_auras()
@@ -836,6 +909,7 @@ func _on_option_chosen(index: int) -> void:
 		_start_wave()
 	else:
 		_refresh_hud()
+	return true
 
 
 ## Verbrauchte Zutat: Tower werden zu Steinen, Fallen verschwinden.

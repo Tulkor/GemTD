@@ -581,6 +581,7 @@ func _ready() -> void:
 	await _rock_select_test()
 	await _take_back_test()
 	await _final_boss_test()
+	await _command_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -908,3 +909,32 @@ func _final_boss_test() -> void:
 		g.queue_free()
 		await get_tree().process_frame
 	Session.score_mode = false
+
+
+## Koop-Vorbereitung: Spieleraktionen als Befehle (reine Daten), auch nach einer Netz-Übertragung (var_to_bytes).
+func _command_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	var cells := [Vector2i(14, 40), Vector2i(18, 40), Vector2i(22, 40), Vector2i(26, 40), Vector2i(30, 40)]
+	check(g.submit({"type": "place", "cell": cells[0]}) and g.towers.has(cells[0]), "Befehl place setzt einen Gem")
+	check(not g.submit({"type": "place", "cell": cells[0]}), "Befehl auf belegtes Feld wird verworfen")
+	for c in cells.slice(1):
+		var wire = bytes_to_var(var_to_bytes({"type": "place", "cell": c, "player": 0}))
+		g.execute(wire)
+	check(g.phase == g.Phase.CHOOSE and g.round_towers.size() == 5, "Befehle nach Netz-Übertragung: 5 Gems, Auswahlphase")
+	var t: Tower = g.round_towers[0]
+	var ref: Dictionary = bytes_to_var(var_to_bytes(g.tower_ref(t)))
+	check(g.tower_from_ref(ref) == t, "Tower über seinen Platz wiedergefunden")
+	var opts: Array = g.tower_options(t)
+	check(not g.execute({"type": "option", "tower": ref, "index": 0, "action": "keep", "id": "gibt_es_nicht", "tier": 0, "player": 0}) and g.phase == g.Phase.CHOOSE,
+		"veralteter Befehl (andere Option) wird verworfen")
+	check(g.execute({"type": "take_back", "tower": g.tower_ref(g.round_towers[4]), "player": 0}) and g.phase == g.Phase.BUILD, "Befehl take_back")
+	g.execute({"type": "place", "cell": cells[4], "player": 0})
+	opts = g.tower_options(t)
+	check(g.execute({"type": "option", "tower": ref, "index": 0, "action": opts[0].action, "id": opts[0].id, "tier": opts[0].tier, "player": 0}) and g.phase == g.Phase.WAVE,
+		"Befehl option (Behalten) startet die Welle")
+	g.queue_free()
+	await get_tree().process_frame
