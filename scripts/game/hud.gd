@@ -53,6 +53,8 @@ var debug_option: OptionButton
 var debug_button: Button
 var debug_panel: PanelContainer
 var dps_meter: DpsMeter
+var enemy_panel: EnemyPanel
+var tower_list: TowerList
 var debug_gems: SpinBox
 var debug_wave: SpinBox
 var immortal_button: Button
@@ -131,6 +133,16 @@ func _ready() -> void:
 	dps_meter = DpsMeter.new()
 	dps_meter.game = get_parent()
 	root.add_child(dps_meter)
+	# Rechte Spalte unter dem DPS-Meter: Gegner der Welle, dann die Tower-Liste
+	enemy_panel = EnemyPanel.new()
+	enemy_panel.game = get_parent()
+	enemy_panel.above = dps_meter
+	root.add_child(enemy_panel)
+	tower_list = TowerList.new()
+	tower_list.game = get_parent()
+	tower_list.above = enemy_panel
+	tower_list.limit = bottom
+	root.add_child(tower_list)
 	_build_debug()
 	dps_meter.avoid = debug_panel
 
