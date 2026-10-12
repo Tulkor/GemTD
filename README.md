@@ -94,6 +94,12 @@ Welle 1: 100, Welle 40: 490, Welle 50: 590), verteilt nach Lebenspunkten auf ihr
 ein Durchbruch kostet die Hälfte davon (`leak_factor`). Ein Gegner aus Welle 40 kostet beim Durchbruch also 24,5 Punkte,
 eine ganz durchgelassene Welle 1 dagegen 50. Gespielt wird bis zur letzten Welle. Einfach ×0,8, Normal ×1, Schwer ×1,25.
 
+Ist die letzte Welle eine Bosswelle, ist ihr Boss ein **Schadenscheck**: er kostet keine Leben und keine Punkte, wenn er
+durchläuft. Am Ende steht, wie viel Schaden er abbekommen hat (absolut und in % seiner Leben). Im Punkte-Modus bringt
+jeder Schaden anteilig Punkte, besiegt ist er `final_boss_factor` (3) × den Wert seiner Welle wert (Welle 50: 1770).
+Der Endbildschirm schlüsselt im Punkte-Modus auf, woher die Punkte kommen: Kills und Punkte je Wellentyp
+(Boden, Gemischt, Masse, Flieger, Boss), der Endboss und was Durchbrüche gekostet haben.
+
 ## Speichern
 
 Wer eine Partie mittendrin verlässt (Menü-Knopf oder Fenster schließen), wird gefragt, ob gespeichert werden soll.

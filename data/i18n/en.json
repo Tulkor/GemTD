@@ -481,5 +481,13 @@
 	"%d Steine": "%d rocks",
 	"Ziehen oder Strg+Klick wählt bis zu %d Steine auf einmal aus.": "Drag or Ctrl+click to select up to %d rocks at once.",
 	"Zurücknehmen": "Take back",
-	"Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.": "%d gems are left this round, the first %d rocks get replaced."
+	"Diese Runde sind noch %d Gems übrig, ersetzt werden die ersten %d Steine.": "%d gems are left this round, the first %d rocks get replaced.",
+	"Endboss": "Final boss",
+	"Schadenscheck: kostet keine Leben, zählt nur dein Schaden": "Damage check: costs no lives, only your damage counts",
+	"Schadenscheck: jeder Schaden bringt Punkte, Durchlaufen kostet nichts": "Damage check: every hit scores points, letting it through costs nothing",
+	"Endboss besiegt!": "Final boss defeated!",
+	"Schaden am Endboss: %s (%.1f %% seiner Leben)": "Damage to the final boss: %s (%.1f %% of its health)",
+	"Wellentyp": "Wave type",
+	"Kills": "Kills",
+	"Durchgelassen": "Let through"
 }

@@ -12,7 +12,8 @@
 	"score": {
 		"wave_base": 100,
 		"wave_step": 10,
-		"leak_factor": 0.5
+		"leak_factor": 0.5,
+		"final_boss_factor": 3.0
 	},
 	"gold_income_ramp": {
 		"from_wave": 28,

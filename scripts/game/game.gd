@@ -53,6 +53,10 @@ var lives := 50
 ## Punkte-Modus (Session.score_mode): statt Leben zählen Punkte, das Spiel endet erst nach der letzten Welle.
 var score_mode := false
 var score := 0.0
+## Wertung nach Wellentyp (wave_type): {kills, points, leaks, lost}, für den Endbildschirm
+var score_stats := {}
+## Endboss (letzte Welle, falls Boss): Schaden, seine Leben gesamt, besiegt, Punkte dafür
+var final_boss := {"damage": 0.0, "hp": 0.0, "kills": 0, "points": 0.0}
 var gold := 0
 var chance_level := 0
 var _gold_frac := 0.0
@@ -961,7 +965,7 @@ func _spawn_enemy(g: Dictionary) -> void:
 	board.add_child(e)
 	e.setup(self, def, g, air_path if def.get("flying", false) else ground_path)
 	e.apply_difficulty(Session.difficulty_factor())
-	e.score_value = score_for(g)
+	setup_score(e, g)
 	enemies.append(e)
 
 
@@ -984,15 +988,30 @@ func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
 	earn_gold(e.bounty)
-	if score_mode:
-		score += e.score_value
+	if e.final_boss:
+		_final_boss_done(e, true)
+	else:
+		var st := _stats_for_wave()
+		st.kills += 1
+		if score_mode:
+			score += e.score_value
+			st.points += e.score_value
 	_remove_enemy(e)
 	_refresh_hud()
 
 
 func on_enemy_leaked(e: Enemy) -> void:
+	if e.final_boss:
+		# Schadenscheck: der Endboss kostet weder Leben noch Punkte, zählt nur der Schaden
+		_final_boss_done(e, false)
+		_remove_enemy(e)
+		_refresh_hud()
+		return
+	var st := _stats_for_wave()
+	st.leaks += 1
 	if score_mode:
 		score -= leak_penalty(e.score_value)
+		st.lost += leak_penalty(e.score_value)
 		_remove_enemy(e)
 		_refresh_hud()
 		return
@@ -1029,6 +1048,43 @@ func score_for(g: Dictionary) -> float:
 	return wave_points(wave_index + 1) * _group_hp(g) / total
 
 
+## Punktewert und Endboss-Markierung für einen neuen (oder geladenen) Gegner der Gruppe g.
+func setup_score(e: Enemy, g: Dictionary) -> void:
+	e.final_boss = is_final_boss_wave()
+	e.score_value = score_for(g) * (float(Database.balance.get("score", {}).get("final_boss_factor", 3.0)) if e.final_boss else 1.0)
+
+
+## Letzte Welle ist eine Boss-Welle: ihr Boss ist der Endboss (Schadenscheck).
+func is_final_boss_wave() -> bool:
+	return not waves.is_empty() and wave_index == waves.size() - 1 and wave_type(waves[wave_index]) == "Boss"
+
+
+## Endboss verschwindet (besiegt oder durchgelaufen): Schaden zählen, im Punkte-Modus Punkte nach Schaden.
+func _final_boss_done(e: Enemy, killed: bool) -> void:
+	var dmg := e.max_hp if killed else clampf(e.max_hp - e.hp, 0.0, e.max_hp)
+	final_boss.damage += dmg
+	final_boss.hp += e.max_hp
+	if killed:
+		final_boss.kills += 1
+	if score_mode and e.max_hp > 0.0:
+		var pts := e.score_value * dmg / e.max_hp
+		score += pts
+		final_boss.points += pts
+
+
+func _stats_for_wave() -> Dictionary:
+	var type := wave_type(waves[wave_index]) if wave_index < waves.size() else "?"
+	if not score_stats.has(type):
+		score_stats[type] = {"kills": 0, "points": 0.0, "leaks": 0, "lost": 0.0}
+	return score_stats[type]
+
+
+## Zusammenfassung für den Endbildschirm.
+func run_summary() -> Dictionary:
+	return {"score_mode": score_mode, "types": score_stats.duplicate(true),
+		"final_boss": final_boss.duplicate() if final_boss.hp > 0.0 else {}}
+
+
 func leak_penalty(value: float) -> float:
 	return value * float(Database.balance.get("score", {}).get("leak_factor", 0.5))
 
@@ -1046,7 +1102,7 @@ func _finish(p: Phase) -> void:
 	phase = p
 	Engine.time_scale = 1.0
 	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
-		roundi(score) if score_mode else null)
+		roundi(score) if score_mode else null, run_summary())
 	_refresh_hud()
 
 
@@ -1092,7 +1148,11 @@ func _refresh_hud() -> void:
 		Phase.CHOOSE:
 			hud.set_phase(tr("Wahlphase"), tr("Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen."), shot_text)
 		Phase.WAVE:
-			hud.set_phase(tr("Welle %d") % (wave_index + 1), tr("noch %d Gegner") % (enemies.size() + spawn_queue.size()))
+			if is_final_boss_wave():
+				hud.set_phase(tr("Endboss"), tr("Schadenscheck: kostet keine Leben, zählt nur dein Schaden") if not score_mode
+					else tr("Schadenscheck: jeder Schaden bringt Punkte, Durchlaufen kostet nichts"))
+			else:
+				hud.set_phase(tr("Welle %d") % (wave_index + 1), tr("noch %d Gegner") % (enemies.size() + spawn_queue.size()))
 		Phase.GAME_OVER:
 			hud.set_phase(tr("Verloren"), "")
 		Phase.VICTORY:

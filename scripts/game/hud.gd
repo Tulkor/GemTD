@@ -43,6 +43,8 @@ var _leave_plain: Button
 var _leave_stay: Button
 var game_over_title: Label
 var game_over_stats: Label
+var game_over_boss: Label        ## Endboss-Schadenscheck
+var game_over_table: GridContainer  ## Punkte-Modus: Punkte nach Wellentyp
 var editor_button: Button
 var chance_value: Label
 var left_col: VBoxContainer
@@ -1088,7 +1090,7 @@ func set_path_length(cells: int, delta: int) -> void:
 
 
 ## score: Punkte im Punkte-Modus, sonst null.
-func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int, path_cells: int, score = null) -> void:
+func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int, path_cells: int, score = null, summary := {}) -> void:
 	recipe_book.hide()
 	help_panel.hide()
 	game_over_title.text = "Gewonnen!" if victory else "Verloren"
@@ -1098,9 +1100,59 @@ func show_game_over(victory: bool, wave: int, waves: int, lives: int, kills: int
 		game_over_title.text = "Geschafft!"
 		game_over_stats.text = tr("Punkte: %d") % int(score) + "\n" + tr("Schwierigkeit: ") + tr(Session.difficulty_name()) + "\n" \
 			+ tr("Gegner besiegt: %d") % kills + "\n" + tr("Weglänge am Ende: %d Felder") % path_cells
+	_fill_summary(summary)
 	editor_button.visible = Session.return_scene != Session.MAIN_MENU
 	editor_button.text = "Zurück zum Map-Editor" if Session.return_scene == Session.MAP_EDITOR else "Zurück zum Tower-Editor"
 	game_over.show()
+
+
+## Endboss-Schaden und (Punkte-Modus) woher die Punkte kommen: Kills und Punkte je Wellentyp.
+func _fill_summary(summary: Dictionary) -> void:
+	for c in game_over_table.get_children():
+		game_over_table.remove_child(c)
+		c.queue_free()
+	var fb: Dictionary = summary.get("final_boss", {})
+	game_over_boss.visible = not fb.is_empty()
+	if not fb.is_empty():
+		var pct := 100.0 * float(fb.damage) / maxf(float(fb.hp), 1.0)
+		game_over_boss.text = (tr("Endboss besiegt!") if int(fb.kills) > 0 and pct >= 99.95 else tr("Schaden am Endboss: %s (%.1f %% seiner Leben)") % [_big(float(fb.damage)), pct])
+	var types: Dictionary = summary.get("types", {})
+	game_over_table.visible = bool(summary.get("score_mode", false))
+	if not game_over_table.visible:
+		return
+	for h in ["Wellentyp", "Kills", "Punkte"]:
+		UiTheme.caption(h, game_over_table)
+	var lost := 0.0
+	var leaks := 0
+	for type in ["Boden", "Gemischt", "Masse", "Flieger", "Boss"] + types.keys().filter(func(k): return k not in ["Boden", "Gemischt", "Masse", "Flieger", "Boss"]):
+		if not types.has(type):
+			continue
+		var st: Dictionary = types[type]
+		lost += float(st.get("lost", 0.0))
+		leaks += int(st.get("leaks", 0))
+		_summary_row(tr(str(type)), str(int(st.get("kills", 0))), "%d" % roundi(float(st.get("points", 0.0))))
+	if not fb.is_empty():
+		_summary_row(tr("Endboss"), "%.0f %%" % (100.0 * float(fb.damage) / maxf(float(fb.hp), 1.0)), "%d" % roundi(float(fb.points)))
+	if leaks > 0:
+		_summary_row(tr("Durchgelassen"), str(leaks), "−%d" % roundi(lost), UiTheme.MISSING)
+
+
+func _summary_row(a: String, b: String, c: String, col := Color(0, 0, 0, 0)) -> void:
+	for i in 3:
+		var l := UiUtil.label([a, b, c][i], game_over_table, 15)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if i == 0 else HORIZONTAL_ALIGNMENT_RIGHT
+		if col.a > 0.0:
+			l.add_theme_color_override("font_color", col)
+
+
+## Große Zahlen mit Tausenderpunkten, z. B. 1.234.567
+static func _big(x: float) -> String:
+	var s := str(roundi(x))
+	var out := ""
+	while s.length() > 3:
+		out = "." + s.right(3) + out
+		s = s.left(s.length() - 3)
+	return s + out
 
 
 func _build_game_over() -> void:
@@ -1127,6 +1179,15 @@ func _build_game_over() -> void:
 	game_over_stats = UiUtil.label("", v, 15)
 	game_over_stats.add_theme_color_override("font_color", UiTheme.DIM)
 	game_over_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_over_boss = UiUtil.label("", v, 15)
+	game_over_boss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_over_boss.add_theme_color_override("font_color", UiTheme.GOLD)
+	game_over_table = GridContainer.new()
+	game_over_table.columns = 3
+	game_over_table.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	game_over_table.add_theme_constant_override("h_separation", 22)
+	game_over_table.add_theme_constant_override("v_separation", 4)
+	v.add_child(game_over_table)
 	v.add_child(_spacer(0))
 	var again := _button("Nochmal spielen", v, func(): restart_requested.emit())
 	again.tooltip_text = "Dieselbe Map mit denselben Einstellungen neu starten"

@@ -43,6 +43,8 @@ static func capture(game) -> Dictionary:
 		"lives": game.lives,
 		"score_mode": game.score_mode,
 		"score": game.score,
+		"score_stats": game.score_stats.duplicate(true),
+		"final_boss": game.final_boss.duplicate(),
 		"gold": game.gold,
 		"gold_frac": game._gold_frac,
 		"rocks": game.rocks.keys(),
@@ -68,6 +70,15 @@ static func apply(game, s: Dictionary) -> void:
 	game.score_mode = bool(s.get("score_mode", false))
 	Session.score_mode = game.score_mode
 	game.score = float(s.get("score", 0.0))
+	game.score_stats = {}
+	var stats: Dictionary = s.get("score_stats", {})
+	for type in stats:
+		var st: Dictionary = stats[type]
+		game.score_stats[str(type)] = {"kills": int(st.get("kills", 0)), "points": float(st.get("points", 0.0)),
+			"leaks": int(st.get("leaks", 0)), "lost": float(st.get("lost", 0.0))}
+	var fb: Dictionary = s.get("final_boss", {})
+	game.final_boss = {"damage": float(fb.get("damage", 0.0)), "hp": float(fb.get("hp", 0.0)),
+		"kills": int(fb.get("kills", 0)), "points": float(fb.get("points", 0.0))}
 	game.gold = int(s.get("gold", 0))
 	game._gold_frac = float(s.get("gold_frac", 0.0))
 	game.enemies_killed = int(s.get("killed", 0))
@@ -128,7 +139,7 @@ static func apply(game, s: Dictionary) -> void:
 			for f in ENEMY_FIELDS:
 				if d.has(f):
 					e.set(f, d[f])
-			e.score_value = game.score_for(g)
+			game.setup_score(e, g)
 			e.place_on_path(float(d.get("traveled", 0.0)))
 			game.enemies.append(e)
 	elif phase == game.Phase.CHOOSE and not game.round_towers.is_empty():

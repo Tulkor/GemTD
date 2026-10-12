@@ -504,6 +504,7 @@ func _ready() -> void:
 	await _score_test()
 	await _rock_select_test()
 	await _take_back_test()
+	await _final_boss_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -777,3 +778,53 @@ func _take_back_test() -> void:
 
 func _gem_key(t: Tower) -> String:
 	return "%s:%d" % [t.tower_id, t.tier]
+
+
+## Endboss der letzten Welle: Schadenscheck ohne Lebensverlust, im Punkte-Modus Punkte nach Schaden; Aufschlüsselung.
+func _final_boss_test() -> void:
+	for mode in [false, true]:
+		Session.map_path = Database.list_maps()[0].path
+		Session.map_override = null
+		Session.score_mode = mode
+		var g: Node = load(Session.GAME).instantiate()
+		add_child(g)
+		await get_tree().process_frame
+		# ein normaler Kill in Welle 1 zählt beim Wellentyp
+		g.phase = g.Phase.WAVE
+		g._spawn_enemy(g.waves[0].groups[0])
+		var first: Enemy = g.enemies[-1]
+		g.on_enemy_killed(first)
+		var t1: String = g.wave_type(g.waves[0])
+		check(int(g.score_stats.get(t1, {}).get("kills", 0)) == 1, "Kill zählt beim Wellentyp %s" % t1)
+		g.wave_index = g.waves.size() - 1
+		check(g.is_final_boss_wave(), "letzte Welle ist der Endboss")
+		g._spawn_enemy(g.waves[-1].groups[0])
+		var boss: Enemy = g.enemies[-1]
+		check(boss.final_boss, "Endboss markiert")
+		boss.hp = boss.max_hp * 0.4
+		g.lives = 1
+		var score_before: float = g.score
+		var st := SaveGame.capture(g)
+		g.on_enemy_leaked(boss)
+		check(g.lives == 1 and g.phase == g.Phase.WAVE, "%s: Endboss läuft durch, kostet keine Leben" % ("Punkte" if mode else "Leben"))
+		check(is_equal_approx(g.final_boss.damage, boss.max_hp * 0.6), "Schaden am Endboss gezählt (60 %)")
+		if mode:
+			var expect: float = g.wave_points(g.waves.size()) * float(Database.balance.score.get("final_boss_factor", 3.0)) * 0.6
+			check(is_equal_approx(g.score - score_before, expect), "Endboss bringt Punkte nach Schaden (%.0f)" % (g.score - score_before))
+		else:
+			check(g.score == score_before, "Leben-Modus: keine Punkte")
+		g._process_wave(0.0)
+		check(g.phase == g.Phase.VICTORY, "nach dem Endboss ist das Spiel gewonnen")
+		check(g.hud.game_over_boss.visible and "60.0" in g.hud.game_over_boss.text, "Endbildschirm zeigt den Schaden am Endboss: %s" % g.hud.game_over_boss.text)
+		check(g.hud.game_over_table.visible == mode, "Aufschlüsselung nur im Punkte-Modus (%d Felder)" % g.hud.game_over_table.get_child_count())
+		# Laden mitten im Endboss: Markierung und Wertung bleiben
+		var h: Node = load(Session.GAME).instantiate()
+		add_child(h)
+		await get_tree().process_frame
+		SaveGame.apply(h, st)
+		check(h.enemies.size() >= 1 and h.enemies.any(func(e): return e.final_boss) and int(h.score_stats.get(t1, {}).get("kills", 0)) == 1,
+			"Spielstand: Endboss und Wertung bleiben erhalten")
+		h.queue_free()
+		g.queue_free()
+		await get_tree().process_frame
+	Session.score_mode = false
