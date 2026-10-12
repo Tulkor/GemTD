@@ -267,6 +267,8 @@ func _ready() -> void:
 	check(game.hud.used_page_label.text == "2 / %d" % used_n, "Pfeil blättert weiter")
 	game.hud._turn_used_page(-2)
 	check(game.hud.used_page_label.text == "%d / %d" % [used_n, used_n], "Pfeil zurück springt ans Ende")
+	game.hud.set_selection({})
+	check(not game.hud.used_col.visible, "nach dem Abwählen kein \"Wird gebraucht für\" mehr")
 	# Reihenfolge: meiste vorhandene Zutaten zuerst, bei Gleichstand Tower vor Fallen
 	var sorted_ids: Array = Hud.sort_used_in(["air_slate", "silver"], [])
 	check(sorted_ids == ["silver", "air_slate"], "Gleichstand: Tower vor Falle: %s" % [sorted_ids])

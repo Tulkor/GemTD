@@ -724,6 +724,7 @@ func set_selection(info: Dictionary) -> void:
 	_selection = info
 	info_col.visible = not info.is_empty()
 	if info.is_empty():
+		_refresh_used_in()  # sonst bleibt "Wird gebraucht für" nach dem Abwählen stehen
 		_update_layout()
 		return
 	info_title.text = info.title
