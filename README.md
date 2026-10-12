@@ -100,6 +100,8 @@ Der Map-Editor bearbeitet bisher nur Bahn 0; Zonen und weitere Bahnen bleiben be
 Technik: `scripts/autoload/net.gd` (Verbindung, Spielerliste, Sitzung), `scripts/net/net_sync.gd` schickt Zuschauern Map,
 Feld (bei Änderung) und Gegner/Schüsse etwa 15 Mal pro Sekunde. `scripts/net/remote_field.gd` zeigt das Feld;
 die Gegner laufen dort mit dem gemeldeten Tempo selbst weiter und werden nur sanft nachkorrigiert.
+Jede Gegnermeldung nennt das Wegstück, auf dem der Gegner im Schnelllauf ist (`game.gd` → `free_stretch`), und ihre
+Sendezeit; so bremst er beim Mitspieler am selben Rand und verspätete Meldungen ziehen ihn nicht zurück.
 Koop: nur der Host rechnet. Jede Spieleraktion ist ein Befehl (`game.gd` → `submit`/`execute`, Tower über ihren Platz
 benannt); Mitspieler schicken ihn an den Host, der ihn mit ihrer Spielernummer prüft und ausführt.
 `scripts/net/coop_sync.gd` schickt den Stand (Tower, Steine, Spieler, Phase) bei jeder Änderung und Gegner etwa

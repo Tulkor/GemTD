@@ -156,7 +156,7 @@ func enemy_packet() -> Dictionary:
 	for e in game.enemies:
 		if not e.dead:
 			list.append(e.net_state())
-	var p := {"e": list, "b": _beams, "q": game.spawn_queue.size(), "wl": game.wave_live}
+	var p := {"e": list, "b": _beams, "q": game.spawn_queue.size(), "wl": game.wave_live, "now": Time.get_ticks_msec()}
 	_beams = []
 	return p
 
@@ -299,6 +299,7 @@ func apply_enemies(packet: Dictionary) -> void:
 	var g = game
 	if g.phase != g.Phase.WAVE:
 		return
+	var age: float = paths.packet_age(packet)
 	var seen := {}
 	for s in packet.get("e", []):
 		var id := int(s[0])
@@ -324,7 +325,7 @@ func apply_enemies(packet: Dictionary) -> void:
 			e.traveled = float(s[2])
 			enemies[id] = e
 			g.enemies.append(e)
-		e.apply_net_state(s)
+		e.apply_net_state(s, age)
 	for id in enemies.keys():
 		if not seen.has(id):
 			g.enemies.erase(enemies[id])

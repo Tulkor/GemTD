@@ -6,6 +6,7 @@ extends Node3D
 
 var peer := 0
 var time_scale := 1.0   ## Spieltempo des Mitspielers
+var _clock_offset := INF  ## kleinster Abstand Ortszeit − Sendezeit einer Meldung (ms): die schnellste Meldung
 var map: MapData
 var map_id := 0
 var field: Dictionary = {}
@@ -79,8 +80,21 @@ func apply_field(f: Dictionary) -> void:
 		towers[k] = t
 
 
+## Wie alt eine Meldung schon ist, in Spielzeit des Mitspielers. Gemessen an der schnellsten Meldung
+## bisher, denn die Uhren beider Rechner kennen einander nicht. Ohne das liefen Gegner nach einer
+## verspäteten Meldung zurück; im 8×-Schnelllauf wären das schnell ein, zwei Towerbreiten.
+func packet_age(packet: Dictionary) -> float:
+	if not packet.has("now"):
+		return 0.0
+	var diff := float(Time.get_ticks_msec() - int(packet.now))
+	# langsam nachgeben, falls eine Uhr etwas schneller geht
+	_clock_offset = minf(_clock_offset + 0.05, diff)
+	return clampf((diff - _clock_offset) / 1000.0, 0.0, 0.5) * time_scale
+
+
 func apply_enemies(packet: Dictionary) -> void:
 	time_scale = float(packet.get("ts", 1.0))
+	var age := packet_age(packet)
 	if map == null:
 		return
 	var seen := {}
@@ -102,7 +116,7 @@ func apply_enemies(packet: Dictionary) -> void:
 			e.setup(null, def, o, path_for(bool(def.get("flying", false)), e.lane))
 			e.traveled = float(s[2])
 			enemies[id] = e
-		e.apply_net_state(s)
+		e.apply_net_state(s, age)
 	for id in enemies.keys():
 		if not seen.has(id):
 			enemies[id].queue_free()

@@ -49,6 +49,9 @@ var remote_field = null   ## remote_field.gd, liefert Punkt auf dem Weg zu einer
 var net_traveled := 0.0   ## zuletzt gemeldete Strecke
 var net_speed := 0.0      ## zuletzt gemeldetes Tempo (Towerbreiten pro Sekunde des Mitspielers)
 var net_age := 0.0        ## Spielzeit des Mitspielers seit der letzten Meldung
+var net_free_from := -1.0 ## Stück, auf dem der Gegner schnell läuft (game.free_stretch), in Strecke
+var net_free_to := -1.0
+var net_boost := 1.0      ## Schnelllauf-Faktor auf diesem Stück
 
 var group: Dictionary = {}  ## Wellengruppe, aus der der Gegner stammt (für Spielstände)
 var shape_name := ""
@@ -188,9 +191,14 @@ func _advance(move: float) -> void:
 ## Tempo gerade jetzt: Verlangsamung drückt nicht unter die Mindestgeschwindigkeit (WC3: 220),
 ## betäubt steht der Gegner.
 func current_speed() -> float:
+	return base_speed() * boost
+
+
+## Tempo ohne Schnelllauf.
+func base_speed() -> float:
 	if stun_time > 0.0:
 		return 0.0
-	return (slowed_speed() if slow_time > 0.0 else speed) * boost
+	return slowed_speed() if slow_time > 0.0 else speed
 
 
 ## Tempo unter der aktuellen Verlangsamung (nie unter min_slowed_speed).
@@ -199,17 +207,24 @@ func slowed_speed() -> float:
 	return maxf(speed * (1.0 - slow_factor), min_speed)
 
 
-## Zustand für Zuschauer: [net_id, id, Strecke, Tempo, hp, max_hp, Flags (1 langsam, 2 Gift, 4 betäubt), Form, Größe, Bahn]
+## Zustand für Zuschauer: [net_id, id, Strecke, Tempo ohne Schnelllauf, hp, max_hp, Flags (1 langsam, 2 Gift,
+## 4 betäubt), Form, Größe, Bahn, schnelles Stück von, bis, Schnelllauf-Faktor]
 func net_state() -> Array:
 	var flags := (1 if slow_time > 0.0 else 0) | (2 if poison_time > 0.0 else 0) | (4 if stun_time > 0.0 else 0)
-	return [net_id, enemy_id, traveled, current_speed(), hp, max_hp, flags, shape_name, size, lane]
+	var free: Array = game.free_stretch(self) if game != null else [-1.0, -1.0]
+	var factor: float = game.idle_speed_factor() if game != null else 1.0
+	return [net_id, enemy_id, traveled, base_speed(), hp, max_hp, flags, shape_name, size, lane, free[0], free[1], factor]
 
 
 ## Neue Meldung vom Mitspieler übernehmen; die Position läuft in _remote_step weiter.
-func apply_net_state(s: Array) -> void:
+## age: wie alt die Meldung schon ist (Spielzeit, remote_field.gd → packet_age).
+func apply_net_state(s: Array, age := 0.0) -> void:
 	net_traveled = float(s[2])
 	net_speed = float(s[3])
-	net_age = 0.0
+	net_age = age
+	net_free_from = float(s[10]) if s.size() > 12 else -1.0
+	net_free_to = float(s[11]) if s.size() > 12 else -1.0
+	net_boost = float(s[12]) if s.size() > 12 else 1.0
 	hp = float(s[4])
 	max_hp = float(s[5])
 	var flags := int(s[6])
@@ -224,8 +239,8 @@ func _remote_step(delta: float) -> void:
 	var real_dt := delta / maxf(Engine.time_scale, 0.01)
 	var dt: float = real_dt * remote_field.time_scale
 	net_age += dt
-	var predicted := net_traveled + net_speed * net_age
-	traveled += net_speed * dt
+	var predicted := remote_advance(net_traveled, net_age)
+	traveled = remote_advance(traveled, dt)
 	if absf(predicted - traveled) > 1.5:
 		traveled = predicted
 	else:
@@ -238,6 +253,27 @@ func _remote_step(delta: float) -> void:
 	pos = p
 	_sync_position()
 	_update_visual()
+
+
+## Zuschauer: Strecke nach dt Sekunden ab from, mit Schnelllauf auf dem gemeldeten Stück.
+func remote_advance(from: float, dt: float) -> float:
+	if net_speed <= 0.0:
+		return from
+	var left := dt
+	if from < net_free_from:
+		var reach := from + net_speed * left
+		if reach <= net_free_from:
+			return reach
+		left -= (net_free_from - from) / net_speed
+		from = net_free_from
+	if from < net_free_to:
+		var fast := net_speed * net_boost
+		var reach := from + fast * left
+		if reach <= net_free_to:
+			return reach
+		left -= (net_free_to - from) / fast
+		from = net_free_to
+	return from + net_speed * left
 
 
 ## Spielstand: Gegner an die Stelle setzen, die dist Towerbreiten nach dem Start liegt.

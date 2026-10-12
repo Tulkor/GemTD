@@ -89,7 +89,7 @@ func _process(delta: float) -> void:
 				list.append(e.net_state())
 		# nach dem letzten Gegner einmal leer schicken, damit der Zuschauer aufräumt
 		if not list.is_empty() or not _beams.is_empty() or _sent_enemies:
-			var packet := {"ts": Engine.time_scale, "e": list, "b": _beams}
+			var packet := {"ts": Engine.time_scale, "now": Time.get_ticks_msec(), "e": list, "b": _beams}
 			for p in Net.watchers:
 				Net.send_enemies(p, packet)
 			_beams = []

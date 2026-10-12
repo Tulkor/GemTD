@@ -109,21 +109,24 @@ func _client() -> void:
 	var max_err := 0.0
 	var moved := 0.0
 	var frames := 0
-	var t_last := Time.get_ticks_usec()
 	var end := Time.get_ticks_msec() + 4000
+	var dt := 0.0
 	while Time.get_ticks_msec() < end:
 		await get_tree().process_frame
-		var now := Time.get_ticks_usec()
-		var dt := (now - t_last) / 1000000.0 * panel.remote.time_scale
-		t_last = now
+		# process_frame kommt vor den _process-Aufrufen: gemessen wird also der Schritt des
+		# vorigen Bilds, mit dessen Bildzeit wie im Gegner (enemy.gd → _remote_step). Mit der Uhrzeit
+		# oder der Zeit dieses Bilds wäre sie bei ungleich langen Bildern daneben, und beim
+		# 8×-Schnelllauf wird daraus ein scheinbarer Sprung.
+		var step_dt := dt
+		dt = get_process_delta_time() / maxf(Engine.time_scale, 0.01) * panel.remote.time_scale
 		frames += 1
 		for id in panel.remote.enemies:
 			var e: Enemy = panel.remote.enemies[id]
 			if last.has(id) and frames > 10:
 				var step: float = e.traveled - last[id]
-				max_jump = maxf(max_jump, absf(step - e.net_speed * dt))
+				max_jump = maxf(max_jump, absf(step - (e.remote_advance(last[id], step_dt) - last[id])))
 				moved += maxf(step, 0.0)
-				max_err = maxf(max_err, absf(e.traveled - (e.net_traveled + e.net_speed * e.net_age)))
+				max_err = maxf(max_err, absf(e.traveled - e.remote_advance(e.net_traveled, e.net_age)))
 			last[id] = e.traveled
 	print("  Bilder: %d, größter Korrektursprung: %.3f, größte Abweichung: %.3f, gesamt gelaufen: %.1f" % [frames, max_jump, max_err, moved])
 	check(moved > 1.0, "Gegner laufen beim Zuschauer")

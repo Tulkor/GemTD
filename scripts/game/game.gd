@@ -114,6 +114,9 @@ var net_panel: NetPanel = null
 var _next_enemy_id := 1
 var _cover: Array = []     ## is_covered: [Tower, größte Reichweite] dieses Bilds
 var _cover_frame := -1
+var _cover_sig := 0        ## ändert sich, wenn Tower dazukommen, wegfallen oder ihre Reichweite ändern
+var _free_cache := {}      ## free_stretch: Bahn/Flieger → {path, sig, list}
+var _probe: Enemy = null   ## Messpunkt für free_stretch
 
 
 func _ready() -> void:
@@ -214,6 +217,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	if _probe != null:
+		_probe.free()
+		_probe = null
 	get_tree().auto_accept_quit = true
 	if Net.game == self:
 		Net.game = null
@@ -1278,17 +1284,7 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 func is_covered(e: Enemy) -> bool:
 	if e.poison_time > 0.0:
 		return true
-	var frame := Engine.get_process_frames()
-	if frame != _cover_frame:
-		# Einmal pro Bild: Tower, die überhaupt etwas erreichen, mit ihrer größten Reichweite
-		_cover_frame = frame
-		_cover = []
-		for t in all_towers():
-			var reach := maxf(t.range_cells() if t.can_attack() else 0.0, t._aura_radius())
-			if t.can_attack() and t.stats.has("range_air"):
-				reach = maxf(reach, float(t.stats.range_air))
-			if reach > 0.0:
-				_cover.append([t, reach + 1.5])
+	_refresh_cover()
 	for c in _cover:
 		var t: Tower = c[0]
 		if not is_instance_valid(t) or e.pos.distance_squared_to(t.pos) > c[1] * c[1]:
@@ -1299,6 +1295,95 @@ func is_covered(e: Enemy) -> bool:
 		if aura > 0.0 and e.pos.distance_to(t.pos) <= aura:
 			return true
 	return false
+
+
+## Einmal pro Bild: Tower, die überhaupt etwas erreichen, mit ihrer größten Reichweite.
+func _refresh_cover() -> void:
+	var frame := Engine.get_process_frames()
+	if frame == _cover_frame:
+		return
+	_cover_frame = frame
+	_cover = []
+	var sig := []
+	for t in all_towers():
+		var reach := maxf(t.range_cells() if t.can_attack() else 0.0, t._aura_radius())
+		if t.can_attack() and t.stats.has("range_air"):
+			reach = maxf(reach, float(t.stats.range_air))
+		if reach > 0.0:
+			_cover.append([t, reach + 1.5])
+			sig.append([t.pos, reach, t.target_mode(), t.can_attack()])
+	_cover_sig = hash(sig)
+
+
+## Für Mitspieler: das Stück, auf dem der Gegner schnell läuft oder als Nächstes laufen wird, als [von, bis] in
+## zurückgelegter Strecke, oder [-1, -1]. Damit sagen sie voraus, wo er abbremst, statt bis zur
+## nächsten Meldung mit 8× weiterzulaufen. Solange Gift wirkt, beginnt das Stück erst danach.
+func free_stretch(e: Enemy) -> Array:
+	if idle_speed_factor() <= 1.0:
+		return [-1.0, -1.0]
+	_refresh_cover()
+	var key := "%d/%d" % [e.lane, int(e.flying)]
+	var cached: Dictionary = _free_cache.get(key, {})
+	if cached.is_empty() or cached.sig != _cover_sig or not is_same(cached.path, e.path):
+		cached = {"path": e.path, "sig": _cover_sig, "list": _free_stretches(e.path, e.flying)}
+		_free_cache[key] = cached
+	# Das Stück, auf dem er gerade ist, ab seinem echten Anfang: der Mitspieler liegt oft knapp
+	# dahinter und soll dort nicht normal schnell laufen.
+	var from := e.traveled
+	var poisoned := e.poison_time > 0.0
+	if poisoned:
+		from += e.base_speed() * e.poison_time
+	for st in cached.list:
+		if st[1] > from:
+			return [maxf(st[0], from) if poisoned else st[0], st[1]]
+	return [-1.0, -1.0]
+
+
+const COVER_SAMPLE := 0.25
+
+
+## Stücke des Wegs ohne Tower in Reichweite, als [von, bis] in Strecke ab dem Start.
+func _free_stretches(path: Array, flying: bool) -> Array:
+	if _probe == null:
+		_probe = Enemy.new()
+	_probe.flying = flying
+	_probe.poison_time = 0.0
+	var out := []
+	var start := -1.0
+	var done := 0.0
+	for i in range(1, path.size()):
+		var a: Vector2 = path[i - 1]
+		var b: Vector2 = path[i]
+		var seg := a.distance_to(b)
+		var n := maxi(ceili(seg / COVER_SAMPLE), 1)
+		for k in range(0 if i == 1 else 1, n + 1):
+			var s := seg * k / n
+			var free := not _probe_covered(a, b, seg, s)
+			if free and start < 0.0:
+				start = done + _cover_edge(a, b, seg, maxf(s - seg / n, 0.0), s, false)
+			elif not free and start >= 0.0:
+				out.append([start, done + _cover_edge(a, b, seg, maxf(s - seg / n, 0.0), s, true)])
+				start = -1.0
+		done += seg
+	if start >= 0.0:
+		out.append([start, done])
+	return out
+
+
+func _probe_covered(a: Vector2, b: Vector2, seg: float, s: float) -> bool:
+	_probe.pos = a.lerp(b, s / seg) if seg > 0.0 else b
+	return is_covered(_probe)
+
+
+## Rand zwischen lo und hi auf dem Abschnitt a–b genauer suchen: dort wechselt is_covered auf covered_at_hi.
+func _cover_edge(a: Vector2, b: Vector2, seg: float, lo: float, hi: float, covered_at_hi: bool) -> float:
+	for i in 5:
+		var mid := (lo + hi) / 2.0
+		if _probe_covered(a, b, seg, mid) == covered_at_hi:
+			hi = mid
+		else:
+			lo = mid
+	return hi
 
 
 ## Tempo-Faktor für Gegner, die gerade kein Tower erreicht.
