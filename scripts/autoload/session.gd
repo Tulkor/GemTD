@@ -23,6 +23,13 @@ const DIFFICULTIES := [
 	{"name": "Normal", "factor": 0.9, "score": 1.0},
 	{"name": "Schwer", "factor": 1.15, "score": 1.25},
 ]
+## Spiele im Hauptmenü. ready: schon spielbar (eeveTD und Shopping Maul entstehen gerade).
+const GAMES := [
+	{"id": "gemtd", "name": "GemTD", "ready": true, "hint": "Gems setzen, kombinieren, Labyrinth bauen"},
+	{"id": "eevetd", "name": "eeveTD", "ready": false, "hint": "Kommt noch: Eevee-Entwicklungen, solo und im Koop zusammen mazen"},
+	{"id": "shoppingmaul", "name": "Shopping Maul", "ready": false, "hint": "Kommt noch: Tower aus Shops kaufen und aufwerten"},
+]
+var game_kind := "gemtd"
 ## Gewählte Stufe (Index in DIFFICULTIES), Standard „Normal“.
 var difficulty := 1
 ## Wertung: false = Leben (Spiel endet bei 0), true = Punkte (Kills geben Punkte, Durchbrüche kosten welche).
@@ -35,6 +42,8 @@ var reopen_settings := false
 var load_state: Dictionary = {}
 ## Datei des laufenden Einzelspiels (leer = noch nie gespeichert); erneutes Speichern überschreibt sie.
 var save_id := ""
+## Tests: Einstellungen vor Runde 1 überspringen (Schwierigkeit und Wertung wie gerade in Session).
+var skip_setup := false
 ## Koop (gemeinsames Feld), nur fürs nächste Spiel: {role: "host"/"client", player: Spielernummer, names: [..]}.
 var coop: Dictionary = {}
 ## Wohin "Zurück" im Spiel führt.

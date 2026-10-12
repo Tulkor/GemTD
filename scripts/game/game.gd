@@ -106,6 +106,8 @@ var local_player := 0
 ## schickt Befehle an den Host und zeigt dessen Stand.
 var coop: CoopSync = null
 var mirror := false
+## Einstellungen vor Runde 1 (setup_panel.gd) bestätigt; bis dahin ist das Feld gesperrt.
+var setup_done := true
 var net_panel: NetPanel = null
 var _next_enemy_id := 1
 
@@ -176,6 +178,11 @@ func _ready() -> void:
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
 
+	setup_done = not saved.is_empty() or Session.skip_setup
+	if not setup_done:
+		var setup := SetupPanel.new()
+		setup.game = self
+		hud.add_child(setup)
 	if saved.is_empty():
 		# Mitspieler bekommen die zufälligen Steine mit dem ersten Stand vom Host
 		if not mirror:
@@ -352,6 +359,8 @@ func _update_hover() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not setup_done:
+		return
 	# Linke Maustaste: Klick beim Loslassen, Ziehen spannt einen Auswahlrahmen für Steine auf (wie in RTS-Spielen)
 	if event is InputEventMouseMotion and _left_down and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
 		if not _dragging and event.position.distance_to(_press_pos) >= DRAG_THRESHOLD and moving == null:
@@ -898,6 +907,7 @@ func _on_option_chosen(index: int) -> void:
 #   option         {tower, index, action, id, tier}  Behalten, Kombinieren, Aufwerten …
 #   move_trap      {tower, to}            Falle verschieben
 #   speed          {factor}               Spieltempo 1×, 2× oder 4× (im Koop für alle)
+#   setup          {difficulty, score_mode}  Einstellungen vor Runde 1 (nur Spieler 0, d. h. solo oder Host)
 
 # --- Spieler ------------------------------------------------------------------
 
@@ -992,6 +1002,9 @@ func execute(cmd: Dictionary) -> bool:
 	var p := int(cmd.get("player", -1))
 	if p < 0 or p >= players.size():
 		return false
+	# Vor den Einstellungen darf nur der Host bzw. Solo-Spieler etwas tun
+	if not setup_done and p != local_player:
+		return false
 	acting = p
 	var ok := _execute(cmd)
 	acting = local_player
@@ -1016,6 +1029,15 @@ func _execute(cmd: Dictionary) -> bool:
 			return take_back(tower_from_ref(cmd.get("tower", {})))
 		"move_trap":
 			return move_trap(tower_from_ref(cmd.get("tower", {})), cmd.get("to", NO_CELL))
+		"setup":
+			if setup_done or acting != 0:
+				return false
+			Session.difficulty = clampi(int(cmd.get("difficulty", 1)), 0, Session.DIFFICULTIES.size() - 1)
+			Session.score_mode = bool(cmd.get("score_mode", false))
+			score_mode = Session.score_mode
+			setup_done = true
+			_refresh_hud()
+			return true
 		"speed":
 			var f := float(cmd.get("factor", 1.0))
 			if not f in [1.0, 2.0, 4.0]:

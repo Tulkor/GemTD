@@ -10,7 +10,8 @@ Getestet mit Godot 4.3, sollte in jeder neueren 4.x-Version laufen.
 ## Starten
 
 Godot öffnen → *Importieren* → `project.godot` wählen → F5.
-Im Hauptmenü Map wählen und *Spielen*.
+Im Hauptmenü das Spiel (GemTD; eeveTD und Shopping Maul folgen) und die Map wählen, dann *Spielen*.
+Ist die Map geladen, fragt vor Runde 1 ein Fenster nach Schwierigkeit und Wertung (im Koop wählt der Host).
 
 **Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, links ziehen spannt einen Auswahlrahmen für bis zu 5 Steine auf (Strg+Klick wählt einzelne dazu oder ab),
 Strg+Z nimmt den zuletzt gesetzten Gem zurück, Rechtsklick/Esc hebt die Auswahl auf.
@@ -65,7 +66,7 @@ Weitere Regeln:
 - **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).
 
-**Schwierigkeit** im Hauptmenü unter „Spielen“: Einfach (Leben und Rüstung der Gegner ×0,8), Normal (×0,9), Schwer (×1,15).
+**Schwierigkeit** im Einstellungsfenster vor Runde 1: Einfach (Leben und Rüstung der Gegner ×0,8), Normal (×0,9), Schwer (×1,15).
 
 Unter „Debug: nächster Gem“ lässt sich jeder Tower in jeder Stufe direkt setzen.
 Der Schalter „Unsterblich“ daneben lässt die Leben ins Minus gehen, ohne dass das Spiel endet.
@@ -101,7 +102,7 @@ Was jedem Spieler gehört, steht in `scripts/game/player_state.gd`.
 
 ## Wertung
 
-Im Hauptmenü unter der Schwierigkeit: „Leben“ (wie im Original, bei 0 Leben verloren) oder „Punkte“.
+Im Einstellungsfenster vor Runde 1: „Leben“ (wie im Original, bei 0 Leben verloren) oder „Punkte“.
 Im Punkte-Modus ist jede Welle `wave_base + wave_step × (Welle − 1)` Punkte wert (`data/balance.json` → `score`;
 Welle 1: 100, Welle 40: 490, Welle 50: 590), verteilt nach Lebenspunkten auf ihre Gegner. Ein Kill bringt den Anteil,
 ein Durchbruch kostet die Hälfte davon (`leak_factor`). Ein Gegner aus Welle 40 kostet beim Durchbruch also 24,5 Punkte,

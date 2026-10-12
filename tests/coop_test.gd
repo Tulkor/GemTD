@@ -78,6 +78,7 @@ func _host() -> void:
 	var peer: int = Net.players.keys()[0]
 	check(g.coop != null and not g.mirror and g.players.size() == 2 and g.players[1].name == "Ben", "Host rechnet, Spieler Anna und Ben")
 	check(Net.coop_player_of(peer) == 1, "Ben ist Spieler 2")
+	check(not g.setup_done and g.submit({"type": "setup", "difficulty": 1, "score_mode": false}), "Anna wählt die Einstellungen")
 	check(await _wait(func(): return Net.player_status(peer).get("in_game", false), 15.0), "Ben ist im Spiel")
 	check(await _play_round(g, 40), "Anna hat gesetzt und behalten")
 	check(await _wait(func(): return g.phase == g.Phase.WAVE, 30.0), "Welle startet, nachdem auch Ben fertig ist")
@@ -107,7 +108,7 @@ func _client() -> void:
 	check(await _wait(func(): return Net.game != null and is_instance_valid(Net.game), 20.0), "Koop-Spiel gestartet")
 	var g: Node = Net.game
 	check(g.mirror and g.local_player == 1, "Ben spiegelt als Spieler 2")
-	check(await _wait(func(): return g.players.size() == 2 and not g.rocks.is_empty(), 10.0), "Stand vom Host da")
+	check(await _wait(func(): return g.players.size() == 2 and not g.rocks.is_empty() and g.setup_done, 20.0), "Stand und Einstellungen vom Host da")
 	check(await _play_round(g, 30), "Ben hat gesetzt und behalten")
 	check(g.round_towers.is_empty() and g.all_towers().any(func(t): return t.owner_player == 1 and not t.is_new), "Bens Tower steht")
 	check(await _wait(func(): return g.phase == g.Phase.WAVE and not g.enemies.is_empty(), 30.0), "Ben sieht die Welle und Gegner")

@@ -541,5 +541,14 @@
 	"Gespeicherter Koop auf %s. „Starten“ setzt das gemeinsame Feld fort, wer fehlt, kann später einsteigen.": "Saved co-op on %s. “Start” continues the shared field, anyone missing can join later.",
 	"Koop: ihr spielt zusammen auf einem Feld.": "Co-op: you play together on one field.",
 	"Koop": "Co-op",
-	"Der Host hat die Koop-Partie beendet.": "The host ended the co-op game."
+	"Der Host hat die Koop-Partie beendet.": "The host ended the co-op game.",
+	"%d Wellen": "%d waves",
+	"Schwierigkeit": "Difficulty",
+	"Wertung": "Scoring",
+	"Los geht's": "Let's go",
+	"Der Host wählt die Einstellungen, gleich geht es los …": "The host is choosing the settings, starting soon …",
+	"Spiel": "Game",
+	"Shopping Maul": "Shopping Maul",
+	"Kommt noch: Eevee-Entwicklungen, solo und im Koop zusammen mazen": "Coming soon: Eevee evolutions, solo and mazing together in co-op",
+	"Kommt noch: Tower aus Shops kaufen und aufwerten": "Coming soon: buy towers from shops and upgrade them"
 }

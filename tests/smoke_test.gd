@@ -16,6 +16,8 @@ func check(cond: bool, msg: String) -> void:
 func _ready() -> void:
 	# Run-History der Tests nicht in die echte Liste schreiben
 	RunHistory.path = "user://test_run_history.json"
+	# Einstellungen vor Runde 1 prüft nur _setup_test, sonst startet jedes Spiel gleich
+	Session.skip_setup = true
 	if FileAccess.file_exists(RunHistory.path):
 		DirAccess.remove_absolute(RunHistory.path)
 	await get_tree().process_frame
@@ -584,6 +586,7 @@ func _ready() -> void:
 	await _command_test()
 	await _coop_test()
 	await _coop_sync_test()
+	await _setup_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -1077,3 +1080,44 @@ func _coop_sync_test() -> void:
 	h.queue_free()
 	g.queue_free()
 	await get_tree().process_frame
+
+
+## Einstellungen vor Runde 1: Fenster im Spiel, erst danach geht es los. Im Koop wählt nur der Host.
+func _setup_test() -> void:
+	Session.skip_setup = false
+	Session.difficulty = 1
+	Session.score_mode = false
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	Session.coop = {"role": "client", "player": 1, "names": ["Anna", "Ben"]}
+	var h: Node = load(Session.GAME).instantiate()
+	add_child(h)
+	await get_tree().process_frame
+	var panel = g.hud.get_children().filter(func(c): return c is SetupPanel)
+	check(not g.setup_done and panel.size() == 1, "Einstellungen: Fenster vor Runde 1")
+	var wait = h.hud.get_children().filter(func(c): return c is SetupPanel)
+	check(wait.size() == 1 and not h.setup_done, "Einstellungen: Mitspieler wartet auf den Host")
+	check(not g.execute({"type": "place", "cell": Vector2i(14, 30), "player": 1}), "Einstellungen: Mitspieler kann vorher nichts tun")
+	check(not g.execute({"type": "setup", "difficulty": 0, "score_mode": true, "player": 1}), "Einstellungen: nur der Host wählt")
+	check(g.submit({"type": "setup", "difficulty": 2, "score_mode": true}) and g.setup_done and g.score_mode and Session.difficulty == 2,
+		"Einstellungen: Schwer und Punkte gewählt")
+	# beide Spiele teilen sich hier Session: erst den Stand nehmen, dann zurücksetzen wie auf einem anderen Rechner
+	var st: Dictionary = g.coop.snapshot()
+	Session.difficulty = 1
+	Session.score_mode = false
+	h.coop.apply_state(st)
+	check(h.setup_done and h.score_mode and Session.difficulty == 2, "Einstellungen: Mitspieler übernimmt sie vom Host")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	check(g.hud.get_children().all(func(c): return not c is SetupPanel) and h.hud.get_children().all(func(c): return not c is SetupPanel),
+		"Einstellungen: Fenster geschlossen")
+	check(not g.submit({"type": "setup", "difficulty": 0, "score_mode": false}), "Einstellungen: nur einmal")
+	h.queue_free()
+	g.queue_free()
+	await get_tree().process_frame
+	Session.difficulty = 1
+	Session.score_mode = false
+	Session.skip_setup = true

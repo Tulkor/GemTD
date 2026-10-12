@@ -135,6 +135,9 @@ func snapshot() -> Dictionary:
 		"final_boss": game.final_boss,
 		"leaks": game.leaks_per_wave,
 		"ts": Engine.time_scale,
+		"setup": game.setup_done,
+		"difficulty": Session.difficulty,
+		"score_mode": game.score_mode,
 		"players": ps,
 		"towers": ts,
 		"rocks": rs,
@@ -240,6 +243,11 @@ func apply_state(s: Dictionary) -> void:
 	g.score_stats = s.get("score_stats", {})
 	g.final_boss = s.get("final_boss", g.final_boss)
 	g.leaks_per_wave = s.get("leaks", {})
+	if s.get("setup", true) and not g.setup_done:
+		Session.difficulty = int(s.get("difficulty", Session.difficulty))
+		Session.score_mode = bool(s.get("score_mode", false))
+		g.score_mode = Session.score_mode
+		g.setup_done = true
 	Engine.time_scale = float(s.get("ts", 1.0))
 	paths.time_scale = Engine.time_scale
 	var phase := int(s.get("phase", g.Phase.BUILD))
