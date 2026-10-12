@@ -12,6 +12,12 @@ Alles kommt aus `scripts/ui/ui_theme.gd`, keine eigenen Farben oder Schriften er
 - Lange Texte mit Autowrap, damit mit der breiten Monospace-Schrift nichts abgeschnitten wird.
 - Alle sichtbaren Texte auf Deutsch schreiben und in `data/i18n/en.json` übersetzen.
 
+## Threads: ein Feature, ein Thread (feste Regel von Lukas)
+Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten deshalb viele Tokens.
+- Jedes größere neue Feature bekommt einen eigenen, frischen Thread (z. B. „eeveTD-Modus“, „Maul-Koop“), nicht die alten Kategorie-Threads.
+- Die Kategorie-Threads (Game-Systeme, UI und UX, Balance, Grafik) sind nur für kleine Nachbesserungen und Rückfragen.
+- Ist ein Feature fertig und gemergt, wird sein Thread geschlossen. Was ein späterer Thread wissen muss, steht im Repo (CLAUDE.md, README, Commit-Texte) oder unter /mnt/project-files/, nicht nur im Chat.
+
 ## Werkzeuge: erst diese benutzen, statt Abläufe neu zu schreiben
 Godot und die Windows-Vorlage installiert der Session-Start-Hook (`tools/setup_godot.sh`), `godot` liegt in `~/.local/bin`.
 - Tests: `tools/run_tests.sh` (schnell: Prüfskripte, Smoke, Netz, Sitzung, Koop) oder `alle` (dazu Balance, Tempo, späte Wellen), einzeln z. B. `tools/run_tests.sh smoke koop`. Gibt nur eine Zeile pro Test aus, Logs in `/tmp/gemtd-tests/`.
