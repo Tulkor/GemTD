@@ -381,6 +381,19 @@ func _square_hitbox() -> bool:
 	return is_trap() and range_cells() <= Board3D.TRAP_CELLS * Board3D.CELL
 
 
+## Größter Radius einer Aura, die auf diesen Gegner wirkt (Brand, Verlangsamung, Rüstung), 0 = keine.
+func enemy_aura_radius(e) -> float:
+	var r := 0.0
+	for ab in abilities():
+		if not str(ab.get("type", "")) in ["burn_aura", "slow_aura", "armor_aura"]:
+			continue
+		var mode := str(ab.get("targets", target_mode()))
+		if (mode == "air" and not e.flying) or (mode == "ground" and e.flying):
+			continue
+		r = maxf(r, float(ab.radius))
+	return r
+
+
 func _aura_radius() -> float:
 	var r := 0.0
 	for ab in abilities():

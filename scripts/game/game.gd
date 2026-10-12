@@ -112,6 +112,8 @@ var mirror := false
 var setup_done := true
 var net_panel: NetPanel = null
 var _next_enemy_id := 1
+var _cover: Array = []     ## is_covered: [Tower, größte Reichweite] dieses Bilds
+var _cover_frame := -1
 
 
 func _ready() -> void:
@@ -1269,6 +1271,39 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 		# Eine Welle ist gleich viele Punkte wert, egal an wie vielen Bahnen sie läuft
 		e.score_value /= lanes.size()
 		enemies.append(e)
+
+
+## Ist der Gegner in Reichweite eines Towers, der ihn angreifen oder mit einer Aura treffen kann?
+## Wirkt noch Gift, zählt das auch: sonst liefe er mit dem Gift schneller ins Ziel als ohne Schnelllauf.
+func is_covered(e: Enemy) -> bool:
+	if e.poison_time > 0.0:
+		return true
+	var frame := Engine.get_process_frames()
+	if frame != _cover_frame:
+		# Einmal pro Bild: Tower, die überhaupt etwas erreichen, mit ihrer größten Reichweite
+		_cover_frame = frame
+		_cover = []
+		for t in all_towers():
+			var reach := maxf(t.range_cells() if t.can_attack() else 0.0, t._aura_radius())
+			if t.can_attack() and t.stats.has("range_air"):
+				reach = maxf(reach, float(t.stats.range_air))
+			if reach > 0.0:
+				_cover.append([t, reach + 1.5])
+	for c in _cover:
+		var t: Tower = c[0]
+		if not is_instance_valid(t) or e.pos.distance_squared_to(t.pos) > c[1] * c[1]:
+			continue
+		if t.can_attack() and t.can_target(e) and t.in_range(e):
+			return true
+		var aura := t.enemy_aura_radius(e)
+		if aura > 0.0 and e.pos.distance_to(t.pos) <= aura:
+			return true
+	return false
+
+
+## Tempo-Faktor für Gegner, die gerade kein Tower erreicht.
+func idle_speed_factor() -> float:
+	return maxf(float(Database.balance.get("idle_speed_factor", 1.0)), 1.0)
 
 
 func find_targets(t: Tower, count: int) -> Array:

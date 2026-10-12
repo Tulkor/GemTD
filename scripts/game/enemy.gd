@@ -28,6 +28,8 @@ var traveled := 0.0  ## zurückgelegte Strecke, Tower zielen auf den Vordersten
 var dead := false
 
 var slow_factor := 0.0
+## Tempo-Faktor außerhalb jeder Tower-Reichweite (balance.json → idle_speed_factor), sonst 1
+var boost := 1.0
 var slow_time := 0.0
 var poison_dps := 0.0
 var poison_time := 0.0
@@ -119,6 +121,54 @@ func _process(delta: float) -> void:
 		stack_time -= delta
 		if stack_time <= 0.0:
 			stacks = 0.0
+	# Wo kein Tower hinreicht, gibt es nichts zu sehen: dort laufen Gegner schneller (weniger Wartezeit).
+	# In kleinen Schritten, damit sie keine Reichweite (z. B. eine Falle) überspringen; wer hineinläuft,
+	# hält genau am Rand an und geht den Rest des Bilds normal schnell. Ohne die genaue Stelle stünde er
+	# bis zu einem Schritt tief in der Reichweite und wäre entsprechend kürzer darin.
+	boost = 1.0 if game == null or game.is_covered(self) else game.idle_speed_factor()
+	if boost > 1.0:
+		var left := move * boost
+		while left > 0.0 and path_index < path.size():
+			var step := minf(left, BOOST_STEP)
+			var before := [pos, path_index, traveled, rotation.y]
+			_advance(step)
+			if game.is_covered(self):
+				var lo := 0.0
+				var hi := step
+				for i in 5:
+					var mid := (lo + hi) / 2.0
+					_restore(before)
+					_advance(mid)
+					if game.is_covered(self):
+						hi = mid
+					else:
+						lo = mid
+				_restore(before)
+				_advance(hi)
+				boost = 1.0
+				_advance((left - hi) / game.idle_speed_factor())
+				break
+			left -= step
+	else:
+		_advance(move)
+	_sync_position()
+	_update_visual()
+	if path_index >= path.size():
+		dead = true
+		game.on_enemy_leaked(self)
+
+
+const BOOST_STEP := 0.5   ## kleiner als eine Falle breit ist (1,5)
+
+
+func _restore(state: Array) -> void:
+	pos = state[0]
+	path_index = state[1]
+	traveled = state[2]
+	rotation.y = state[3]
+
+
+func _advance(move: float) -> void:
 	while move > 0.0 and path_index < path.size():
 		var target := path[path_index]
 		var dist := pos.distance_to(target)
@@ -133,11 +183,6 @@ func _process(delta: float) -> void:
 			traveled += move
 			move = 0.0
 			rotation.y = atan2(-dir.x, -dir.y)
-	_sync_position()
-	_update_visual()
-	if path_index >= path.size():
-		dead = true
-		game.on_enemy_leaked(self)
 
 
 ## Tempo gerade jetzt: Verlangsamung drückt nicht unter die Mindestgeschwindigkeit (WC3: 220),
@@ -145,7 +190,7 @@ func _process(delta: float) -> void:
 func current_speed() -> float:
 	if stun_time > 0.0:
 		return 0.0
-	return slowed_speed() if slow_time > 0.0 else speed
+	return (slowed_speed() if slow_time > 0.0 else speed) * boost
 
 
 ## Tempo unter der aktuellen Verlangsamung (nie unter min_slowed_speed).

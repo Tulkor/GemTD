@@ -588,6 +588,7 @@ func _ready() -> void:
 	await _coop_sync_test()
 	await _setup_test()
 	await _maul_test()
+	await _idle_speed_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -1191,3 +1192,39 @@ func _maul_test() -> void:
 		n.queue_free()
 	await get_tree().process_frame
 	Session.map_path = Database.list_maps()[0].path
+
+
+## Außerhalb jeder Tower-Reichweite laufen Gegner idle_speed_factor (8×) so schnell, in Reichweite normal.
+func _idle_speed_test() -> void:
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	g.debug_tower = "ruby:0"
+	var t: Tower = g.place_gem(Vector2i(30, 40))
+	t.is_new = false
+	g.phase = g.Phase.WAVE
+	g._spawn_enemy(g.waves[0].groups[0])
+	var e: Enemy = g.enemies[-1]
+	e.set_process(false)
+	check(not g.is_covered(e), "Gegner am Spawn ist außer Reichweite")
+	var before: float = e.traveled
+	e._process(0.05)
+	check(is_equal_approx(e.traveled - before, e.speed * 0.05 * g.idle_speed_factor()) and e.boost == g.idle_speed_factor(),
+		"außer Reichweite %d× so schnell (%.2f Felder)" % [int(g.idle_speed_factor()), e.traveled - before])
+	e.pos = t.pos + Vector2(0.5, 0.0)
+	await get_tree().process_frame
+	check(g.is_covered(e), "neben dem Tower in Reichweite")
+	e.place_on_path(0.0)
+	# bis kurz vor die Reichweite laufen lassen: dort bremst er auf normales Tempo
+	var steps := 0
+	while not g.is_covered(e) and steps < 2000 and not e.dead:
+		e._process(0.05)
+		steps += 1
+	check(g.is_covered(e) and e.pos.distance_to(t.pos) >= t.range_cells() - 0.6, "bremst am Rand der Reichweite (%.2f von %.2f)" % [e.pos.distance_to(t.pos), t.range_cells()])
+	before = e.traveled
+	e._process(0.05)
+	check(e.boost == 1.0 and e.traveled - before <= e.speed * 0.05 + 0.001, "in Reichweite normal schnell")
+	g.queue_free()
+	await get_tree().process_frame

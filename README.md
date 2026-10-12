@@ -226,6 +226,10 @@ Wellenrhythmus (classic): Boden, Masse, Boden, Flieger; Massenwellen ab Welle 10
 Eine Bosswelle ist ein einzelner Gegner mit zehnfachen Leben, Gold und Schaden (Gruppe mit `"count": 1`).
 Eine Massenwelle hat 25 statt 10 Gegner mit je 40 % Leben, Gold und Leben-Schaden und kürzerem Abstand.
 Dafür überschreibt die Gruppe in der Wellendatei `hp`, `bounty`, `damage`, `shape` und `size`.
+Schnelllauf: Wo kein Tower einen Gegner angreifen oder mit einer Aura treffen kann, läuft er
+`idle_speed_factor` (balance.json, 8) mal so schnell, auf allen Maps und in jeder Zone. Er läuft in kleinen Schritten
+und hält genau am Rand einer Reichweite an, damit keine (auch keine Falle) übersprungen wird. Solange Gift wirkt,
+läuft er normal schnell.
 
 ## Test
 

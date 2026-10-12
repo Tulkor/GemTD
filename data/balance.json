@@ -8,6 +8,7 @@
 		"max_bonus": 1.2
 	},
 	"min_slowed_speed": 1.72,
+	"idle_speed_factor": 8,
 	"gold_income_factor": 0.7,
 	"score": {
 		"wave_base": 100,
