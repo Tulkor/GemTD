@@ -1,0 +1,21 @@
+{
+	"id": "eeve_haeuptling",
+	"name": "Häuptling",
+	"name_original": "Chieftain",
+	"category": "eeve",
+	"hp": 137500,
+	"speed": 3.281,
+	"armor": 0.0,
+	"armor_type": "eeve_hero",
+	"bounty": 200,
+	"damage": 40,
+	"flying": false,
+	"color": "#c04040",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 5,
+		"wc3": "h098"
+	},
+	"boss": true
+}

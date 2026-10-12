@@ -1,0 +1,36 @@
+{
+	"id": "eeve_area_melter",
+	"name": "Flächenschmelzer",
+	"name_original": "Area Melter",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 5,
+		"cost": 1400,
+		"lumber": 0,
+		"from": "eeve_area_roaster",
+		"next": [],
+		"wc3": "h03N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				0,
+				0
+			],
+			"range": 2.34,
+			"cooldown": 0.0,
+			"abilities": [
+				{
+					"type": "burn_aura",
+					"radius": 2.34,
+					"dps": 600.0
+				}
+			]
+		}
+	]
+}

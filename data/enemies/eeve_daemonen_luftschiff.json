@@ -1,0 +1,20 @@
+{
+	"id": "eeve_daemonen_luftschiff",
+	"name": "Dämonen-Luftschiff",
+	"name_original": "Daemon Airship",
+	"category": "eeve",
+	"hp": 34375,
+	"speed": 3.711,
+	"armor": 4.0,
+	"armor_type": "eeve_small",
+	"bounty": 40,
+	"damage": 4,
+	"flying": true,
+	"color": "#a040c0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 10,
+		"wc3": "h09W"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"id": "eeve_phoenix",
+	"name": "Phönix",
+	"name_original": "Phoenix",
+	"category": "eeve",
+	"hp": 26250,
+	"speed": 3.516,
+	"armor": 4.0,
+	"armor_type": "eeve_small",
+	"bounty": 36,
+	"damage": 4,
+	"flying": true,
+	"color": "#ff7a30",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 9,
+		"wc3": "h09P"
+	}
+}

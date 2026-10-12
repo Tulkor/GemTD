@@ -1,0 +1,39 @@
+{
+	"id": "eeve_arcane_shrine",
+	"name": "Arkaner Schrein",
+	"name_original": "Arcane Shrine",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 1,
+		"cost": 20,
+		"lumber": 0,
+		"from": "eeve_magic_base_tower",
+		"next": [
+			"eeve_altar_of_magic"
+		],
+		"wc3": "h0AF"
+	},
+	"tiers": [
+		{
+			"damage": [
+				36.0,
+				48.0
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 3,
+					"falloff": 0.55,
+					"radius": 1.56
+				}
+			]
+		}
+	]
+}

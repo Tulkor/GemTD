@@ -232,7 +232,7 @@ func _game_row(parent: Node) -> void:
 	var group := ButtonGroup.new()
 	for g in Session.GAMES:
 		var id: String = g.id
-		var b := UiUtil.button(str(g.name), h, func(): Session.game_kind = id)
+		var b := UiUtil.button(str(g.name), h, func(): _pick_game(id))
 		b.toggle_mode = true
 		b.button_group = group
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -242,6 +242,12 @@ func _game_row(parent: Node) -> void:
 		b.set_pressed_no_signal(id == Session.game_kind)
 		b.disabled = not g.ready
 		b.tooltip_text = tr(str(g.hint))
+
+
+## Spiel wählen: die Map-Liste zeigt nur Maps für dieses Spiel (Feld "game" der Map, Standard GemTD).
+func _pick_game(id: String) -> void:
+	Session.game_kind = id
+	_reload()
 
 
 func _gap(h: float) -> Control:
@@ -260,7 +266,7 @@ func _menu_button(text: String, parent: Node, on_pressed: Callable) -> Button:
 
 func _reload() -> void:
 	Database.reload()
-	maps = Database.list_maps()
+	maps = Database.list_maps().filter(func(m): return m.game == Session.game_kind)
 	selected = maxi(maps.map(func(m): return m.path).find(Session.map_path), 0)
 	for c in cards_box.get_children():
 		cards_box.remove_child(c)
@@ -344,7 +350,7 @@ func _play() -> void:
 	Session.save_id = ""
 	Session.test_tower = ""
 	Session.return_scene = Session.MAIN_MENU
-	Session.goto(Session.GAME)
+	Session.goto(Session.game_scene())
 
 
 func _update_net_button() -> void:

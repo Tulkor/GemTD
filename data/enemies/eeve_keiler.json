@@ -1,0 +1,20 @@
+{
+	"id": "eeve_keiler",
+	"name": "Keiler",
+	"name_original": "Boar",
+	"category": "eeve",
+	"hp": 500,
+	"speed": 2.344,
+	"armor": 0.0,
+	"armor_type": "eeve_large",
+	"bounty": 4,
+	"damage": 4,
+	"flying": false,
+	"color": "#b88a5a",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 1,
+		"wc3": "h08P"
+	}
+}

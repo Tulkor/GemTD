@@ -1,0 +1,37 @@
+{
+	"id": "eeve_ritual_pit",
+	"name": "Ritualgrube",
+	"name_original": "Ritual Pit",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 5,
+		"cost": 1300,
+		"lumber": 0,
+		"from": "eeve_altar_of_magic",
+		"next": [],
+		"wc3": "h01N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1339.0,
+				1811.0
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 5,
+					"falloff": 0.7,
+					"radius": 1.56
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,43 @@
+{
+	"id": "eeve_essence_of_fire",
+	"name": "Essenz des Feuers",
+	"name_original": "Essence of Fire",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 3,
+		"cost": 550,
+		"lumber": 1,
+		"from": "eeve_fire_base_tower",
+		"next": [
+			"eeve_phoenix_egg"
+		],
+		"wc3": "h037"
+	},
+	"tiers": [
+		{
+			"damage": [
+				20.0,
+				30.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				},
+				{
+					"type": "damage_aura",
+					"radius": 7.81,
+					"bonus": 0.25
+				}
+			]
+		}
+	]
+}

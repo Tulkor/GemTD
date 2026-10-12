@@ -1,0 +1,21 @@
+{
+	"id": "eeve_riesenskorpion",
+	"name": "Riesenskorpion",
+	"name_original": "Giant Scorpion",
+	"category": "eeve",
+	"hp": 35000,
+	"speed": 2.812,
+	"armor": 1.0,
+	"armor_type": "eeve_hero",
+	"bounty": 120,
+	"damage": 40,
+	"flying": false,
+	"color": "#5aa0e0",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 3,
+		"wc3": "h08Y"
+	},
+	"boss": true
+}

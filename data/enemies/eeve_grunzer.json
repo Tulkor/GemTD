@@ -1,0 +1,20 @@
+{
+	"id": "eeve_grunzer",
+	"name": "Grunzer",
+	"name_original": "Grunt",
+	"category": "eeve",
+	"hp": 27500,
+	"speed": 3.125,
+	"armor": 0.0,
+	"armor_type": "eeve_large",
+	"bounty": 20,
+	"damage": 4,
+	"flying": false,
+	"color": "#c04040",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 5,
+		"wc3": "h096"
+	}
+}

@@ -1,0 +1,37 @@
+{
+	"id": "eeve_moonshine_rune",
+	"name": "Mondschein-Rune",
+	"name_original": "Moonshine Rune",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 3,
+		"cost": 500,
+		"lumber": 0,
+		"from": "eeve_storm_base_tower",
+		"next": [
+			"eeve_moonlight_beam"
+		],
+		"wc3": "h04P"
+	},
+	"tiers": [
+		{
+			"damage": [
+				59.0,
+				89.0
+			],
+			"range": 6.25,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 9
+				}
+			]
+		}
+	]
+}

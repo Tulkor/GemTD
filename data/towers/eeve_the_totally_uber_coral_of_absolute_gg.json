@@ -1,0 +1,36 @@
+{
+	"id": "eeve_the_totally_uber_coral_of_absolute_gg",
+	"name": "Die total übere Koralle des absoluten GG",
+	"name_original": "The Totally Uber Coral of Absolute GG",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 6,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_coral_atoll",
+		"next": [],
+		"wc3": "h05H"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1296.0,
+				1944.0
+			],
+			"range": 7.03,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.94,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,41 @@
+{
+	"id": "eeve_sacred_orb_of_power",
+	"name": "Heilige Kugel der Macht",
+	"name_original": "Sacred Orb of Power",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_orb_of_life",
+		"next": [],
+		"wc3": "h014"
+	},
+	"tiers": [
+		{
+			"damage": [
+				387.0,
+				581.0
+			],
+			"range": 7.81,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.47,
+					"factor": 0.3
+				},
+				{
+					"type": "speed_aura",
+					"radius": 9.38,
+					"bonus": 0.33
+				}
+			]
+		}
+	]
+}

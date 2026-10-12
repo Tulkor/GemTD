@@ -1,0 +1,43 @@
+{
+	"id": "eeve_permafrost_blaster",
+	"name": "Permafrost-Kanone",
+	"name_original": "Permafrost Blaster",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 4,
+		"cost": 500,
+		"lumber": 0,
+		"from": "eeve_glacier",
+		"next": [
+			"eeve_frozen_monument"
+		],
+		"wc3": "h04X"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1130.0,
+				1380.0
+			],
+			"range": 4.69,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.98,
+					"factor": 0.33
+				},
+				{
+					"type": "slow",
+					"factor": 0.18,
+					"duration": 2.5
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"id": "eeve_hippogreif",
+	"name": "Hippogreif",
+	"name_original": "Hippo Gryph",
+	"category": "eeve",
+	"hp": 2800,
+	"speed": 2.891,
+	"armor": 3.0,
+	"armor_type": "eeve_none",
+	"bounty": 7,
+	"damage": 1,
+	"flying": true,
+	"color": "#a0c040",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 7,
+		"wc3": "h09J"
+	},
+	"shape": "pyramid"
+}

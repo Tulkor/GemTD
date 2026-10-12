@@ -1,0 +1,21 @@
+{
+	"id": "eeve_lichfuerst",
+	"name": "Lichfürst",
+	"name_original": "Lich Lord",
+	"category": "eeve",
+	"hp": 510000,
+	"speed": 4.078,
+	"armor": 3.0,
+	"armor_type": "eeve_hero",
+	"bounty": 320,
+	"damage": 40,
+	"flying": false,
+	"color": "#9090a0",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 8,
+		"wc3": "h09O"
+	},
+	"boss": true
+}

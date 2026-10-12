@@ -135,7 +135,7 @@ func _ready() -> void:
 		push_error("Keine Map gefunden")
 		Session.goto(Session.MAIN_MENU)
 		return
-	waves = Database.wave_sets.get(map.wave_set, {}).get("waves", [])
+	waves = _make_waves()
 	lives = map.lives
 	score_mode = Session.score_mode
 	if coop_info.is_empty():
@@ -187,9 +187,7 @@ func _ready() -> void:
 
 	setup_done = not saved.is_empty() or Session.skip_setup
 	if not setup_done:
-		var setup := SetupPanel.new()
-		setup.game = self
-		hud.add_child(setup)
+		hud.add_child(_make_setup_panel())
 	if saved.is_empty():
 		# Mitspieler bekommen die zufälligen Steine mit dem ersten Stand vom Host
 		if not mirror:
@@ -294,6 +292,18 @@ func leave(save: bool, quit := false) -> void:
 		get_tree().quit()
 	else:
 		Session.goto(Session.return_scene)
+
+
+## Wellen des Spiels (eeve_game.gd würfelt sie selbst aus).
+func _make_waves() -> Array:
+	return Database.wave_sets.get(map.wave_set, {}).get("waves", [])
+
+
+## Fenster für die Einstellungen vor Runde 1.
+func _make_setup_panel() -> Control:
+	var setup := SetupPanel.new()
+	setup.game = self
+	return setup
 
 
 func _load_map() -> MapData:
@@ -1272,11 +1282,16 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 		board.add_child(e)
 		var lp: Dictionary = lane_paths[i]
 		e.setup(self, def, g, lp.air if def.get("flying", false) else lp.ground)
-		e.apply_difficulty(Session.difficulty_factor())
+		_apply_enemy_difficulty(e, g)
 		setup_score(e, g)
 		# Eine Welle ist gleich viele Punkte wert, egal an wie vielen Bahnen sie läuft
 		e.score_value /= lanes.size()
 		enemies.append(e)
+
+
+## Schwierigkeit auf einen neuen Gegner der Gruppe g anwenden.
+func _apply_enemy_difficulty(e: Enemy, _g: Dictionary) -> void:
+	e.apply_difficulty(Session.difficulty_factor())
 
 
 ## Ist der Gegner in Reichweite eines Towers, der ihn angreifen oder mit einer Aura treffen kann?

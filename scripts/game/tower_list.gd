@@ -102,7 +102,8 @@ func _process(delta: float) -> void:
 func towers() -> Array:
 	if game == null:
 		return []
-	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new)
+	# eeveTD: Barrikaden sind nur Mauern und stehen nicht in der Liste
+	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new and not t.def.get("eeve", {}).get("barricade", false))
 	match sort:
 		"kills":
 			list_t.sort_custom(func(a, b): return a.kills > b.kills if a.kills != b.kills else a.total_damage > b.total_damage)
@@ -156,7 +157,7 @@ func refresh() -> void:
 ## Spezial-Tower, die t zusammen mit anderen fertigen Towern auf dem Feld ergeben würde (Namen).
 ## Kombinieren geht nur während der Welle, markiert wird aber immer, damit man es planen kann.
 func combos(t, field: Array = []) -> Array:
-	if game == null or not is_instance_valid(t) or t.is_new:
+	if game == null or not is_instance_valid(t) or t.is_new or str(t.def.get("category", "gem")) == "eeve":
 		return []
 	if field.is_empty():
 		field = towers()

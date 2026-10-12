@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, Smoke, Netz, Sitzung, Koop
+#   schnell (Standard): Prüfskripte, Smoke, eeveTD, Netz, Sitzung, Koop
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
 # Exit-Code 0 = alles grün.
@@ -72,6 +72,7 @@ do_test() {
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
     smoke)   run_one smoke smoke_test ;;
+    eeve)    run_one eeve eeve_test ;;
     netz)    run_pair netz net_test ;;
     sitzung) run_pair sitzung session_test ;;
     koop)    run_pair koop coop_test ;;
@@ -87,8 +88,8 @@ do_test() {
 
 MODE=${1:-schnell}
 case $MODE in
-  schnell) set -- tabelle ui maps smoke netz sitzung koop ;;
-  alle)    set -- tabelle ui maps smoke netz sitzung koop balance tempo spaet ;;
+  schnell) set -- tabelle ui maps smoke eeve netz sitzung koop ;;
+  alle)    set -- tabelle ui maps smoke eeve netz sitzung koop balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()

@@ -1,0 +1,41 @@
+{
+	"id": "eeve_ultra_toxic_shroom_field",
+	"name": "Ultragiftiges Pilzfeld",
+	"name_original": "Ultra Toxic Shroom Field",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 5,
+		"cost": 700,
+		"lumber": 0,
+		"from": "eeve_hazardous_shroom_field",
+		"next": [],
+		"wc3": "h00S"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1058.0,
+				1058.0
+			],
+			"range": 5.86,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 200,
+					"duration": 15.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.35,
+					"duration": 15.0
+				}
+			]
+		}
+	]
+}

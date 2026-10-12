@@ -1,0 +1,38 @@
+{
+	"id": "eeve_coral_needle",
+	"name": "Korallennadel",
+	"name_original": "Coral Needle",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 3,
+		"cost": 300,
+		"lumber": 0,
+		"from": "eeve_tiny_coral",
+		"next": [
+			"eeve_coral_atoll"
+		],
+		"wc3": "h05E"
+	},
+	"tiers": [
+		{
+			"damage": [
+				302.0,
+				454.0
+			],
+			"range": 6.25,
+			"cooldown": 1.4,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.34
+				}
+			]
+		}
+	]
+}

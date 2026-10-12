@@ -44,7 +44,11 @@ func _ready() -> void:
 			var path := "res://data/maps/%s.json" % opts.get("map", "classic")
 			Session.map_path = path
 			Session.map_override = null
-			node = load(Session.GAME).instantiate()
+			# Maps eines anderen Spiels (z. B. "game": "eevetd") starten dessen Szene
+			var md = Database.load_json(path)
+			var kind: String = str(md.get("game", "gemtd")) if md is Dictionary else "gemtd"
+			Session.game_kind = kind
+			node = load(Session.game_scene()).instantiate()
 	add_child(node)
 	await _frames(5)
 	var angles: PackedStringArray = ["bild"]
@@ -73,6 +77,9 @@ func _frames(n: int) -> void:
 ## Spielstand für das Bild herstellen.
 func _prepare(game: Node) -> void:
 	game.camera_rig.set_process(false)   # kein Mitlaufen am Fensterrand (Maus steht in Xvfb in der Ecke)
+	if game.has_method("add_element_point"):
+		await _prepare_eeve(game)
+		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
 		game._select(game.round_towers[0])
@@ -97,6 +104,47 @@ func _prepare(game: Node) -> void:
 			game._select(game.round_towers[0])
 		elif not game.towers.is_empty():
 			game._select(game.towers.values()[0])
+	var t := 0.0
+	var wait := float(opts.get("warten", "1"))
+	while t < wait:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+
+
+## eeveTD: kleines Labyrinth aus Barrikaden vor dem Eingang, einige davon zu Towern aufgewertet.
+## --phase=welle startet Level 1, --auswahl wählt einen Tower aus.
+func _prepare_eeve(game: Node) -> void:
+	game.gold = 3000
+	game.lumber = 2
+	game.points = 6
+	for el in ["nature", "nature", "nature", "fire", "fire", "storm"]:
+		game.add_element_point(el)
+	# Zwei versetzte Mauern vor dem Eingang (unten Mitte), Gegner laufen im Bogen herum
+	var walls := []
+	for x in range(30, 58, 2):
+		walls.append(Vector2i(x, 76))
+	for x in range(32, 60, 2):
+		walls.append(Vector2i(x, 68))
+	for c in walls:
+		game.build_barricade(c)
+	var plan := {Vector2i(36, 76): ["eeve_nature_base_tower", "eeve_thorns_tower"], Vector2i(44, 76): ["eeve_fire_base_tower", "eeve_camp_fire", "eeve_brazier"],
+			Vector2i(50, 76): ["eeve_storm_base_tower", "eeve_storm_lantern"], Vector2i(40, 68): ["eeve_nature_base_tower", "eeve_orb_of_life"],
+			Vector2i(48, 68): ["eeve_fire_base_tower", "eeve_heat_stakes", "eeve_searing_totem"], Vector2i(54, 68): ["eeve_nature_base_tower", "eeve_minor_bird_launcher"]}
+	for c in plan:
+		var t: Tower = game.towers.get(c)
+		if t == null:
+			continue
+		for id in plan[c]:
+			var opts: Array = game.tower_options(t)
+			var i: int = opts.map(func(o): return o.id).find(id)
+			if i >= 0:
+				game._apply_option(t, opts[i])
+	game.gold = 412
+	game.log_lines = []
+	if opts.get("phase", "bau") == "welle":
+		game.submit({"type": "start_level"})
+	if opts.has("auswahl"):
+		game._select(game.towers.get(Vector2i(44, 76)))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:

@@ -1,0 +1,20 @@
+{
+	"id": "eeve_soldat",
+	"name": "Soldat",
+	"name_original": "Soldier",
+	"category": "eeve",
+	"hp": 15000,
+	"speed": 2.93,
+	"armor": 1.0,
+	"armor_type": "eeve_large",
+	"bounty": 16,
+	"damage": 4,
+	"flying": false,
+	"color": "#7a6ad0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 4,
+		"wc3": "h090"
+	}
+}

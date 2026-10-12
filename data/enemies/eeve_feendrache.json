@@ -1,0 +1,21 @@
+{
+	"id": "eeve_feendrache",
+	"name": "Feendrache",
+	"name_original": "Faerie Drake",
+	"category": "eeve",
+	"hp": 1925,
+	"speed": 2.734,
+	"armor": 0.0,
+	"armor_type": "eeve_none",
+	"bounty": 6,
+	"damage": 1,
+	"flying": true,
+	"color": "#40a080",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 6,
+		"wc3": "h09B"
+	},
+	"shape": "pyramid"
+}

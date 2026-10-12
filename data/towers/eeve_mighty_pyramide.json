@@ -1,0 +1,42 @@
+{
+	"id": "eeve_mighty_pyramide",
+	"name": "Mächtige Pyramide",
+	"name_original": "Mighty Pyramide",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "physical",
+	"targets": "ground",
+	"eeve": {
+		"element": "earth",
+		"level": 3,
+		"cost": 440,
+		"lumber": 0,
+		"from": "eeve_pyramide",
+		"next": [
+			"eeve_ancient_pyramide"
+		],
+		"wc3": "h07J"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1500,
+				1500
+			],
+			"range": 2.54,
+			"cooldown": 3.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "slow",
+					"factor": 0.32,
+					"duration": 1.3
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+	"id": "eeve_ancient_pyramide",
+	"name": "Uralte Pyramide",
+	"name_original": "Ancient Pyramide",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "physical",
+	"targets": "ground",
+	"eeve": {
+		"element": "earth",
+		"level": 5,
+		"cost": 1400,
+		"lumber": 0,
+		"from": "eeve_mighty_pyramide",
+		"next": [],
+		"wc3": "h08N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				4500,
+				4500
+			],
+			"range": 2.93,
+			"cooldown": 3.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "slow",
+					"factor": 0.4,
+					"duration": 1.65
+				}
+			]
+		}
+	]
+}

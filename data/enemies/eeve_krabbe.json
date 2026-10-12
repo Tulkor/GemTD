@@ -1,0 +1,21 @@
+{
+	"id": "eeve_krabbe",
+	"name": "Krabbe",
+	"name_original": "Crab",
+	"category": "eeve",
+	"hp": 625,
+	"speed": 2.539,
+	"armor": 0.0,
+	"armor_type": "eeve_medium",
+	"bounty": 2,
+	"damage": 1,
+	"flying": false,
+	"color": "#e07050",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 2,
+		"wc3": "h08Q"
+	},
+	"shape": "pyramid"
+}

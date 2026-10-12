@@ -1,0 +1,21 @@
+{
+	"id": "eeve_hoellengolem",
+	"name": "Höllengolem",
+	"name_original": "Infernal Golem",
+	"category": "eeve",
+	"hp": 4500000,
+	"speed": 4.078,
+	"armor": 5.0,
+	"armor_type": "eeve_divine",
+	"bounty": 1000,
+	"damage": 0,
+	"flying": false,
+	"color": "#e8c840",
+	"size": 1.9,
+	"eeve": {
+		"kind": "challenge",
+		"stage": 0,
+		"wc3": "E004"
+	},
+	"boss": true
+}

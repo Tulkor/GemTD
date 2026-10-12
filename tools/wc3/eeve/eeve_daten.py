@@ -1,0 +1,344 @@
+"""Erzeugt die eeveTD-Daten für das Spiel aus der ausgelesenen Karte (eeveTD v1.01).
+
+    python3 -I tools/wc3/eeve/eeve_daten.py [recherche-ordner]
+
+Quelle (Standard): /mnt/project-files/konzepte/recherche-stand/eeve/ mit objects.json und towers.json
+(siehe tools/wc3/README.md). Schreibt:
+  data/towers/eeve_*.json   Tower der sechs Elemente (ohne Fallen und Dual-Tower) und die Barrikade
+  data/enemies/eeve_*.json  Gegner je Gegnerstufe und die Challenges
+
+Werte in WC3-Einheiten werden umgerechnet: 128 Einheiten = 1 Towerbreite (2 Felder).
+Fähigkeiten, die unser Spiel noch nicht kennt, stehen als "todo" in den Daten und wirken noch nicht.
+"""
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/mnt/project-files/konzepte/recherche-stand/eeve")
+U = 128.0  # WC3-Einheiten pro Towerbreite
+
+objects = json.load(open(SRC / "objects.json"))
+UNITS = {u["id"]: u["mods"] for u in objects["w3u"]}
+TOWERS = {t["id"]: t for t in json.load(open(SRC / "towers.json"))}
+
+ELEMENTS = {"Nature": "nature", "Earth": "earth", "Fire": "fire", "Storm": "storm", "Magic": "magic", "Water": "water"}
+COLORS = {"nature": "#46d160", "earth": "#c08a4a", "fire": "#ff5a2a", "storm": "#7fb2ff", "magic": "#c46bff", "water": "#2fc8e8"}
+# Schadensarten heißen in eeve anders als in WC3 (siehe war3mapSkin.txt); unsere Schlüssel in data/eeve.json
+DAMAGE = {"chaos": "chaos", "siege": "physical", "hero": "elemental", "normal": "electric", "pierce": "magic", "magic": "magic"}
+# Modelle aus dem Crystal Pack je Turmlinie (rein optisch)
+MODELS = ["crystal_08", "crystal_11", "crystal_13", "crystal_18", "crystal_19", "crystal_20", "crystal_23", "crystal_24"]
+
+NAMES = {
+    "Barricade": "Barrikade",
+    "Nature Base Tower": "Natur-Grundturm", "Earth Base Tower": "Erd-Grundturm", "Fire Base Tower": "Feuer-Grundturm",
+    "Storm Base Tower": "Sturm-Grundturm", "Magic Base Tower": "Magie-Grundturm", "Water Base Tower": "Wasser-Grundturm",
+    "Thorns Tower": "Dornenturm", "Itching Thorns Tower": "Juckender Dornenturm",
+    "Orb of Life": "Kugel des Lebens", "Sacred Orb of Power": "Heilige Kugel der Macht",
+    "Minor Bird Launcher": "Kleiner Vogelwerfer", "Bird Launcher": "Vogelwerfer", "Greater Bird Launcher": "Großer Vogelwerfer",
+    "Xtreme Bird Launcher": "Xtremer Vogelwerfer", "Wicked Bird Rampage WTF Tower": "Wilder Vogelrausch-WTF-Turm",
+    "Nonhazardous Shroom Field": "Harmloses Pilzfeld", "Shroom Field": "Pilzfeld", "Hazardous Shroom Field": "Gefährliches Pilzfeld",
+    "Ultra Toxic Shroom Field": "Ultragiftiges Pilzfeld",
+    "Weak Pyramide": "Schwache Pyramide", "Pyramide": "Pyramide", "Mighty Pyramide": "Mächtige Pyramide", "Ancient Pyramide": "Uralte Pyramide",
+    "Small Geyser": "Kleiner Geysir", "Geyser": "Geysir", "Crater": "Krater", "Deep Crater": "Tiefer Krater",
+    "Ultra FFS Mega Power Totem": "Ultra-FFS-Mega-Power-Totem",
+    "Lesser Rock Launcher": "Kleiner Steinwerfer", "Rock Launcher": "Steinwerfer", "Greater Rock Launcher": "Großer Steinwerfer",
+    "Gold Mine": "Goldmine", "Diamond Mine": "Diamantmine",
+    "Area Roaster": "Flächenröster", "Area Melter": "Flächenschmelzer",
+    "Heat Stakes": "Hitzepfähle", "Searing Totem": "Sengendes Totem", "Scorched Rune": "Versengte Rune",
+    "Rune of Incineration": "Rune der Einäscherung",
+    "Camp Fire": "Lagerfeuer", "Brazier": "Kohlenbecken", "Blazing Brazier": "Loderndes Kohlenbecken", "Hell Brazier": "Höllenbecken",
+    "Ultra Hot zOMG Dine in Hell Tower": "Ultraheißer zOMG-Höllenmahl-Turm",
+    "Essence of Fire": "Essenz des Feuers", "Phoenix Egg": "Phönix-Ei",
+    "Storm Lantern": "Sturmlaterne", "Stormy Peak": "Stürmischer Gipfel", "Storm Generator": "Sturmgenerator",
+    "Heart of the Storm": "Herz des Sturms", "Moonshine Rune": "Mondschein-Rune", "Moonlight Beam": "Mondlichtstrahl",
+    "Storm Cloud": "Sturmwolke", "Tornado": "Tornado",
+    "Lightning Field": "Blitzfeld", "Ball Lightning": "Kugelblitz", "Lightning Generator": "Blitzgenerator",
+    "Great Lightning Turret": "Großer Blitzturm",
+    "Xtreme Lightning \"This is madness\" Ultra Q_Q Tower": "Xtremer „Das ist Wahnsinn“-Ultra-Q_Q-Blitzturm",
+    "Arcane Shrine": "Arkaner Schrein", "Altar of Magic": "Altar der Magie", "Ritual Pit": "Ritualgrube",
+    "Stone of Wisdom": "Stein der Weisheit", "Ancient Fountain of Wisdom": "Uralter Brunnen der Weisheit",
+    "Cube of Betrayal": "Würfel des Verrats", "Floating Cube of Treachery": "Schwebender Würfel der Heimtücke",
+    "Scaring Statue of Corruption": "Schreckliche Statue der Verderbnis",
+    "Ruinous Obelisk": "Verfallener Obelisk", "Enchanted Obelisk": "Verzauberter Obelisk", "Ornate Obelisk": "Verzierter Obelisk",
+    "Runed Obelisk": "Runen-Obelisk", "Glowing Engraved Obelisk of Ultimate Pwnage": "Leuchtender Obelisk der ultimativen Pwnage",
+    "Hydro Cannon": "Hydrokanone", "Tsunami Cannon": "Tsunamikanone",
+    "Coral Flower": "Korallenblume", "Tiny Coral": "Winzige Koralle", "Coral Needle": "Korallennadel", "Coral Atoll": "Korallenatoll",
+    "The Totally Uber Coral of Absolute GG": "Die total übere Koralle des absoluten GG",
+    "Fountain of Corrosion": "Brunnen der Korrosion", "Glowing Fountain of Oxidization": "Leuchtender Brunnen der Oxidation",
+    "Ice Cube": "Eiswürfel", "Glacier": "Gletscher", "Permafrost Blaster": "Permafrost-Kanone", "Frozen Monument": "Gefrorenes Monument",
+}
+# Vollständige Namen (die Kartendaten kürzen manche ab)
+FULL = {"h072": "Xtreme Lightning \"This is madness\" Ultra Q_Q Tower", "h022": "Glowing Engraved Obelisk of Ultimate Pwnage"}
+
+
+def r(v):
+    return round(v / U, 2)
+
+
+def aura(kind, radius, **kw):
+    return dict({"type": kind, "radius": r(radius)}, **kw)
+
+
+# Fähigkeiten je Tower (Werte aus den Tooltips der Karte, siehe Design-Dokument). Splash kommt aus den Einheitendaten.
+ABIL = {
+    "h00M": [{"type": "crit", "chance": 0.4, "multiplier": 2.0}],
+    "h015": [{"type": "crit", "chance": 0.4, "multiplier": 2.0}],
+    "h00Y": [aura("speed_aura", 1000, bonus=0.2)],
+    "h014": [aura("speed_aura", 1200, bonus=0.33)],
+    "h00G": [{"type": "bounce", "targets": 2, "falloff": 0.5, "radius": r(500)}],
+    "h00N": [{"type": "bounce", "targets": 4, "falloff": 0.55, "radius": r(500)}],
+    "h00O": [{"type": "bounce", "targets": 6, "falloff": 0.6, "radius": r(500)}],
+    "h00P": [{"type": "bounce", "targets": 9, "falloff": 0.65, "radius": r(500)}],
+    "h016": [{"type": "bounce", "targets": 19, "falloff": 0.7, "radius": r(500)}],
+    "h00E": [{"type": "poison", "dps": 10, "duration": 2.5}, {"type": "slow", "factor": 0.15, "duration": 2.5}],
+    "h00Q": [{"type": "poison", "dps": 30, "duration": 5.0}, {"type": "slow", "factor": 0.25, "duration": 5.0}],
+    "h00R": [{"type": "poison", "dps": 70, "duration": 8.0}, {"type": "slow", "factor": 0.3, "duration": 8.0}],
+    "h00S": [{"type": "poison", "dps": 200, "duration": 15.0}, {"type": "slow", "factor": 0.35, "duration": 15.0}],
+    # Pyramiden: Erdstoß trifft alle Bodengegner in Reichweite (Angriff gegen Luft fehlt noch)
+    "h08I": [{"type": "multishot", "targets": 99}, {"type": "slow", "factor": 0.15, "duration": 0.6}],
+    "h08M": [{"type": "multishot", "targets": 99}, {"type": "slow", "factor": 0.25, "duration": 0.95}],
+    "h07J": [{"type": "multishot", "targets": 99}, {"type": "slow", "factor": 0.32, "duration": 1.3}],
+    "h08N": [{"type": "multishot", "targets": 99}, {"type": "slow", "factor": 0.4, "duration": 1.65}],
+    "h07K": [{"type": "stun", "chance": 0.05, "duration": 2.0, "damage": 100}],
+    "h07B": [{"type": "stun", "chance": 0.10, "duration": 2.0, "damage": 400}],
+    "h07C": [{"type": "stun", "chance": 0.15, "duration": 2.0, "damage": 700}],
+    "h07E": [{"type": "todo", "text": "Goldene Aura: +33 % Kopfgeld für Tower im Umkreis 1000"}],
+    "h07D": [{"type": "todo", "text": "Wohlstands-Aura: +55 % Kopfgeld für Tower im Umkreis 1200"}],
+    "h03K": [aura("burn_aura", 300, dps=200.0)],
+    "h03N": [aura("burn_aura", 300, dps=600.0)],
+    "h02U": [{"type": "poison", "chance": 0.12, "dps": 50, "duration": 3.0}, {"type": "slow", "chance": 0.12, "factor": 0.06, "duration": 3.0}],
+    "h02V": [{"type": "poison", "chance": 0.13, "dps": 180, "duration": 3.0}, {"type": "slow", "chance": 0.13, "factor": 0.08, "duration": 3.0}],
+    "h01E": [{"type": "poison", "chance": 0.14, "dps": 1000, "duration": 3.0}, {"type": "slow", "chance": 0.14, "factor": 0.1, "duration": 3.0}],
+    "h02T": [{"type": "poison", "chance": 0.15, "dps": 1800, "duration": 3.0}, {"type": "slow", "chance": 0.15, "factor": 0.12, "duration": 3.0}],
+    "h037": [aura("damage_aura", 1000, bonus=0.25)],
+    "h03B": [aura("damage_aura", 1200, bonus=0.4)],
+    "h074": [{"type": "multishot", "targets": 3}],
+    "h060": [{"type": "multishot", "targets": 3}],
+    "h05T": [{"type": "multishot", "targets": 3}],
+    "h078": [{"type": "multishot", "targets": 4}],
+    "h04P": [{"type": "multishot", "targets": 9}],
+    "h06T": [{"type": "multishot", "targets": 15}],
+    "h06U": [aura("slow_aura", 600, factor=0.15)],
+    "h05Y": [aura("slow_aura", 800, factor=0.25)],
+    # Kettenblitz: vorerst als Blitzschlag um das Ziel (trifft alle im Umkreis statt einer festen Anzahl)
+    "h04I": [{"type": "nova", "chance": 0.06, "damage": 60, "radius": r(300)}],
+    "h062": [{"type": "nova", "chance": 0.06, "damage": 240, "radius": r(320)}],
+    "h085": [{"type": "nova", "chance": 0.06, "damage": 660, "radius": r(340)}],
+    "h05N": [{"type": "nova", "chance": 0.06, "damage": 2400, "radius": r(360)}],
+    "h072": [{"type": "nova", "chance": 0.06, "damage": 6000, "radius": r(400)}],
+    "h0AF": [{"type": "bounce", "targets": 3, "falloff": 0.55, "radius": r(200)}],
+    "h01K": [{"type": "bounce", "targets": 4, "falloff": 0.63, "radius": r(200)}],
+    "h01N": [{"type": "bounce", "targets": 5, "falloff": 0.7, "radius": r(200)}],
+    "h02S": [{"type": "todo", "text": "Aura der Weisheit: +45 % Erfahrung für Tower im Umkreis 1000"}],
+    "h01G": [{"type": "todo", "text": "Aura der großen Weisheit: +70 % Erfahrung für Tower im Umkreis 1200"}],
+    "h02O": [{"type": "armor_reduce", "amount": 3.0, "duration": 3.0}],
+    "h02D": [{"type": "armor_reduce", "amount": 6.0, "duration": 5.0}],
+    "h01F": [{"type": "armor_reduce", "amount": 8.0, "duration": 6.0}],
+    "h02W": [{"type": "crit", "chance": 0.05, "multiplier": 1.7}],
+    "h020": [{"type": "crit", "chance": 0.05, "multiplier": 2.2}],
+    "h029": [{"type": "crit", "chance": 0.05, "multiplier": 2.8}],
+    "h02N": [{"type": "crit", "chance": 0.05, "multiplier": 3.5}],
+    "h022": [{"type": "crit", "chance": 0.05, "multiplier": 5.5}],
+    # Welle, die Gegner auf ihrem Weg trifft: vorerst als Treffer im Umkreis des Ziels
+    "h04D": [{"type": "nova", "chance": 0.23, "damage": 180, "radius": r(250)}],
+    "h04E": [{"type": "nova", "chance": 0.28, "damage": 1700, "radius": r(300)}],
+    "h04U": [aura("armor_aura", 600, amount=5.0)],
+    "h056": [aura("armor_aura", 800, amount=8.0)],
+    "h04W": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
+    "h052": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
+    "h04X": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
+    "h055": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
+}
+# Werte, die in den Einheitendaten fehlen (Standard des WC3-Grundturms), aus den Tooltips
+RANGE = {"h03K": 300, "h03N": 300, "h04D": 700, "h04E": 700, "h05D": 700, "h07K": 650, "h07B": 650, "h07C": 650,
+         "h07M": 700, "h0AF": 700, "h01K": 700, "h01N": 700, "h02O": 700, "h02D": 700, "h01F": 700, "h00E": 700, "h00Q": 700,
+         "h04P": 800, "h06T": 800, "h011": 700}
+COOLDOWN = {"h02D": 0.9, "h04P": 0.9, "h06T": 0.9}
+# Erdstoß der Pyramiden: Schaden je Stoß = DPS × 3 s (Design-Dokument)
+SHOCK = {"h08I": 150, "h08M": 570, "h07J": 1500, "h08N": 4500}
+SHOCK_RANGE = {"h08I": 240, "h08M": 280, "h07J": 325, "h08N": 375}
+NO_ATTACK = {"h03K", "h03N"}
+
+
+def slug(name):
+    s = name.lower().replace('"', "").replace("'", "")
+    return "eeve_" + re.sub(r"[^a-z0-9]+", "_", s).strip("_")
+
+
+def unit_name(uid):
+    return FULL.get(uid, TOWERS[uid]["name"])
+
+
+def splash(m):
+    if m.get("ua1w") != "msplash":
+        return []
+    radius = float(m.get("ua1h") or m.get("ua1q") or 0)
+    if radius <= 0:
+        return []
+    return [{"type": "splash", "radius": r(radius), "factor": float(m.get("uhd1", 0.5))}]
+
+
+def tower_json(uid, element, line, children):
+    t = TOWERS[uid]
+    m = UNITS[uid]
+    name = unit_name(uid)
+    base = float(m.get("ua1b", 20) or 0)
+    sides = float(m.get("ua1s", 6) or 1)
+    tier = {"damage": [base + 1, base + sides]}
+    tier["range"] = r(float(m.get("ua1r") or RANGE.get(uid, 700)))
+    if uid in SHOCK:
+        tier["damage"] = [SHOCK[uid], SHOCK[uid]]
+        tier["range"] = r(SHOCK_RANGE[uid])
+    tier["cooldown"] = float(m.get("ua1c") or COOLDOWN.get(uid, 1.0))
+    if uid in NO_ATTACK:
+        tier["damage"] = [0, 0]
+        tier["cooldown"] = 0.0
+    abilities = ([] if uid in NO_ATTACK else splash(m)) + ABIL.get(uid, [])
+    todo = [a["text"] for a in abilities if a["type"] == "todo"]
+    tier["abilities"] = [a for a in abilities if a["type"] != "todo"]
+    d = {
+        "id": slug(name),
+        "name": NAMES[name],
+        "name_original": name,
+        "category": "eeve",
+        "color": COLORS[element],
+        "model": "res://assets/models/crystals/%s.glb" % MODELS[line % len(MODELS)],
+        "damage_type": DAMAGE.get(m.get("ua1t") or "pierce", "magic"),
+        "targets": "ground" if uid in SHOCK else "both",
+        "eeve": {
+            "element": element,
+            "level": int(str(t["req_level"] or 1).split(",")[0]),
+            "cost": int(t["cost"] or 0),
+            "lumber": int(t["lumber"] or 0),
+            "from": slug(unit_name(t["from"])) if t["from"] and t["from"] != "h006" else "eeve_barricade",
+            "next": [slug(unit_name(c)) for c in children],
+            "wc3": uid,
+        },
+        "tiers": [tier],
+    }
+    if todo:
+        d["eeve"]["todo"] = todo
+    return d
+
+
+def towers():
+    out = [{
+        "id": "eeve_barricade", "name": "Barrikade", "name_original": "Barricade", "category": "eeve",
+        "color": "#8c8c96", "model": "res://assets/models/rocks/rock_a.glb", "model_tint": False,
+        "damage_type": "", "targets": "both",
+        "eeve": {"element": "", "level": 0, "cost": 2, "lumber": 0, "from": "", "next": [], "wc3": "h006", "barricade": True},
+        "tiers": [{"damage": [0, 0], "range": 0.0, "cooldown": 0.0, "abilities": []}],
+    }]
+    bases = [b for b in TOWERS["h006"]["upgrades"].split(",") if TOWERS[b]["element"] in ELEMENTS]
+    for b in bases:
+        element = ELEMENTS[TOWERS[b]["element"]]
+        out[0]["eeve"]["next"].append(slug(unit_name(b)))
+        lines = TOWERS[b]["upgrades"].split(",")
+        out.append(tower_json(b, element, 0, lines))
+        for i, first in enumerate(lines):
+            uid = first
+            while uid:
+                kids = [k for k in (TOWERS[uid]["upgrades"] or "").split(",") if k]
+                out.append(tower_json(uid, element, i + 1, kids))
+                uid = kids[0] if kids else ""
+    return out
+
+
+# --- Gegner ----------------------------------------------------------------------------
+
+ENEMY_NAMES = {
+    "Boar": "Keiler", "Chicken": "Huhn", "Giant Sea Hawk": "Riesen-Seefalke", "Vulture": "Geier", "Giant Wolf": "Riesenwolf",
+    "Giant Lobster": "Riesenhummer", "Crab": "Krabbe", "Spirit Owl": "Geistereule", "Tiny Owl": "Kleine Eule", "Flood Lord": "Flutfürst",
+    "Spider": "Spinne", "Scarab": "Skarabäus", "Falcon": "Falke", "Harpy": "Harpyie", "Giant Scorpion": "Riesenskorpion",
+    "Soldier": "Soldat", "Militia": "Miliz", "Gryphon": "Greif", "Flying Sheep": "Fliegendes Schaf", "Paladin": "Paladin",
+    "Grunt": "Grunzer", "Troll": "Troll", "Wyvern Rider": "Wyvernreiter", "Bat Rider": "Fledermausreiter", "Chieftain": "Häuptling",
+    "Naga Siren": "Naga-Sirene", "Murloc": "Murloc", "Winged Serpent": "Geflügelte Schlange", "Faerie Drake": "Feendrache",
+    "Naga Imperator": "Naga-Imperator", "Ranger": "Waldläufer", "Night Elf Warrior": "Nachtelfenkrieger", "Chimaera": "Chimäre",
+    "Hippo Gryph": "Hippogreif", "High Priestess": "Hohepriesterin", "Banshee": "Banshee", "Skeleton": "Skelett",
+    "Frost Wyrm": "Frostwyrm", "Gargoyle": "Gargoyle", "Lich Lord": "Lichfürst", "Fire Elemental": "Feuerelementar",
+    "Tiny Devil": "Kleiner Teufel", "Phoenix": "Phönix", "Fire Drake": "Feuerdrache", "Fire Lord": "Feuerfürst",
+    "Void Keeper": "Leerenwächter", "Daemonic Minion": "Dämonischer Diener", "Daemon Airship": "Dämonen-Luftschiff",
+    "Flying Daemon": "Fliegender Dämon", "Daemon Lord": "Dämonenfürst",
+    "Clay Golem Challenge": "Lehmgolem", "Flesh Golem Challenge": "Fleischgolem", "Rock Golem Challenge": "Felsgolem",
+    "Steel Golem Challenge": "Stahlgolem", "Infernal Golem Challenge": "Höllengolem", "Air Challenge": "Luft-Challenge",
+    "Mass Challenge": "Massen-Challenge",
+}
+# Gegner je Gegnerstufe: Boden, Boden-Masse, Luft, Luft-Masse, Boss (Design-Dokument, Abschnitt Gegner und Wellen)
+STAGES = [
+    ["Boar", "Chicken", "Giant Sea Hawk", "Vulture", "Giant Wolf"],
+    ["Giant Lobster", "Crab", "Spirit Owl", "Tiny Owl", "Flood Lord"],
+    ["Spider", "Scarab", "Falcon", "Harpy", "Giant Scorpion"],
+    ["Soldier", "Militia", "Gryphon", "Flying Sheep", "Paladin"],
+    ["Grunt", "Troll", "Wyvern Rider", "Bat Rider", "Chieftain"],
+    ["Naga Siren", "Murloc", "Winged Serpent", "Faerie Drake", "Naga Imperator"],
+    ["Ranger", "Night Elf Warrior", "Chimaera", "Hippo Gryph", "High Priestess"],
+    ["Banshee", "Skeleton", "Frost Wyrm", "Gargoyle", "Lich Lord"],
+    ["Fire Elemental", "Tiny Devil", "Phoenix", "Fire Drake", "Fire Lord"],
+    ["Void Keeper", "Daemonic Minion", "Daemon Airship", "Flying Daemon", "Daemon Lord"],
+]
+KINDS = ["ground", "ground_mass", "air", "air_mass", "boss"]
+ARMOR = {"small": "eeve_small", "medium": "eeve_medium", "large": "eeve_large", "hero": "eeve_hero",
+         "divine": "eeve_divine", "none": "eeve_none", None: "eeve_large", "normal": "eeve_medium"}
+ENEMY_COLORS = ["#b88a5a", "#e07050", "#5aa0e0", "#7a6ad0", "#c04040", "#40a080", "#a0c040", "#9090a0", "#ff7a30", "#a040c0"]
+CHALLENGES = ["Clay Golem Challenge", "Flesh Golem Challenge", "Rock Golem Challenge", "Steel Golem Challenge",
+              "Mass Challenge", "Air Challenge", "Infernal Golem Challenge"]
+
+
+def unit_by_name(name):
+    for uid, m in UNITS.items():
+        if m.get("unam") == name and m.get("uhpm"):
+            return uid, m
+    raise KeyError(name)
+
+
+def enemy_json(name, kind, stage):
+    uid, m = unit_by_name(name)
+    d = {
+        "id": slug(ENEMY_NAMES[name].replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")),
+        "name": ENEMY_NAMES[name],
+        "name_original": name.replace(" Challenge", "") if "Golem" in name else name,
+        "category": "eeve",
+        "hp": int(m["uhpm"]),
+        "speed": round(min(float(m.get("umvs") or 300), 522.0) / U, 3),
+        "armor": float(m.get("udef") or 0),
+        "armor_type": ARMOR.get(m.get("udty")),
+        "bounty": int(m.get("ubba") or 0) + int(m.get("ubdi") or 0),
+        "damage": {"ground": 4, "ground_mass": 1, "air": 4, "air_mass": 1, "boss": 40, "challenge": 0}[kind],
+        "flying": m.get("umvt") == "fly",
+        "color": ENEMY_COLORS[(stage - 1) % len(ENEMY_COLORS)] if stage else "#e8c840",
+        "size": {"ground": 1.0, "ground_mass": 0.75, "air": 1.0, "air_mass": 0.7, "boss": 1.7, "challenge": 1.9}[kind],
+        "eeve": {"kind": kind, "stage": stage, "wc3": uid},
+    }
+    if kind == "boss" or (kind == "challenge" and "Golem" in name):
+        d["boss"] = True
+    if kind in ("ground_mass", "air_mass") or name == "Mass Challenge":
+        d["shape"] = "pyramid"
+    return d
+
+
+def enemies():
+    out = []
+    for s, row in enumerate(STAGES, start=1):
+        for kind, name in zip(KINDS, row):
+            out.append(enemy_json(name, kind, s))
+    for name in CHALLENGES:
+        out.append(enemy_json(name, "challenge", 0))
+    return out
+
+
+def write(kind, items):
+    folder = ROOT / "data" / kind
+    for old in folder.glob("eeve_*.json"):
+        old.unlink()
+    for d in items:
+        with open(folder / (d["id"] + ".json"), "w", encoding="utf-8") as f:
+            json.dump(d, f, ensure_ascii=False, indent="\t")
+            f.write("\n")
+    print("%d %s geschrieben" % (len(items), kind))
+
+
+if __name__ == "__main__":
+    write("towers", towers())
+    write("enemies", enemies())

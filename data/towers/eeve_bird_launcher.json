@@ -1,0 +1,39 @@
+{
+	"id": "eeve_bird_launcher",
+	"name": "Vogelwerfer",
+	"name_original": "Bird Launcher",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 2,
+		"cost": 140,
+		"lumber": 0,
+		"from": "eeve_minor_bird_launcher",
+		"next": [
+			"eeve_greater_bird_launcher"
+		],
+		"wc3": "h00N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				94.0,
+				114.0
+			],
+			"range": 7.42,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 4,
+					"falloff": 0.55,
+					"radius": 3.91
+				}
+			]
+		}
+	]
+}

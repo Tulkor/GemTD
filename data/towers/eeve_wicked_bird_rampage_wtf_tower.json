@@ -1,0 +1,37 @@
+{
+	"id": "eeve_wicked_bird_rampage_wtf_tower",
+	"name": "Wilder Vogelrausch-WTF-Turm",
+	"name_original": "Wicked Bird Rampage WTF Tower",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 6,
+		"cost": 1300,
+		"lumber": 1,
+		"from": "eeve_xtreme_bird_launcher",
+		"next": [],
+		"wc3": "h016"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1239.0,
+				1515.0
+			],
+			"range": 8.2,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 19,
+					"falloff": 0.7,
+					"radius": 3.91
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,38 @@
+{
+	"id": "eeve_ruinous_obelisk",
+	"name": "Verfallener Obelisk",
+	"name_original": "Ruinous Obelisk",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 1,
+		"cost": 30,
+		"lumber": 0,
+		"from": "eeve_magic_base_tower",
+		"next": [
+			"eeve_enchanted_obelisk"
+		],
+		"wc3": "h02W"
+	},
+	"tiers": [
+		{
+			"damage": [
+				48.0,
+				48.0
+			],
+			"range": 6.25,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.05,
+					"multiplier": 1.7
+				}
+			]
+		}
+	]
+}

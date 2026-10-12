@@ -1,0 +1,41 @@
+{
+	"id": "eeve_magic_base_tower",
+	"name": "Magie-Grundturm",
+	"name_original": "Magic Base Tower",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 1,
+		"cost": 48,
+		"lumber": 0,
+		"from": "eeve_barricade",
+		"next": [
+			"eeve_arcane_shrine",
+			"eeve_stone_of_wisdom",
+			"eeve_cube_of_betrayal",
+			"eeve_ruinous_obelisk"
+		],
+		"wc3": "h0AN"
+	},
+	"tiers": [
+		{
+			"damage": [
+				21.0,
+				26.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"id": "eeve_skarabaeus",
+	"name": "Skarabäus",
+	"name_original": "Scarab",
+	"category": "eeve",
+	"hp": 1750,
+	"speed": 2.734,
+	"armor": 1.0,
+	"armor_type": "eeve_medium",
+	"bounty": 3,
+	"damage": 1,
+	"flying": false,
+	"color": "#5aa0e0",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 3,
+		"wc3": "h08U"
+	},
+	"shape": "pyramid"
+}

@@ -1,0 +1,21 @@
+{
+	"id": "eeve_fliegendes_schaf",
+	"name": "Fliegendes Schaf",
+	"name_original": "Flying Sheep",
+	"category": "eeve",
+	"hp": 750,
+	"speed": 2.422,
+	"armor": 1.0,
+	"armor_type": "eeve_none",
+	"bounty": 4,
+	"damage": 1,
+	"flying": true,
+	"color": "#7a6ad0",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 4,
+		"wc3": "h093"
+	},
+	"shape": "pyramid"
+}

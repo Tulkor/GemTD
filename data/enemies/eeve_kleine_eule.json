@@ -1,0 +1,21 @@
+{
+	"id": "eeve_kleine_eule",
+	"name": "Kleine Eule",
+	"name_original": "Tiny Owl",
+	"category": "eeve",
+	"hp": 175,
+	"speed": 2.344,
+	"armor": 0.0,
+	"armor_type": "eeve_none",
+	"bounty": 2,
+	"damage": 1,
+	"flying": true,
+	"color": "#e07050",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 2,
+		"wc3": "h08S"
+	},
+	"shape": "pyramid"
+}

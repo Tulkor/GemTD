@@ -1,0 +1,20 @@
+{
+	"id": "eeve_waldlaeufer",
+	"name": "Waldläufer",
+	"name_original": "Ranger",
+	"category": "eeve",
+	"hp": 70000,
+	"speed": 3.516,
+	"armor": 3.0,
+	"armor_type": "eeve_large",
+	"bounty": 28,
+	"damage": 4,
+	"flying": false,
+	"color": "#a0c040",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 7,
+		"wc3": "h09G"
+	}
+}

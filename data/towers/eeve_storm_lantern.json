@@ -1,0 +1,37 @@
+{
+	"id": "eeve_storm_lantern",
+	"name": "Sturmlaterne",
+	"name_original": "Storm Lantern",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 1,
+		"cost": 20,
+		"lumber": 0,
+		"from": "eeve_storm_base_tower",
+		"next": [
+			"eeve_stormy_peak"
+		],
+		"wc3": "h074"
+	},
+	"tiers": [
+		{
+			"damage": [
+				10.0,
+				12.0
+			],
+			"range": 8.2,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 3
+				}
+			]
+		}
+	]
+}

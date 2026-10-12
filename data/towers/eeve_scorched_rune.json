@@ -1,0 +1,45 @@
+{
+	"id": "eeve_scorched_rune",
+	"name": "Versengte Rune",
+	"name_original": "Scorched Rune",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 4,
+		"cost": 900,
+		"lumber": 0,
+		"from": "eeve_searing_totem",
+		"next": [
+			"eeve_rune_of_incineration"
+		],
+		"wc3": "h01E"
+	},
+	"tiers": [
+		{
+			"damage": [
+				573.0,
+				859.0
+			],
+			"range": 8.01,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "poison",
+					"chance": 0.14,
+					"dps": 1000,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"chance": 0.14,
+					"factor": 0.1,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

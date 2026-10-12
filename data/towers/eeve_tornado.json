@@ -1,0 +1,41 @@
+{
+	"id": "eeve_tornado",
+	"name": "Tornado",
+	"name_original": "Tornado",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_storm_cloud",
+		"next": [],
+		"wc3": "h05Y"
+	},
+	"tiers": [
+		{
+			"damage": [
+				676.0,
+				1006.0
+			],
+			"range": 11.72,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.47,
+					"factor": 0.3
+				},
+				{
+					"type": "slow_aura",
+					"radius": 6.25,
+					"factor": 0.25
+				}
+			]
+		}
+	]
+}

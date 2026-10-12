@@ -1,0 +1,43 @@
+{
+	"id": "eeve_nonhazardous_shroom_field",
+	"name": "Harmloses Pilzfeld",
+	"name_original": "Nonhazardous Shroom Field",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 1,
+		"cost": 10,
+		"lumber": 0,
+		"from": "eeve_nature_base_tower",
+		"next": [
+			"eeve_shroom_field"
+		],
+		"wc3": "h00E"
+	},
+	"tiers": [
+		{
+			"damage": [
+				32.0,
+				32.0
+			],
+			"range": 5.47,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 10,
+					"duration": 2.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.15,
+					"duration": 2.5
+				}
+			]
+		}
+	]
+}

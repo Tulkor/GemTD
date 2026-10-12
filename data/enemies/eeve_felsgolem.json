@@ -1,0 +1,21 @@
+{
+	"id": "eeve_felsgolem",
+	"name": "Felsgolem",
+	"name_original": "Rock Golem",
+	"category": "eeve",
+	"hp": 450000,
+	"speed": 3.906,
+	"armor": 3.0,
+	"armor_type": "eeve_divine",
+	"bounty": 350,
+	"damage": 0,
+	"flying": false,
+	"color": "#e8c840",
+	"size": 1.9,
+	"eeve": {
+		"kind": "challenge",
+		"stage": 0,
+		"wc3": "E003"
+	},
+	"boss": true
+}

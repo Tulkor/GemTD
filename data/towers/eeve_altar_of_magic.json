@@ -1,0 +1,39 @@
+{
+	"id": "eeve_altar_of_magic",
+	"name": "Altar der Magie",
+	"name_original": "Altar of Magic",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 3,
+		"cost": 630,
+		"lumber": 0,
+		"from": "eeve_arcane_shrine",
+		"next": [
+			"eeve_ritual_pit"
+		],
+		"wc3": "h01K"
+	},
+	"tiers": [
+		{
+			"damage": [
+				412.0,
+				558.0
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 4,
+					"falloff": 0.63,
+					"radius": 1.56
+				}
+			]
+		}
+	]
+}

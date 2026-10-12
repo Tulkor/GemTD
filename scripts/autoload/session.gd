@@ -5,6 +5,7 @@ const MAIN_MENU := "res://scenes/main_menu.tscn"
 const GAME := "res://scenes/game.tscn"
 const MAP_EDITOR := "res://scenes/map_editor.tscn"
 const TOWER_EDITOR := "res://scenes/tower_editor.tscn"
+const EEVE_GAME := "res://scenes/eeve_game.tscn"
 
 ## Pfad der Map, die das Spiel laden soll.
 var map_path := ""
@@ -26,7 +27,7 @@ const DIFFICULTIES := [
 ## Spiele im Hauptmenü. ready: schon spielbar (eeveTD und Shopping Maul entstehen gerade).
 const GAMES := [
 	{"id": "gemtd", "name": "GemTD", "ready": true, "hint": "Gems setzen, kombinieren, Labyrinth bauen"},
-	{"id": "eevetd", "name": "eeveTD", "ready": false, "hint": "Kommt noch: Eevee-Entwicklungen, solo und im Koop zusammen mazen"},
+	{"id": "eevetd", "name": "eeveTD", "ready": true, "hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level (noch solo)", "scene": EEVE_GAME},
 	{"id": "shoppingmaul", "name": "Shopping Maul", "ready": false, "hint": "Kommt noch: Tower aus Shops kaufen und aufwerten"},
 ]
 var game_kind := "gemtd"
@@ -48,6 +49,14 @@ var skip_setup := false
 var coop: Dictionary = {}
 ## Wohin "Zurück" im Spiel führt.
 var return_scene := MAIN_MENU
+
+
+## Spielszene des gewählten Spiels (game_kind), Standard ist GemTD.
+func game_scene() -> String:
+	for g in GAMES:
+		if g.id == game_kind:
+			return str(g.get("scene", GAME))
+	return GAME
 
 
 func goto(scene: String) -> void:

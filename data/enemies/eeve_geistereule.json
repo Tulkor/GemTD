@@ -1,0 +1,20 @@
+{
+	"id": "eeve_geistereule",
+	"name": "Geistereule",
+	"name_original": "Spirit Owl",
+	"category": "eeve",
+	"hp": 875,
+	"speed": 2.148,
+	"armor": 0.0,
+	"armor_type": "eeve_small",
+	"bounty": 8,
+	"damage": 4,
+	"flying": true,
+	"color": "#e07050",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 2,
+		"wc3": "h08R"
+	}
+}

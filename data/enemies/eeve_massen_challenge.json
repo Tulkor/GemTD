@@ -1,0 +1,21 @@
+{
+	"id": "eeve_massen_challenge",
+	"name": "Massen-Challenge",
+	"name_original": "Mass Challenge",
+	"category": "eeve",
+	"hp": 175000,
+	"speed": 4.078,
+	"armor": 4.0,
+	"armor_type": "eeve_divine",
+	"bounty": 0,
+	"damage": 0,
+	"flying": false,
+	"color": "#e8c840",
+	"size": 1.9,
+	"eeve": {
+		"kind": "challenge",
+		"stage": 0,
+		"wc3": "h0AL"
+	},
+	"shape": "pyramid"
+}

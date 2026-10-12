@@ -1,0 +1,39 @@
+{
+	"id": "eeve_minor_bird_launcher",
+	"name": "Kleiner Vogelwerfer",
+	"name_original": "Minor Bird Launcher",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 1,
+		"cost": 10,
+		"lumber": 0,
+		"from": "eeve_nature_base_tower",
+		"next": [
+			"eeve_bird_launcher"
+		],
+		"wc3": "h00G"
+	},
+	"tiers": [
+		{
+			"damage": [
+				27.0,
+				33.0
+			],
+			"range": 7.03,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 2,
+					"falloff": 0.5,
+					"radius": 3.91
+				}
+			]
+		}
+	]
+}

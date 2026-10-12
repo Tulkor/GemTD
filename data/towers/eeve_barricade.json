@@ -1,0 +1,39 @@
+{
+	"id": "eeve_barricade",
+	"name": "Barrikade",
+	"name_original": "Barricade",
+	"category": "eeve",
+	"color": "#8c8c96",
+	"model": "res://assets/models/rocks/rock_a.glb",
+	"model_tint": false,
+	"damage_type": "",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 0,
+		"cost": 2,
+		"lumber": 0,
+		"from": "",
+		"next": [
+			"eeve_fire_base_tower",
+			"eeve_magic_base_tower",
+			"eeve_nature_base_tower",
+			"eeve_storm_base_tower",
+			"eeve_water_base_tower",
+			"eeve_earth_base_tower"
+		],
+		"wc3": "h006",
+		"barricade": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				0,
+				0
+			],
+			"range": 0.0,
+			"cooldown": 0.0,
+			"abilities": []
+		}
+	]
+}

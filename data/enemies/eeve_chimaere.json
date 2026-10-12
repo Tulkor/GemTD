@@ -1,0 +1,20 @@
+{
+	"id": "eeve_chimaere",
+	"name": "Chimäre",
+	"name_original": "Chimaera",
+	"category": "eeve",
+	"hp": 14000,
+	"speed": 3.125,
+	"armor": 3.0,
+	"armor_type": "eeve_small",
+	"bounty": 28,
+	"damage": 4,
+	"flying": true,
+	"color": "#a0c040",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 7,
+		"wc3": "h09I"
+	}
+}

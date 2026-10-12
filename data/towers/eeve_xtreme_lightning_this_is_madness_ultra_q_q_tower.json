@@ -1,0 +1,37 @@
+{
+	"id": "eeve_xtreme_lightning_this_is_madness_ultra_q_q_tower",
+	"name": "Xtremer „Das ist Wahnsinn“-Ultra-Q_Q-Blitzturm",
+	"name_original": "Xtreme Lightning \"This is madness\" Ultra Q_Q Tower",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 6,
+		"cost": 1200,
+		"lumber": 1,
+		"from": "eeve_great_lightning_turret",
+		"next": [],
+		"wc3": "h072"
+	},
+	"tiers": [
+		{
+			"damage": [
+				412.0,
+				1650.0
+			],
+			"range": 11.72,
+			"cooldown": 1.05,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.06,
+					"damage": 6000,
+					"radius": 3.12
+				}
+			]
+		}
+	]
+}
