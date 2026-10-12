@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Erzeugt docs/tower-werte.md aus data/towers/*.json und data/balance.json.
 
-Aufruf aus dem Projektordner: python3 tools/tower_tabelle.py
+Aufruf aus dem Projektordner: python3 tools/tower_tabelle.py [--pruefen] [--kopieren]
 Nach jeder Änderung an Tower-Werten neu ausführen, damit die Tabelle aktuell bleibt.
+  --pruefen   nichts schreiben, nur Exit-Code 1, wenn docs/tower-werte.md veraltet ist (für Tests und Git-Hook)
+  --kopieren  zusätzlich nach /mnt/project-files/balance/tower-werte.md kopieren (falls der Ordner da ist)
 """
 import json
 import pathlib
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "tower-werte.md"
+PROJECT_COPY = pathlib.Path("/mnt/project-files/balance/tower-werte.md")
 
 GEM_ORDER = ["amethyst", "aquamarine", "diamond", "emerald", "opal", "ruby", "sapphire", "topaz"]
 GEM_TIERS = ["Splitter", "Fehlerhaft", "Normal", "Makellos", "Perfekt", "Groß"]
@@ -178,8 +182,19 @@ def main():
     for dt, name in DAMAGE_TYPES.items():
         row = table.get(dt, {})
         lines.append("| %s | %s |" % (name, " | ".join(num(row.get(a, 1)) for a in armors)))
-    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    text = "\n".join(lines) + "\n"
+    if "--pruefen" in sys.argv:
+        current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
+        if current != text:
+            print("docs/tower-werte.md ist veraltet: python3 tools/tower_tabelle.py --kopieren")
+            sys.exit(1)
+        print("Tower-Tabelle aktuell")
+        return
+    OUT.write_text(text, encoding="utf-8")
     print("geschrieben:", OUT.relative_to(ROOT))
+    if "--kopieren" in sys.argv and PROJECT_COPY.parent.is_dir():
+        PROJECT_COPY.write_text(text, encoding="utf-8")
+        print("kopiert:", PROJECT_COPY)
 
 
 if __name__ == "__main__":
