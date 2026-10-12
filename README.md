@@ -91,7 +91,7 @@ Tower zuletzt getroffen hat. Leben bzw. Punkte, Wellen und Tempo sind gemeinsam,
 Wer das Spiel verlässt, hält die Runde nicht auf (von seinen gesetzten Gems bleibt der erste) und steigt über
 „Mitspielen“ wieder ein. Verlässt der Host, ist die Partie für alle vorbei; vorher kann er sie speichern.
 
-Maul-Maps (z. B. „Maul (2 Spieler)“): jeder Spieler hat eine Zone und baut nur dort; jede Bahn hat ihren eigenen
+Maul-Maps („Maul (2 Spieler)“, „Maul (4 Spieler)“): jeder Spieler hat eine Zone und baut nur dort; jede Bahn hat ihren eigenen
 Spawn und läuft durch mehrere Zonen ins gemeinsame Ziel. Jede Welle erscheint an jeder Bahn eines mitspielenden
 Spielers (ist eine Welle gleich viele Punkte wert). Solo auf einer Maul-Map läuft nur die eigene Bahn.
 Im Map-JSON: `spawn_player` (Bahn 0), `lanes` [{spawn, checkpoints, player}] und `zones` [{rect [x, y, w, h], player}].

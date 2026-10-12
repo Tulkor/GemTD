@@ -1132,6 +1132,18 @@ func _maul_test() -> void:
 		if m.id == "maul_2":
 			path = m.path
 	check(path != "", "Maul-Map vorhanden")
+	# Vier Spieler: Kette im Kreis, jede Bahn durch die eigene und die nächste Zone
+	var m4: MapData = null
+	for m in Database.list_maps():
+		if m.id == "maul_4":
+			m4 = MapData.load_file(m.path)
+	check(m4 != null and m4.lane_count() == 4 and m4.zones.size() == 4, "Maul (4 Spieler): vier Bahnen, vier Zonen")
+	if m4 != null:
+		var pf := Pathfinder.new(m4)
+		var lens := range(4).map(func(i): return pf.compute_path(i).size())
+		check(lens.all(func(n): return n > 100), "Maul (4 Spieler): alle Wege offen %s" % [lens])
+		check(range(4).all(func(i): return m4.can_build_for(m4.waypoints(i)[1], i) and m4.can_build_for(m4.waypoints(i)[5], (i + 1) % 4)),
+			"Maul (4 Spieler): jede Bahn läuft durch die eigene und die nächste Zone")
 	Session.map_path = path
 	Session.map_override = null
 	var solo: Node = load(Session.GAME).instantiate()
