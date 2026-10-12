@@ -4,7 +4,7 @@ extends Node
 ## res://data/<typ>/*.json  -> mitgelieferte Daten
 ## user://data/<typ>/*.json -> eigene Daten (überschreiben gleiche IDs)
 ##
-## Typen: towers, enemies, waves, maps. Dazu res://data/balance.json.
+## Typen: towers, enemies, waves, maps. Dazu res://data/balance.json und res://data/modes.json (TD-Modi).
 
 const RES_DATA := "res://data/"
 const USER_DATA := "user://data/"
@@ -16,6 +16,8 @@ var towers: Dictionary = {}
 var enemies: Dictionary = {}
 var wave_sets: Dictionary = {}
 var balance: Dictionary = {}
+## TD-Modi aus data/modes.json, in der Reihenfolge der Datei (siehe mode()).
+var modes: Array = []
 
 
 func _ready() -> void:
@@ -28,6 +30,10 @@ func reload() -> void:
 	wave_sets = _load_dir("waves")
 	var b = load_json(RES_DATA + "balance.json")
 	balance = b if typeof(b) == TYPE_DICTIONARY else {}
+	var m = load_json(RES_DATA + "modes.json")
+	modes = m.get("modes", []) if typeof(m) == TYPE_DICTIONARY else []
+	if modes.is_empty():
+		modes = [{"id": "gemtd", "name": "GemTD", "ready": true, "min_players": 1, "max_players": 8}]
 
 
 # --- Dateien -----------------------------------------------------------------
@@ -94,10 +100,39 @@ func list_maps() -> Array:
 		if typeof(d) != TYPE_DICTIONARY:
 			continue
 		var id := str(d.get("id", path.get_file().get_basename()))
-		by_id[id] = {"id": id, "name": str(d.get("name", id)), "path": path}
+		by_id[id] = {"id": id, "name": str(d.get("name", id)), "path": path, "game": str(d.get("game", "gemtd"))}
 	var list := by_id.values()
 	list.sort_custom(func(a, b): return a.name < b.name)
 	return list
+
+
+# --- TD-Modi ---------------------------------------------------------------------
+
+func mode(id: String) -> Dictionary:
+	for m in modes:
+		if str(m.get("id", "")) == id:
+			return m
+	return {}
+
+
+## Modus spielbar und für so viele Spieler erlaubt?
+func mode_allows(id: String, players: int) -> bool:
+	var m := mode(id)
+	return not m.is_empty() and bool(m.get("ready", false)) \
+		and players >= int(m.get("min_players", 1)) and players <= int(m.get("max_players", 8))
+
+
+## Erlaubte Spielerzahl als Text, z. B. "1–8 Spieler".
+func mode_players_text(id: String) -> String:
+	var m := mode(id)
+	var lo := int(m.get("min_players", 1))
+	var hi := int(m.get("max_players", 8))
+	return tr("%d Spieler") % lo if lo == hi else tr("%d–%d Spieler") % [lo, hi]
+
+
+## Maps, die zum Modus passen (Einträge wie list_maps()): Feld "game" der Map, Standard "gemtd".
+func maps_for_mode(id: String, all_maps: Array) -> Array:
+	return all_maps.filter(func(mp): return str(mp.get("game", "gemtd")) == id)
 
 
 ## Schadensfaktor Schadensart gegen Rüstungsart, 1.0 wenn nichts eingetragen ist.

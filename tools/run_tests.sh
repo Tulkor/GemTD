@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, Smoke, Netz, Sitzung, Koop
+#   schnell (Standard): Prüfskripte, Smoke, Netz, Sitzung, Koop, Lobby
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
 # Exit-Code 0 = alles grün.
@@ -75,6 +75,7 @@ do_test() {
     netz)    run_pair netz net_test ;;
     sitzung) run_pair sitzung session_test ;;
     koop)    run_pair koop coop_test ;;
+    lobby)   run_pair lobby lobby_test ;;
     balance) run_fixed balance balance_test ;;
     tempo)   run_fixed tempo speed_test -- --runs=1 ;;
     spaet)   run_fixed spaet late_balance_test ;;
@@ -87,8 +88,8 @@ do_test() {
 
 MODE=${1:-schnell}
 case $MODE in
-  schnell) set -- tabelle ui maps smoke netz sitzung koop ;;
-  alle)    set -- tabelle ui maps smoke netz sitzung koop balance tempo spaet ;;
+  schnell) set -- tabelle ui maps smoke netz sitzung koop lobby ;;
+  alle)    set -- tabelle ui maps smoke netz sitzung koop lobby balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()
