@@ -61,10 +61,14 @@ var gold := 0
 var chance_level := 0
 var _gold_frac := 0.0
 var spawn_queue: Array = []
+## Laufende Welle fürs Gegner-Fenster: Leben und Schaden der schon entfernten Gegner, Kills, Durchgelassene
+var wave_live := {"gone_hp": 0.0, "gone_dealt": 0.0, "killed": 0, "leaked": 0}
 ## Länge des Bodenwegs in Feldern, und wie lang er zu Beginn der Bauphase war.
 var path_length := 0
 var round_path_start := 0
 var enemies_killed := 0
+var leaks_per_wave := {}  ## Welle (Index) -> verlorene Leben (Punkte-Modus: durchgelassene Gegner), für die Run-History
+var play_time := 0.0      ## gespielte Sekunden in Echtzeit, ohne Pause
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
@@ -257,6 +261,8 @@ func _update_paths() -> void:
 # --- Eingabe -----------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	if phase < Phase.GAME_OVER:
+		play_time += delta / maxf(Engine.time_scale, 0.001)
 	_update_hover()
 	if phase == Phase.WAVE:
 		_process_wave(delta)
@@ -931,6 +937,7 @@ func _start_wave() -> void:
 		return
 	phase = Phase.WAVE
 	spawn_queue.clear()
+	wave_live = {"gone_hp": 0.0, "gone_dealt": 0.0, "killed": 0, "leaked": 0}
 	var w: Dictionary = waves[wave_index]
 	for g in w.get("groups", []):
 		for i in int(g.get("count", 1)):
@@ -1009,6 +1016,7 @@ func on_enemy_leaked(e: Enemy) -> void:
 		return
 	var st := _stats_for_wave()
 	st.leaks += 1
+	leaks_per_wave[wave_index] = int(leaks_per_wave.get(wave_index, 0)) + (1 if score_mode else e.damage)
 	if score_mode:
 		score -= leak_penalty(e.score_value)
 		st.lost += leak_penalty(e.score_value)
@@ -1089,17 +1097,32 @@ func leak_penalty(value: float) -> float:
 	return value * float(Database.balance.get("score", {}).get("leak_factor", 0.5))
 
 
+## Leben der Gegner, die in dieser Welle noch nicht erschienen sind (mit Schwierigkeit).
+func queued_hp() -> float:
+	var total := 0.0
+	for g in spawn_queue:
+		total += _group_hp(g)
+	return total * Session.difficulty_factor()
+
+
 func _group_hp(g: Dictionary) -> float:
 	return float(g.get("hp", Database.enemies.get(str(g.get("enemy", "")), {}).get("hp", 10)))
 
 
 func _remove_enemy(e: Enemy) -> void:
+	wave_live.gone_hp += e.max_hp
+	wave_live.gone_dealt += clampf(e.max_hp - e.hp, 0.0, e.max_hp)
+	if e.hp <= 0.0:
+		wave_live.killed += 1
+	else:
+		wave_live.leaked += 1
 	enemies.erase(e)
 	e.queue_free()
 
 
 func _finish(p: Phase) -> void:
 	phase = p
+	RunHistory.record(RunHistory.entry_from(self, p == Phase.VICTORY))
 	Engine.time_scale = 1.0
 	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
 		roundi(score) if score_mode else null, run_summary())

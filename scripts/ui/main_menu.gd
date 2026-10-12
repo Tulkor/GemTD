@@ -10,6 +10,9 @@ var settings: Control
 var lobby: LobbyPanel
 var loader: LoadPanel
 var net_button: Button
+var history_button: Button
+var history: RunHistoryPanel
+var maps_view: Control
 
 
 func _ready() -> void:
@@ -50,6 +53,12 @@ func _ready() -> void:
 	_difficulty_row(left)
 	_mode_row(left)
 	_menu_button("Spiel laden", left, func(): loader.show())
+	history_button = _menu_button("Run-History", left, func(): show_history(history_button.button_pressed))
+	history_button.toggle_mode = true
+	history_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	history_button.add_theme_stylebox_override("hover_pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	history_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	history_button.add_theme_color_override("font_hover_pressed_color", UiTheme.GOLD_DARK)
 	net_button = _menu_button("Mehrspieler", left, func(): lobby.show())
 	_menu_button("Map-Editor", left, _open_map_editor)
 	_menu_button("Tower-Editor", left, _open_tower_editor)
@@ -66,6 +75,13 @@ func _ready() -> void:
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_theme_constant_override("separation", 16)
 	row.add_child(right)
+	maps_view = right
+	# Run-History ersetzt rechts die Map-Auswahl, solange der Knopf gedrückt ist
+	history = RunHistoryPanel.new()
+	history.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	history.visible = false
+	history.replay_requested.connect(_replay)
+	row.add_child(history)
 	UiUtil.label("Map wählen", right, 22)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -183,6 +199,27 @@ func _open_settings() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if settings.visible and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		settings.hide()
+	elif history.visible and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		show_history(false)
+
+
+func show_history(on: bool) -> void:
+	history_button.set_pressed_no_signal(on)
+	if on:
+		history.reload()
+	history.visible = on
+	maps_view.visible = not on
+
+
+## „Map nochmal spielen“: gleiche Map, Schwierigkeit und Wertung wie der Lauf.
+func _replay(run: Dictionary) -> void:
+	for i in maps.size():
+		if maps[i].path == str(run.get("map_path", "")) or maps[i].name == str(run.get("map", "")):
+			selected = i
+			break
+	Session.difficulty = clampi(int(run.get("difficulty", Session.difficulty)), 0, Session.DIFFICULTIES.size() - 1)
+	Session.score_mode = bool(run.get("score_mode", false))
+	_play()
 
 
 ## Schwierigkeit: drei Umschalter, genau einer aktiv.

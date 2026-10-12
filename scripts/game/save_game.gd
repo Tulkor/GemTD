@@ -53,6 +53,8 @@ static func capture(game) -> Dictionary:
 		"path_start": game.round_path_start,
 		"undo_gems": game.undo_gems.duplicate(true),
 		"killed": game.enemies_killed,
+		"leaks_per_wave": game.leaks_per_wave.duplicate(),
+		"play_time": game.play_time,
 		"spawn_queue": game.spawn_queue.duplicate(true),
 		"spawn_timer": game.spawn_timer,
 		"enemies": es,
@@ -82,6 +84,8 @@ static func apply(game, s: Dictionary) -> void:
 	game.gold = int(s.get("gold", 0))
 	game._gold_frac = float(s.get("gold_frac", 0.0))
 	game.enemies_killed = int(s.get("killed", 0))
+	game.leaks_per_wave = (s.get("leaks_per_wave", {}) as Dictionary).duplicate()
+	game.play_time = float(s.get("play_time", 0.0))
 	game._next_enemy_id = int(s.get("next_enemy_id", 1))
 	game.rng.seed = int(s.get("rng_seed", game.rng.seed))
 	game.rng.state = int(s.get("rng_state", game.rng.state))

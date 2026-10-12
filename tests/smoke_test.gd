@@ -14,6 +14,10 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _ready() -> void:
+	# Run-History der Tests nicht in die echte Liste schreiben
+	RunHistory.path = "user://test_run_history.json"
+	if FileAccess.file_exists(RunHistory.path):
+		DirAccess.remove_absolute(RunHistory.path)
 	await get_tree().process_frame
 	check(Database.towers.size() >= 8, "Tower geladen: %d" % Database.towers.size())
 	check(Database.enemies.size() >= 1, "Gegner geladen: %d" % Database.enemies.size())
@@ -332,6 +336,38 @@ func _ready() -> void:
 	topaz.kills = old_kills
 	topaz.damage_bonus = 0.0
 	topaz.damage_source = ""
+	# Gegner-Fenster: Anteil der abgezogenen Wellen-Leben und Felder bis zum Ziel
+	var ep: EnemyPanel = game.hud.enemy_panel
+	game._process_wave(1.0)
+	var ed: Dictionary = ep.data()
+	check(not ed.is_empty() and float(ed.total) > 0.0 and int(ed.alive) + int(ed.queued) > 0, "Gegner-Fenster kennt die Welle: %s" % [ed])
+	if not game.enemies.is_empty():
+		var ge: Enemy = game.enemies[0]
+		var before: float = float(ed.dealt)
+		ge.hp -= ge.max_hp * 0.5
+		check(is_equal_approx(float(ep.data().dealt) - before, ge.max_hp * 0.5), "Schaden am Gegner zählt zum Wellen-Anteil")
+		ge.hp += ge.max_hp * 0.5
+		var fr: Dictionary = ep.front()
+		check(not fr.is_empty() and int(fr.fields) > 0 and float(fr.progress) >= 0.0 and float(fr.progress) < 1.0, "Vorderster Gegner: %s Felder" % [fr.get("fields")])
+		var gone_before: float = float(game.wave_live.gone_hp)
+		var total_before: float = float(ep.data().total)
+		ge.hp = 0.0
+		ge.dead = true
+		game.on_enemy_killed(ge)
+		check(int(game.wave_live.killed) >= 1 and is_equal_approx(float(ep.data().total), total_before), "Kill ändert die Wellen-Leben nicht, zählt aber als besiegt")
+	# Tower-Liste: fertige Tower, Kamera fährt per Doppelklick hin
+	var tl: TowerList = game.hud.tower_list
+	tl.refresh()
+	var listed: Array = tl.towers()
+	check(not listed.is_empty() and listed.all(func(t): return not t.is_new) and tl.rows.size() == listed.size(), "Tower-Liste zeigt %d Tower" % listed.size())
+	tl.sort = "kills"
+	listed[0].kills += 1000
+	tl.refresh()
+	check(tl.towers()[0] == listed[0] and tl.rows[listed[0].get_instance_id()].button.get_index() == 0, "Tower-Liste sortiert nach Kills")
+	listed[0].kills -= 1000
+	tl.sort = "damage"
+	tl.focus(listed[0])
+	check(Vector2(game.camera_rig.target.x, game.camera_rig.target.z).distance_to(Vector2(listed[0].position.x, listed[0].position.z)) < 0.5, "Doppelklick fährt die Kamera zum Tower")
 
 	# Sternrubin aus Fehlerhaftem Rubin (frühere Runde) + Splitter Amethyst + Splitter Rubin (neu):
 	# alte Tower zählen weder als One-Shot noch in der Auswahlphase, nur während der Welle
@@ -499,6 +535,17 @@ func _ready() -> void:
 	Session.difficulty = 1
 	game._finish(game.Phase.GAME_OVER)
 	check(game.hud.game_over.visible and game.hud.game_over_title.text == "Verloren", "Menü am Spielende erscheint")
+	var runs := RunHistory.load_runs()
+	check(runs.size() == 1 and not runs[0].victory and runs[0].map == game.map.name and (runs[0].leaks as Array).size() == game.waves.size() and runs[0].has("summary"),
+			"Run-History: verlorenes Spiel gespeichert: %s" % [runs[0].keys() if not runs.is_empty() else []])
+	var rh := RunHistoryPanel.new()
+	add_child(rh)
+	await get_tree().process_frame
+	check(rh.list.get_child_count() == 1 and rh.detail.get_child_count() > 5, "Run-History im Menü zeigt den Lauf mit Details")
+	rh.filter = "score"
+	rh._rebuild()
+	check(rh.list.get_child_count() == 0 and rh.empty.visible, "Filter Punkte: kein Punkte-Lauf")
+	rh.queue_free()
 
 	await _save_test()
 	await _score_test()
@@ -642,6 +689,10 @@ func _score_test() -> void:
 	check(st.score_mode and is_equal_approx(st.score, g.score), "Spielstand enthält Punkte")
 	g._finish(g.Phase.VICTORY)
 	check("Punkte: %d" % roundi(g.score) in g.hud.game_over_stats.text, "Endbildschirm zeigt die Punkte")
+	var last: Dictionary = RunHistory.load_runs()[0]
+	check(last.score_mode and last.victory and int(last.score) == roundi(g.score), "Run-History: Punkte-Lauf mit %d Punkten" % int(last.score))
+	RunHistory.delete(0)
+	check(RunHistory.load_runs().is_empty() or not RunHistory.load_runs()[0].score_mode, "Lauf löschen")
 	Session.score_mode = false
 	g.queue_free()
 	await get_tree().process_frame
