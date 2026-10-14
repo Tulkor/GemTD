@@ -51,6 +51,14 @@ def describe(ab):
         return "%s Ziele gleichzeitig" % num(ab["targets"])
     if t == "bounce":
         return "springt auf %s Ziele (je %s)" % (num(ab["targets"]), pct(ab.get("falloff", 0.8)))
+    if t in ("pierce", "fork", "chain"):
+        f = float(ab.get("factor", 1.0))
+        extra = ", danach je %s" % pct(f) if f != 1.0 else ""
+        if t == "pierce":
+            return "durchbohrt %s Gegner%s" % (num(ab["count"]), extra)
+        if t == "fork":
+            return "gabelt sich %s× (±%s°)%s" % (num(ab["count"]), num(ab.get("angle", 30)), extra)
+        return "springt %s× weiter (Radius %s)%s" % (num(ab["count"]), num(ab.get("radius", 2.5)), extra)
     if t == "armor_reduce":
         return c + "Rüstung −%s für %s s" % (num(ab["amount"]), num(ab["duration"]))
     if t == "stun":

@@ -11,6 +11,7 @@ extends Node
 ##   --welle=N               nächste Welle ist Welle N (Debug-Sprung)
 ##   --phase=bau|wahl|welle  Stand für das Bild (Standard bau); welle startet die Welle
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
+##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
@@ -108,6 +109,13 @@ func _prepare(game: Node) -> void:
 	if phase == "welle":
 		game._select(game.round_towers[0])
 		game._on_option_chosen(0)
+	if opts.has("faehigkeiten"):
+		for t in game.towers.values():
+			t.stats = t.stats.duplicate(true)
+			var list: Array = t.stats.get("abilities", [])
+			for type in String(opts.faehigkeiten).split(","):
+				list.append(Abilities.default_for(type))
+			t.stats["abilities"] = list
 	if opts.has("auswahl"):
 		if not game.round_towers.is_empty():
 			game._select(game.round_towers[0])

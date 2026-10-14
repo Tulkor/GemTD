@@ -21,6 +21,10 @@ const SCHEMA := {
 	"burn_aura": {"label": "Brand-Aura (Gegner)", "params": {"radius": 2.0, "dps": 20.0}},
 	"slow_aura": {"label": "Verlangsamungs-Aura (Gegner)", "params": {"radius": 2.0, "factor": 0.3}},
 	"armor_aura": {"label": "Rüstungs-Aura (Gegner)", "params": {"radius": 2.0, "amount": 3.0}},
+	# Geschosse wie in Path of Exile, Reihenfolge bei jedem Treffer: Durchbohren → Gabeln → Verketten
+	"pierce": {"label": "Durchbohren (Pierce)", "params": {"count": 2, "factor": 1.0}},
+	"fork": {"label": "Gabeln (Fork)", "params": {"count": 1, "angle": 30.0, "reach": 3.0, "factor": 1.0}},
+	"chain": {"label": "Verketten (Chain)", "params": {"count": 2, "radius": 2.5, "factor": 1.0}},
 }
 
 const PARAM_LABELS := {
@@ -35,6 +39,9 @@ const PARAM_LABELS := {
 	"falloff": "Abnahme",
 	"amount": "Menge",
 	"gold": "Gold",
+	"count": "Anzahl",
+	"angle": "Winkel (°)",
+	"reach": "Flugweite (Towerbreiten)",
 }
 
 
@@ -87,4 +94,18 @@ static func describe(ab: Dictionary) -> String:
 			return str(TranslationServer.translate("Verlangsamt Gegner im Radius %.1f um %d%%")) % [float(ab.radius), float(ab.factor) * 100]
 		"armor_aura":
 			return str(TranslationServer.translate("Senkt Rüstung von Gegnern im Radius %.1f um %.0f")) % [float(ab.radius), float(ab.amount)]
+		"pierce":
+			return str(TranslationServer.translate("Geschoss durchbohrt %d Gegner")) % int(ab.count) + _factor_text(ab)
+		"fork":
+			return str(TranslationServer.translate("Geschoss gabelt sich %d× in zwei (±%d°)")) % [int(ab.count), int(ab.get("angle", 30.0))] + _factor_text(ab)
+		"chain":
+			return str(TranslationServer.translate("Geschoss springt %d× weiter (Radius %.1f)")) % [int(ab.count), float(ab.get("radius", 2.5))] + _factor_text(ab)
 	return type
+
+
+## Schaden der Geschosse nach Durchbohren/Gabeln/Verketten, nur wenn er sich ändert.
+static func _factor_text(ab: Dictionary) -> String:
+	var f := float(ab.get("factor", 1.0))
+	if is_equal_approx(f, 1.0):
+		return ""
+	return ", " + str(TranslationServer.translate("danach je %d%% Schaden")) % roundi(f * 100)
