@@ -2,8 +2,9 @@
 
   python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> <art> [hoehe]
 
-art: "line" (Schuss, wird zwischen Tower und Ziel gespannt; das Video läuft von links nach rechts)
-     "nova" (Kreis von vorne, wird flach auf den Boden gelegt)
+art: "line"       (Strahl/Blitz, wird zwischen Tower und Ziel gespannt; das Video läuft von links nach rechts)
+     "projectile" (Geschoss, fliegt in eigener Länge zum Ziel; Video ebenfalls von links nach rechts)
+     "nova"       (Kreis von vorne, wird flach auf den Boden gelegt)
 Schneidet alle Bilder auf den gemeinsamen sichtbaren Bereich zu, verkleinert sie auf [hoehe] Pixel
 (Standard 64 für line, 192 für nova) und legt sie in ein Raster. Ergebnis: assets/fx/shot/<id>.png und
 der Eintrag in data/fx/shots.json (bestehende Einträge bleiben, Wiedergabe-Werte werden nicht überschrieben).
@@ -52,7 +53,7 @@ def main(fid, video, art, hoehe=None):
 	frames = [f.crop(box) for f in frames]
 	hoehe = int(hoehe or (192 if art == "nova" else 64))
 	breite = max(1, round(frames[0].width * hoehe / frames[0].height))
-	if art == "line":
+	if art != "nova":
 		breite = min(breite, 512)
 	frames = [f.resize((breite, hoehe), Image.LANCZOS) for f in frames]
 	cols = max(1, min(len(frames), MAX_BREITE // breite))
@@ -83,7 +84,8 @@ def main(fid, video, art, hoehe=None):
 		"hue": round(h, 3), "saturation": round(s, 3), "video_length": round(len(frames) / fps, 3)}
 	# Wiedergabe-Werte (Länge, Breite, Größe) von Hand in shots.json, hier nur Startwerte
 	eintrag["length"] = alt.get("length", min(0.35, eintrag["video_length"]))
-	eintrag["width" if art == "line" else "size"] = alt.get("width" if art == "line" else "size", 0.45 if art == "line" else 1.0)
+	key = "size" if art == "nova" else "width"
+	eintrag[key] = alt.get(key, 1.0 if art == "nova" else 0.45)
 	eintrag["add"] = alt.get("add", True)
 	daten["effects"][fid] = {**alt, **eintrag}
 	with open(datei, "w", encoding="utf-8") as fh:
@@ -92,4 +94,6 @@ def main(fid, video, art, hoehe=None):
 
 
 if __name__ == "__main__":
+	if len(sys.argv) < 4 or sys.argv[3] not in ("line", "projectile", "nova"):
+		sys.exit(__doc__)
 	main(*sys.argv[1:])

@@ -27,6 +27,7 @@ Godot und die Windows-Vorlage installiert der Session-Start-Hook (`tools/setup_g
 - Balance: `python3 tools/balance_bericht.py [--vergleich=main] [--tower=ruby:5,…]` → Tabelle Boss/Normal/Masse/Luft als .md und .html in `/mnt/project-files/balance/`.
 - Maps: `python3 tools/map_check.py` (Größe, Weglänge, Abschnitte, Fehler); Maze-Rechner in `tools/maze/`.
 - Texte: `python3 tools/pruefe_ui.py [--stil]` findet fehlende englische Übersetzungen und Farben außerhalb des Themes.
+- Effekte: `python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> line|projectile|nova` macht aus einem Video mit Alphakanal ein Sprite-Sheet plus Eintrag in `data/fx/shots.json` (danach gleich im Tower-Editor wählbar); `tools/fx/vorschau.sh [--tower=…]` zeigt Effekte als Bild. Unity-Pakete: `tools/fx/treffer_umwandeln.py` (siehe `tools/fx/README.md`).
 - WC3-Karten: `tools/wc3/auslesen.sh karte.w3x ziel/` (siehe `tools/wc3/README.md`).
 - Alte Builds: `tools/builds_aufraeumen.sh` zeigt nur an; `--wirklich` nur auf Lukas' ausdrücklichen Wunsch.
 
