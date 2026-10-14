@@ -949,11 +949,18 @@
 	"Fallen liegen auf dem Weg, Gegner laufen darüber. Sie treffen nur Bodengegner.": "Traps lie on the path and enemies walk over them. They only hit ground enemies.",
 	"28 % Chance: 1700 Zauberschaden im Radius 2,3 um das Ziel": "28% chance: 1700 spell damage in radius 2.3 around the target",
 	"6 % Chance: 660 Zauberschaden im Radius 2,7 um das Ziel": "6% chance: 660 spell damage in radius 2.7 around the target",
-	"20 % Chance: 1600 Zauberschaden im Radius 2,3 um das Ziel": "20% chance: 1600 spell damage in radius 2.3 around the target",
 	"6 % Chance: 2400 Zauberschaden im Radius 2,8 um das Ziel": "6% chance: 2400 spell damage in radius 2.8 around the target",
 	"23 % Chance: 180 Zauberschaden im Radius 1,9 um das Ziel": "23% chance: 180 spell damage in radius 1.9 around the target",
 	"6 % Chance: 240 Zauberschaden im Radius 2,5 um das Ziel": "6% chance: 240 spell damage in radius 2.5 around the target",
 	"6 % Chance: 60 Zauberschaden im Radius 2,3 um das Ziel": "6% chance: 60 spell damage in radius 2.3 around the target",
 	"6 % Chance: 6000 Zauberschaden im Radius 3,1 um das Ziel": "6% chance: 6000 spell damage in radius 3.1 around the target",
-	"Bei jedem Treffer: 2500 Zauberschaden im Radius 1,9 um das Ziel": "On every hit: 2500 spell damage in radius 1.9 around the target"
+	"Bei jedem Treffer: 2500 Zauberschaden im Radius 1,9 um das Ziel": "On every hit: 2500 spell damage in radius 1.9 around the target",
+	"Kegel": "Cone",
+	"Länge (Towerbreiten)": "Length (tower widths)",
+	"Breite am Tower": "Width at the tower",
+	"Breite am Ende": "Width at the end",
+	"im Kegel (Länge %.1f, Breite bis %.1f)": "in a cone (length %.1f, width up to %.1f)",
+	"%d%% Chance: ": "%d%% chance: ",
+	"%d Zauberschaden an allen Gegnern": "%d spell damage to all enemies",
+	"Trifft alle Gegner": "Hits all enemies"
 }

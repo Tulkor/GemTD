@@ -178,5 +178,27 @@ func _ready() -> void:
 	check(stunned, "Zeitsperre des Eisigen Zeitkristalls betäubt Gegner")
 	var ground: bool = not Database.enemies[str(game.waves[1].groups[0].enemy)].get("flying", false)
 	check(not ground or trap.total_damage > 0.0, "Falle trifft Bodengegner, die darüber laufen (Schaden %d)" % trap.total_damage)
+
+	# Kegelangriff (Feuerspeiender Schneemann): trifft im Kegel vor dem Tower, nicht daneben oder dahinter
+	c.set_tower("eeve_fire_breathing_snowman", 0)
+	var probes := {}
+	for k in ["ziel", "im_kegel", "daneben", "dahinter"]:
+		var en := Enemy.new()
+		en.game = game
+		en.max_hp = 1e7
+		en.hp = 1e7
+		probes[k] = en
+	probes.ziel.pos = c.pos + Vector2(2.0, 0.0)
+	probes.im_kegel.pos = c.pos + Vector2(4.0, 1.0)
+	probes.daneben.pos = c.pos + Vector2(2.0, 2.0)
+	probes.dahinter.pos = c.pos + Vector2(-1.0, 0.0)
+	var keep: Array = game.enemies
+	game.enemies = probes.values()
+	c._attack(probes.ziel)
+	game.enemies = keep
+	check(probes.ziel.hp < 1e7 and probes.im_kegel.hp < 1e7, "Kegel trifft Ziel und Gegner im Kegel")
+	check(probes.daneben.hp == 1e7 and probes.dahinter.hp == 1e7, "Kegel trifft nichts daneben oder hinter dem Tower")
+	for en in probes.values():
+		en.free()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)

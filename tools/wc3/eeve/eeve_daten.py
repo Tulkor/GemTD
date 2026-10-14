@@ -175,11 +175,12 @@ ABIL.update({
     "h013": [{"type": "area_debuff", "radius": r(250), "armor": 3.0, "slow": 0.1, "dps": 60.0, "duration": 15.0,
               "text": "Ätzt Gegner im Radius 2,0 um das Ziel: −3 Rüstung, −10 % Tempo, 60 Schaden/s für 15 s"}],
     "h03V": [{"type": "crit", "chance": 0.1, "multiplier": 10.0}],
-    # Kegel vor dem Tower: vorerst als Treffer im Umkreis des Ziels
-    "h06V": [{"type": "nova", "chance": 0.2, "damage": 1600, "radius": r(300)}],
+    # Kegel wie beim Schneemann (Tooltip nennt keine Maße): Länge 1000 = Reichweite
+    "h06V": [{"type": "cone", "chance": 0.2, "damage": 1600, "length": r(1000), "width_start": r(150), "width_end": r(300)}],
     "h011": [{"type": "rage", "bonus": 0.4, "radius": r(450), "duration": 8.0, "every": 15.0,
               "text": "Alle 15 s: +40 % Schaden für Tower im Radius 3,5 für 8 s"}],
-    "h054": [{"type": "splash", "radius": r(300), "factor": 1.0}],
+    # Feueratem (A02X): 600 lang, Radius 150 am Tower bis 300 am Ende
+    "h054": [{"type": "cone", "length": r(600), "width_start": r(150), "width_end": r(300)}],
     "h09Z": [{"type": "amplify", "chance": 0.2, "bonus": 0.25, "duration": 5.0,
               "text": "20 % Chance, das Ziel 5 s zu ertränken: es nimmt 25 % mehr Schaden"}],
     "h01O": [{"type": "pulse", "every": 20.0, "radius": r(1800), "stun": 2.5, "center": "tower",

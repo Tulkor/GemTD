@@ -30,11 +30,12 @@
 			"cooldown": 1.5,
 			"abilities": [
 				{
-					"type": "nova",
+					"type": "cone",
 					"chance": 0.2,
 					"damage": 1600,
-					"radius": 2.34,
-					"text": "20 % Chance: 1600 Zauberschaden im Radius 2,3 um das Ziel"
+					"length": 7.81,
+					"width_start": 1.17,
+					"width_end": 2.34
 				}
 			]
 		}

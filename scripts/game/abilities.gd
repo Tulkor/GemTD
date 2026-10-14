@@ -21,6 +21,7 @@ const SCHEMA := {
 	"burn_aura": {"label": "Brand-Aura (Gegner)", "params": {"radius": 2.0, "dps": 20.0}},
 	"slow_aura": {"label": "Verlangsamungs-Aura (Gegner)", "params": {"radius": 2.0, "factor": 0.3}},
 	"armor_aura": {"label": "Rüstungs-Aura (Gegner)", "params": {"radius": 2.0, "amount": 3.0}},
+	"cone": {"label": "Kegel", "params": {"length": 4.0, "width_start": 0.5, "width_end": 1.5}},
 }
 
 const PARAM_LABELS := {
@@ -35,6 +36,9 @@ const PARAM_LABELS := {
 	"falloff": "Abnahme",
 	"amount": "Menge",
 	"gold": "Gold",
+	"length": "Länge (Towerbreiten)",
+	"width_start": "Breite am Tower",
+	"width_end": "Breite am Ende",
 }
 
 
@@ -87,5 +91,11 @@ static func describe(ab: Dictionary) -> String:
 			return str(TranslationServer.translate("Verlangsamt Gegner im Radius %.1f um %d%%")) % [float(ab.radius), float(ab.factor) * 100]
 		"armor_aura":
 			return str(TranslationServer.translate("Senkt Rüstung von Gegnern im Radius %.1f um %.0f")) % [float(ab.radius), float(ab.amount)]
+		"cone":
+			var reach := str(TranslationServer.translate("im Kegel (Länge %.1f, Breite bis %.1f)")) % [float(ab.length), float(ab.width_end) * 2.0]
+			if ab.has("damage"):
+				var chance := str(TranslationServer.translate("%d%% Chance: ")) % (float(ab.chance) * 100) if ab.has("chance") else ""
+				return chance + str(TranslationServer.translate("%d Zauberschaden an allen Gegnern")) % int(ab.damage) + " " + reach
+			return str(TranslationServer.translate("Trifft alle Gegner")) + " " + reach
 	# Fähigkeiten einzelner Modi (z. B. eeveTD) bringen ihren Text in den Daten mit
 	return str(TranslationServer.translate(str(ab.get("text", type))))

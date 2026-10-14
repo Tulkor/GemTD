@@ -30,9 +30,10 @@
 			"cooldown": 2.5,
 			"abilities": [
 				{
-					"type": "splash",
-					"radius": 2.34,
-					"factor": 1.0
+					"type": "cone",
+					"length": 4.69,
+					"width_start": 1.17,
+					"width_end": 2.34
 				}
 			]
 		}
