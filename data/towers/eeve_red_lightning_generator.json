@@ -1,0 +1,44 @@
+{
+	"id": "eeve_red_lightning_generator",
+	"name": "Roter Blitzgenerator",
+	"name_original": "Red Lightning Generator",
+	"category": "eeve",
+	"color": "#bf8694",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h05U",
+		"elements": [
+			"fire",
+			"storm"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1168.0,
+				1290.0
+			],
+			"range": 7.81,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "chain",
+					"chance": 0.2,
+					"damage": 1250,
+					"targets": 4,
+					"growth": 1.25,
+					"radius": 3.91,
+					"text": "20 % Chance auf roten Kettenblitz: 1250 Zauberschaden, springt auf 4 weitere, +25 % je Sprung"
+				}
+			]
+		}
+	]
+}

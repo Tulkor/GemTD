@@ -1,0 +1,49 @@
+{
+	"id": "eeve_lightning_rock_elemental",
+	"name": "Blitz-Felselementar",
+	"name_original": "Lightning Rock Elemental",
+	"category": "eeve",
+	"color": "#9f9ea4",
+	"model": "res://assets/models/crystals/crystal_24.glb",
+	"damage_type": "electric",
+	"targets": "air",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h07N",
+		"elements": [
+			"earth",
+			"storm"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				867.0,
+				959.0
+			],
+			"range": 7.03,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 3
+				},
+				{
+					"type": "pulse",
+					"every": 12.0,
+					"radius": 1.56,
+					"stun": 2.0,
+					"damage": 3000,
+					"center": "target",
+					"targets": "ground",
+					"text": "Aufspießen alle 12 s: Bodengegner um das Ziel 2 s betäubt, 3000 Zauberschaden"
+				}
+			]
+		}
+	]
+}

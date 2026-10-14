@@ -4,7 +4,7 @@
 
 Quelle (Standard): /mnt/project-files/konzepte/recherche-stand/eeve/ mit objects.json und towers.json
 (siehe tools/wc3/README.md). Schreibt:
-  data/towers/eeve_*.json   Tower der sechs Elemente (ohne Fallen und Dual-Tower) und die Barrikade
+  data/towers/eeve_*.json   Tower der sechs Elemente mit Fallen, Dual-Grundturm und Dual-Tower, dazu die Barrikade
   data/enemies/eeve_*.json  Gegner je Gegnerstufe und die Challenges
 
 Werte in WC3-Einheiten werden umgerechnet: 128 Einheiten = 1 Towerbreite (2 Felder).
@@ -68,6 +68,14 @@ NAMES = {
     "The Totally Uber Coral of Absolute GG": "Die total übere Koralle des absoluten GG",
     "Fountain of Corrosion": "Brunnen der Korrosion", "Glowing Fountain of Oxidization": "Leuchtender Brunnen der Oxidation",
     "Ice Cube": "Eiswürfel", "Glacier": "Gletscher", "Permafrost Blaster": "Permafrost-Kanone", "Frozen Monument": "Gefrorenes Monument",
+    "Noxious Tendril Trap": "Giftranken-Falle", "Earthbind Trap": "Erdfessel-Falle", "Flame Grate": "Flammenrost",
+    "Lightning Trap": "Blitzfalle", "Crystal Trap": "Kristallfalle", "Slowing Puddle": "Bremspfütze",
+    "Dual Element Base Tower": "Dual-Grundturm",
+    "Acid Fountain": "Säurebrunnen", "Arcane Lava Piles": "Arkane Lavahaufen", "Arcane Lightning Generator": "Arkaner Blitzgenerator",
+    "Fire Berry Bush": "Feuerbeerenstrauch", "Fire Breathing Snowman": "Feuerspeiender Schneemann", "Gaea Spring": "Gaia-Quelle",
+    "Icy Time Crystal": "Eisiger Zeitkristall", "Lightning Rock Elemental": "Blitz-Felselementar", "Magic Mushrooms": "Magische Pilze",
+    "Runed Rock": "Runenfels", "Natural Maelstrom": "Natürlicher Mahlstrom", "Radiating Cloud": "Strahlende Wolke",
+    "Red Lightning Generator": "Roter Blitzgenerator", "Thornweed Field": "Dornkrautfeld", "Volcano": "Vulkan",
 }
 # Vollständige Namen (die Kartendaten kürzen manche ab)
 FULL = {"h072": "Xtreme Lightning \"This is madness\" Ultra Q_Q Tower", "h022": "Glowing Engraved Obelisk of Ultimate Pwnage"}
@@ -151,6 +159,52 @@ ABIL = {
     "h04X": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
     "h055": [{"type": "slow", "factor": 0.18, "duration": 2.5}],
 }
+# Fallen (direkt gebaut, Element 4, 900 Gold + 1 Holz). Gegner laufen darüber, getroffen wird nur, wer auf der Falle steht.
+ABIL.update({
+    "h045": [{"type": "multishot", "targets": 99}, {"type": "poison", "dps": 100, "duration": 30.0}],
+    "h07V": [{"type": "stun", "chance": 1.0, "duration": 2.5}],
+    "h03S": [{"type": "stacking_damage", "per_hit": 200, "duration": 3.0},
+             {"type": "death_explosion", "damage": 3000, "radius": r(250), "duration": 3.0,
+              "text": "Brennende Gegner explodieren beim Tod: 3000 Schaden im Radius 2,0"}],
+    "h06O": [{"type": "nova", "damage": 2500, "radius": r(250)}],
+    "h026": [{"type": "armor_reduce", "amount": 6.0, "duration": 7.0}],
+    "h04K": [{"type": "slow", "factor": 0.17, "duration": 8.0}],
+})
+# Dual-Tower (Upgrade des Dual-Grundturms, je 3 Punkte in beiden Elementen)
+ABIL.update({
+    "h013": [{"type": "area_debuff", "radius": r(250), "armor": 3.0, "slow": 0.1, "dps": 60.0, "duration": 15.0,
+              "text": "Ätzt Gegner im Radius 2,0 um das Ziel: −3 Rüstung, −10 % Tempo, 60 Schaden/s für 15 s"}],
+    "h03V": [{"type": "crit", "chance": 0.1, "multiplier": 10.0}],
+    # Kegel vor dem Tower: vorerst als Treffer im Umkreis des Ziels
+    "h06V": [{"type": "nova", "chance": 0.2, "damage": 1600, "radius": r(300)}],
+    "h011": [{"type": "rage", "bonus": 0.4, "radius": r(450), "duration": 8.0, "every": 15.0,
+              "text": "Alle 15 s: +40 % Schaden für Tower im Radius 3,5 für 8 s"}],
+    "h054": [{"type": "splash", "radius": r(300), "factor": 1.0}],
+    "h09Z": [{"type": "amplify", "chance": 0.2, "bonus": 0.25, "duration": 5.0,
+              "text": "20 % Chance, das Ziel 5 s zu ertränken: es nimmt 25 % mehr Schaden"}],
+    "h01O": [{"type": "pulse", "every": 20.0, "radius": r(1800), "stun": 2.5, "center": "tower",
+              "text": "Zeitsperre alle 20 s: betäubt alle Gegner im Radius 14 für 2,5 s"}],
+    "h07N": [{"type": "multishot", "targets": 3},
+             {"type": "pulse", "every": 12.0, "radius": r(200), "stun": 2.0, "damage": 3000, "center": "target", "targets": "ground",
+              "text": "Aufspießen alle 12 s: Bodengegner um das Ziel 2 s betäubt, 3000 Zauberschaden"}],
+    "h01Y": [{"type": "pulse", "every": 10.0, "radius": 0.0, "slow": 0.5, "duration": 3.0, "center": "target", "max": 1,
+              "text": "Verhexen alle 10 s: ein Gegner wird 3 s zum Tier (−50 % Tempo)"}],
+    "h01L": [{"type": "gold_on_hit", "chance": 0.16, "gold": 1}],
+    "h00Z": [aura("slow_aura", 800, factor=0.11), aura("armor_aura", 800, amount=4.0)],
+    "h09C": [{"type": "hp_cut", "radius": r(700), "factor": 0.23, "factor_challenge": 0.15,
+              "text": "Gegner, die in Radius 5,5 kommen, verlieren einmalig 23 % ihrer Leben (Challenge 15 %)"}],
+    "h05U": [{"type": "chain", "chance": 0.2, "damage": 1250, "targets": 4, "growth": 1.25, "radius": r(500),
+              "text": "20 % Chance auf roten Kettenblitz: 1250 Zauberschaden, springt auf 4 weitere, +25 % je Sprung"}],
+    "h010": [{"type": "stun", "chance": 0.15, "duration": 3.0}],
+    "h03P": [{"type": "poison", "dps": 250, "duration": 8.0}, {"type": "slow", "factor": 0.07, "duration": 8.0}],
+})
+TRAPS = ["h045", "h07V", "h03S", "h06O", "h026", "h04K"]
+DUAL_BASE = "h0AT"   # Barrikade -> Dual-Grundturm (1998 Gold + 1 Holz, zusammen 2000)
+DUAL_PAGE_2 = "h01D"  # zweite Upgrade-Seite im Original, bei uns im selben Turm
+# Schaden kommt beim Schneemann aus dem Zauber (3000 je Stoß), nicht aus dem Angriff
+DAMAGE_OVERRIDE = {"h054": [3000, 3000]}
+DAMAGE_TYPE_OVERRIDE = {"h054": "spells"}
+
 # Werte, die in den Einheitendaten fehlen (Standard des WC3-Grundturms), aus den Tooltips
 RANGE = {"h03K": 300, "h03N": 300, "h04D": 700, "h04E": 700, "h05D": 700, "h07K": 650, "h07B": 650, "h07C": 650,
          "h07M": 700, "h0AF": 700, "h01K": 700, "h01N": 700, "h02O": 700, "h02D": 700, "h01F": 700, "h00E": 700, "h00Q": 700,
@@ -160,6 +214,23 @@ COOLDOWN = {"h02D": 0.9, "h04P": 0.9, "h06T": 0.9}
 SHOCK = {"h08I": 150, "h08M": 570, "h07J": 1500, "h08N": 4500}
 SHOCK_RANGE = {"h08I": 240, "h08M": 280, "h07J": 325, "h08N": 375}
 NO_ATTACK = {"h03K", "h03N"}
+
+
+def num(v):
+    return ("%.1f" % v).replace(".", ",")
+
+
+def describe(a):
+    """Anzeigetext für Fähigkeiten, die abilities.gd nicht selbst beschreibt (Abilities.describe nimmt dann "text")."""
+    if "text" in a:
+        return a
+    a = dict(a)
+    if a["type"] == "nova":
+        chance = "%d %% Chance: " % round(a["chance"] * 100) if "chance" in a else "Bei jedem Treffer: "
+        a["text"] = chance + "%d Zauberschaden im Radius %s um das Ziel" % (a["damage"], num(a["radius"]))
+    elif a["type"] == "stacking_damage":
+        a["text"] = "Jeder Treffer auf dasselbe Ziel macht %d Schaden mehr als der letzte" % a["per_hit"]
+    return a
 
 
 def slug(name):
@@ -180,13 +251,13 @@ def splash(m):
     return [{"type": "splash", "radius": r(radius), "factor": float(m.get("uhd1", 0.5))}]
 
 
-def tower_json(uid, element, line, children):
+def tower_json(uid, element, line, children, kind="tower"):
     t = TOWERS[uid]
     m = UNITS[uid]
     name = unit_name(uid)
     base = float(m.get("ua1b", 20) or 0)
     sides = float(m.get("ua1s", 6) or 1)
-    tier = {"damage": [base + 1, base + sides]}
+    tier = {"damage": DAMAGE_OVERRIDE.get(uid, [base + 1, base + sides])}
     tier["range"] = r(float(m.get("ua1r") or RANGE.get(uid, 700)))
     if uid in SHOCK:
         tier["damage"] = [SHOCK[uid], SHOCK[uid]]
@@ -195,32 +266,60 @@ def tower_json(uid, element, line, children):
     if uid in NO_ATTACK:
         tier["damage"] = [0, 0]
         tier["cooldown"] = 0.0
-    abilities = ([] if uid in NO_ATTACK else splash(m)) + ABIL.get(uid, [])
+    abilities = ([] if uid in NO_ATTACK or uid in DAMAGE_OVERRIDE else splash(m)) + ABIL.get(uid, [])
+    abilities = [describe(a) for a in abilities]
     todo = [a["text"] for a in abilities if a["type"] == "todo"]
     tier["abilities"] = [a for a in abilities if a["type"] != "todo"]
+    targets = "ground" if uid in SHOCK or kind == "trap" else "both"
+    if "air" in str(m.get("ua1g") or "") and "ground" not in str(m.get("ua1g")):
+        targets = "air"
     d = {
         "id": slug(name),
         "name": NAMES[name],
         "name_original": name,
         "category": "eeve",
-        "color": COLORS[element],
+        "color": mix_color(element) if "+" in element else COLORS.get(element, "#d8d8e8"),
         "model": "res://assets/models/crystals/%s.glb" % MODELS[line % len(MODELS)],
-        "damage_type": DAMAGE.get(m.get("ua1t") or "pierce", "magic"),
-        "targets": "ground" if uid in SHOCK else "both",
+        "damage_type": DAMAGE_TYPE_OVERRIDE.get(uid, DAMAGE.get(m.get("ua1t") or "pierce", "magic")),
+        "targets": targets,
         "eeve": {
             "element": element,
             "level": int(str(t["req_level"] or 1).split(",")[0]),
             "cost": int(t["cost"] or 0),
             "lumber": int(t["lumber"] or 0),
-            "from": slug(unit_name(t["from"])) if t["from"] and t["from"] != "h006" else "eeve_barricade",
+            "from": slug(unit_name(t["from"])) if t["from"] and t["from"] != "h006" else ("" if kind == "trap" else "eeve_barricade"),
             "next": [slug(unit_name(c)) for c in children],
             "wc3": uid,
         },
         "tiers": [tier],
     }
+    if kind == "trap":
+        d["kind"] = "trap"
+        d["model_scale"] = 0.3
+        d["eeve"]["trap"] = True
+    if "+" in element:
+        d["eeve"]["element"] = ""
+        d["eeve"]["elements"] = element.split("+")
+        d["eeve"]["from"] = "eeve_dual_element_base_tower"
+    if uid == DUAL_BASE:
+        d["eeve"]["dual_base"] = True
+        d["eeve"]["level"] = 3
     if todo:
         d["eeve"]["todo"] = todo
     return d
+
+
+def mix_color(element):
+    a, b = (Color_hex(COLORS[e]) for e in element.split("+"))
+    return "#%02x%02x%02x" % tuple((x + y) // 2 for x, y in zip(a, b))
+
+
+def Color_hex(h):
+    return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
+
+
+def dual_element(uid):
+    return "+".join(ELEMENTS[e] for e in TOWERS[uid]["element"].split("+"))
 
 
 def towers():
@@ -243,6 +342,13 @@ def towers():
                 kids = [k for k in (TOWERS[uid]["upgrades"] or "").split(",") if k]
                 out.append(tower_json(uid, element, i + 1, kids))
                 uid = kids[0] if kids else ""
+    for i, uid in enumerate(TRAPS):
+        out.append(tower_json(uid, ELEMENTS[TOWERS[uid]["element"]], i + 2, [], kind="trap"))
+    duals = TOWERS[DUAL_BASE]["upgrades"].split(",") + TOWERS[DUAL_PAGE_2]["upgrades"].split(",")
+    out[0]["eeve"]["next"].append("eeve_dual_element_base_tower")
+    out.append(tower_json(DUAL_BASE, "", 5, duals))
+    for i, uid in enumerate(duals):
+        out.append(tower_json(uid, dual_element(uid), i, []))
     return out
 
 

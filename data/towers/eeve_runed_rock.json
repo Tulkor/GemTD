@@ -1,0 +1,40 @@
+{
+	"id": "eeve_runed_rock",
+	"name": "Runenfels",
+	"name_original": "Runed Rock",
+	"category": "eeve",
+	"color": "#c27aa4",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h01L",
+		"elements": [
+			"earth",
+			"magic"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1365.0,
+				1509.0
+			],
+			"range": 6.25,
+			"cooldown": 1.7,
+			"abilities": [
+				{
+					"type": "gold_on_hit",
+					"chance": 0.16,
+					"gold": 1
+				}
+			]
+		}
+	]
+}

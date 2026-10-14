@@ -1,0 +1,43 @@
+{
+	"id": "eeve_icy_time_crystal",
+	"name": "Eisiger Zeitkristall",
+	"name_original": "Icy Time Crystal",
+	"category": "eeve",
+	"color": "#7999f3",
+	"model": "res://assets/models/crystals/crystal_23.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h01O",
+		"elements": [
+			"water",
+			"magic"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				963.0,
+				1065.0
+			],
+			"range": 5.47,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "pulse",
+					"every": 20.0,
+					"radius": 14.06,
+					"stun": 2.5,
+					"center": "tower",
+					"text": "Zeitsperre alle 20 s: betäubt alle Gegner im Radius 14 für 2,5 s"
+				}
+			]
+		}
+	]
+}

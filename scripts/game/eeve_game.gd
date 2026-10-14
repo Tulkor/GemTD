@@ -7,6 +7,9 @@ extends "res://scripts/game/game.gd"
 ## läuft eine Pause (Phase BUILD), danach startet das nächste Level (Phase WAVE), bis alle Gegner weg sind.
 ## Zu Beginn jedes Levels gibt es Zinsen, Einkommen und Food, alle 7 Level einen Elementpunkt und Holz,
 ## nach jeder Golem-Challenge einen zufälligen Elementpunkt.
+## Fallen (Elementstufe 4) baut man direkt auf den Weg, Gegner laufen darüber. Ab 3 Punkten in zwei Elementen
+## wird eine Barrikade zum Dual-Grundturm und der kostenlos zum Dual-Tower dieser beiden Elemente.
+## Tower und Fallen sind EeveTower (eeve_tower.gd) mit den Sonderfähigkeiten der Dual-Tower und Fallen.
 
 const ELEMENT_IDS := ["nature", "earth", "fire", "storm", "magic", "water"]
 const BARRICADE := "eeve_barricade"
@@ -21,6 +24,8 @@ var points := 0            ## noch nicht verteilte Elementpunkte
 var elements := {}         ## Element -> Stufe
 var element_caps := {}     ## Element -> höchste Stufe (4 + zufällige Punkte)
 var log_lines: Array = []  ## letzte Meldungen (Einkommen, Punkte) für die Seitenleiste
+var clock := 0.0           ## Spielzeit in Wellen (für zeitlich begrenzte Effekte der Tower)
+var placing_trap := ""     ## Falle, die gerade gesetzt wird (Klick aufs Feld), "" = keine
 var eeve_panel: EevePanel
 
 
@@ -86,6 +91,8 @@ func _execute(cmd: Dictionary) -> bool:
 			return true
 		"build":
 			return build_barricade(cmd.get("cell", NO_CELL))
+		"trap":
+			return build_trap(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
 		"element":
 			return add_element_point(str(cmd.get("element", "")))
 		"start_level":
@@ -191,6 +198,7 @@ func _start_wave() -> void:
 
 
 func _process_wave(delta: float) -> void:
+	clock += delta
 	super._process_wave(delta)
 
 
@@ -202,6 +210,31 @@ func _note(text: String) -> void:
 	log_lines.append(text)
 	if log_lines.size() > 4:
 		log_lines.pop_front()
+
+
+func add_ring(p: Vector2, r: float, col: Color) -> void:
+	var n := 24
+	for i in n:
+		var a := TAU * i / n
+		var b := TAU * (i + 1) / n
+		effects.add_beam(Board3D.to_3d(p + Vector2(cos(a), sin(a)) * r, 0.15), Board3D.to_3d(p + Vector2(cos(b), sin(b)) * r, 0.15), col)
+
+
+## Brennende Gegner (Flammenrost) explodieren beim Tod und treffen alle Gegner im Umkreis.
+func on_enemy_killed(e: Enemy) -> void:
+	super.on_enemy_killed(e)
+	var burn: Dictionary = e.get_meta("eeve_burn", {})
+	if burn.is_empty() or float(burn.until) < clock or not is_instance_valid(burn.tower):
+		return
+	var t: Tower = burn.tower
+	add_ring(e.pos, float(burn.radius), Color("ff7a30"))
+	for other in enemies_in_radius(e.pos, float(burn.radius)):
+		if other.flying:
+			continue
+		other.last_hit_by = t.owner_player
+		t.total_damage += other.take_damage(float(burn.damage), "spells")
+		if other.dead:
+			t.kills += 1
 
 
 func _finish(p: Phase) -> void:
@@ -261,18 +294,32 @@ func add_element_point(el: String) -> bool:
 	return true
 
 
-## Auren wie in GemTD, dazu der Elementbonus: +10 % Grundschaden je Stufe im Element des Towers.
+## Auren wie in GemTD, dazu der Elementbonus: +10 % Grundschaden je Stufe im Element des Towers
+## (Dual-Tower: Mittel ihrer beiden Elemente) und der Buff der Feuerbeeren, solange er wirkt.
 func _update_auras() -> void:
 	super._update_auras()
 	var per := float(rules.get("element_bonus_per_level", 0.1))
 	for t in all_towers():
-		var el := str(t.def.get("eeve", {}).get("element", ""))
-		var lvl: int = elements.get(el, 0)
-		if lvl <= 0:
+		var e: Dictionary = t.def.get("eeve", {})
+		var els: Array = e.get("elements", [e.get("element", "")])
+		var lvl := 0.0
+		for el in els:
+			lvl += elements.get(el, 0)
+		lvl /= maxf(els.size(), 1)
+		if lvl <= 0.0:
 			continue
 		var aura: String = t.damage_source
 		t.damage_bonus += per * lvl
-		t.damage_source = tr("%s Stufe %d") % [element_name(el), lvl] + (" + " + aura if aura != "" else "")
+		var names := " + ".join(els.map(func(el): return element_name(el)))
+		t.damage_source = tr("%s Stufe %s") % [names, str(snappedf(lvl, 0.5))] + (" + " + aura if aura != "" else "")
+	for src in all_towers():
+		if not src is EeveTower or src.rage_left <= 0.0:
+			continue
+		var ab: Dictionary = src.ability("rage")
+		for t in all_towers():
+			if t.pos.distance_to(src.pos) <= float(ab.radius):
+				t.damage_bonus += float(ab.bonus)
+				t.damage_source += " + " + src.label()
 
 
 # --- Bauen und Aufwerten -------------------------------------------------------------
@@ -282,7 +329,10 @@ func food_used() -> int:
 
 
 func can_build(a: Vector2i) -> bool:
-	return setup_done and phase < Phase.GAME_OVER and gold >= barricade_cost() and food_used() < food_cap and can_place(a)
+	if not (setup_done and phase < Phase.GAME_OVER and gold >= barricade_cost() and food_used() < food_cap and can_place(a)):
+		return false
+	# nicht auf Fallen bauen, sonst läuft dort nie ein Gegner darüber
+	return Board3D.footprint(a).all(func(c): return not trap_cells.has(c))
 
 
 func barricade_cost() -> int:
@@ -293,7 +343,7 @@ func build_barricade(a: Vector2i) -> bool:
 	if not can_build(a):
 		return false
 	gold -= barricade_cost()
-	var t := Tower.new()
+	var t := EeveTower.new()
 	t.owner_player = acting
 	board.add_child(t)
 	t.setup(self, a, BARRICADE, 0)
@@ -305,6 +355,95 @@ func build_barricade(a: Vector2i) -> bool:
 	board.refresh_hover()
 	_refresh_hud()
 	return true
+
+
+# --- Fallen ---------------------------------------------------------------------------
+
+## Fallen aller Elemente in der Reihenfolge der Elemente.
+func trap_ids() -> Array:
+	var out := []
+	for el in ELEMENT_IDS:
+		for id in Database.towers:
+			var e: Dictionary = Database.towers[id].get("eeve", {})
+			if e.get("trap", false) and str(e.get("element", "")) == el:
+				out.append(id)
+	return out
+
+
+## Warum die Falle gerade nicht gebaut werden kann ("" = geht).
+func trap_reason(id: String) -> String:
+	var e: Dictionary = Database.towers.get(id, {}).get("eeve", {})
+	if elements.get(str(e.get("element", "")), 0) < int(e.get("level", 4)):
+		return tr("%s %d nötig") % [element_name(str(e.element)), int(e.level)]
+	if gold < int(e.get("cost", 0)):
+		return tr("zu wenig Gold")
+	if lumber < int(e.get("lumber", 0)):
+		return tr("zu wenig Holz")
+	if food_used() >= food_cap:
+		return tr("kein Food frei")
+	return ""
+
+
+## Fallen liegen auf begehbaren Feldern (3×3), nicht unter Barrikaden, Felsen oder anderen Fallen.
+func can_build_trap(id: String, a: Vector2i) -> bool:
+	if not setup_done or phase >= Phase.GAME_OVER or a == NO_CELL or trap_reason(id) != "":
+		return false
+	for c in Board3D.footprint(a, Board3D.TRAP_CELLS):
+		if not map.is_walkable(c) or occupied.has(c) or trap_cells.has(c):
+			return false
+	return true
+
+
+func build_trap(id: String, a: Vector2i) -> bool:
+	if not can_build_trap(id, a):
+		return false
+	var e: Dictionary = Database.towers[id].eeve
+	gold -= int(e.cost)
+	lumber -= int(e.get("lumber", 0))
+	var t := EeveTower.new()
+	t.owner_player = acting
+	board.add_child(t)
+	t.setup(self, a, id, 0)
+	t.set_meta("spent", int(e.cost))
+	_register(t)
+	_update_auras()
+	if acting == local_player:
+		placing_trap = ""
+		board.hover_cell = NO_CELL
+	_refresh_hud()
+	return true
+
+
+## Falle zum Setzen auswählen (Knopf in der Seitenleiste), nochmal drücken bricht ab.
+func start_trap_placement(id: String) -> void:
+	_select(null)
+	placing_trap = "" if placing_trap == id or trap_reason(id) != "" else id
+	board.hover_cell = NO_CELL
+	_refresh_hud()
+
+
+func _select_rocks(list: Array, t: Tower = null) -> void:
+	placing_trap = ""
+	super._select_rocks(list, t)
+
+
+# --- Dual-Tower --------------------------------------------------------------------------
+
+## Elementpaare mit mindestens 3 Punkten in beiden Elementen.
+func dual_pair_ready(els: Array) -> bool:
+	return els.size() == 2 and els.all(func(el): return elements.get(el, 0) >= dual_level())
+
+
+func dual_level() -> int:
+	return int(Database.towers.get("eeve_dual_element_base_tower", {}).get("eeve", {}).get("level", 3))
+
+
+func any_dual_ready() -> bool:
+	var ready := []
+	for el in ELEMENT_IDS:
+		if elements.get(el, 0) >= dual_level():
+			ready.append(el)
+	return ready.size() >= 2
 
 
 ## Felsen gehören zum Feld und lassen sich nicht entfernen.
@@ -325,7 +464,12 @@ func tower_options(t: Tower) -> Array:
 		var el := str(nd.get("element", ""))
 		var need := int(nd.get("level", 1))
 		var reason := ""
-		if elements.get(el, 0) < need:
+		# Dual-Grundturm zeigt nur die Dual-Tower, deren beide Elemente auf Stufe 3 sind
+		if nd.has("elements") and not dual_pair_ready(nd.elements):
+			continue
+		if nd.get("dual_base", false) and not any_dual_ready():
+			reason = tr("zwei Elemente auf Stufe %d nötig") % need
+		elif not nd.get("dual_base", false) and el != "" and elements.get(el, 0) < need:
 			reason = tr("%s %d nötig") % [element_name(el), need]
 		elif gold < cost:
 			reason = tr("zu wenig Gold")
@@ -369,6 +513,14 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 # --- Eingabe -----------------------------------------------------------------------
 
 func _update_hover() -> void:
+	if placing_trap != "":
+		var a := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
+		if a != board.hover_cell or board.hover_size != Board3D.TRAP_CELLS:
+			board.hover_cell = a
+			board.hover_size = Board3D.TRAP_CELLS
+			board.hover_ok = can_build_trap(placing_trap, a)
+			board.refresh_hover()
+		return
 	var c := NO_CELL
 	if setup_done and phase < Phase.GAME_OVER and not occupied.has(board.mouse_cell(camera_rig.camera)):
 		c = board.mouse_anchor(camera_rig.camera)
@@ -380,11 +532,19 @@ func _update_hover() -> void:
 
 
 func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
+	if placing_trap != "":
+		var at := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
+		if can_build_trap(placing_trap, at):
+			submit({"type": "trap", "id": placing_trap, "cell": at})
+		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
+	var trap: Tower = traps.get(trap_cells.get(c, NO_CELL), null)
 	if towers.has(a):
 		_select(towers[a])
 	elif rocks.has(a):
 		_select(null, a)
+	elif trap != null:
+		_select(trap)
 	elif can_build(anchor):
 		submit({"type": "build", "cell": anchor})
 	else:
@@ -397,6 +557,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			submit({"type": "start_level"})
 			return
 		if event.keycode == KEY_Z:
+			return
+		if event.keycode == KEY_ESCAPE and placing_trap != "":
+			placing_trap = ""
+			_refresh_hud()
 			return
 	super._unhandled_input(event)
 
@@ -422,6 +586,12 @@ func _refresh_hud_local() -> void:
 	hud.set_path_length(path_length, 0)
 	hud.set_waves(_upcoming_waves(4))
 	hud.set_round_gems([], "")
+	if placing_trap != "" and phase < Phase.GAME_OVER:
+		hud.set_phase(Database.tower_label(placing_trap, 0), tr("Falle auf den Weg setzen · Esc oder Rechtsklick = abbrechen"))
+		_refresh_selection()
+		if eeve_panel != null:
+			eeve_panel.refresh()
+		return
 	match phase:
 		Phase.BUILD:
 			var next := wave_index + 1
@@ -460,6 +630,12 @@ func _refresh_selection() -> void:
 	var e: Dictionary = selected.def.get("eeve", {})
 	if e.get("barricade", false):
 		view.subtitle = tr("Barrikade · zum Grundturm eines Elements aufwerten")
+	elif e.get("trap", false):
+		view.subtitle = tr("Falle · %s · Gegner laufen darüber, trifft nur Bodengegner") % element_name(str(e.get("element", "")))
+	elif e.get("dual_base", false):
+		view.subtitle = tr("Dual-Grundturm · kostenlos zum Dual-Tower zweier Elemente mit Stufe %d aufwerten") % dual_level()
+	elif e.has("elements"):
+		view.subtitle = tr("Dual-Tower · %s") % " + ".join((e.elements as Array).map(func(el): return element_name(el))) + " · " + TowerStats.targets_text(selected.target_mode())
 	else:
 		view.subtitle = tr("%s · Elementstufe %d") % [element_name(str(e.get("element", ""))), int(e.get("level", 1))] + " · " + TowerStats.targets_text(selected.target_mode())
 	var body := ""
@@ -474,7 +650,7 @@ func _refresh_selection() -> void:
 func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	if o.action == "scrap":
 		return {"label": o.label, "style": "normal", "tooltip": tr("Tower oder Barrikade entfernen. Gold gibt es nicht zurück, das Food wird frei.")}
-	var sub := tr("%d Gold") % int(o.cost)
+	var sub := tr("%d Gold") % int(o.cost) if int(o.cost) > 0 else tr("kostenlos")
 	if int(o.get("lumber", 0)) > 0:
 		sub += " + " + tr("%d Holz") % int(o.lumber)
 	if o.get("reason", "") != "":
@@ -482,6 +658,9 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	var v := {"label": o.label, "sub": sub, "style": "normal", "icon": "up", "disabled": o.get("reason", "") != "",
 			"tooltip": o.label}
 	v.preview_range = Tower.ring_radius(Database.tower_tier(o.id, 0), false)
+	var nd: Dictionary = Database.towers.get(o.id, {}).get("eeve", {})
+	if nd.has("elements"):
+		v.label = "%s (%s)" % [o.label, " + ".join((nd.elements as Array).map(func(el): return element_name(el)))]
 	v.diff = TowerStats.diff(t, o.id, 0)
 	return v
 

@@ -87,4 +87,5 @@ static func describe(ab: Dictionary) -> String:
 			return str(TranslationServer.translate("Verlangsamt Gegner im Radius %.1f um %d%%")) % [float(ab.radius), float(ab.factor) * 100]
 		"armor_aura":
 			return str(TranslationServer.translate("Senkt Rüstung von Gegnern im Radius %.1f um %.0f")) % [float(ab.radius), float(ab.amount)]
-	return type
+	# Fähigkeiten einzelner Modi (z. B. eeveTD) bringen ihren Text in den Daten mit
+	return str(TranslationServer.translate(str(ab.get("text", type))))

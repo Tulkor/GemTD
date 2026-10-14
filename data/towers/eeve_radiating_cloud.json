@@ -1,0 +1,42 @@
+{
+	"id": "eeve_radiating_cloud",
+	"name": "Strahlende Wolke",
+	"name_original": "Radiating Cloud",
+	"category": "eeve",
+	"color": "#57bdf3",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h09C",
+		"elements": [
+			"water",
+			"storm"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1383.0,
+				1529.0
+			],
+			"range": 5.47,
+			"cooldown": 1.6,
+			"abilities": [
+				{
+					"type": "hp_cut",
+					"radius": 5.47,
+					"factor": 0.23,
+					"factor_challenge": 0.15,
+					"text": "Gegner, die in Radius 5,5 kommen, verlieren einmalig 23 % ihrer Leben (Challenge 15 %)"
+				}
+			]
+		}
+	]
+}
