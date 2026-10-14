@@ -1,0 +1,21 @@
+{
+	"id": "eeve_murloc",
+	"name": "Murloc",
+	"name_original": "Murloc",
+	"category": "eeve",
+	"hp": 11375,
+	"speed": 3.32,
+	"armor": 0.0,
+	"armor_type": "eeve_medium",
+	"bounty": 6,
+	"damage": 1,
+	"flying": false,
+	"color": "#40a080",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 6,
+		"wc3": "h09A"
+	},
+	"shape": "pyramid"
+}

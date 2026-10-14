@@ -1,0 +1,41 @@
+{
+	"id": "eeve_fire_base_tower",
+	"name": "Feuer-Grundturm",
+	"name_original": "Fire Base Tower",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 1,
+		"cost": 48,
+		"lumber": 0,
+		"from": "eeve_barricade",
+		"next": [
+			"eeve_area_roaster",
+			"eeve_heat_stakes",
+			"eeve_camp_fire",
+			"eeve_essence_of_fire"
+		],
+		"wc3": "h0AP"
+	},
+	"tiers": [
+		{
+			"damage": [
+				21.0,
+				26.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

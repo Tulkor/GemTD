@@ -1,0 +1,39 @@
+{
+	"id": "eeve_lesser_rock_launcher",
+	"name": "Kleiner Steinwerfer",
+	"name_original": "Lesser Rock Launcher",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 2,
+		"cost": 250,
+		"lumber": 0,
+		"from": "eeve_earth_base_tower",
+		"next": [
+			"eeve_rock_launcher"
+		],
+		"wc3": "h07K"
+	},
+	"tiers": [
+		{
+			"damage": [
+				405.0,
+				447.0
+			],
+			"range": 5.08,
+			"cooldown": 2.25,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.05,
+					"duration": 2.0,
+					"damage": 100
+				}
+			]
+		}
+	]
+}

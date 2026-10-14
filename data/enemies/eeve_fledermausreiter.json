@@ -1,0 +1,21 @@
+{
+	"id": "eeve_fledermausreiter",
+	"name": "Fledermausreiter",
+	"name_original": "Bat Rider",
+	"category": "eeve",
+	"hp": 1250,
+	"speed": 2.578,
+	"armor": 0.0,
+	"armor_type": "eeve_none",
+	"bounty": 5,
+	"damage": 1,
+	"flying": true,
+	"color": "#c04040",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 5,
+		"wc3": "h095"
+	},
+	"shape": "pyramid"
+}

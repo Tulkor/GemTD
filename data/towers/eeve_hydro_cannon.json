@@ -1,0 +1,39 @@
+{
+	"id": "eeve_hydro_cannon",
+	"name": "Hydrokanone",
+	"name_original": "Hydro Cannon",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 2,
+		"cost": 200,
+		"lumber": 0,
+		"from": "eeve_water_base_tower",
+		"next": [
+			"eeve_tsunami_cannon"
+		],
+		"wc3": "h04D"
+	},
+	"tiers": [
+		{
+			"damage": [
+				125.0,
+				233.0
+			],
+			"range": 5.47,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.23,
+					"damage": 180,
+					"radius": 1.95
+				}
+			]
+		}
+	]
+}

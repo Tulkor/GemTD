@@ -1,0 +1,42 @@
+{
+	"id": "eeve_weak_pyramide",
+	"name": "Schwache Pyramide",
+	"name_original": "Weak Pyramide",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "physical",
+	"targets": "ground",
+	"eeve": {
+		"element": "earth",
+		"level": 1,
+		"cost": 50,
+		"lumber": 0,
+		"from": "eeve_earth_base_tower",
+		"next": [
+			"eeve_pyramide"
+		],
+		"wc3": "h08I"
+	},
+	"tiers": [
+		{
+			"damage": [
+				150,
+				150
+			],
+			"range": 1.88,
+			"cooldown": 3.0,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "slow",
+					"factor": 0.15,
+					"duration": 0.6
+				}
+			]
+		}
+	]
+}

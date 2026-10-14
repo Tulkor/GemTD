@@ -1,0 +1,45 @@
+{
+	"id": "eeve_heat_stakes",
+	"name": "Hitzepfähle",
+	"name_original": "Heat Stakes",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 1,
+		"cost": 50,
+		"lumber": 0,
+		"from": "eeve_fire_base_tower",
+		"next": [
+			"eeve_searing_totem"
+		],
+		"wc3": "h02U"
+	},
+	"tiers": [
+		{
+			"damage": [
+				43.0,
+				65.0
+			],
+			"range": 7.62,
+			"cooldown": 1.4,
+			"abilities": [
+				{
+					"type": "poison",
+					"chance": 0.12,
+					"dps": 50,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"chance": 0.12,
+					"factor": 0.06,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

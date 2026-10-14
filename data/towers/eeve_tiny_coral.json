@@ -1,0 +1,38 @@
+{
+	"id": "eeve_tiny_coral",
+	"name": "Winzige Koralle",
+	"name_original": "Tiny Coral",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 2,
+		"cost": 140,
+		"lumber": 0,
+		"from": "eeve_coral_flower",
+		"next": [
+			"eeve_coral_needle"
+		],
+		"wc3": "h05G"
+	},
+	"tiers": [
+		{
+			"damage": [
+				119.0,
+				179.0
+			],
+			"range": 5.86,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.47,
+					"factor": 0.32
+				}
+			]
+		}
+	]
+}

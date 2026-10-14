@@ -1,0 +1,38 @@
+{
+	"id": "eeve_brazier",
+	"name": "Kohlenbecken",
+	"name_original": "Brazier",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 2,
+		"cost": 170,
+		"lumber": 0,
+		"from": "eeve_camp_fire",
+		"next": [
+			"eeve_blazing_brazier"
+		],
+		"wc3": "h03W"
+	},
+	"tiers": [
+		{
+			"damage": [
+				95.0,
+				221.0
+			],
+			"range": 6.25,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.98,
+					"factor": 0.6
+				}
+			]
+		}
+	]
+}

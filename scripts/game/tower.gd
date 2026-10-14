@@ -288,6 +288,7 @@ func _hit(e, dmg: float) -> void:
 				e.apply_armor_reduction(float(ab.amount), float(ab.duration))
 			"stun":
 				e.apply_stun(float(ab.duration))
+				dmg += float(ab.get("damage", 0.0))
 			"gold_on_hit":
 				game.add_gold(int(ab.get("gold", 0)) + floori(float(ab.get("gold_per_wave", 0)) * game.current_wave()), owner_player)
 			"stacking_damage":

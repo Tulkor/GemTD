@@ -1,0 +1,36 @@
+{
+	"id": "eeve_ultra_hot_zomg_dine_in_hell_tower",
+	"name": "Ultraheißer zOMG-Höllenmahl-Turm",
+	"name_original": "Ultra Hot zOMG Dine in Hell Tower",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 6,
+		"cost": 1200,
+		"lumber": 1,
+		"from": "eeve_hell_brazier",
+		"next": [],
+		"wc3": "h039"
+	},
+	"tiers": [
+		{
+			"damage": [
+				864.0,
+				2016.0
+			],
+			"range": 6.25,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.48,
+					"factor": 0.75
+				}
+			]
+		}
+	]
+}

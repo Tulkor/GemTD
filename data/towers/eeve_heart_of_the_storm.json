@@ -1,0 +1,35 @@
+{
+	"id": "eeve_heart_of_the_storm",
+	"name": "Herz des Sturms",
+	"name_original": "Heart of the Storm",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 5,
+		"cost": 800,
+		"lumber": 0,
+		"from": "eeve_storm_generator",
+		"next": [],
+		"wc3": "h078"
+	},
+	"tiers": [
+		{
+			"damage": [
+				363.0,
+				443.0
+			],
+			"range": 8.2,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 4
+				}
+			]
+		}
+	]
+}

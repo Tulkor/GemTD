@@ -1,0 +1,43 @@
+{
+	"id": "eeve_storm_cloud",
+	"name": "Sturmwolke",
+	"name_original": "Storm Cloud",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 3,
+		"cost": 550,
+		"lumber": 1,
+		"from": "eeve_storm_base_tower",
+		"next": [
+			"eeve_tornado"
+		],
+		"wc3": "h06U"
+	},
+	"tiers": [
+		{
+			"damage": [
+				212.0,
+				318.0
+			],
+			"range": 10.94,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.39,
+					"factor": 0.3
+				},
+				{
+					"type": "slow_aura",
+					"radius": 4.69,
+					"factor": 0.15
+				}
+			]
+		}
+	]
+}

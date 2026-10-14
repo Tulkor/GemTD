@@ -1,0 +1,37 @@
+{
+	"id": "eeve_storm_generator",
+	"name": "Sturmgenerator",
+	"name_original": "Storm Generator",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 4,
+		"cost": 760,
+		"lumber": 0,
+		"from": "eeve_stormy_peak",
+		"next": [
+			"eeve_heart_of_the_storm"
+		],
+		"wc3": "h05T"
+	},
+	"tiers": [
+		{
+			"damage": [
+				187.0,
+				229.0
+			],
+			"range": 8.2,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 3
+				}
+			]
+		}
+	]
+}

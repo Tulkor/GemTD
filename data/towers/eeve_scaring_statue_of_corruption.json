@@ -1,0 +1,36 @@
+{
+	"id": "eeve_scaring_statue_of_corruption",
+	"name": "Schreckliche Statue der Verderbnis",
+	"name_original": "Scaring Statue of Corruption",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 5,
+		"cost": 800,
+		"lumber": 0,
+		"from": "eeve_floating_cube_of_treachery",
+		"next": [],
+		"wc3": "h01F"
+	},
+	"tiers": [
+		{
+			"damage": [
+				494.0,
+				918.0
+			],
+			"range": 5.47,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "armor_reduce",
+					"amount": 8.0,
+					"duration": 6.0
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"id": "eeve_fliegender_daemon",
+	"name": "Fliegender Dämon",
+	"name_original": "Flying Daemon",
+	"category": "eeve",
+	"hp": 6875,
+	"speed": 3.359,
+	"armor": 4.0,
+	"armor_type": "eeve_none",
+	"bounty": 10,
+	"damage": 1,
+	"flying": true,
+	"color": "#a040c0",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 10,
+		"wc3": "h09V"
+	},
+	"shape": "pyramid"
+}

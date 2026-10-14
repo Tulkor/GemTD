@@ -1,0 +1,21 @@
+{
+	"id": "eeve_hohepriesterin",
+	"name": "Hohepriesterin",
+	"name_original": "High Priestess",
+	"category": "eeve",
+	"hp": 350000,
+	"speed": 3.828,
+	"armor": 3.0,
+	"armor_type": "eeve_hero",
+	"bounty": 280,
+	"damage": 40,
+	"flying": false,
+	"color": "#a0c040",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 7,
+		"wc3": "h09F"
+	},
+	"boss": true
+}

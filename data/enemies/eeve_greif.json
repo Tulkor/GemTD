@@ -1,0 +1,20 @@
+{
+	"id": "eeve_greif",
+	"name": "Greif",
+	"name_original": "Gryphon",
+	"category": "eeve",
+	"hp": 3750,
+	"speed": 2.539,
+	"armor": 1.0,
+	"armor_type": "eeve_small",
+	"bounty": 16,
+	"damage": 4,
+	"flying": true,
+	"color": "#7a6ad0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 4,
+		"wc3": "h091"
+	}
+}

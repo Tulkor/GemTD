@@ -1,0 +1,41 @@
+{
+	"id": "eeve_gold_mine",
+	"name": "Goldmine",
+	"name_original": "Gold Mine",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 3,
+		"cost": 550,
+		"lumber": 1,
+		"from": "eeve_earth_base_tower",
+		"next": [
+			"eeve_diamond_mine"
+		],
+		"wc3": "h07E",
+		"todo": [
+			"Goldene Aura: +33 % Kopfgeld für Tower im Umkreis 1000"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				173.0,
+				259.0
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.39,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

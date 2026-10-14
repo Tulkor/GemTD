@@ -1,0 +1,39 @@
+{
+	"id": "eeve_xtreme_bird_launcher",
+	"name": "Xtremer Vogelwerfer",
+	"name_original": "Xtreme Bird Launcher",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 4,
+		"cost": 600,
+		"lumber": 0,
+		"from": "eeve_greater_bird_launcher",
+		"next": [
+			"eeve_wicked_bird_rampage_wtf_tower"
+		],
+		"wc3": "h00P"
+	},
+	"tiers": [
+		{
+			"damage": [
+				492.0,
+				602.0
+			],
+			"range": 8.2,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "bounce",
+					"targets": 9,
+					"falloff": 0.65,
+					"radius": 3.91
+				}
+			]
+		}
+	]
+}

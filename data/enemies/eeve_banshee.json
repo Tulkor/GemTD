@@ -1,0 +1,20 @@
+{
+	"id": "eeve_banshee",
+	"name": "Banshee",
+	"name_original": "Banshee",
+	"category": "eeve",
+	"hp": 102000,
+	"speed": 3.711,
+	"armor": 3.0,
+	"armor_type": "eeve_large",
+	"bounty": 32,
+	"damage": 4,
+	"flying": false,
+	"color": "#9090a0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 8,
+		"wc3": "h09L"
+	}
+}

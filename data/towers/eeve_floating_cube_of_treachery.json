@@ -1,0 +1,38 @@
+{
+	"id": "eeve_floating_cube_of_treachery",
+	"name": "Schwebender Würfel der Heimtücke",
+	"name_original": "Floating Cube of Treachery",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 4,
+		"cost": 700,
+		"lumber": 0,
+		"from": "eeve_cube_of_betrayal",
+		"next": [
+			"eeve_scaring_statue_of_corruption"
+		],
+		"wc3": "h02D"
+	},
+	"tiers": [
+		{
+			"damage": [
+				307.0,
+				571.0
+			],
+			"range": 5.47,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "armor_reduce",
+					"amount": 6.0,
+					"duration": 5.0
+				}
+			]
+		}
+	]
+}

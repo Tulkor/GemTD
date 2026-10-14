@@ -1,0 +1,20 @@
+{
+	"id": "eeve_naga_sirene",
+	"name": "Naga-Sirene",
+	"name_original": "Naga Siren",
+	"category": "eeve",
+	"hp": 45500,
+	"speed": 3.32,
+	"armor": 0.0,
+	"armor_type": "eeve_large",
+	"bounty": 24,
+	"damage": 4,
+	"flying": false,
+	"color": "#40a080",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 6,
+		"wc3": "h09D"
+	}
+}

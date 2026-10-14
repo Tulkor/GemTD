@@ -68,6 +68,8 @@ static func describe(ab: Dictionary) -> String:
 		"armor_reduce":
 			return str(TranslationServer.translate("Senkt Rüstung um %.0f für %.1fs")) % [float(ab.amount), float(ab.duration)]
 		"stun":
+			if float(ab.get("damage", 0)) > 0.0:
+				return str(TranslationServer.translate("%d%% Chance, %.1fs zu betäuben und %d Zusatzschaden")) % [float(ab.chance) * 100, float(ab.duration), int(ab.damage)]
 			return str(TranslationServer.translate("%d%% Chance, %.1fs zu betäuben")) % [float(ab.chance) * 100, float(ab.duration)]
 		"air_bonus":
 			return str(TranslationServer.translate("%.1fx Schaden gegen Flieger")) % float(ab.multiplier)

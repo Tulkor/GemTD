@@ -1,0 +1,41 @@
+{
+	"id": "eeve_phoenix_egg",
+	"name": "Phönix-Ei",
+	"name_original": "Phoenix Egg",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_essence_of_fire",
+		"next": [],
+		"wc3": "h03B"
+	},
+	"tiers": [
+		{
+			"damage": [
+				20.0,
+				30.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				},
+				{
+					"type": "damage_aura",
+					"radius": 9.38,
+					"bonus": 0.4
+				}
+			]
+		}
+	]
+}

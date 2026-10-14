@@ -1,0 +1,38 @@
+{
+	"id": "eeve_coral_atoll",
+	"name": "Korallenatoll",
+	"name_original": "Coral Atoll",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 4,
+		"cost": 500,
+		"lumber": 0,
+		"from": "eeve_coral_needle",
+		"next": [
+			"eeve_the_totally_uber_coral_of_absolute_gg"
+		],
+		"wc3": "h05F"
+	},
+	"tiers": [
+		{
+			"damage": [
+				609.0,
+				913.0
+			],
+			"range": 6.64,
+			"cooldown": 1.3,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.62,
+					"factor": 0.36
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,37 @@
+{
+	"id": "eeve_stormy_peak",
+	"name": "Stürmischer Gipfel",
+	"name_original": "Stormy Peak",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 2,
+		"cost": 170,
+		"lumber": 0,
+		"from": "eeve_storm_lantern",
+		"next": [
+			"eeve_storm_generator"
+		],
+		"wc3": "h060"
+	},
+	"tiers": [
+		{
+			"damage": [
+				38.0,
+				46.0
+			],
+			"range": 8.2,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 3
+				}
+			]
+		}
+	]
+}

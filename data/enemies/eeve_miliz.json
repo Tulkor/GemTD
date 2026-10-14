@@ -1,0 +1,21 @@
+{
+	"id": "eeve_miliz",
+	"name": "Miliz",
+	"name_original": "Militia",
+	"category": "eeve",
+	"hp": 3750,
+	"speed": 2.93,
+	"armor": 1.0,
+	"armor_type": "eeve_medium",
+	"bounty": 4,
+	"damage": 1,
+	"flying": false,
+	"color": "#7a6ad0",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 4,
+		"wc3": "h08Z"
+	},
+	"shape": "pyramid"
+}

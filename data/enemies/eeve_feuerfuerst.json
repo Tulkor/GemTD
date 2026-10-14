@@ -1,0 +1,21 @@
+{
+	"id": "eeve_feuerfuerst",
+	"name": "Feuerfürst",
+	"name_original": "Fire Lord",
+	"category": "eeve",
+	"hp": 712500,
+	"speed": 4.078,
+	"armor": 4.0,
+	"armor_type": "eeve_hero",
+	"bounty": 360,
+	"damage": 40,
+	"flying": false,
+	"color": "#ff7a30",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 9,
+		"wc3": "h09R"
+	},
+	"boss": true
+}

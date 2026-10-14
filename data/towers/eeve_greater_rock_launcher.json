@@ -1,0 +1,37 @@
+{
+	"id": "eeve_greater_rock_launcher",
+	"name": "Großer Steinwerfer",
+	"name_original": "Greater Rock Launcher",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 5,
+		"cost": 700,
+		"lumber": 0,
+		"from": "eeve_rock_launcher",
+		"next": [],
+		"wc3": "h07C"
+	},
+	"tiers": [
+		{
+			"damage": [
+				2271.0,
+				2509.0
+			],
+			"range": 5.08,
+			"cooldown": 1.75,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.15,
+					"duration": 2.0,
+					"damage": 700
+				}
+			]
+		}
+	]
+}

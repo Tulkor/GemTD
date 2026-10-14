@@ -1,0 +1,38 @@
+{
+	"id": "eeve_blazing_brazier",
+	"name": "Loderndes Kohlenbecken",
+	"name_original": "Blazing Brazier",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 3,
+		"cost": 360,
+		"lumber": 0,
+		"from": "eeve_brazier",
+		"next": [
+			"eeve_hell_brazier"
+		],
+		"wc3": "h03X"
+	},
+	"tiers": [
+		{
+			"damage": [
+				216.0,
+				504.0
+			],
+			"range": 6.25,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.09,
+					"factor": 0.66
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,41 @@
+{
+	"id": "eeve_frozen_monument",
+	"name": "Gefrorenes Monument",
+	"name_original": "Frozen Monument",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 5,
+		"cost": 700,
+		"lumber": 0,
+		"from": "eeve_permafrost_blaster",
+		"next": [],
+		"wc3": "h055"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1745.0,
+				2133.0
+			],
+			"range": 5.08,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.17,
+					"factor": 0.36
+				},
+				{
+					"type": "slow",
+					"factor": 0.18,
+					"duration": 2.5
+				}
+			]
+		}
+	]
+}

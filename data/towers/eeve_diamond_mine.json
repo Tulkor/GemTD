@@ -1,0 +1,39 @@
+{
+	"id": "eeve_diamond_mine",
+	"name": "Diamantmine",
+	"name_original": "Diamond Mine",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_gold_mine",
+		"next": [],
+		"wc3": "h07D",
+		"todo": [
+			"Wohlstands-Aura: +55 % Kopfgeld für Tower im Umkreis 1200"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				538.0,
+				806.0
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.47,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

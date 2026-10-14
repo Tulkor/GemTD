@@ -1,0 +1,45 @@
+{
+	"id": "eeve_searing_totem",
+	"name": "Sengendes Totem",
+	"name_original": "Searing Totem",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 2,
+		"cost": 200,
+		"lumber": 0,
+		"from": "eeve_heat_stakes",
+		"next": [
+			"eeve_scorched_rune"
+		],
+		"wc3": "h02V"
+	},
+	"tiers": [
+		{
+			"damage": [
+				131.0,
+				197.0
+			],
+			"range": 7.81,
+			"cooldown": 1.3,
+			"abilities": [
+				{
+					"type": "poison",
+					"chance": 0.13,
+					"dps": 180,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"chance": 0.13,
+					"factor": 0.08,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

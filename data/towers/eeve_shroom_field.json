@@ -1,0 +1,43 @@
+{
+	"id": "eeve_shroom_field",
+	"name": "Pilzfeld",
+	"name_original": "Shroom Field",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 3,
+		"cost": 100,
+		"lumber": 0,
+		"from": "eeve_nonhazardous_shroom_field",
+		"next": [
+			"eeve_hazardous_shroom_field"
+		],
+		"wc3": "h00Q"
+	},
+	"tiers": [
+		{
+			"damage": [
+				95.0,
+				95.0
+			],
+			"range": 5.47,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 30,
+					"duration": 5.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 5.0
+				}
+			]
+		}
+	]
+}

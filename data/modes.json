@@ -14,7 +14,7 @@
 		{
 			"id": "eevetd",
 			"name": "eeveTD",
-			"ready": false,
+			"ready": true,
 			"min_players": 1,
 			"max_players": 1,
 			"scene": "res://scenes/eeve_game.tscn",

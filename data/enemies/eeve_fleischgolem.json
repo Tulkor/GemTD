@@ -1,0 +1,21 @@
+{
+	"id": "eeve_fleischgolem",
+	"name": "Fleischgolem",
+	"name_original": "Flesh Golem",
+	"category": "eeve",
+	"hp": 140000,
+	"speed": 3.32,
+	"armor": 2.0,
+	"armor_type": "eeve_divine",
+	"bounty": 250,
+	"damage": 0,
+	"flying": false,
+	"color": "#e8c840",
+	"size": 1.9,
+	"eeve": {
+		"kind": "challenge",
+		"stage": 0,
+		"wc3": "E001"
+	},
+	"boss": true
+}

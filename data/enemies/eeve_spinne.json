@@ -1,0 +1,20 @@
+{
+	"id": "eeve_spinne",
+	"name": "Spinne",
+	"name_original": "Spider",
+	"category": "eeve",
+	"hp": 7000,
+	"speed": 2.734,
+	"armor": 1.0,
+	"armor_type": "eeve_large",
+	"bounty": 12,
+	"damage": 4,
+	"flying": false,
+	"color": "#5aa0e0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 3,
+		"wc3": "h08W"
+	}
+}

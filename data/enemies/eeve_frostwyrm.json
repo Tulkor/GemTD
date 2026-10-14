@@ -1,0 +1,20 @@
+{
+	"id": "eeve_frostwyrm",
+	"name": "Frostwyrm",
+	"name_original": "Frost Wyrm",
+	"category": "eeve",
+	"hp": 19500,
+	"speed": 3.32,
+	"armor": 3.0,
+	"armor_type": "eeve_small",
+	"bounty": 32,
+	"damage": 4,
+	"flying": true,
+	"color": "#9090a0",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 8,
+		"wc3": "h09M"
+	}
+}

@@ -1,0 +1,43 @@
+{
+	"id": "eeve_fountain_of_corrosion",
+	"name": "Brunnen der Korrosion",
+	"name_original": "Fountain of Corrosion",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 3,
+		"cost": 500,
+		"lumber": 1,
+		"from": "eeve_water_base_tower",
+		"next": [
+			"eeve_glowing_fountain_of_oxidization"
+		],
+		"wc3": "h04U"
+	},
+	"tiers": [
+		{
+			"damage": [
+				396.0,
+				594.0
+			],
+			"range": 5.86,
+			"cooldown": 2.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.39,
+					"factor": 0.4
+				},
+				{
+					"type": "armor_aura",
+					"radius": 4.69,
+					"amount": 5.0
+				}
+			]
+		}
+	]
+}

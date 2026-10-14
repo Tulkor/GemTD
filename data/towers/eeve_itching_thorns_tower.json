@@ -1,0 +1,36 @@
+{
+	"id": "eeve_itching_thorns_tower",
+	"name": "Juckender Dornenturm",
+	"name_original": "Itching Thorns Tower",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 0,
+		"from": "eeve_thorns_tower",
+		"next": [],
+		"wc3": "h015"
+	},
+	"tiers": [
+		{
+			"damage": [
+				360.0,
+				600.0
+			],
+			"range": 4.1,
+			"cooldown": 0.35,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.4,
+					"multiplier": 2.0
+				}
+			]
+		}
+	]
+}

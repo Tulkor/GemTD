@@ -1,0 +1,21 @@
+{
+	"id": "eeve_feuerdrache",
+	"name": "Feuerdrache",
+	"name_original": "Fire Drake",
+	"category": "eeve",
+	"hp": 5250,
+	"speed": 3.203,
+	"armor": 4.0,
+	"armor_type": "eeve_none",
+	"bounty": 9,
+	"damage": 1,
+	"flying": true,
+	"color": "#ff7a30",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 9,
+		"wc3": "h09S"
+	},
+	"shape": "pyramid"
+}

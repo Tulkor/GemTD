@@ -10,12 +10,15 @@ const RES_DATA := "res://data/"
 const USER_DATA := "user://data/"
 const TIER_NAMES := ["Splitter", "Fehlerhafter", "Normaler", "Makelloser", "Perfekter", "Großartiger"]
 const DAMAGE_TYPE_NAMES := {"pierce": "Durchbohrend", "magic": "Magie", "normal": "Normal", "siege": "Belagerung",
-		"hero": "Held", "spells": "Zauber", "chaos": "Chaos"}
+		"hero": "Held", "spells": "Zauber", "chaos": "Chaos",
+		"physical": "Physisch", "electric": "Elektrisch", "elemental": "Elementar"}
 
 var towers: Dictionary = {}
 var enemies: Dictionary = {}
 var wave_sets: Dictionary = {}
 var balance: Dictionary = {}
+## Regeln für eeveTD (res://data/eeve.json): Wirtschaft, Elemente, Schwierigkeiten, Wellen, Schadenstabelle.
+var eeve: Dictionary = {}
 ## TD-Modi aus data/modes.json, in der Reihenfolge der Datei (siehe mode()).
 var modes: Array = []
 
@@ -30,6 +33,8 @@ func reload() -> void:
 	wave_sets = _load_dir("waves")
 	var b = load_json(RES_DATA + "balance.json")
 	balance = b if typeof(b) == TYPE_DICTIONARY else {}
+	var e = load_json(RES_DATA + "eeve.json")
+	eeve = e if typeof(e) == TYPE_DICTIONARY else {}
 	var m = load_json(RES_DATA + "modes.json")
 	modes = m.get("modes", []) if typeof(m) == TYPE_DICTIONARY else []
 	if modes.is_empty():
@@ -136,10 +141,12 @@ func maps_for_mode(id: String, all_maps: Array) -> Array:
 
 
 ## Schadensfaktor Schadensart gegen Rüstungsart, 1.0 wenn nichts eingetragen ist.
+## eeveTD-Gegner (Rüstungsart "eeve_…") nutzen die Tabelle aus eeve.json.
 func damage_factor(damage_type: String, armor_type: String) -> float:
 	if damage_type == "" or armor_type == "":
 		return 1.0
-	return float(balance.get("damage_table", {}).get(damage_type, {}).get(armor_type, 1.0))
+	var table: Dictionary = eeve.get("damage_table", {}) if armor_type.begins_with("eeve_") else balance.get("damage_table", {})
+	return float(table.get(damage_type, {}).get(armor_type, 1.0))
 
 
 # --- Tower -------------------------------------------------------------------

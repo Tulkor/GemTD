@@ -1,0 +1,35 @@
+{
+	"id": "eeve_moonlight_beam",
+	"name": "Mondlichtstrahl",
+	"name_original": "Moonlight Beam",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 5,
+		"cost": 750,
+		"lumber": 0,
+		"from": "eeve_moonshine_rune",
+		"next": [],
+		"wc3": "h06T"
+	},
+	"tiers": [
+		{
+			"damage": [
+				164.0,
+				246.0
+			],
+			"range": 6.25,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 15
+				}
+			]
+		}
+	]
+}

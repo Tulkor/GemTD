@@ -1,0 +1,21 @@
+{
+	"id": "eeve_naga_imperator",
+	"name": "Naga-Imperator",
+	"name_original": "Naga Imperator",
+	"category": "eeve",
+	"hp": 227500,
+	"speed": 3.516,
+	"armor": 0.0,
+	"armor_type": "eeve_hero",
+	"bounty": 240,
+	"damage": 40,
+	"flying": false,
+	"color": "#40a080",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 6,
+		"wc3": "h09E"
+	},
+	"boss": true
+}
