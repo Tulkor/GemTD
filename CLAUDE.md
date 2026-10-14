@@ -19,7 +19,7 @@ Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten
 - Ist ein Feature fertig und gemergt, wird sein Thread geschlossen. Was ein späterer Thread wissen muss, steht im Repo (CLAUDE.md, README, Commit-Texte) oder unter /mnt/project-files/, nicht nur im Chat.
 
 ## Werkzeuge: erst diese benutzen, statt Abläufe neu zu schreiben
-Godot und die Windows-Vorlage installiert der Session-Start-Hook (`tools/setup_godot.sh`), `godot` liegt in `~/.local/bin`.
+Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`), `godot` liegt in `~/.local/bin`. Die Windows-Vorlage (1 GB) lädt erst `tools/build_windows.sh`.
 - Tests: `tools/run_tests.sh` (schnell: Prüfskripte, Smoke, Netz, Sitzung, Koop, Lobby) oder `alle` (dazu Balance, Tempo, späte Wellen), einzeln z. B. `tools/run_tests.sh smoke koop`. Gibt nur eine Zeile pro Test aus, Logs in `/tmp/gemtd-tests/`.
 - Build (nur wenn Lukas ausdrücklich fragt): `tools/build_windows.sh` → nächste Nummer in `/mnt/project-files/builds/`, Tests vorher, Git-Tag `v0.<N>`. Release-Notes-Entwurf: `python3 tools/release_notes.py <N>`.
 - Screenshots: `tools/screenshot.sh --runden=3 --phase=wahl --auswahl --winkel=schraeg,oben --name=…` (Optionen in `tools/screenshot.gd`), Bilder unter `/mnt/project-files/screens/`.
@@ -29,6 +29,9 @@ Godot und die Windows-Vorlage installiert der Session-Start-Hook (`tools/setup_g
 - Texte: `python3 tools/pruefe_ui.py [--stil]` findet fehlende englische Übersetzungen und Farben außerhalb des Themes.
 - WC3-Karten: `tools/wc3/auslesen.sh karte.w3x ziel/` (siehe `tools/wc3/README.md`).
 - Alte Builds: `tools/builds_aufraeumen.sh` zeigt nur an; `--wirklich` nur auf Lukas' ausdrücklichen Wunsch.
+- Code lesen: Dateien über 300 Zeilen (game.gd, hud.gd, maul_game.gd, net.gd …) nicht ganz lesen. Erst `python3 tools/gliederung.py <datei.gd>` (Funktionen mit Zeilen und Kurzbeschreibung), `--suche=wort` (Funktionen mit Trefferzeilen, auch für ganze Ordner) oder `--funktion=name`, dann nur die gebrauchten Zeilen lesen.
+- Daten lesen: `python3 tools/daten.py tower:ruby`, `gegner:bat`, `gegner --suche=boss` (Tabelle), `wellen` (alle Wellen mit Gegnerwerten), `<datei> <pfad>` mit Punkt-Pfad oder id (`data/maul/shops.json shops.media_markt.towers`), `--suche=text`. Große Werte kommen als Gliederung, nicht ganz.
+- Main nachziehen: `tools/main_nachziehen.sh [--tests]` merged origin/main, zeigt neue Commits und Konfliktstellen (Datei und Zeilen) statt der vollen Git-Ausgabe.
 
 ## Code-Landkarte
 - `scripts/autoload/`: `database.gd` lädt alle JSON-Daten (`Database.towers`, `.enemies`, `.wave_sets`, `.balance`, `.modes`, `list_maps()`); `session.gd` trägt Werte zwischen Szenen (Map, Schwierigkeit, Wertung, Koop, Debug); `loc.gd` Sprache; `display.gd` Fenster; `net.gd` ENet, Lobby und Sitzungen.
