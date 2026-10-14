@@ -3,6 +3,7 @@ extends Enemy
 ## Gegner in Shopping Maul ("die Gewerbeaufsicht"). Läuft eine Route aus mehreren Abschnitten;
 ## zwischen zwei Abschnitten wird teleportiert (maul_game.gd → on_enemy_leaked).
 ## Schaden nach der Maul-Tabelle (rules.json → damage_table), Zauber ignorieren die Rüstung.
+## spell_factor (aus Enemy): Zauberschaden, Geist mehr, Zauberresistenz weniger.
 
 var route := ""            ## Name der Route (map.json → maul.routes)
 var legs: Array = []       ## Abschnitte: je eine Liste von Wegpunkt-Feldern
@@ -12,7 +13,6 @@ var waypoint_at: Array = []  ## Index im Pfad, an dem der jeweilige Wegpunkt des
 var ghost := false         ## ignoriert das Maze (Speziallevel Geist)
 var invisible := false     ## nur angreifbar, wo jemand enttarnt
 var frost := false         ## Frost-Aura: Tower in der Nähe greifen langsamer an
-var spell_factor := 1.0    ## Zauberschaden (Geist mehr, Zauberresistenz weniger)
 var leak_cost := 1         ## Teamleben, wenn er durchkommt
 var detected_until := 0.0  ## Spielzeit, bis zu der er sichtbar ist
 
