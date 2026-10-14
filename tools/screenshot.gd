@@ -2,6 +2,7 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor   Standard spiel
+##   --seite=single|history|lobby   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   --map=<id>              Map aus data/maps (Standard classic)
 ##   --runden=N              N Runden automatisch spielen (Gems am Weg setzen, ersten behalten, Welle 8× laufen)
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
@@ -51,6 +52,9 @@ func _ready() -> void:
 			node = load(Session.game_scene()).instantiate()
 	add_child(node)
 	await _frames(5)
+	if scene == "menu" and opts.has("seite"):
+		node.show_page(opts.seite)
+		await _frames(3)
 	var angles: PackedStringArray = ["bild"]
 	if scene == "spiel":
 		await _prepare(node)

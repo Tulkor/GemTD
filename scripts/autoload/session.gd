@@ -24,12 +24,7 @@ const DIFFICULTIES := [
 	{"name": "Normal", "factor": 0.9, "score": 1.0},
 	{"name": "Schwer", "factor": 1.15, "score": 1.25},
 ]
-## Spiele im Hauptmenü. ready: schon spielbar (eeveTD und Shopping Maul entstehen gerade).
-const GAMES := [
-	{"id": "gemtd", "name": "GemTD", "ready": true, "hint": "Gems setzen, kombinieren, Labyrinth bauen"},
-	{"id": "eevetd", "name": "eeveTD", "ready": true, "hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level (noch solo)", "scene": EEVE_GAME},
-	{"id": "shoppingmaul", "name": "Shopping Maul", "ready": false, "hint": "Kommt noch: Tower aus Shops kaufen und aufwerten"},
-]
+## Gewählter TD-Modus (ID aus data/modes.json, siehe Database.modes).
 var game_kind := "gemtd"
 ## Gewählte Stufe (Index in DIFFICULTIES), Standard „Normal“.
 var difficulty := 1
@@ -51,18 +46,16 @@ var coop: Dictionary = {}
 var return_scene := MAIN_MENU
 
 
-## Spielszene des gewählten Spiels (game_kind), Standard ist GemTD.
-func game_scene() -> String:
-	for g in GAMES:
-		if g.id == game_kind:
-			return str(g.get("scene", GAME))
-	return GAME
-
-
 func goto(scene: String) -> void:
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	get_tree().change_scene_to_file(scene)
+
+
+## Einstieg des gewählten Modus (data/modes.json → scene), sonst das normale Spiel.
+func game_scene() -> String:
+	var s := str(Database.mode(game_kind).get("scene", ""))
+	return s if s != "" else GAME
 
 
 func difficulty_factor() -> float:
