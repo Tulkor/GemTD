@@ -1,0 +1,52 @@
+{
+	"source": "Shopping Maul 5.44f, Skript (maulwork/maul_rules.md); Werte von Hand übernommen",
+	"difficulties": [
+		{"id": "easy", "name": "Einfach", "lives": 250, "hp": 160, "factor": 0.9, "adapt_min": 0.5, "adapt_max": 2.25, "xp": 0.66, "specials": true},
+		{"id": "normal", "name": "Normal", "lives": 150, "hp": 180, "factor": 1.0, "adapt_min": 0.75, "adapt_max": 7.5, "xp": 1.0, "specials": true},
+		{"id": "hard", "name": "Schwer", "lives": 75, "hp": 200, "factor": 1.1, "adapt_min": 1.0, "adapt_max": 10.0, "xp": 1.75, "specials": true},
+		{"id": "very_hard", "name": "Sehr schwer", "lives": 25, "hp": 250, "factor": 1.25, "adapt_min": 1.5, "adapt_max": 10.0, "xp": 2.5, "specials": true}
+	],
+	"default_difficulty": 1,
+	"modes": [
+		{"id": "group", "name": "Standard (Gruppe)"},
+		{"id": "line", "name": "Standard (Linie)", "interval": 0.8, "max_alive": 120}
+	],
+	"first_delay": 90,
+	"first_delay_many": 65,
+	"level_delay": 18,
+	"level_delay_after_40": 70,
+	"regular_levels": 40,
+	"start_gold": 500,
+	"start_gold_red": 45,
+	"income": {"start": 185, "add": 38, "growth": 1.01, "boss_bonus": 50, "red_share": 0.2},
+	"enemies_per_spawn": {"ground": [2, 1], "air": [5, 1], "boss": [1, 0]},
+	"player_factor": {"base": 0.5, "per_missing": 0.02, "max_players": 11, "steps_before": [36, 40, 41, 49], "step": 0.2},
+	"min_growth": 1.05,
+	"boss_hp_divisor": 7.5,
+	"leak": {"budget": 600, "max": 25, "boss": 15, "boss_40": 30, "no_leak_bonus": 5},
+	"adapt": {"quota": 0.05, "streak_max": 13, "streak_step": 0.02, "reset_quota": 0.2, "average": 3},
+	"speed_random": 50,
+	"empty_zone_speed": 3.0,
+	"sell_refund": 0.75,
+	"food": 80,
+	"spawn_interval_group": 0.25,
+	"detect_shops": ["media_markt", "aldi", "mcdonalds"],
+	"reveal": {"duration": 30, "cooldown": 60},
+	"level_40_text": "Die Gewerbeaufsicht ist besiegt! Jetzt kommen 10 Bonuslevel.",
+	"specials": {
+		"invisible": {"armor": -10},
+		"fast": {"speed": 0.15},
+		"spell_resist": {"spell_factor": 0.67},
+		"frost": {"radius": 250, "attack_slow": 0.33},
+		"ghost": {"armor": -30, "spell_factor": 1.45}
+	},
+	"spell_hero_factor": 0.7,
+	"damage_table": {
+		"normal": {"small": 1.0, "medium": 1.5, "large": 1.0, "fortified": 0.7, "hero": 1.0, "unarmored": 1.0},
+		"pierce": {"small": 2.0, "medium": 0.75, "large": 1.0, "fortified": 0.35, "hero": 0.5, "unarmored": 1.5},
+		"siege": {"small": 1.0, "medium": 0.5, "large": 1.0, "fortified": 1.5, "hero": 0.5, "unarmored": 1.5},
+		"magic": {"small": 1.25, "medium": 0.75, "large": 2.0, "fortified": 0.35, "hero": 0.5, "unarmored": 1.0},
+		"chaos": {"small": 1.0, "medium": 1.0, "large": 1.0, "fortified": 1.0, "hero": 1.0, "unarmored": 1.0},
+		"hero": {"small": 1.0, "medium": 1.0, "large": 1.0, "fortified": 0.5, "hero": 1.0, "unarmored": 1.0}
+	}
+}

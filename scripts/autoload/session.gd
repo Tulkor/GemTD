@@ -5,6 +5,7 @@ const MAIN_MENU := "res://scenes/main_menu.tscn"
 const GAME := "res://scenes/game.tscn"
 const MAP_EDITOR := "res://scenes/map_editor.tscn"
 const TOWER_EDITOR := "res://scenes/tower_editor.tscn"
+const MAUL := "res://scenes/maul_game.tscn"
 const EEVE_GAME := "res://scenes/eeve_game.tscn"
 
 ## Pfad der Map, die das Spiel laden soll.

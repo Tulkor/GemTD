@@ -24,7 +24,7 @@
 		{
 			"id": "shoppingmaul",
 			"name": "Shopping Maul",
-			"ready": false,
+			"ready": true,
 			"min_players": 1,
 			"max_players": 1,
 			"scene": "res://scenes/maul_game.tscn",

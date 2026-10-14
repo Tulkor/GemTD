@@ -1,0 +1,5341 @@
+{
+	"source": "Shopping Maul 5.44f, maulwork/maul_towers.json + objects.json",
+	"shops": [
+		{
+			"id": "media_markt",
+			"name": "Media Markt",
+			"name_en": "Electric Shop",
+			"kind": "standard",
+			"bonus": "rebate",
+			"color": "#ff4f4f",
+			"text": "Reichweite: Normal Schaden: Normal Geschwindigkeit: Normal   Besonderheiten: Kann unsichtbare Einheiten ohne Forschung aufdecken, gut gegen große Gegnergruppen.",
+			"rules": "Manager hat dauerhaft Enttarnung ohne Forschung (DE: Basisfähigkeit A00O, EN: A01R). Statt Bonus-Upgrade gibt es 'Rabatt' (5 % Kaufpreis-Rückerstattung je Stufe).",
+			"towers": [
+				{
+					"id": "o00X",
+					"name": "Special Offer",
+					"cost": 12,
+					"value": 12,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						24,
+						24
+					],
+					"cooldown": 1.0,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 0.78,
+							"dps": 4.0
+						}
+					],
+					"hotkey": "Q",
+					"tooltip": "DMG: 23 dmg/s (1s) / RG: 800 / Special: Burning",
+					"build_time": 5
+				},
+				{
+					"id": "o000",
+					"name": "Stupid Salesman",
+					"cost": 33,
+					"value": 33,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						32,
+						32
+					],
+					"cooldown": 0.4,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 80 dmg/s (0,4s) / RG: 800 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "o002",
+					"name": "Costumer",
+					"cost": 76,
+					"value": 76,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						39,
+						39
+					],
+					"cooldown": 0.5,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 3.91,
+							"dps": 8.0,
+							"targets": "ground"
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 78 + 10 dmg/s (0,5/1s) / RG: 800 / Special: Dual attack (normal + plague), Only Ground!",
+					"build_time": 6
+				},
+				{
+					"id": "o003",
+					"name": "Faulty TV",
+					"cost": 90,
+					"value": 90,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o036"
+					],
+					"damage": [
+						1441,
+						1441
+					],
+					"cooldown": 0.6,
+					"range": 6.25,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: 2.400 dmg/s (0,6s) / RG: 800 / Special: Upgradeable, Only Air!",
+					"build_time": 10
+				},
+				{
+					"id": "o004",
+					"name": "Digital Camera",
+					"cost": 180,
+					"value": 180,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 3.12,
+							"dps": 76.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "A",
+					"tooltip": "DMG: 76 dmg/s (1s) / RG: 500 / Special: Flash, Damages all units in range",
+					"build_time": 17
+				},
+				{
+					"id": "o00W",
+					"name": "Salesgirl Of The Month",
+					"cost": 350,
+					"value": 350,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						540,
+						540
+					],
+					"cooldown": 2.0,
+					"range": 9.38,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 0.98,
+							"factor": 0.5
+						},
+						{
+							"type": "detect",
+							"radius": 3.91
+						},
+						{
+							"type": "nova_spell",
+							"damage": 36.0,
+							"radius": 6.25,
+							"cooldown": 1.95,
+							"slow": 0.33,
+							"slow_duration": 3.0
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 72 dmg/s (2s) / RG: 800 / Special: Thunder clap, Truesight",
+					"build_time": 25
+				},
+				{
+					"id": "o01P",
+					"name": "Washing Machine",
+					"cost": 550,
+					"value": 550,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.8,
+					"range": 7.03,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 3.91,
+							"dps": 268.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 266 dmg/s (1s) / RG: 500 / Special: Damages all units in range",
+					"build_time": 25
+				},
+				{
+					"id": "o02J",
+					"name": "Subwoofer",
+					"cost": 840,
+					"value": 840,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1841,
+						1841
+					],
+					"cooldown": 1.0,
+					"range": 5.47,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 5.47,
+							"dps": 148.0,
+							"targets": "ground"
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 1.840 + 150 dmg/s (1s) / RG: 800 / Special: Dual attack (normal + noise), Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "o005",
+					"name": "Aibo 2.1",
+					"cost": 1200,
+					"value": 1200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1651,
+						1651
+					],
+					"cooldown": 0.5,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 6.25,
+							"dps": 108.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 3.300 + 108 dmg/s (0,5/1s) / RG: 800 / Special: Dual attack (normal + radiation)",
+					"build_time": 50
+				},
+				{
+					"id": "o029",
+					"name": "Nuclear Generator",
+					"cost": 2200,
+					"value": 2200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 5.47,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 5.47,
+							"dps": 712.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 714 dmg/s (1s) / RG: 700 / Special: Damages all units in range",
+					"build_time": 60
+				},
+				{
+					"id": "o01D",
+					"name": "Nuclear Reactor",
+					"cost": 4800,
+					"value": 4800,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						13001,
+						13001
+					],
+					"cooldown": 1.0,
+					"range": 5.47,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 5.47,
+							"dps": 712.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 13.000 + 714 dmg/s (1s) / RG: 700 / Special: Dual attack (normal + radiation)",
+					"build_time": 60
+				},
+				{
+					"id": "o036",
+					"name": "Technican",
+					"cost": 710,
+					"value": 800,
+					"upgrade_from": "o003",
+					"upgrades_to": [],
+					"damage": [
+						8371,
+						8371
+					],
+					"cooldown": 0.3,
+					"range": 6.25,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 27.900 dmg/s (0,3s) / RG: 800 / Special: Only Air!",
+					"build_time": 40
+				}
+			],
+			"todo": [
+				"Digital Camera: Flash (ACwb)"
+			]
+		},
+		{
+			"id": "hm",
+			"name": "H&M",
+			"name_en": "Clothes Shop",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#ff4fd8",
+			"text": "Reichweite: Hoch Schaden: Niedrig Geschwindigkeit: Sehr hoch  Besonderheiten: Viele der Tower verteilen kritischen Schaden und/oder können betäuben.",
+			"rules": "Viele Tower mit kritischen Treffern (3x/10x) und/oder Betäubung. Manager erhält 'Aufdecken' (aktiv, 30 s, Forschung nötig).",
+			"towers": [
+				{
+					"id": "o006",
+					"name": "Mannequin",
+					"cost": 9,
+					"value": 9,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						12,
+						12
+					],
+					"cooldown": 0.8,
+					"range": 8.59,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 15 dmg/s (0,8s) / RG: 1.100 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "o007",
+					"name": "Mr Man",
+					"cost": 30,
+					"value": 30,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						3,
+						41
+					],
+					"cooldown": 0.25,
+					"range": 9.38,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 96 dmg/s (0,25s) / RG: 1.200 / Special: Critical Strike, Unreliable",
+					"build_time": 6
+				},
+				{
+					"id": "o008",
+					"name": "Model",
+					"cost": 100,
+					"value": 100,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						23,
+						23
+					],
+					"cooldown": 0.1,
+					"range": 8.59,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: 230 dmg/s (0,1s) / RG: 1.100 / Special: Flirt, Only Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h004",
+					"name": "Girl",
+					"cost": 160,
+					"value": 160,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h017"
+					],
+					"damage": [
+						731,
+						731
+					],
+					"cooldown": 0.25,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						},
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.25
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 2.920 dmg/s (0,25s) / RG: 1.000 / Special: Critical, Stun, Upgradeable, Only Air!",
+					"build_time": 15
+				},
+				{
+					"id": "o009",
+					"name": "\"Real\" Emergeny",
+					"cost": 250,
+					"value": 250,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						131,
+						131
+					],
+					"cooldown": 0.58,
+					"range": 8.59,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 10.0
+						}
+					],
+					"hotkey": "A",
+					"tooltip": "DMG: 224 dmg/s (0,59s) / RG: 1.100 / Special: Critical",
+					"build_time": 17
+				},
+				{
+					"id": "o00A",
+					"name": "Latest Fashion",
+					"cost": 450,
+					"value": 450,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						104,
+						104
+					],
+					"cooldown": 0.29,
+					"range": 10.16,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 10.0
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 355 dmg/s (0,29s) / RG: 1.300 / Special: Critical",
+					"build_time": 25
+				},
+				{
+					"id": "o01N",
+					"name": "Living Fur Coat",
+					"cost": 600,
+					"value": 600,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						306,
+						306
+					],
+					"cooldown": 0.25,
+					"range": 10.94,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						},
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.1
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.220 dmg/s (0,25s) / RG: 1.400 / Special: Critical, Stun",
+					"build_time": 25
+				},
+				{
+					"id": "o010",
+					"name": "\"Beautiful\" Coworker",
+					"cost": 830,
+					"value": 830,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						430,
+						430
+					],
+					"cooldown": 0.2,
+					"range": 9.77,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.1,
+							"duration": 0.33
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 2.150 dmg/s (0,2s) / RG: 1.250 / Special: Stun",
+					"build_time": 35
+				},
+				{
+					"id": "o02D",
+					"name": "Child Labor Ship",
+					"cost": 1280,
+					"value": 1280,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						576,
+						576
+					],
+					"cooldown": 0.25,
+					"range": 10.94,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 2.300 dmg/s (0,25s) / RG: 1.400 / Special: Critical",
+					"build_time": 50
+				},
+				{
+					"id": "o02C",
+					"name": "Hugo Boss",
+					"cost": 2444,
+					"value": 2444,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1501,
+						1501
+					],
+					"cooldown": 0.25,
+					"range": 8.59,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						},
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.25
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 6.000 dmg/s (0,25s) / RG: 1.100 / Special: Stun, Critical",
+					"build_time": 60
+				},
+				{
+					"id": "o01K",
+					"name": "Giorgio Armani",
+					"cost": 6300,
+					"value": 6300,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						3851,
+						3851
+					],
+					"cooldown": 0.2,
+					"range": 9.38,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.95,
+							"factor": 0.5
+						},
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.33
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 19.250 dmg/s (0,20s) / RG: 1.200 / Special: Stun, Splash (250), Only Ground!",
+					"build_time": 60
+				},
+				{
+					"id": "h017",
+					"name": "Big Girl",
+					"cost": 790,
+					"value": 950,
+					"upgrade_from": "h004",
+					"upgrades_to": [],
+					"damage": [
+						8471,
+						8471
+					],
+					"cooldown": 0.3,
+					"range": 8.98,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 28.200 dmg/s (0,3s) / RG: 1.150 / Special: Only Air!",
+					"build_time": 30
+				}
+			],
+			"todo": [
+				"Model: Flirten (Amls)"
+			]
+		},
+		{
+			"id": "obi",
+			"name": "Obi Baumarkt",
+			"name_en": "Do-It-Yourself Store",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#ff9a3c",
+			"text": "Reichweite: Sehr niedrig Schaden: Sehr Hoch Geschwindigkeit: Hoch  Besonderheiten: Jede Runde werden 1% des Tower-Gesamtwerts abgezogen",
+			"rules": "Jede Runde werden 1 % des Gesamt-Towerwerts abgezogen ('Baumarkt Abzug', Trigger QP). Sehr kurze Reichweiten (200-500), sehr hoher Schaden. Manager: Aufdecken.",
+			"towers": [
+				{
+					"id": "o00G",
+					"name": "Stupid Trainee",
+					"cost": 14,
+					"value": 14,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						19,
+						19
+					],
+					"cooldown": 0.4,
+					"range": 2.34,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 48 dmg/s (0,4s) / RG: 300 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "o00H",
+					"name": "Flamethrower",
+					"cost": 30,
+					"value": 30,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						78,
+						78
+					],
+					"cooldown": 0.6,
+					"range": 2.34,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.95,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 130 dmg/s (0,6s) / RG: 300 / Special: Splash (250), Only Ground!",
+					"build_time": 6
+				},
+				{
+					"id": "o012",
+					"name": "Electro Trap",
+					"cost": 95,
+					"value": 95,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.1,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 3.12,
+							"dps": 56.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 55 dmg/s (1s) / RG: 400 / Special: Damages all units in range",
+					"build_time": 10
+				},
+				{
+					"id": "o00J",
+					"name": "Snow Making Machine",
+					"cost": 200,
+					"value": 200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						586,
+						586
+					],
+					"cooldown": 0.6,
+					"range": 2.34,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 975 dmg/s (0,6s) / RG: 300 / Special: Frost",
+					"build_time": 16
+				},
+				{
+					"id": "o00U",
+					"name": "Pin Gun",
+					"cost": 275,
+					"value": 275,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o03B"
+					],
+					"damage": [
+						3324,
+						3324
+					],
+					"cooldown": 0.3,
+					"range": 3.91,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 11.080 dmg/s (0,3s) / RG: 500 / Special: Upgradeable, Only Air!",
+					"build_time": 25
+				},
+				{
+					"id": "o00V",
+					"name": "Chainsaw",
+					"cost": 375,
+					"value": 375,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						607,
+						607
+					],
+					"cooldown": 0.25,
+					"range": 1.56,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "S",
+					"tooltip": "DMG: 2.420 dmg/s (0,25s) / RG: 200 / Special: -",
+					"build_time": 25
+				},
+				{
+					"id": "o00K",
+					"name": "Micro Rockets",
+					"cost": 450,
+					"value": 450,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						642,
+						642
+					],
+					"cooldown": 0.35,
+					"range": 2.34,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.56,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.830 dmg/s (0,3s) / RG: 300 / Special: Splash (200)",
+					"build_time": 25
+				},
+				{
+					"id": "o01O",
+					"name": "Tim Taylor And Al Borland",
+					"cost": 740,
+					"value": 740,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						617,
+						617
+					],
+					"cooldown": 0.2,
+					"range": 3.12,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 2.464 dmg/s (0,2s) / RG: 400 / Special: Splash (175), Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "o02A",
+					"name": "C4",
+					"cost": 1030,
+					"value": 1030,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1521,
+						1521
+					],
+					"cooldown": 0.25,
+					"range": 2.34,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.1,
+							"duration": 0.33
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 6.080 dmg/s (0,25s) / RG: 300 / Special: Stun",
+					"build_time": 50
+				},
+				{
+					"id": "o01E",
+					"name": "Flying Claws",
+					"cost": 2444,
+					"value": 2444,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						3500,
+						3500
+					],
+					"cooldown": 0.2,
+					"range": 1.95,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "X",
+					"tooltip": "DMG: 17.500 dmg/s (0,2s) / RG: 250 / Special: -",
+					"build_time": 60
+				},
+				{
+					"id": "o02B",
+					"name": "Homemade Battle-Bot",
+					"cost": 5200,
+					"value": 5200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						16203,
+						16203
+					],
+					"cooldown": 0.5,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.1,
+							"duration": 0.25
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 32.400 dmg/s (0,5s) / RG: 400 / Special: Stun",
+					"build_time": 60
+				},
+				{
+					"id": "o03B",
+					"name": "King Gun",
+					"cost": 1150,
+					"value": 1425,
+					"upgrade_from": "o00U",
+					"upgrades_to": [],
+					"damage": [
+						13512,
+						13512
+					],
+					"cooldown": 0.2,
+					"range": 3.91,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 67.500 dmg/s (0,2s) / RG: 500 / Special: Only Air!",
+					"build_time": 50
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "mcdonalds",
+			"name": "Mc Donalds",
+			"name_en": "Mc Donalds",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#ffd166",
+			"text": "Reichweite: Extrem hoch Schaden: Sehr niedrig Geschwindigkeit: Hoch  Besonderheiten: Verlangsamt die Einheiten im großen Umkreis um das Haupthaus mit \"Übergewicht\" und kann Gegner enttarnen. Der Filialleiter kann +33% Schaden zaubern.",
+			"rules": "Haupthaus hat Aura 'Übergewicht' (A01K/A00J, verlangsamt Gegner im großen Umkreis) und Enttarnung (A037/A03O). Manager-Zauber A01P/A04C: +33 % Schaden auf einen Tower für 6 Minuten. Extrem große Reichweiten (1.500-6.400).",
+			"towers": [
+				{
+					"id": "h005",
+					"name": "Bored Waitress",
+					"cost": 0,
+					"value": 0,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h01V"
+					],
+					"damage": [
+						12,
+						12
+					],
+					"cooldown": 0.2,
+					"range": 11.72,
+					"targets": "ground",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.1,
+							"duration": 0.33
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 60/600 dmg/s (0,2s) / RG: 1.500 / Special: 10x damage vs air, Stun, Upgradeable",
+					"build_time": 10
+				},
+				{
+					"id": "o00L",
+					"name": "Fat Kid",
+					"cost": 0,
+					"value": 0,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						8,
+						8
+					],
+					"cooldown": 0.1,
+					"range": 27.34,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: 80 dmg/s (0,1s) / RG: 3.500 / Special: -",
+					"build_time": 9
+				},
+				{
+					"id": "h002",
+					"name": "Big Mac",
+					"cost": 15,
+					"value": 15,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						11,
+						11
+					],
+					"cooldown": 0.4,
+					"range": 11.72,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 28 dmg/s (0,4s) / RG: 500-1.500 / Special: -",
+					"build_time": 2
+				},
+				{
+					"id": "hgtw",
+					"name": "Grill",
+					"cost": 45,
+					"value": 45,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						31,
+						31
+					],
+					"cooldown": 0.5,
+					"range": 19.53,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 62 dmg/s (0,5s) / RG: 2.500 / Special: -",
+					"build_time": 5
+				},
+				{
+					"id": "o013",
+					"name": "Happy Meal",
+					"cost": 180,
+					"value": 180,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						103,
+						103
+					],
+					"cooldown": 0.4,
+					"range": 25.86,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 256 dmg/s (0,4s) / RG: 3.310 / Special: -",
+					"build_time": 10
+				},
+				{
+					"id": "o00M",
+					"name": "Ronald McDonald",
+					"cost": 220,
+					"value": 220,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						30,
+						30
+					],
+					"cooldown": 0.1,
+					"range": 19.53,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "S",
+					"tooltip": "DMG: 300 dmg/s (0,1s) / RG: 2.500 / Special: -",
+					"build_time": 14
+				},
+				{
+					"id": "o01Q",
+					"name": "McFlurry",
+					"cost": 450,
+					"value": 450,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						110,
+						110
+					],
+					"cooldown": 0.15,
+					"range": 26.56,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 730 dmg/s (0,15s) / RG: 3.400 / Special: Frost, Only Ground!",
+					"build_time": 25
+				},
+				{
+					"id": "o00N",
+					"name": "Mind Control Unit",
+					"cost": 790,
+					"value": 790,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						133,
+						133
+					],
+					"cooldown": 0.2,
+					"range": 39.06,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 665 dmg/s (0,2s) / RG: 5.000 / Special: Stun",
+					"build_time": 35
+				},
+				{
+					"id": "o02E",
+					"name": "Burnt Down Burger King",
+					"cost": 1130,
+					"value": 1130,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						421,
+						421
+					],
+					"cooldown": 0.3,
+					"range": 26.56,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.56,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 1.400 dmg/s (0,3s) / RG: 1.000-3.400 / Special: Splash (200), Only Ground!",
+					"build_time": 50
+				},
+				{
+					"id": "o02F",
+					"name": "Fries Carver",
+					"cost": 2690,
+					"value": 2690,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						860,
+						887
+					],
+					"cooldown": 0.2,
+					"range": 32.81,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "X",
+					"tooltip": "DMG: 4.290 dmg/s (0,2s) / RG: 4.200 / Special: 10% chance to create lifes",
+					"build_time": 60
+				},
+				{
+					"id": "o025",
+					"name": "Big Boy",
+					"cost": 5200,
+					"value": 5200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						5803,
+						5830
+					],
+					"cooldown": 0.5,
+					"range": 24.22,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 11.650 dmg/s (0,5s) / RG: 3.100 / Special: Stun",
+					"build_time": 60
+				},
+				{
+					"id": "h01V",
+					"name": "Bored Cleaner",
+					"cost": 1620,
+					"value": 1620,
+					"upgrade_from": "h005",
+					"upgrades_to": [],
+					"damage": [
+						4607,
+						4607
+					],
+					"cooldown": 0.2,
+					"range": 50.0,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 23.000 dmg/s (0,2s) / RG: 6.400 / Special: Only Air!",
+					"build_time": 40
+				}
+			],
+			"todo": [
+				"Fries Carver: Life (ACbh)"
+			]
+		},
+		{
+			"id": "aldi",
+			"name": "Aldi",
+			"name_en": "Supermarket",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#4fa3ff",
+			"text": "Reichweite: Hoch Schaden: Hoch Geschwindigkeit: Sehr niedrig  Besonderheiten: Viele Tower haben Gebietsschaden.",
+			"rules": "Viele Tower mit Flächenschaden, langsame Angriffe (1,5-3 s). Manager: passive Enttarnung (A032/A00T).",
+			"towers": [
+				{
+					"id": "o00Y",
+					"name": "Cheap Grill",
+					"cost": 12,
+					"value": 12,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						64,
+						64
+					],
+					"cooldown": 3.0,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "Q",
+					"tooltip": "DMG: 21 dmg/s (3s) / RG: 1.000 / Special: Stun",
+					"build_time": 3
+				},
+				{
+					"id": "o00B",
+					"name": "Turk",
+					"cost": 30,
+					"value": 30,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						82,
+						82
+					],
+					"cooldown": 2.4,
+					"range": 11.72,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 34 dmg/s (2,4s) / RG: 1.500 / Special: Splash (175)",
+					"build_time": 6
+				},
+				{
+					"id": "o00C",
+					"name": "Odd Plant",
+					"cost": 60,
+					"value": 60,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						197,
+						197
+					],
+					"cooldown": 1.75,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 112 dmg/s (1,75s) / RG: 1.000 / Special: Splash (175), Only Ground!",
+					"build_time": 15
+				},
+				{
+					"id": "o00D",
+					"name": "Cooling Box",
+					"cost": 150,
+					"value": 150,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						300,
+						300
+					],
+					"cooldown": 1.5,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 3.0
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 200 dmg/s (1,5s) / RG: 800 / Special: Frost, Splash (175)",
+					"build_time": 20
+				},
+				{
+					"id": "o00Z",
+					"name": "New Year Rocket",
+					"cost": 150,
+					"value": 150,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o03D"
+					],
+					"damage": [
+						851,
+						851
+					],
+					"cooldown": 0.2,
+					"range": 6.25,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 4.250 dmg/s (0,2s) / RG: 800 / Special: Upgradeable, Only Air!",
+					"build_time": 20
+				},
+				{
+					"id": "o00E",
+					"name": "Cheap PC",
+					"cost": 450,
+					"value": 450,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 2.0,
+					"range": 10.16,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						},
+						{
+							"type": "burn_aura",
+							"radius": 7.03,
+							"dps": 80.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 80 dmg/s (1s) / RG: 900 / Special: Damages all units in range",
+					"build_time": 30
+				},
+				{
+					"id": "o00F",
+					"name": "Booze",
+					"cost": 600,
+					"value": 600,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						2720,
+						2720
+					],
+					"cooldown": 2.0,
+					"range": 9.38,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.360 dmg/s (2s) / RG: 1.200 / Special: Splash (175), Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "o01M",
+					"name": "Chinese Soup",
+					"cost": 1220,
+					"value": 1220,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						5201,
+						5201
+					],
+					"cooldown": 2.0,
+					"range": 15.04,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 2.600 dmg/s (2s) / RG: 1.925 / Special: Stun",
+					"build_time": 40
+				},
+				{
+					"id": "o027",
+					"name": "Weired Storehouse Worker",
+					"cost": 1820,
+					"value": 1820,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						5961,
+						5961
+					],
+					"cooldown": 1.6,
+					"range": 10.16,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						},
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 3.725 dmg/s (1,6s) / RG: 1.300 / Special: Stun, Splash (175)",
+					"build_time": 50
+				},
+				{
+					"id": "o028",
+					"name": "Jungle Supermarket",
+					"cost": 2666,
+					"value": 2666,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						11573,
+						11573
+					],
+					"cooldown": 2.0,
+					"range": 14.84,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.37,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 5.800 dmg/s (2s) / RG: 1.900 / Special: Splash (175), Only Ground!",
+					"build_time": 60
+				},
+				{
+					"id": "o01G",
+					"name": "Voodoo Market",
+					"cost": 5666,
+					"value": 5666,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						24001,
+						24001
+					],
+					"cooldown": 1.66,
+					"range": 13.02,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.95,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 14.400 dmg/s (1,66s) / RG: 1.666 / Special: Splash (250), Only Ground!",
+					"build_time": 60
+				},
+				{
+					"id": "o03D",
+					"name": "Moon Rocket",
+					"cost": 1100,
+					"value": 1250,
+					"upgrade_from": "o00Z",
+					"upgrades_to": [],
+					"damage": [
+						9891,
+						9891
+					],
+					"cooldown": 0.3,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 0.78,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 33.000 dmg/s (0,3s) / RG: 1.000 / Special: Splash (100), Only Air!",
+					"build_time": 50
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "tante_emma",
+			"name": "Tante Emma Laden",
+			"name_en": "Small Corner Shop",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#8be36b",
+			"text": "Reichweite: Normal Schaden: Anfangs niedrig Geschwindigkeit: Hoch  Besonderheiten: Viele Tower vergiften. Es kann eine Stammkundin angeworben werden, die permanent Geld erzeugt.",
+			"rules": "Laden wird zur Goldmine mit 15.000 Gold (SetResourceAmount). 'Nursing Home' (50 G) erzeugt eine Stammkundin ('Regular Customer', Arbeiter mit Ernten), die aus dem Laden Gold schürft; es gibt immer nur eine (alte wird entfernt). Viele Gift-Tower.",
+			"towers": [
+				{
+					"id": "o00O",
+					"name": "Larry, The Fruiterer",
+					"cost": 14,
+					"value": 14,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						8,
+						8
+					],
+					"cooldown": 0.5,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 16 dmg/s (0,5s) / RG: 800 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "o00P",
+					"name": "Rabid Rat",
+					"cost": 45,
+					"value": 45,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						13,
+						13
+					],
+					"cooldown": 0.2,
+					"range": 7.03,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 1.0,
+							"duration": 3.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 3.0
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 65 dmg/s (0,2s) / RG: 900 / Special: Weak poison, Only Ground!",
+					"build_time": 6
+				},
+				{
+					"id": "n008",
+					"name": "Nursing Home",
+					"cost": 50,
+					"value": 50,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Harvest gold",
+					"build_time": 0
+				},
+				{
+					"id": "o011",
+					"name": "Toxic Shroom",
+					"cost": 105,
+					"value": 105,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						50,
+						95
+					],
+					"cooldown": 0.2,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 1.0,
+							"duration": 3.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 3.0
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 370 dmg/s (0,2s) / RG: 1.000 / Special: Weak poison, Unreliable",
+					"build_time": 6
+				},
+				{
+					"id": "o00I",
+					"name": "Flytrap",
+					"cost": 125,
+					"value": 125,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o03C"
+					],
+					"damage": [
+						1101,
+						1101
+					],
+					"cooldown": 0.4,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 2.750 dmg/s (0,4s) / RG: 1.000 / Special: Only Air!",
+					"build_time": 25
+				},
+				{
+					"id": "o00Q",
+					"name": "Vermin Exterminator",
+					"cost": 400,
+					"value": 400,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						666,
+						666
+					],
+					"cooldown": 0.65,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 10.0,
+							"duration": 20.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.2,
+							"duration": 20.0
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 1.000 dmg/s (0,65s) / RG: 800 / Special: Strong poison",
+					"build_time": 9
+				},
+				{
+					"id": "o00R",
+					"name": "Can Armor",
+					"cost": 560,
+					"value": 560,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						819,
+						819
+					],
+					"cooldown": 0.7,
+					"range": 8.98,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 1.56,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.170 dmg/s (0,7s) / RG: 1.150 / Special: Splash (200)",
+					"build_time": 16
+				},
+				{
+					"id": "o01R",
+					"name": "Giant Cockroach",
+					"cost": 900,
+					"value": 900,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1158,
+						1158
+					],
+					"cooldown": 0.4,
+					"range": 7.42,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 10.0,
+							"duration": 20.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.2,
+							"duration": 20.0
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 2.900 dmg/s (0,4s) / RG: 950 / Special: Strong poison, Only Ground!",
+					"build_time": 30
+				},
+				{
+					"id": "o00S",
+					"name": "Old Costumer",
+					"cost": 1400,
+					"value": 1400,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1555,
+						1555
+					],
+					"cooldown": 0.3,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 10.0,
+							"duration": 20.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.2,
+							"duration": 20.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 5.200 dmg/s (0,3s) / RG: 800 / Special: Strong poison, Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "o02I",
+					"name": "Psycho LSD Moss",
+					"cost": 2300,
+					"value": 2300,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 2.0,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "wave_spell",
+							"damage": 1677.0,
+							"cooldown": 2.95,
+							"range": 6.25,
+							"width": 1.56
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 3.050 dmg/s (2s) / RG: 800 / Special: Shockwave",
+					"build_time": 50
+				},
+				{
+					"id": "o01F",
+					"name": "Poison Tank",
+					"cost": 5250,
+					"value": 5250,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						15208,
+						15208
+					],
+					"cooldown": 0.7,
+					"range": 8.59,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "poison",
+							"dps": 10.0,
+							"duration": 20.0
+						},
+						{
+							"type": "slow",
+							"factor": 0.2,
+							"duration": 20.0
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 21.725 dmg/s (0,7s) / RG: 1.100 / Special: Strong poison, Only Ground!",
+					"build_time": 50
+				},
+				{
+					"id": "o03C",
+					"name": "Planetrap",
+					"cost": 600,
+					"value": 725,
+					"upgrade_from": "o00I",
+					"upgrades_to": [],
+					"damage": [
+						1101,
+						1101
+					],
+					"cooldown": 0.4,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "burn_aura",
+							"radius": 6.25,
+							"dps": 1640.0,
+							"targets": "both"
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 1.640 dmg/s (1s) / RG: 800 / Special: Static charge, Only Air!",
+					"build_time": 50
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "porsche",
+			"name": "Porsche Autohaus",
+			"name_en": "Porsche Car Dealer",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#c0c8d8",
+			"text": "Reichweite: Hoch Schaden: Hoch Geschwindigkeit: Hoch  Besonderheiten: Viele der sehr teuren Tower verursachen Frost-Schaden und alle verlangsamen Gegner mit einer Aura.",
+			"rules": "Fast alle Tower haben die Aura 'Porsche' (-10 % Bewegungstempo der Gegner); teure Tower mit Frost. Manager: Aufdecken.",
+			"towers": [
+				{
+					"id": "o00T",
+					"name": "Golden Gear",
+					"cost": 45,
+					"value": 45,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						62,
+						62
+					],
+					"cooldown": 0.6,
+					"range": 7.03,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						}
+					],
+					"hotkey": "Q",
+					"tooltip": "DMG: 103 dmg/s (0,6s) / RG: 900 / Special: Slow aura",
+					"build_time": 3
+				},
+				{
+					"id": "o014",
+					"name": "Bucket Seat",
+					"cost": 140,
+					"value": 140,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						50,
+						50
+					],
+					"cooldown": 0.2,
+					"range": 15.62,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 250 dmg/s (0,2s) / RG: 2.000 / Special: Frost",
+					"build_time": 10
+				},
+				{
+					"id": "o019",
+					"name": "Cleaner",
+					"cost": 210,
+					"value": 210,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o03E"
+					],
+					"damage": [
+						1361,
+						1361
+					],
+					"cooldown": 0.6,
+					"range": 46.88,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: 2.267 dmg/s (0,6s) / RG: 6.000 / Special: Upgradeable, Only Air!",
+					"build_time": 20
+				},
+				{
+					"id": "o015",
+					"name": "Hood Babe",
+					"cost": 350,
+					"value": 350,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						331,
+						331
+					],
+					"cooldown": 0.4,
+					"range": 8.98,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: 825 dmg/s (0,4s) / RG: 1.150 / Special: Flirt",
+					"build_time": 15
+				},
+				{
+					"id": "o01L",
+					"name": "Rich Idiot",
+					"cost": 490,
+					"value": 490,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						455,
+						455
+					],
+					"cooldown": 0.4,
+					"range": 10.16,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "A",
+					"tooltip": "DMG: 1.135 dmg/s (0,4s) / RG: 1.300 / Special: Frost, Slow aura",
+					"build_time": 20
+				},
+				{
+					"id": "o02G",
+					"name": "Porsche Fan",
+					"cost": 765,
+					"value": 765,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						831,
+						831
+					],
+					"cooldown": 0.35,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 2.770 dmg/s (0,35s) / RG: 1.000 / Special: Slow aura",
+					"build_time": 25
+				},
+				{
+					"id": "o02H",
+					"name": "Mr Porsche",
+					"cost": 1000,
+					"value": 1000,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						508,
+						508
+					],
+					"cooldown": 0.25,
+					"range": 12.5,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						},
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 2.030 dmg/s (0,25s) / RG: 1.600 / Special: Critical, Slow aura",
+					"build_time": 30
+				},
+				{
+					"id": "o016",
+					"name": "Cayenne Turbo S",
+					"cost": 1250,
+					"value": 1250,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1856,
+						1856
+					],
+					"cooldown": 0.5,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 3.710 dmg/s (0,5s) / RG: 1.000 / Special: Frost",
+					"build_time": 50
+				},
+				{
+					"id": "o017",
+					"name": "Boxster S",
+					"cost": 1705,
+					"value": 1705,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						959,
+						959
+					],
+					"cooldown": 0.25,
+					"range": 14.06,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						},
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 3.840 dmg/s (0,25s) / RG: 1.800 / Special: Critical, Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "o018",
+					"name": "Carrera GT",
+					"cost": 3200,
+					"value": 3200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1807,
+						1807
+					],
+					"cooldown": 0.2,
+					"range": 10.94,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 1.56,
+							"factor": 0.1
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 9.000 dmg/s (0,2s) / RG: 1.400 / Special: Frost, Envy",
+					"build_time": 60
+				},
+				{
+					"id": "o02L",
+					"name": "Pimped Carrera GT",
+					"cost": 7400,
+					"value": 7400,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						4801,
+						4801
+					],
+					"cooldown": 0.2,
+					"range": 12.5,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 7.81,
+							"factor": 0.15
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 24.000 dmg/s (0,2s) / RG: 1.600 / Special: Frost aura",
+					"build_time": 60
+				},
+				{
+					"id": "o03E",
+					"name": "Sexy Secretary",
+					"cost": 2100,
+					"value": 2310,
+					"upgrade_from": "o019",
+					"upgrades_to": [],
+					"damage": [
+						1361,
+						1361
+					],
+					"cooldown": 0.5,
+					"range": 46.88,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 4544.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 0.4,
+							"range": 7.81
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 72.700 dmg/s (0,5s) / RG: 2.000 / Special: Chain lightning, Only Air!",
+					"build_time": 40
+				}
+			],
+			"todo": [
+				"Hood Babe: Flirten (Amls)",
+				"Carrera GT: Neid (ACwb)"
+			]
+		},
+		{
+			"id": "bank",
+			"name": "Deutsche Bank",
+			"name_en": "Bank",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#3c6cff",
+			"text": "Reichweite: Normal Schaden: Normal Geschwindigkeit: Hoch   Besonderheiten: Kann nur Bodeneinheiten angreifen. Verdient pro Runde 5% Gold aller Spielerkonten, kann aber selbst kein Geld anlegen.",
+			"rules": "Bank-Besitzer kann kein eigenes Konto nutzen (vorhandenes Guthaben wird beim Bau ausgezahlt, '-da' gesperrt). Stattdessen bekommt er jede Runde 5 % der Summe aller Spielerkonten (fest 750 G, wenn die Summe >= 15.000 ist). Tower greifen fast nur Bodenziele an.",
+			"towers": [
+				{
+					"id": "h00C",
+					"name": "Cash Dispenser",
+					"cost": 8,
+					"value": 8,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						10,
+						10
+					],
+					"cooldown": 0.6,
+					"range": 7.03,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 17 dmg/s (0,6s) / RG: 900 / Special: Only Ground!",
+					"build_time": 2
+				},
+				{
+					"id": "h00D",
+					"name": "Save",
+					"cost": 35,
+					"value": 35,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						34,
+						34
+					],
+					"cooldown": 0.4,
+					"range": 7.03,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 85 dmg/s (0,4s) / RG: 900 / Special: Only  Ground!",
+					"build_time": 5
+				},
+				{
+					"id": "h00E",
+					"name": "Useless Debtor",
+					"cost": 70,
+					"value": 70,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						73,
+						73
+					],
+					"cooldown": 0.5,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 146 dmg/s (0,5s) / RG: 1.000 / Special: Frost, Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h00F",
+					"name": "Broker",
+					"cost": 160,
+					"value": 160,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						275,
+						275
+					],
+					"cooldown": 0.6,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: 458 dmg/s (0,6s) / RG: 800 / Special: Only Ground!",
+					"build_time": 15
+				},
+				{
+					"id": "h00G",
+					"name": "Alert Button",
+					"cost": 200,
+					"value": 200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						513,
+						513
+					],
+					"cooldown": 0.8,
+					"range": 5.47,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 640 dmg/s (0,8s) / RG: 700 / Special: Only Ground!",
+					"build_time": 20
+				},
+				{
+					"id": "h00H",
+					"name": "Money Transporter",
+					"cost": 270,
+					"value": 270,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						781,
+						781
+					],
+					"cooldown": 0.5,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "S",
+					"tooltip": "DMG: 1.480 dmg/s (0,5s) / RG: 1.000 / Special: Unreliable, Only Ground!",
+					"build_time": 0
+				},
+				{
+					"id": "h00J",
+					"name": "John McClane",
+					"cost": 400,
+					"value": 400,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.4,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "wave_spell",
+							"damage": 117.0,
+							"cooldown": 0.95,
+							"range": 6.25,
+							"width": 1.56
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 469 dmg/s (1s) / RG: 800 / Special: Shockwave, Only Ground!",
+					"build_time": 30
+				},
+				{
+					"id": "h00I",
+					"name": "Robocop",
+					"cost": 710,
+					"value": 710,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1013,
+						1013
+					],
+					"cooldown": 0.5,
+					"range": 7.03,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 2.024 dmg/s (0,5s) / RG: 900 / Special: Critical, Only Ground!",
+					"build_time": 40
+				},
+				{
+					"id": "h01H",
+					"name": "Firesale",
+					"cost": 1200,
+					"value": 1200,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.4,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "detect",
+							"radius": 3.91
+						},
+						{
+							"type": "burn_aura",
+							"radius": 3.91,
+							"dps": 175.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 700 dmg/s (1s) / RG: 1.000 / Special: Damages all units in range, Truesight, Only Ground!",
+					"build_time": 50
+				},
+				{
+					"id": "h01I",
+					"name": "Gold Mine",
+					"cost": 2700,
+					"value": 2700,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						3100,
+						3100
+					],
+					"cooldown": 0.3,
+					"range": 7.03,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 10.300 dmg/s (0,3s) / RG: 900 / Special: Stun, Only Ground!",
+					"build_time": 60
+				},
+				{
+					"id": "h00A",
+					"name": "Fort Knox",
+					"cost": 4900,
+					"value": 4900,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						7668,
+						7668
+					],
+					"cooldown": 0.4,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 19.150 dmg/s (0,4s) / RG: 1.000 / Special: Frost, Only Ground!",
+					"build_time": 60
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "aral",
+			"name": "Aral Tankstelle",
+			"name_en": "Gas Station",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#2ef2e0",
+			"text": "Reichweite: Niedrig-Normal Schaden: Normal Geschwindigkeit: Hoch   Besonderheiten: Nur ein Basistower, der sich mehrfach upgraden lässt. Viele der Tower können betäuben.",
+			"rules": "Nur ein Basistower (Waterway, 11 G) mit langer Upgradekette (11 Stufen), Verzweigung beim Tanker: Anti USA-AA-Gun (Luft) oder Terrorists -> Oil Itself. Viele Stufen betäuben.",
+			"towers": [
+				{
+					"id": "h00K",
+					"name": "Waterway",
+					"cost": 11,
+					"value": 11,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h00L"
+					],
+					"damage": [
+						17,
+						17
+					],
+					"cooldown": 0.6,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 28 dmg/s (0,6s) / RG: 500 / Special: -",
+					"build_time": 5
+				},
+				{
+					"id": "h00L",
+					"name": "Gas Pump",
+					"cost": 21,
+					"value": 32,
+					"upgrade_from": "h00K",
+					"upgrades_to": [
+						"h00M"
+					],
+					"damage": [
+						58,
+						58
+					],
+					"cooldown": 0.6,
+					"range": 3.91,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 97 dmg/s (0,6s) / RG: 500 / Special: Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h00O",
+					"name": "Oil Well",
+					"cost": 65,
+					"value": 310,
+					"upgrade_from": "h00N",
+					"upgrades_to": [
+						"h00P"
+					],
+					"damage": [
+						278,
+						278
+					],
+					"cooldown": 0.3,
+					"range": 5.47,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 923 dmg/s (0,3s) / RG: 700 / Special: Stun, Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h00N",
+					"name": "Mechanic",
+					"cost": 105,
+					"value": 245,
+					"upgrade_from": "h00M",
+					"upgrades_to": [
+						"h00O"
+					],
+					"damage": [
+						281,
+						281
+					],
+					"cooldown": 0.3,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 933 dmg/s (0,3s) / RG: 500 / Special: Stun",
+					"build_time": 10
+				},
+				{
+					"id": "h00M",
+					"name": "Alcoholic",
+					"cost": 108,
+					"value": 140,
+					"upgrade_from": "h00L",
+					"upgrades_to": [
+						"h00N"
+					],
+					"damage": [
+						135,
+						135
+					],
+					"cooldown": 0.3,
+					"range": 3.91,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 447 dmg/s (0,3s) / RG: 500 / Special: Stun (0,66s/20%), Only Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h00Q",
+					"name": "Trucker",
+					"cost": 135,
+					"value": 600,
+					"upgrade_from": "h00P",
+					"upgrades_to": [
+						"h00R"
+					],
+					"damage": [
+						438,
+						438
+					],
+					"cooldown": 0.22,
+					"range": 5.47,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 1.990 dmg/s (0,22s) / RG: 700 / Special: Stun, Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h00P",
+					"name": "Greedy Cahsier",
+					"cost": 155,
+					"value": 465,
+					"upgrade_from": "h00O",
+					"upgrades_to": [
+						"h00Q"
+					],
+					"damage": [
+						438,
+						438
+					],
+					"cooldown": 0.3,
+					"range": 5.47,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 1.455 dmg/s (0,3s) / RG: 700 / Special: Stun",
+					"build_time": 10
+				},
+				{
+					"id": "h00R",
+					"name": "Oil Sheik",
+					"cost": 230,
+					"value": 830,
+					"upgrade_from": "h00Q",
+					"upgrades_to": [
+						"h01J"
+					],
+					"damage": [
+						574,
+						574
+					],
+					"cooldown": 0.22,
+					"range": 5.47,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 2.604 dmg/s (0,22s) / RG: 700 / Special: Stun, Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h01Y",
+					"name": "Anti USA-AA-Gun",
+					"cost": 400,
+					"value": 1651,
+					"upgrade_from": "h01J",
+					"upgrades_to": [],
+					"damage": [
+						969,
+						969
+					],
+					"cooldown": 0.22,
+					"range": 5.86,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 10
+						}
+					],
+					"hotkey": "V",
+					"tooltip": "DMG: 10 x 4.400 dmg/s (0,22s) / RG: 750 / Special: Multistrike, Only Air!",
+					"build_time": 10
+				},
+				{
+					"id": "h01J",
+					"name": "Tanker",
+					"cost": 421,
+					"value": 1251,
+					"upgrade_from": "h00R",
+					"upgrades_to": [
+						"h01Y",
+						"h01K"
+					],
+					"damage": [
+						873,
+						873
+					],
+					"cooldown": 0.22,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 3.960 dmg/s (0,22s) / RG: 800 / Special: Stun /",
+					"build_time": 10
+				},
+				{
+					"id": "h01K",
+					"name": "Terrorists",
+					"cost": 1000,
+					"value": 2251,
+					"upgrade_from": "h01J",
+					"upgrades_to": [
+						"h02N"
+					],
+					"damage": [
+						1951,
+						1951
+					],
+					"cooldown": 0.22,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 8.700 dmg/s (0,22s) / RG: 800 / Special: Stun, Only  Ground!",
+					"build_time": 10
+				},
+				{
+					"id": "h02N",
+					"name": "Oil Itself",
+					"cost": 2500,
+					"value": 4751,
+					"upgrade_from": "h01K",
+					"upgrades_to": [],
+					"damage": [
+						4091,
+						4091
+					],
+					"cooldown": 0.2,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 20.500 dmg/s (0,20s) / RG: 800 / Special: Stun, Only  Ground!",
+					"build_time": 10
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "sexshop",
+			"name": "Beate Uhse Sexshop",
+			"name_en": "Sexshop",
+			"kind": "standard",
+			"bonus": "rebate",
+			"color": "#ff6fa8",
+			"text": "Reichweite: Normal Schaden: Hoch Geschwindigkeit: Niedrig  Besonderheiten: Alle Tower sind recht schnell gebaut und verursachen durch Zauber großen Schaden bei Gegnergruppen.",
+			"rules": "Schnell gebaut, Flächenzauber (Kettenblitz, Schockwelle, Donnerschlag) mit Autocast. Rabatt statt Bonus. Manager: Aufdecken.",
+			"towers": [
+				{
+					"id": "h00W",
+					"name": "Dildo",
+					"cost": 12,
+					"value": 12,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						14,
+						14
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 24 dmg/s (0,6s) / RG: 850 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "h00X",
+					"name": "Penis Pump",
+					"cost": 37,
+					"value": 37,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						24,
+						24
+					],
+					"cooldown": 0.65,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 10.0
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 37 dmg/s (0,65s) / RG: 800 / Special: Critical",
+					"build_time": 5
+				},
+				{
+					"id": "h00Y",
+					"name": "Pornos",
+					"cost": 130,
+					"value": 130,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.4,
+					"range": 7.03,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 0.78,
+							"factor": 0.5
+						},
+						{
+							"type": "nova_spell",
+							"damage": 48.0,
+							"radius": 4.69,
+							"cooldown": 4.95,
+							"slow": 0.33,
+							"slow_duration": 3.0
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 38 dmg/s (5s) / RG: 600 / Special: Thunderclap, Only Ground!",
+					"build_time": 7
+				},
+				{
+					"id": "h00Z",
+					"name": "Rubber Doll",
+					"cost": 210,
+					"value": 210,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h019"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.45,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 900.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 0.9,
+							"range": 7.81
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 7.200 dmg/s (1s) / RG: 1.000 / Special: Chain lightning, Only Air!",
+					"build_time": 10
+				},
+				{
+					"id": "h010",
+					"name": "Sexy Stripper",
+					"cost": 325,
+					"value": 325,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1720,
+						1720
+					],
+					"cooldown": 1.75,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 982 dmg/s (1,75s) / RG: 850 / Special: Flirt",
+					"build_time": 14
+				},
+				{
+					"id": "h011",
+					"name": "Loveboat",
+					"cost": 465,
+					"value": 465,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1668,
+						1668
+					],
+					"cooldown": 2.0,
+					"range": 6.25,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "wave_spell",
+							"damage": 139.0,
+							"cooldown": 1.95,
+							"range": 6.25,
+							"width": 1.56
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 833 + 278 dmg/s (2s) / RG: 800 / Special: Dual attack (normal + shockwave), Only Ground!",
+					"build_time": 16
+				},
+				{
+					"id": "h012",
+					"name": "PIMP",
+					"cost": 555,
+					"value": 555,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.2,
+					"range": 5.86,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 578.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 2.9,
+							"range": 8.98
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.542 dmg/s (3s) / RG: 1150 / Special: Chain lightning",
+					"build_time": 20
+				},
+				{
+					"id": "h013",
+					"name": "Dominatrix",
+					"cost": 895,
+					"value": 895,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						4748,
+						4748
+					],
+					"cooldown": 3.0,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "wave_spell",
+							"damage": 290.0,
+							"cooldown": 2.95,
+							"range": 6.25,
+							"width": 1.56
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 1.580 + 580 dmg/s (3s) / RG: 850/800 / Special: Dual attack (normal + shockwave)",
+					"build_time": 23
+				},
+				{
+					"id": "h01F",
+					"name": "Brothel",
+					"cost": 1180,
+					"value": 1180,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.4,
+					"range": 7.03,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 3240.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 5.9,
+							"range": 6.25
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 4.320 dmg/s (6s) / RG: 800 / Special: Chain lightning",
+					"build_time": 26
+				},
+				{
+					"id": "h01G",
+					"name": "Kamasutra",
+					"cost": 2350,
+					"value": 2350,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						9377,
+						9377
+					],
+					"cooldown": 2.0,
+					"range": 5.86,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "wave_spell",
+							"damage": 859.0,
+							"cooldown": 1.95,
+							"range": 6.25,
+							"width": 1.56
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 3.0
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 4.688 + 1.740 dmg/s (2s) / RG: 800 / Special: Dual attack (normal + shockwave), Frost",
+					"build_time": 30
+				},
+				{
+					"id": "h007",
+					"name": "Golden Shower",
+					"cost": 5500,
+					"value": 5500,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.4,
+					"range": 7.42,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 7000.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 2.4,
+							"range": 7.42
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 22.400 dmg/s (2,5s) / RG: 950 / Special: Chain lightning",
+					"build_time": 30
+				},
+				{
+					"id": "h019",
+					"name": "Rubber Orgy",
+					"cost": 1390,
+					"value": 1600,
+					"upgrade_from": "h00Z",
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.45,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "chain_spell",
+							"damage": 8500.0,
+							"targets": 5,
+							"falloff": 0.55,
+							"cooldown": 0.9,
+							"range": 7.81
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 68.000 dmg/s (1s) / RG: 1.000 / Special: Chain lightning, Only Air!",
+					"build_time": 10
+				}
+			],
+			"todo": [
+				"Sexy Stripper: Flirten (Amls)"
+			]
+		},
+		{
+			"id": "cinemaxx",
+			"name": "CinemaxX",
+			"name_en": "Cinema",
+			"kind": "standard",
+			"bonus": "damage",
+			"color": "#b38cff",
+			"text": "Reichweite: Mäßig Schaden: Mäßig Geschwindigkeit: Sehr hoch  Besonderheiten: Drei Tower gegen Luftangriffe.",
+			"rules": "Filmhelden; drei Lufttower (Jacky Chan, Terminator->Terminator II). Kurze bis mittlere Reichweite, sehr schnelle Angriffe. Manager: Aufdecken.",
+			"towers": [
+				{
+					"id": "o01S",
+					"name": "Shrek",
+					"cost": 17,
+					"value": 17,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						13,
+						13
+					],
+					"cooldown": 0.3,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 43 dmg/s (0,3s) / RG: 400 / Special: -",
+					"build_time": 3
+				},
+				{
+					"id": "o01T",
+					"name": "Private Ryan",
+					"cost": 34,
+					"value": 34,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						22,
+						22
+					],
+					"cooldown": 0.25,
+					"range": 3.52,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: 88 dmg/s (0,25s) / RG: 450 / Special: Critical",
+					"build_time": 10
+				},
+				{
+					"id": "o01U",
+					"name": "Jacky Chan",
+					"cost": 130,
+					"value": 130,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						361,
+						361
+					],
+					"cooldown": 0.1,
+					"range": 7.81,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: 3.600 dmg/s (0,1s) / RG: 1.000 / Special: Only Air!",
+					"build_time": 15
+				},
+				{
+					"id": "o01V",
+					"name": "Judge Dredd",
+					"cost": 225,
+					"value": 225,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						63,
+						63
+					],
+					"cooldown": 0.1,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.15
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 630 dmg/s (0,1s) / RG: 500 / Special: Stun",
+					"build_time": 20
+				},
+				{
+					"id": "o01W",
+					"name": "Terminator",
+					"cost": 360,
+					"value": 360,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o02R"
+					],
+					"damage": [
+						2551,
+						2551
+					],
+					"cooldown": 0.25,
+					"range": 9.38,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "A",
+					"tooltip": "DMG: 10.200 dmg/s (0,25s) / RG: 1.200 / Special: Critical (20%/3x), Upgradeable, Only Air!",
+					"build_time": 25
+				},
+				{
+					"id": "o01X",
+					"name": "Darth Vader",
+					"cost": 420,
+					"value": 420,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						327,
+						327
+					],
+					"cooldown": 0.1,
+					"range": 2.73,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "S",
+					"tooltip": "DMG: 3.260 dmg/s (0,1s) / RG: 350 / Special: Unreliable",
+					"build_time": 30
+				},
+				{
+					"id": "o01Y",
+					"name": "Hellboy",
+					"cost": 570,
+					"value": 570,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						133,
+						196
+					],
+					"cooldown": 0.1,
+					"range": 4.3,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.650 dmg/s (0,1s) / RG: 550 / Special: 10% chance to create lifes",
+					"build_time": 35
+				},
+				{
+					"id": "o02K",
+					"name": "Sauron",
+					"cost": 880,
+					"value": 880,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						879,
+						879
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 3.512 dmg/s (0,25s) / RG: 400 / Special: Stun",
+					"build_time": 40
+				},
+				{
+					"id": "o01Z",
+					"name": "The Godfather",
+					"cost": 1280,
+					"value": 1280,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						719,
+						719
+					],
+					"cooldown": 0.15,
+					"range": 3.91,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "Y",
+					"tooltip": "DMG: 4.800 dmg/s (0,15s) / RG: 500 / Special: Only Ground!",
+					"build_time": 50
+				},
+				{
+					"id": "o01I",
+					"name": "Wolverine",
+					"cost": 2500,
+					"value": 2500,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						3841,
+						3841
+					],
+					"cooldown": 0.3,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 12.750 dmg/s (0,3s) / RG: 500 / Special: Stun",
+					"build_time": 60
+				},
+				{
+					"id": "o026",
+					"name": "Blade",
+					"cost": 5300,
+					"value": 5300,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						5200,
+						5200
+					],
+					"cooldown": 0.2,
+					"range": 5.08,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 26.000 dmg/s (0,2s) / RG: 650 / Special: Stun",
+					"build_time": 60
+				},
+				{
+					"id": "o02R",
+					"name": "Terminator II",
+					"cost": 1640,
+					"value": 2000,
+					"upgrade_from": "o01W",
+					"upgrades_to": [],
+					"damage": [
+						12401,
+						12401
+					],
+					"cooldown": 0.2,
+					"range": 10.55,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 60.200 dmg/s (0,2s) / RG: 1.350 / Special: Only Air!",
+					"build_time": 5
+				}
+			],
+			"todo": [
+				"Hellboy: Life (ACbh)",
+				"Hellboy: Bond Of Death (Ambt)"
+			]
+		},
+		{
+			"id": "post",
+			"name": "Post",
+			"name_en": "Post",
+			"kind": "pro",
+			"bonus": "rebate",
+			"color": "#ffe14f",
+			"text": "Reichweite: Normal Schaden: Normal Geschwindigkeit: Normal  Besonderheiten: Die Tower der Post können mit modularen Waffen bestückt werden und während eines Levels zwischen den Towern ausgetauscht werden.",
+			"rules": "Post-Tower haben Item-Slots (Letter Box 1, Post Office 2, Big Post Office 4); die Waffen sind Items aus Package Store / Big Package Store. 'Swap' überträgt alle Items sofort auf einen anderen Tower, Post Office Box hat Autoswap. Rabatt statt Bonus.",
+			"towers": [
+				{
+					"id": "h01P",
+					"name": "Package Store",
+					"cost": 15,
+					"value": 15,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: - / RG: - / Special: Item Shop",
+					"build_time": 5
+				},
+				{
+					"id": "h03O",
+					"name": "Post Office Box",
+					"cost": 20,
+					"value": 20,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: 1 slot, Autoswap",
+					"build_time": 15
+				},
+				{
+					"id": "h01N",
+					"name": "Letter Box",
+					"cost": 20,
+					"value": 20,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						26,
+						26
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 42 dmg/s (0,6s) / RG: 850 / Special: 1 slot",
+					"build_time": 10
+				},
+				{
+					"id": "h023",
+					"name": "Big Package Store",
+					"cost": 50,
+					"value": 50,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "S",
+					"tooltip": "DMG: - / RG: - / Special: Item Shop",
+					"build_time": 15
+				},
+				{
+					"id": "h01O",
+					"name": "Post Office",
+					"cost": 120,
+					"value": 120,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						193,
+						193
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 320 dmg/s (0,6s) / RG: 850 / Special: 2 slots",
+					"build_time": 15
+				},
+				{
+					"id": "h01R",
+					"name": "Big Post Office",
+					"cost": 320,
+					"value": 320,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						580,
+						580
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: 965 dmg/s (0,6s) / RG: 850 / Special: 4 slots",
+					"build_time": 0
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "copyshop",
+			"name": "Copyshop",
+			"name_en": "Copyshop",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#9fa8b8",
+			"text": "Reichweite: - Schaden: - Geschwindigkeit: -  Besonderheiten: Mit dem Copyshop kann man jeden beliebigen Tower kopieren, die allerdings dann etwa 5% mehr kosten. Dafür sind die Bauzeit und die Möglichkeiten unschlagbar.",
+			"rules": "Einziger Tower: Towercopier (9 G). Fähigkeit 'Tower kopieren' (A01I) verwandelt ihn in einen beliebigen Tower. Verrechnet werden Punktwert x 1,05 - 9 G (der Bestätigungsdialog zeigt fälschlich x 1,4 - 9). Tower mit Punktwert < 9 sind gratis. Nur Ziele mit <= 500 max. HP; Tower von TUI/Bestatter sind laut Meldung nicht kopierbar. Manager: passive Enttarnung.",
+			"towers": [
+				{
+					"id": "h01T",
+					"name": "Towercopier",
+					"cost": 9,
+					"value": 9,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						11,
+						11
+					],
+					"cooldown": 1.0,
+					"range": 3.91,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 11 dmg/s (1s) / RG: 500 / Special: Can copy (nearly) any tower",
+					"build_time": 5
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "tui",
+			"name": "TUI Reisebüro",
+			"name_en": "Travel Agency",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#5fd0ff",
+			"text": "Reichweite: Niedrig+ Schaden: Normal+ Geschwindigkeit: Gut  Besonderheiten: Maximal 6 Tower gleichzeitig. Der Schaden und die Reichweite lässt sich unabhängig voneinander ausbauen.",
+			"rules": "Nahrungslimit wird auf 6 gesetzt, also max. 6 Tower. Vier Länder (je 25 G), frei untereinander tauschbar (uupt-Kreis); jedes hat eine Endstufe für 1.500 G. Schaden und Reichweite werden über Forschungen gesteigert: Range R001, Basic Damage R002, Advanced Damage R000 (nur Endstufen). Tower des Ladens können nicht kopiert werden.",
+			"towers": [
+				{
+					"id": "h024",
+					"name": "Irak",
+					"cost": 25,
+					"value": 25,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h028",
+						"h025",
+						"h026",
+						"h01Q"
+					],
+					"damage": [
+						20,
+						20
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 0.59,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 80+ dmg/s (0,25s) / RG: 400+ / Special: Splash (75)",
+					"build_time": 20
+				},
+				{
+					"id": "h025",
+					"name": "Holland",
+					"cost": 25,
+					"value": 50,
+					"upgrade_from": "h024",
+					"upgrades_to": [
+						"h029",
+						"h024",
+						"h026",
+						"h01Q"
+					],
+					"damage": [
+						20,
+						20
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 7.81,
+							"factor": 0.1
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 80+ dmg/s (0,25s) / RG: 400+ / Special: Slow Effect, Only Ground!",
+					"build_time": 20
+				},
+				{
+					"id": "h01Q",
+					"name": "Russia",
+					"cost": 25,
+					"value": 100,
+					"upgrade_from": "h026",
+					"upgrades_to": [
+						"h02A",
+						"h024",
+						"h025",
+						"h026"
+					],
+					"damage": [
+						20,
+						20
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 80+ dmg/s (0,25s) / RG: 400+ / Special: Frost",
+					"build_time": 20
+				},
+				{
+					"id": "h026",
+					"name": "Australia",
+					"cost": 25,
+					"value": 75,
+					"upgrade_from": "h025",
+					"upgrades_to": [
+						"h027",
+						"h024",
+						"h025",
+						"h01Q"
+					],
+					"damage": [
+						45,
+						45
+					],
+					"cooldown": 0.1,
+					"range": 3.12,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "X",
+					"tooltip": "DMG: 450+ dmg/s (0,1s) / RG: 400+ / Special: Only Air!",
+					"build_time": 60
+				},
+				{
+					"id": "h028",
+					"name": "Congo",
+					"cost": 1500,
+					"value": 1525,
+					"upgrade_from": "h024",
+					"upgrades_to": [],
+					"damage": [
+						2039,
+						2039
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "splash",
+							"radius": 0.78,
+							"factor": 0.5
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 8.152+ dmg/s (0,25s) / RG: 400+ / Special: Splash (100)",
+					"build_time": 20
+				},
+				{
+					"id": "h029",
+					"name": "Jamaica",
+					"cost": 1500,
+					"value": 1550,
+					"upgrade_from": "h025",
+					"upgrades_to": [],
+					"damage": [
+						2039,
+						2039
+					],
+					"cooldown": 0.23,
+					"range": 3.12,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 7.81,
+							"factor": 0.2
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 8.860+ dmg/s (0,23s) / RG: 400+ / Special: Slow aura, Only Ground!",
+					"build_time": 20
+				},
+				{
+					"id": "h02A",
+					"name": "Antarctica",
+					"cost": 1500,
+					"value": 1600,
+					"upgrade_from": "h01Q",
+					"upgrades_to": [],
+					"damage": [
+						2039,
+						2039
+					],
+					"cooldown": 0.25,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 8.112+ dmg/s (0,25s) / RG: 400+ / Special:Multitarget (2)",
+					"build_time": 20
+				},
+				{
+					"id": "h027",
+					"name": "New Zealand",
+					"cost": 1500,
+					"value": 1575,
+					"upgrade_from": "h026",
+					"upgrades_to": [],
+					"damage": [
+						2039,
+						2039
+					],
+					"cooldown": 0.1,
+					"range": 3.12,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "detect",
+							"radius": 15.62
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 20.380+ dmg/s (0,1s) / RG: 400+ / Special: Large scale reveal, Only Air!",
+					"build_time": 60
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "aok",
+			"name": "AOK",
+			"name_en": "Sickness Fund",
+			"kind": "pro",
+			"bonus": "rebate",
+			"color": "#5fe08a",
+			"text": "Reichweite: Hoch Schaden: Niedrig Geschwindigkeit: Niedrig  Besonderheiten: 10%ige Chance, bei einem Kill Leben zu erhalten. Angriffe prallen mehrfach ab. Bonusgold beim Verlust von Leben. Falls alle Leben vorhanden sind gibt es einen 33%igen Angriffsbonus für alle Tower.",
+			"rules": "Tower mit Multitarget (bis 4 Ziele). 10 % Chance auf +1 Leben pro Kill. Bonus bei Lebensverlust: Level x floor(0,66 x verlorene Leben), höchstens Level x 25 G ('AOK Bonus'). Laut Tooltip +33 % Schaden bei vollen Leben. Nicht verfügbar im Modus 'Auge um Auge' (R00N). AOK-Spieler bekommen R00U nicht, also kein Headquarters und kein Revised Plan B. Rabatt statt Bonus.",
+			"towers": [
+				{
+					"id": "h02B",
+					"name": "Hypochondriac",
+					"cost": 11,
+					"value": 11,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						12,
+						12
+					],
+					"cooldown": 0.75,
+					"range": 7.42,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 16 dmg/s (0,75s) / RG: 950 / Special: -",
+					"build_time": 1
+				},
+				{
+					"id": "h02C",
+					"name": "Coma Patient",
+					"cost": 33,
+					"value": 33,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						53,
+						53
+					],
+					"cooldown": 0.9,
+					"range": 8.59,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 66 dmg/s (0,9s) / RG: 1.100 / Special: Only Ground!",
+					"build_time": 5
+				},
+				{
+					"id": "h014",
+					"name": "Grandpa",
+					"cost": 88,
+					"value": 88,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h018"
+					],
+					"damage": [
+						667,
+						667
+					],
+					"cooldown": 1.05,
+					"range": 9.38,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "E",
+					"tooltip": "DMG: 1.270 dmg/s (1,05s) / RG: 1.200 / Special: Multitarget (3), Only Air!",
+					"build_time": 10
+				},
+				{
+					"id": "h01D",
+					"name": "Sick Boy",
+					"cost": 111,
+					"value": 111,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						120,
+						120
+					],
+					"cooldown": 1.2,
+					"range": 9.38,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [
+						{
+							"type": "detect",
+							"radius": 3.91
+						},
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "R",
+					"tooltip": "DMG: 200 dmg/s (1,2s) / RG: 1.200 / Special: Multitarget (3), Truesight",
+					"build_time": 15
+				},
+				{
+					"id": "h01E",
+					"name": "Plague Patient",
+					"cost": 222,
+					"value": 222,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						455,
+						455
+					],
+					"cooldown": 1.5,
+					"range": 10.55,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "detect",
+							"radius": 3.91
+						},
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "A",
+					"tooltip": "DMG: 303 dmg/s (1,5s) / RG: 1.350 / Special: Frost, Truesight, Only Ground!",
+					"build_time": 20
+				},
+				{
+					"id": "h02D",
+					"name": "Living Dentures",
+					"cost": 444,
+					"value": 444,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						425,
+						425
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "S",
+					"tooltip": "DMG: 850 dmg/s (1s) / RG: 1.000 / Special: Multitarget (3)",
+					"build_time": 0
+				},
+				{
+					"id": "h02E",
+					"name": "Rock In The Surf",
+					"cost": 666,
+					"value": 666,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						981,
+						981
+					],
+					"cooldown": 2.0,
+					"range": 14.06,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "D",
+					"tooltip": "DMG: 980 dmg/s (2s) / RG: 1.800 / Special: Multitarget (2)",
+					"build_time": 30
+				},
+				{
+					"id": "h02F",
+					"name": "Doc Morris",
+					"cost": 999,
+					"value": 999,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1387,
+						1387
+					],
+					"cooldown": 0.8,
+					"range": 9.38,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [
+						{
+							"type": "slow",
+							"factor": 0.3,
+							"duration": 1.0
+						}
+					],
+					"hotkey": "F",
+					"tooltip": "DMG: 1.733 dmg/s (0,8s) / RG: 1.200 / Special: Frost, Only Ground!",
+					"build_time": 35
+				},
+				{
+					"id": "h02G",
+					"name": "Pharma Fanboy",
+					"cost": 1333,
+					"value": 1333,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						2729,
+						2729
+					],
+					"cooldown": 1.4,
+					"range": 7.42,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "crit",
+							"chance": 0.2,
+							"multiplier": 3.0
+						}
+					],
+					"hotkey": "Y",
+					"tooltip": "DMG: 2.730 dmg/s (1,4s) / RG: 950 / Special: Critical",
+					"build_time": 45
+				},
+				{
+					"id": "h02H",
+					"name": "Private Patient",
+					"cost": 1777,
+					"value": 1777,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h03E"
+					],
+					"damage": [
+						1367,
+						1367
+					],
+					"cooldown": 0.8,
+					"range": 10.94,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "X",
+					"tooltip": "DMG: 3.400 dmg/s (0,8s) / RG: 1.400 / Special: Multitarget (4), Upgradeable, Only Ground!",
+					"build_time": 50
+				},
+				{
+					"id": "o031",
+					"name": "First Aid",
+					"cost": 2500,
+					"value": 2500,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o032"
+					],
+					"damage": [
+						743,
+						743
+					],
+					"cooldown": 0.5,
+					"range": 25.78,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 1.500 dmg/s (0,5s) / RG: 3.300 / Special: Multitarget (3), Increases the damage of all your towers by 40% (does not stack with similar effects), Support unit available",
+					"build_time": 30
+				},
+				{
+					"id": "h018",
+					"name": "Grand-Grandpa",
+					"cost": 888,
+					"value": 976,
+					"upgrade_from": "h014",
+					"upgrades_to": [],
+					"damage": [
+						10712,
+						10712
+					],
+					"cooldown": 1.2,
+					"range": 8.59,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 17.850 dmg/s (1,2s) / RG: 1.100 / Special: Multitarget (3), Only Air!",
+					"build_time": 40
+				},
+				{
+					"id": "h03E",
+					"name": "Cured Private Patient",
+					"cost": 4000,
+					"value": 5777,
+					"upgrade_from": "h02H",
+					"upgrades_to": [],
+					"damage": [
+						1277,
+						1277
+					],
+					"cooldown": 0.3,
+					"range": 10.94,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "U",
+					"tooltip": "DMG: 8.500 dmg/s (0,3s) / RG: 1.400 / Special: Multitarget (4)",
+					"build_time": 10
+				},
+				{
+					"id": "o032",
+					"name": "Second Aid",
+					"cost": 4200,
+					"value": 6700,
+					"upgrade_from": "o031",
+					"upgrades_to": [],
+					"damage": [
+						4141,
+						4141
+					],
+					"cooldown": 1.0,
+					"range": 30.47,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "stun",
+							"chance": 0.2,
+							"duration": 0.5
+						},
+						{
+							"type": "multishot",
+							"targets": 3
+						}
+					],
+					"hotkey": "C",
+					"tooltip": "DMG: 4.140 dmg/s (1s) / RG: 3.900 / Special: Multitarget (3), Stun, Increases the damage of all your towers by 50% (does not stack with similar effects), Support unit available",
+					"build_time": 45
+				}
+			],
+			"todo": [
+				"First Aid: Medicin 1 (AEar)",
+				"Second Aid: Medicin 2 (AEar)"
+			]
+		},
+		{
+			"id": "ikea",
+			"name": "IKEA",
+			"name_en": "IKEA",
+			"kind": "pro",
+			"bonus": "rebate",
+			"color": "#ffd84f",
+			"text": "Reichweite: Niedrig-Normal Schaden: Niedrig Geschwindigkeit: Hoch  Besonderheiten: Modulares Waffensystem. Durch Combos können bessere Teile erzeugt werden.",
+			"rules": "Modulares Waffensystem: Show House (4 Slots) / Big Show House (6 Slots) nehmen Möbel-Items aus dem Store auf. Combos aus bestimmten Item-Paaren ergeben stärkere Teile (C1-C5, AC1-AC3, X-X3). Rabatt statt Bonus.",
+			"towers": [
+				{
+					"id": "h02I",
+					"name": "Show House",
+					"cost": 20,
+					"value": 20,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						9,
+						9
+					],
+					"cooldown": 0.2,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 45 dmg/s (0,2s) / RG: 400 / Special: Can hold up to 4 items",
+					"build_time": 10
+				},
+				{
+					"id": "h02T",
+					"name": "Store",
+					"cost": 25,
+					"value": 25,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Shop",
+					"build_time": 5
+				},
+				{
+					"id": "h01C",
+					"name": "Big Show House",
+					"cost": 35,
+					"value": 35,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						16,
+						16
+					],
+					"cooldown": 0.2,
+					"range": 3.12,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 90 dmg/s (0,2s) / RG: 400 / Special: Can hold up to 6 items",
+					"build_time": 20
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "gaertnerei",
+			"name": "Gärtnerei",
+			"name_en": "Market-Garden",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#6bdc5a",
+			"text": "Reichweite: Niedrig Schaden: Hoch Geschwindigkeit: Hoch  Besonderheiten: Die Tower an sich sind sehr günstig, dürsten aber nach Wasser bevor sie Schaden verursachen. Man sollte also für ausreichend Bewässerungsanlagen sorgen, die allerdings auch einiges kosten. Die roten Balken zeigen den Wasserstand an.",
+			"rules": "Pflanzen sind billig, brauchen aber Wasser (= Mana; rote Balken zeigen den Füllstand). Aktiv ab >= 90 % Wasser, inaktiv ab <= 75 % (Einheitstyp 'Ancient' wird gesetzt bzw. entfernt), zwischen den Runden inaktiv. Bewässerungsanlagen I-VIII (Arpm, 20-8.600 l/s, Reichweite 750). Forschung Reservoir R005/R004 (+10 % Kapazität je Stufe). Bekommt kein Bonus-Upgrade.",
+			"towers": [
+				{
+					"id": "h03J",
+					"name": "Violet",
+					"cost": 6,
+					"value": 6,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h02W"
+					],
+					"damage": [
+						5,
+						5
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 10 dmg/s (0,5s) / RG: 600 / Special: Upgradeable",
+					"build_time": 5
+				},
+				{
+					"id": "h02V",
+					"name": "Irrigation Plant I",
+					"cost": 36,
+					"value": 36,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h02X"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (20 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h02W",
+					"name": "Camomile",
+					"cost": 0,
+					"value": 6,
+					"upgrade_from": "h03J",
+					"upgrades_to": [
+						"h032"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 20 dmg/s (0,5s) / RG: 600 / Special: Requires water (4 liter/s)",
+					"build_time": 5
+				},
+				{
+					"id": "h032",
+					"name": "President Bush",
+					"cost": 6,
+					"value": 12,
+					"upgrade_from": "h02W",
+					"upgrades_to": [
+						"h033"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 60 dmg/s (0,5s) / RG: 600 / Special: Requires water (12 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h033",
+					"name": "Underwater Cactus",
+					"cost": 12,
+					"value": 24,
+					"upgrade_from": "h032",
+					"upgrades_to": [
+						"h034"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 180 dmg/s (0,5s) / RG: 600 / Special: Requires water (36 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h034",
+					"name": "Palm",
+					"cost": 24,
+					"value": 48,
+					"upgrade_from": "h033",
+					"upgrades_to": [
+						"h035"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 540 dmg/s (0,5s) / RG: 600 / Special: Requires water (108 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h035",
+					"name": "Ent",
+					"cost": 36,
+					"value": 84,
+					"upgrade_from": "h034",
+					"upgrades_to": [
+						"h036"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 1.080 dmg/s (0,5s) / RG: 600 / Special: Requires water (216 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h036",
+					"name": "Toadstool",
+					"cost": 48,
+					"value": 132,
+					"upgrade_from": "h035",
+					"upgrades_to": [
+						"h015"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 2.160 dmg/s (0,5s) / RG: 600 / Special: Requires water (432 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h02X",
+					"name": "Irrigation Plant II",
+					"cost": 61,
+					"value": 97,
+					"upgrade_from": "h02V",
+					"upgrades_to": [
+						"h02Y"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (60 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h015",
+					"name": "Alien Plant",
+					"cost": 64,
+					"value": 196,
+					"upgrade_from": "h036",
+					"upgrades_to": [
+						"h01Z"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 2.160 dmg/s (0,5s) / RG: 600 / Special: Requires water (864 liter/s)",
+					"build_time": 15
+				},
+				{
+					"id": "h01Z",
+					"name": "Flowerpot",
+					"cost": 80,
+					"value": 276,
+					"upgrade_from": "h015",
+					"upgrades_to": [
+						"h02Q"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 4.320 dmg/s (0,5s) / RG: 600 / Special: Requires water (1.700 liter/s)",
+					"build_time": 30
+				},
+				{
+					"id": "h02Q",
+					"name": "Weeds",
+					"cost": 100,
+					"value": 376,
+					"upgrade_from": "h01Z",
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.5,
+					"range": 4.69,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 17.300 dmg/s (0,5s) / RG: 600 / Special: Requires water (3.450 liter/s)",
+					"build_time": 30
+				},
+				{
+					"id": "h02Y",
+					"name": "Irrigation Plant III",
+					"cost": 160,
+					"value": 257,
+					"upgrade_from": "h02X",
+					"upgrades_to": [
+						"h02Z"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (180 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h02Z",
+					"name": "Irrigation Plant IV",
+					"cost": 401,
+					"value": 658,
+					"upgrade_from": "h02Y",
+					"upgrades_to": [
+						"h030"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (540 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h030",
+					"name": "Irrigation Plant V",
+					"cost": 607,
+					"value": 1265,
+					"upgrade_from": "h02Z",
+					"upgrades_to": [
+						"h031"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (1.080 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h031",
+					"name": "Irrigation Plant VI",
+					"cost": 1085,
+					"value": 2350,
+					"upgrade_from": "h030",
+					"upgrades_to": [
+						"h020"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (2.160 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h020",
+					"name": "Irrigation Plant VII",
+					"cost": 1600,
+					"value": 3950,
+					"upgrade_from": "h031",
+					"upgrades_to": [
+						"h02L"
+					],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (4.320 liter/s)",
+					"build_time": 10
+				},
+				{
+					"id": "h02L",
+					"name": "Irrigation Plant VIII",
+					"cost": 2500,
+					"value": 6450,
+					"upgrade_from": "h020",
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 1.0,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 750 / Special: Irrigatation (8.600 liter/s)",
+					"build_time": 10
+				}
+			],
+			"todo": [
+				"Irrigation Plant I: Wässern I (Arpm)",
+				"Camomile: Rache des Gärtners I AA (Afak)",
+				"Camomile: Rache des Gärtners I (Afak)",
+				"Irrigation Plant II: Wässern II (Arpm)",
+				"President Bush: Rache des Gärtners II AA (Afak)",
+				"President Bush: Rache des Gärtners II (Afak)",
+				"Irrigation Plant III: Wässern III (Arpm)",
+				"Underwater Cactus: Rache des Gärtners III AA (Afak)",
+				"Underwater Cactus: Rache des Gärtners III (Afak)",
+				"Irrigation Plant IV: Wässern IV (Arpm)",
+				"Palm: Rache des Gärtners IV AA (Afak)",
+				"Palm: Rache des Gärtners IV (Afak)",
+				"Irrigation Plant V: Wässern V (Arpm)",
+				"Ent: Rache des Gärtners V AA (Afak)",
+				"Ent: Rache des Gärtners V (Afak)",
+				"Irrigation Plant VI: Wässern VI (Arpm)",
+				"Toadstool: Rache des Gärtners VI AA (Afak)",
+				"Toadstool: Rache des Gärtners VI (Afak)",
+				"Irrigation Plant VII: Wässern VII (Arpm)",
+				"Alien Plant: Rache des Gärtners VII AA (Afak)",
+				"Alien Plant: Rache des Gärtners VII (Afak)",
+				"Irrigation Plant VIII: Wässern VIII (Arpm)",
+				"Flowerpot: Rache des Gärtners VIII AA (Afak)",
+				"Flowerpot: Rache des Gärtners VIII (Afak)",
+				"Weeds: Rache des Gärtners IX AA (Afak)",
+				"Weeds: Rache des Gärtners IX (Afak)"
+			]
+		},
+		{
+			"id": "fitness",
+			"name": "Fitness-Studio",
+			"name_en": "Fitness Studio",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#ff7a3c",
+			"text": "Reichweite: Hoch Schaden: Normal Geschwindigkeit: Hoch  Besonderheiten:  / Die Tower benötigen jede Runde Anabolika, was Geld kostet. Fehlt das Geld für ausreichende Mengen Anabolika, werden die entsprechenden Tower deaktiviert. Dafür gewinnen sie mit jeder Dosis an Stärke. Man kann zusätzlich dopen, um sie zu verbessern.",
+			"rules": "Tower sind Helden (Drug Taker, 4 Stufen aus dem CCCP Doping Center). Jede Runde wird Anabolika bezahlt (3/25/75/200 G je Stufe), dafür gibt es + gleich viel Stärke. Fehlt das Geld, wird der Tower pausiert ('Cold Turkey'). Doping-Items aus Erich's Pharmacy. Starke Dosen geben Nebenwirkungsstufen (A05V, Dosis/300), die den Schaden senken und pro Runde um 1 sinken; 'Holiday In A Bottle' senkt sie. Unter jedem Helden setzt das Skript einen unsichtbaren 'Blocker2' (o02T) für die Wegfindung.",
+			"towers": [
+				{
+					"id": "h039",
+					"name": "CCCP Doping Center",
+					"cost": 6,
+					"value": 6,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"H03C",
+						"H03A",
+						"H03B",
+						"H038"
+					],
+					"damage": [
+						12,
+						12
+					],
+					"cooldown": 1.0,
+					"range": 6.25,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 11 dmg/s (1s) / RG: 800 / Special: Upgrade to hero-towers",
+					"build_time": 5
+				},
+				{
+					"id": "h037",
+					"name": "Erich´s Pharmacy",
+					"cost": 25,
+					"value": 25,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Shop",
+					"build_time": 5
+				},
+				{
+					"id": "H038",
+					"name": "Drug Taker (Ben Johnson)",
+					"cost": 5,
+					"value": 11,
+					"upgrade_from": "h039",
+					"upgrades_to": [],
+					"damage": [
+						16,
+						16
+					],
+					"cooldown": 0.5,
+					"range": 7.81,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "A",
+					"tooltip": "DMG: 32 dmg/s (0,5s) / RG: 1.000 / Special: Low resistibility to side effects, Costs: 3 gold/round",
+					"build_time": 5
+				},
+				{
+					"id": "H03A",
+					"name": "Drug Taker (Tyler Hamilton)",
+					"cost": 125,
+					"value": 131,
+					"upgrade_from": "h039",
+					"upgrades_to": [],
+					"damage": [
+						172,
+						172
+					],
+					"cooldown": 0.5,
+					"range": 8.2,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: 343 dmg/s (0,5s) / RG: 1.050 / Special: Normal resistibility to side effects, Costs: 25 gold/round",
+					"build_time": 10
+				},
+				{
+					"id": "H03B",
+					"name": "Drug Taker (Floud Landis)",
+					"cost": 400,
+					"value": 406,
+					"upgrade_from": "h039",
+					"upgrades_to": [],
+					"damage": [
+						568,
+						568
+					],
+					"cooldown": 0.46,
+					"range": 8.59,
+					"targets": "ground",
+					"damage_type": "pierce",
+					"abilities": [],
+					"hotkey": "D",
+					"tooltip": "DMG: 1.233 dmg/s (0,46s) / RG: 1.100 / Special: Normal resistibility to side effects, Costs: 75 gold/round, only Ground!",
+					"build_time": 15
+				},
+				{
+					"id": "H03C",
+					"name": "Drug Taker (Jan Ullrich)",
+					"cost": 1200,
+					"value": 1206,
+					"upgrade_from": "h039",
+					"upgrades_to": [],
+					"damage": [
+						1561,
+						1561
+					],
+					"cooldown": 0.43,
+					"range": 10.16,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "F",
+					"tooltip": "DMG: 3.628 dmg/s (0,43s) / RG: 1.300 / Special: High resistibility to side effects, Costs: 200 gold/round",
+					"build_time": 20
+				}
+			],
+			"todo": []
+		},
+		{
+			"id": "bestatter",
+			"name": "Bestattungsinstitut",
+			"name_en": "Undertaker",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#8a8aa0",
+			"text": "Reichweite: Normal Schaden: Hoch Geschwindigkeit: Niedrig  Besonderheiten: Erweckt bewegliche Zombies die mithilfe von Kultstätten am Leben erhalten werden müssen.",
+			"rules": "Graveyard (40 G) beschwört bewegliche Zombies (7 Typen). Kultstätten (Spare Time Death Cult -> ... -> I Love Lucifer Community) kanalisieren 'Bond Of Death' (+5 bis +1.300 HP/s) und halten die Zombies am Leben. Contained Darkness frisst Leichen (+6 Mana je Leiche; bei 30 Mana, also 5 Leichen, wird sie für 30 s zu Unleashed Darkness). Grave-Kette für Luftziele.",
+			"towers": [
+				{
+					"id": "h008",
+					"name": "Grave",
+					"cost": 5,
+					"value": 5,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"h016"
+					],
+					"damage": [
+						19,
+						19
+					],
+					"cooldown": 2.0,
+					"range": 6.02,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "Q",
+					"tooltip": "DMG: 8 dmg/s (2s) / RG: 770 / Special: Upgradeable",
+					"build_time": 5
+				},
+				{
+					"id": "o034",
+					"name": "Graveyard",
+					"cost": 40,
+					"value": 40,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Summons undead creatures",
+					"build_time": 5
+				},
+				{
+					"id": "o030",
+					"name": "Spare Time Death Cult",
+					"cost": 100,
+					"value": 100,
+					"upgrade_from": null,
+					"upgrades_to": [
+						"o033"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 5 HP/s",
+					"build_time": 5
+				},
+				{
+					"id": "h01B",
+					"name": "Contained Darkness",
+					"cost": 3333,
+					"value": 3333,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 2.7,
+					"range": 9.38,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: 15.500 dmg/s (0,5s) / RG: 1.000 / Special: Collect 5 corpses for Darkness!",
+					"build_time": 40
+				},
+				{
+					"id": "o033",
+					"name": "Dark Lord Club",
+					"cost": 400,
+					"value": 500,
+					"upgrade_from": "o030",
+					"upgrades_to": [
+						"o035"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 30 HP/s",
+					"build_time": 10
+				},
+				{
+					"id": "h016",
+					"name": "King´s Grave",
+					"cost": 430,
+					"value": 435,
+					"upgrade_from": "h008",
+					"upgrades_to": [
+						"h01A"
+					],
+					"damage": [
+						4021,
+						4021
+					],
+					"cooldown": 0.3,
+					"range": 6.88,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 13.400 dmg/s (0,3s) / RG: 880 / Special: Upgradeable, Only Air!",
+					"build_time": 30
+				},
+				{
+					"id": "o035",
+					"name": "Circle Of The Antichrist",
+					"cost": 500,
+					"value": 1000,
+					"upgrade_from": "o033",
+					"upgrades_to": [
+						"o037"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 65 HP/s",
+					"build_time": 10
+				},
+				{
+					"id": "o037",
+					"name": "Church Of Reversed Faith",
+					"cost": 1000,
+					"value": 2000,
+					"upgrade_from": "o035",
+					"upgrades_to": [
+						"o038"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 145 HP/s",
+					"build_time": 10
+				},
+				{
+					"id": "h01A",
+					"name": "Imperator´s Grave",
+					"cost": 1065,
+					"value": 1500,
+					"upgrade_from": "h016",
+					"upgrades_to": [],
+					"damage": [
+						12171,
+						12171
+					],
+					"cooldown": 0.25,
+					"range": 8.44,
+					"targets": "air",
+					"damage_type": "magic",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: 48.700 dmg/s (0,25s) / RG: 1.080 / Special: Only Air!",
+					"build_time": 30
+				},
+				{
+					"id": "o038",
+					"name": "US Government",
+					"cost": 2000,
+					"value": 4000,
+					"upgrade_from": "o037",
+					"upgrades_to": [
+						"o039"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 320 HP/s",
+					"build_time": 10
+				},
+				{
+					"id": "o039",
+					"name": "Temple Of Anti-Love",
+					"cost": 4000,
+					"value": 8000,
+					"upgrade_from": "o038",
+					"upgrades_to": [
+						"o03A"
+					],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 690 HP/s",
+					"build_time": 10
+				},
+				{
+					"id": "o03A",
+					"name": "I Love Lucifer Community",
+					"cost": 6000,
+					"value": 14000,
+					"upgrade_from": "o039",
+					"upgrades_to": [],
+					"damage": [
+						1321,
+						1321
+					],
+					"cooldown": 0.25,
+					"range": 25.39,
+					"targets": "both",
+					"damage_type": "chaos",
+					"abilities": [],
+					"hotkey": "U",
+					"tooltip": "DMG: - dmg/s (-s) / RG: 1.000 / Special: Restores 1.300 HP/s",
+					"build_time": 10
+				}
+			],
+			"todo": [
+				"Spare Time Death Cult: Bond Of Death (Ambt)",
+				"Graveyard: BI Bitchy Hellhound (ANcl)",
+				"Graveyard: BI Bonegun (ANcl)",
+				"Graveyard: BI Devil (ANcl)",
+				"Graveyard: BI Diablo (ANcl)",
+				"Graveyard: BI Wiz-O-Matic (ANcl)",
+				"Graveyard: BI Bony Bones (ANcl)",
+				"Graveyard: BI Disco Ghoul (ANcl)",
+				"Contained Darkness: BI Icy (ANcl)",
+				"Contained Darkness: Fleisch (Arai)",
+				"Dark Lord Club: Bond Of Death (Ambt)",
+				"Circle Of The Antichrist: Bond Of Death (Ambt)",
+				"Church Of Reversed Faith: Bond Of Death (Ambt)",
+				"US Government: Bond Of Death (Ambt)",
+				"Temple Of Anti-Love: Bond Of Death (Ambt)",
+				"I Love Lucifer Community: Bond Of Death (Ambt)"
+			]
+		},
+		{
+			"id": "waffenladen",
+			"name": "Waffenladen",
+			"name_en": "Weapon Shop",
+			"kind": "pro",
+			"bonus": "damage",
+			"color": "#d05a5a",
+			"text": "Reichweite: - Schaden: - Geschwindigkeit: -  Besonderheiten: Man kann bis zu fünf mobile Kampfdrohnen bauen und individuell ausrüsten. Allerdings müssen die in der Nähe des Drone Chargers bleiben um ihre Batterien nachzuladen und man kann nicht mazen.",
+			"rules": "Nahrungslimit 6. Drone Charger (25 G, nur einer erlaubt) trainiert Battle Drone / Support Drone (je 20 G, max. 5 Drohnen, Heldentyp, mobil). FAC-1/2/3 verkaufen Module Mk1-Mk3 (Gun, Reloader, Engine, Battery, Scanner, Static, Autogun AG/AA). Drohnen verlieren Energie und teleportieren bei 0 zurück zum Charger (ohne Charger werden sie pausiert). Support Drone: 10 % Leben, keine Autocannons. Mazen ist nicht möglich. Bekommt kein Bonus-Upgrade.",
+			"towers": [
+				{
+					"id": "h03Q",
+					"name": "FAC-1",
+					"cost": 10,
+					"value": 10,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "W",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Shop with weak upgrades",
+					"build_time": 10
+				},
+				{
+					"id": "h02O",
+					"name": "Drone Charger",
+					"cost": 25,
+					"value": 25,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.4,
+					"range": 7.81,
+					"targets": "ground",
+					"damage_type": "chaos",
+					"abilities": [
+						{
+							"type": "slow_aura",
+							"radius": 7.81,
+							"factor": 0.05
+						}
+					],
+					"hotkey": "W",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Recharges drones, Frost aura, you can only have one",
+					"build_time": 1
+				},
+				{
+					"id": "h03R",
+					"name": "FAC-2",
+					"cost": 50,
+					"value": 50,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "E",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Shop with normal upgrades",
+					"build_time": 20
+				},
+				{
+					"id": "h03S",
+					"name": "FAC-3",
+					"cost": 100,
+					"value": 100,
+					"upgrade_from": null,
+					"upgrades_to": [],
+					"damage": [
+						0,
+						0
+					],
+					"cooldown": 0.6,
+					"range": 6.64,
+					"targets": "both",
+					"damage_type": "normal",
+					"abilities": [],
+					"hotkey": "R",
+					"tooltip": "DMG: - dmg/s (-s) / RG: - / Special: Shop with strong upgrades",
+					"build_time": 30
+				}
+			],
+			"todo": [
+				"Drone Charger: Recharge (AHab)"
+			]
+		}
+	]
+}
