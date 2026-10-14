@@ -17,7 +17,8 @@ func _texture() -> ImageTexture:
 		return _tex
 	var m := game.map
 	var img := Image.create(m.width, m.height, false, Image.FORMAT_RGBA8)
-	var own: Rect2i = m.zones[0].rect if not m.zones.is_empty() else Rect2i()
+	var zone: int = game.players[game.local_player].zone
+	var own: Rect2i = m.zones[zone].rect if zone < m.zones.size() else Rect2i()
 	for y in m.height:
 		for x in m.width:
 			var c := Vector2i(x, y)
@@ -46,6 +47,8 @@ func _draw() -> void:
 	var per_unit := k / Board3D.CELL
 	for t in game.towers.values():
 		draw_rect(Rect2(Vector2(t.cell) * k, k * 2.0), t.color)
+	for u in game.units:
+		draw_circle(u.pos * per_unit, 2.5, UiTheme.HAVE if not u.drone else UiTheme.CYAN)
 	for e in game.enemies:
 		var col := UiTheme.MISSING if not e.boss else UiTheme.GOLD
 		draw_rect(Rect2(e.pos * per_unit - Vector2(1.5, 1.5), Vector2(3, 3)), col)
