@@ -1,0 +1,38 @@
+{
+	"id": "eeve_thorns_tower",
+	"name": "Dornenturm",
+	"name_original": "Thorns Tower",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 3,
+		"cost": 350,
+		"lumber": 0,
+		"from": "eeve_nature_base_tower",
+		"next": [
+			"eeve_itching_thorns_tower"
+		],
+		"wc3": "h00M"
+	},
+	"tiers": [
+		{
+			"damage": [
+				101.0,
+				167.0
+			],
+			"range": 3.91,
+			"cooldown": 0.4,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.4,
+					"multiplier": 2.0
+				}
+			]
+		}
+	]
+}

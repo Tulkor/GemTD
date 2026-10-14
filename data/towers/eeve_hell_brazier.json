@@ -1,0 +1,38 @@
+{
+	"id": "eeve_hell_brazier",
+	"name": "Höllenbecken",
+	"name_original": "Hell Brazier",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 4,
+		"cost": 600,
+		"lumber": 0,
+		"from": "eeve_blazing_brazier",
+		"next": [
+			"eeve_ultra_hot_zomg_dine_in_hell_tower"
+		],
+		"wc3": "h03Y"
+	},
+	"tiers": [
+		{
+			"damage": [
+				421.0,
+				983.0
+			],
+			"range": 6.25,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.29,
+					"factor": 0.7
+				}
+			]
+		}
+	]
+}

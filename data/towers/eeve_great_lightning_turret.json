@@ -1,0 +1,39 @@
+{
+	"id": "eeve_great_lightning_turret",
+	"name": "Großer Blitzturm",
+	"name_original": "Great Lightning Turret",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 4,
+		"cost": 500,
+		"lumber": 0,
+		"from": "eeve_lightning_generator",
+		"next": [
+			"eeve_xtreme_lightning_this_is_madness_ultra_q_q_tower"
+		],
+		"wc3": "h05N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				170.0,
+				680.0
+			],
+			"range": 11.33,
+			"cooldown": 1.1,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.06,
+					"damage": 2400,
+					"radius": 2.81
+				}
+			]
+		}
+	]
+}

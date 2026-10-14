@@ -1,0 +1,21 @@
+{
+	"id": "eeve_troll",
+	"name": "Troll",
+	"name_original": "Troll",
+	"category": "eeve",
+	"hp": 6875,
+	"speed": 3.125,
+	"armor": 0.0,
+	"armor_type": "eeve_medium",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"color": "#c04040",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 5,
+		"wc3": "h094"
+	},
+	"shape": "pyramid"
+}

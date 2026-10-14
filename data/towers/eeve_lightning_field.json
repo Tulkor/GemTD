@@ -1,0 +1,39 @@
+{
+	"id": "eeve_lightning_field",
+	"name": "Blitzfeld",
+	"name_original": "Lightning Field",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 1,
+		"cost": 10,
+		"lumber": 0,
+		"from": "eeve_storm_base_tower",
+		"next": [
+			"eeve_ball_lightning"
+		],
+		"wc3": "h04I"
+	},
+	"tiers": [
+		{
+			"damage": [
+				9.0,
+				35.0
+			],
+			"range": 10.16,
+			"cooldown": 1.25,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.06,
+					"damage": 60,
+					"radius": 2.34
+				}
+			]
+		}
+	]
+}

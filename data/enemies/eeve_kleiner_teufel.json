@@ -1,0 +1,21 @@
+{
+	"id": "eeve_kleiner_teufel",
+	"name": "Kleiner Teufel",
+	"name_original": "Tiny Devil",
+	"category": "eeve",
+	"hp": 35625,
+	"speed": 3.906,
+	"armor": 4.0,
+	"armor_type": "eeve_medium",
+	"bounty": 9,
+	"damage": 1,
+	"flying": false,
+	"color": "#ff7a30",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 9,
+		"wc3": "h09T"
+	},
+	"shape": "pyramid"
+}

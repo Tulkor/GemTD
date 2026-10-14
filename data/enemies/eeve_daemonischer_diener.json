@@ -1,0 +1,21 @@
+{
+	"id": "eeve_daemonischer_diener",
+	"name": "Dämonischer Diener",
+	"name_original": "Daemonic Minion",
+	"category": "eeve",
+	"hp": 48125,
+	"speed": 4.078,
+	"armor": 4.0,
+	"armor_type": "eeve_medium",
+	"bounty": 10,
+	"damage": 1,
+	"flying": false,
+	"color": "#a040c0",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 10,
+		"wc3": "h09Y"
+	},
+	"shape": "pyramid"
+}

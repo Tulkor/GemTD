@@ -1,0 +1,20 @@
+{
+	"id": "eeve_feuerelementar",
+	"name": "Feuerelementar",
+	"name_original": "Fire Elemental",
+	"category": "eeve",
+	"hp": 142500,
+	"speed": 3.906,
+	"armor": 4.0,
+	"armor_type": "eeve_large",
+	"bounty": 36,
+	"damage": 4,
+	"flying": false,
+	"color": "#ff7a30",
+	"size": 1.0,
+	"eeve": {
+		"kind": "ground",
+		"stage": 9,
+		"wc3": "h09Q"
+	}
+}

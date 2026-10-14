@@ -1,0 +1,38 @@
+{
+	"id": "eeve_area_roaster",
+	"name": "Flächenröster",
+	"name_original": "Area Roaster",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 3,
+		"cost": 750,
+		"lumber": 0,
+		"from": "eeve_fire_base_tower",
+		"next": [
+			"eeve_area_melter"
+		],
+		"wc3": "h03K"
+	},
+	"tiers": [
+		{
+			"damage": [
+				0,
+				0
+			],
+			"range": 2.34,
+			"cooldown": 0.0,
+			"abilities": [
+				{
+					"type": "burn_aura",
+					"radius": 2.34,
+					"dps": 200.0
+				}
+			]
+		}
+	]
+}

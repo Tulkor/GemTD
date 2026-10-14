@@ -1,0 +1,21 @@
+{
+	"id": "eeve_gargoyle",
+	"name": "Gargoyle",
+	"name_original": "Gargoyle",
+	"category": "eeve",
+	"hp": 3900,
+	"speed": 3.047,
+	"armor": 3.0,
+	"armor_type": "eeve_none",
+	"bounty": 8,
+	"damage": 1,
+	"flying": true,
+	"color": "#9090a0",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 8,
+		"wc3": "h09K"
+	},
+	"shape": "pyramid"
+}

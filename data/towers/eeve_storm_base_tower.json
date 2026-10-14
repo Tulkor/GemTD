@@ -1,0 +1,41 @@
+{
+	"id": "eeve_storm_base_tower",
+	"name": "Sturm-Grundturm",
+	"name_original": "Storm Base Tower",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 1,
+		"cost": 48,
+		"lumber": 0,
+		"from": "eeve_barricade",
+		"next": [
+			"eeve_storm_lantern",
+			"eeve_moonshine_rune",
+			"eeve_storm_cloud",
+			"eeve_lightning_field"
+		],
+		"wc3": "h0AS"
+	},
+	"tiers": [
+		{
+			"damage": [
+				21.0,
+				26.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

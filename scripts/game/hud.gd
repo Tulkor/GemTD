@@ -47,6 +47,8 @@ var game_over_boss: Label        ## Endboss-Schadenscheck
 var game_over_table: GridContainer  ## Punkte-Modus: Punkte nach Wellentyp
 var editor_button: Button
 var chance_value: Label
+var title_label: Label
+var recipes_button: Button
 var left_col: VBoxContainer
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
@@ -183,6 +185,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match event.keycode:
 		KEY_R:
+			if not recipes_button.visible:
+				return
 			toggle_recipe_book()
 		KEY_ESCAPE:
 			if recipe_book.visible:
@@ -267,7 +271,7 @@ func _build_top_bar() -> void:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 5)
 	bar.add_child(h)
-	UiTheme.title(UiUtil.label("GemTD", h, 22))
+	title_label = UiTheme.title(UiUtil.label("GemTD", h, 22))
 	h.add_child(_spacer(4))
 	wave_value = _chip("Welle", h)
 	lives_value = _chip("Leben", h, UiTheme.MISSING)
@@ -299,7 +303,8 @@ func _build_top_bar() -> void:
 	debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 	debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 
-	_button("Rezepte", h, toggle_recipe_book).tooltip_text = "Rezeptbuch (Taste R)"
+	recipes_button = _button("Rezepte", h, toggle_recipe_book)
+	recipes_button.tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
 	_button("Menü", h, open_leave_confirm)
 
@@ -805,6 +810,7 @@ func set_options(options: Array) -> void:
 			b.tooltip_text = o.label
 		if o.get("style", "normal") == "oneshot":
 			b.add_theme_stylebox_override("normal", UiTheme.box(Color("241a38"), UiTheme.PURPLE_LIGHT))
+		b.disabled = bool(o.get("disabled", false))
 	actions_col.visible = not options.is_empty()
 	_update_layout()
 

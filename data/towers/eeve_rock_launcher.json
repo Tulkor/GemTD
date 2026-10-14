@@ -1,0 +1,39 @@
+{
+	"id": "eeve_rock_launcher",
+	"name": "Steinwerfer",
+	"name_original": "Rock Launcher",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 4,
+		"cost": 700,
+		"lumber": 0,
+		"from": "eeve_lesser_rock_launcher",
+		"next": [
+			"eeve_greater_rock_launcher"
+		],
+		"wc3": "h07B"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1417.0,
+				1567.0
+			],
+			"range": 5.08,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.1,
+					"duration": 2.0,
+					"damage": 400
+				}
+			]
+		}
+	]
+}

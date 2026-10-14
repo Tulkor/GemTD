@@ -1,0 +1,21 @@
+{
+	"id": "eeve_flutfuerst",
+	"name": "Flutfürst",
+	"name_original": "Flood Lord",
+	"category": "eeve",
+	"hp": 12500,
+	"speed": 2.578,
+	"armor": 0.0,
+	"armor_type": "eeve_hero",
+	"bounty": 80,
+	"damage": 40,
+	"flying": false,
+	"color": "#e07050",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 2,
+		"wc3": "h08T"
+	},
+	"boss": true
+}

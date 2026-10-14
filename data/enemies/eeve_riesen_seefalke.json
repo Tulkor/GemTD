@@ -1,0 +1,20 @@
+{
+	"id": "eeve_riesen_seefalke",
+	"name": "Riesen-Seefalke",
+	"name_original": "Giant Sea Hawk",
+	"category": "eeve",
+	"hp": 250,
+	"speed": 1.953,
+	"armor": 0.0,
+	"armor_type": "eeve_small",
+	"bounty": 4,
+	"damage": 4,
+	"flying": true,
+	"color": "#b88a5a",
+	"size": 1.0,
+	"eeve": {
+		"kind": "air",
+		"stage": 1,
+		"wc3": "h003"
+	}
+}

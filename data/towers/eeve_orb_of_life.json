@@ -1,0 +1,43 @@
+{
+	"id": "eeve_orb_of_life",
+	"name": "Kugel des Lebens",
+	"name_original": "Orb of Life",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 3,
+		"cost": 550,
+		"lumber": 1,
+		"from": "eeve_nature_base_tower",
+		"next": [
+			"eeve_sacred_orb_of_power"
+		],
+		"wc3": "h00Y"
+	},
+	"tiers": [
+		{
+			"damage": [
+				125.0,
+				187.0
+			],
+			"range": 7.81,
+			"cooldown": 0.8,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.39,
+					"factor": 0.3
+				},
+				{
+					"type": "speed_aura",
+					"radius": 7.81,
+					"bonus": 0.2
+				}
+			]
+		}
+	]
+}

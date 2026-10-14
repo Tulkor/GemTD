@@ -1,0 +1,43 @@
+{
+	"id": "eeve_hazardous_shroom_field",
+	"name": "Gefährliches Pilzfeld",
+	"name_original": "Hazardous Shroom Field",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "nature",
+		"level": 4,
+		"cost": 540,
+		"lumber": 0,
+		"from": "eeve_shroom_field",
+		"next": [
+			"eeve_ultra_toxic_shroom_field"
+		],
+		"wc3": "h00R"
+	},
+	"tiers": [
+		{
+			"damage": [
+				491.0,
+				491.0
+			],
+			"range": 5.66,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 70,
+					"duration": 8.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.3,
+					"duration": 8.0
+				}
+			]
+		}
+	]
+}

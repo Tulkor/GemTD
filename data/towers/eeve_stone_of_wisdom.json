@@ -1,0 +1,41 @@
+{
+	"id": "eeve_stone_of_wisdom",
+	"name": "Stein der Weisheit",
+	"name_original": "Stone of Wisdom",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 3,
+		"cost": 550,
+		"lumber": 1,
+		"from": "eeve_magic_base_tower",
+		"next": [
+			"eeve_ancient_fountain_of_wisdom"
+		],
+		"wc3": "h02S",
+		"todo": [
+			"Aura der Weisheit: +45 % Erfahrung für Tower im Umkreis 1000"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				346.0,
+				518.0
+			],
+			"range": 7.81,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.39,
+					"factor": 0.36
+				}
+			]
+		}
+	]
+}

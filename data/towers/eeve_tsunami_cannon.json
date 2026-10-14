@@ -1,0 +1,37 @@
+{
+	"id": "eeve_tsunami_cannon",
+	"name": "Tsunamikanone",
+	"name_original": "Tsunami Cannon",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 5,
+		"cost": 1450,
+		"lumber": 0,
+		"from": "eeve_hydro_cannon",
+		"next": [],
+		"wc3": "h04E"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1083.0,
+				2011.0
+			],
+			"range": 5.47,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.28,
+					"damage": 1700,
+					"radius": 2.34
+				}
+			]
+		}
+	]
+}

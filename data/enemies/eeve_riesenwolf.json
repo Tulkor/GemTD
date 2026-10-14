@@ -1,0 +1,21 @@
+{
+	"id": "eeve_riesenwolf",
+	"name": "Riesenwolf",
+	"name_original": "Giant Wolf",
+	"category": "eeve",
+	"hp": 2500,
+	"speed": 2.344,
+	"armor": 0.0,
+	"armor_type": "eeve_hero",
+	"bounty": 40,
+	"damage": 40,
+	"flying": false,
+	"color": "#b88a5a",
+	"size": 1.7,
+	"eeve": {
+		"kind": "boss",
+		"stage": 1,
+		"wc3": "h002"
+	},
+	"boss": true
+}

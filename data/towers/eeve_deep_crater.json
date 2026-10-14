@@ -1,0 +1,38 @@
+{
+	"id": "eeve_deep_crater",
+	"name": "Tiefer Krater",
+	"name_original": "Deep Crater",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 4,
+		"cost": 500,
+		"lumber": 0,
+		"from": "eeve_crater",
+		"next": [
+			"eeve_ultra_ffs_mega_power_totem"
+		],
+		"wc3": "h07Z"
+	},
+	"tiers": [
+		{
+			"damage": [
+				746.0,
+				912.0
+			],
+			"range": 5.27,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.78,
+					"factor": 0.52
+				}
+			]
+		}
+	]
+}

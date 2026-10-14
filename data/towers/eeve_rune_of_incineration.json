@@ -1,0 +1,43 @@
+{
+	"id": "eeve_rune_of_incineration",
+	"name": "Rune der Einäscherung",
+	"name_original": "Rune of Incineration",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "fire",
+		"level": 5,
+		"cost": 800,
+		"lumber": 0,
+		"from": "eeve_scorched_rune",
+		"next": [],
+		"wc3": "h02T"
+	},
+	"tiers": [
+		{
+			"damage": [
+				942.0,
+				1414.0
+			],
+			"range": 8.2,
+			"cooldown": 1.1,
+			"abilities": [
+				{
+					"type": "poison",
+					"chance": 0.15,
+					"dps": 1800,
+					"duration": 3.0
+				},
+				{
+					"type": "slow",
+					"chance": 0.15,
+					"factor": 0.12,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

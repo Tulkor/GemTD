@@ -1,0 +1,38 @@
+{
+	"id": "eeve_crater",
+	"name": "Krater",
+	"name_original": "Crater",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 3,
+		"cost": 220,
+		"lumber": 0,
+		"from": "eeve_geyser",
+		"next": [
+			"eeve_deep_crater"
+		],
+		"wc3": "h07Y"
+	},
+	"tiers": [
+		{
+			"damage": [
+				306.0,
+				374.0
+			],
+			"range": 5.08,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.78,
+					"factor": 0.48
+				}
+			]
+		}
+	]
+}

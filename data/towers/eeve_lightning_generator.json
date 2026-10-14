@@ -1,0 +1,39 @@
+{
+	"id": "eeve_lightning_generator",
+	"name": "Blitzgenerator",
+	"name_original": "Lightning Generator",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 3,
+		"cost": 300,
+		"lumber": 0,
+		"from": "eeve_ball_lightning",
+		"next": [
+			"eeve_great_lightning_turret"
+		],
+		"wc3": "h085"
+	},
+	"tiers": [
+		{
+			"damage": [
+				82.0,
+				328.0
+			],
+			"range": 10.94,
+			"cooldown": 1.15,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.06,
+					"damage": 660,
+					"radius": 2.66
+				}
+			]
+		}
+	]
+}

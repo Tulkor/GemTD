@@ -1,0 +1,21 @@
+{
+	"id": "eeve_huhn",
+	"name": "Huhn",
+	"name_original": "Chicken",
+	"category": "eeve",
+	"hp": 125,
+	"speed": 2.344,
+	"armor": 0.0,
+	"armor_type": "eeve_medium",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"color": "#b88a5a",
+	"size": 0.75,
+	"eeve": {
+		"kind": "ground_mass",
+		"stage": 1,
+		"wc3": "h001"
+	},
+	"shape": "pyramid"
+}

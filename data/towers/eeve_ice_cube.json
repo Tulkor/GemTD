@@ -1,0 +1,43 @@
+{
+	"id": "eeve_ice_cube",
+	"name": "Eiswürfel",
+	"name_original": "Ice Cube",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 1,
+		"cost": 40,
+		"lumber": 0,
+		"from": "eeve_water_base_tower",
+		"next": [
+			"eeve_glacier"
+		],
+		"wc3": "h04W"
+	},
+	"tiers": [
+		{
+			"damage": [
+				113.0,
+				139.0
+			],
+			"range": 3.91,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.08,
+					"factor": 0.3
+				},
+				{
+					"type": "slow",
+					"factor": 0.18,
+					"duration": 2.5
+				}
+			]
+		}
+	]
+}

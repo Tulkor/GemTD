@@ -1,0 +1,39 @@
+{
+	"id": "eeve_ball_lightning",
+	"name": "Kugelblitz",
+	"name_original": "Ball Lightning",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "electric",
+	"targets": "both",
+	"eeve": {
+		"element": "storm",
+		"level": 2,
+		"cost": 140,
+		"lumber": 0,
+		"from": "eeve_lightning_field",
+		"next": [
+			"eeve_lightning_generator"
+		],
+		"wc3": "h062"
+	},
+	"tiers": [
+		{
+			"damage": [
+				32.0,
+				126.0
+			],
+			"range": 10.55,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "nova",
+					"chance": 0.06,
+					"damage": 240,
+					"radius": 2.5
+				}
+			]
+		}
+	]
+}

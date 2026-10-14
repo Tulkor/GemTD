@@ -1,0 +1,38 @@
+{
+	"id": "eeve_runed_obelisk",
+	"name": "Runen-Obelisk",
+	"name_original": "Runed Obelisk",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 4,
+		"cost": 600,
+		"lumber": 0,
+		"from": "eeve_ornate_obelisk",
+		"next": [
+			"eeve_glowing_engraved_obelisk_of_ultimate_pwnage"
+		],
+		"wc3": "h02N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				936.0,
+				936.0
+			],
+			"range": 6.25,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.05,
+					"multiplier": 3.5
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,39 @@
+{
+	"id": "eeve_ancient_fountain_of_wisdom",
+	"name": "Uralter Brunnen der Weisheit",
+	"name_original": "Ancient Fountain of Wisdom",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 5,
+		"cost": 1000,
+		"lumber": 1,
+		"from": "eeve_stone_of_wisdom",
+		"next": [],
+		"wc3": "h01G",
+		"todo": [
+			"Aura der großen Weisheit: +70 % Erfahrung für Tower im Umkreis 1200"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1075.0,
+				1613.0
+			],
+			"range": 7.81,
+			"cooldown": 2.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.47,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

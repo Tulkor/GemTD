@@ -1,0 +1,36 @@
+{
+	"id": "eeve_ultra_ffs_mega_power_totem",
+	"name": "Ultra-FFS-Mega-Power-Totem",
+	"name_original": "Ultra FFS Mega Power Totem",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "physical",
+	"targets": "both",
+	"eeve": {
+		"element": "earth",
+		"level": 6,
+		"cost": 900,
+		"lumber": 1,
+		"from": "eeve_deep_crater",
+		"next": [],
+		"wc3": "h07M"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1723.0,
+				2105.0
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.78,
+					"factor": 0.55
+				}
+			]
+		}
+	]
+}

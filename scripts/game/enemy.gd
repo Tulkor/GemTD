@@ -18,6 +18,8 @@ var score_value := 0.0  ## Punkte-Modus: Punkte für den Kill (game.gd → score
 var final_boss := false  ## Endboss der letzten Welle: nur Schadenscheck, kostet keine Leben
 var flying := false
 var armor_type := ""
+var spell_factor := 1.0     ## Faktor auf Zauberschaden (eeveTD: Schwierigkeit, 0 = zauberimmun)
+var hit_reduction := 0.0    ## weniger Schaden pro Treffer, nicht bei Zaubern (eeveTD: Eigenschaft „Zäh“)
 var size := 1.0
 var color := Color.GRAY
 
@@ -319,6 +321,10 @@ func effective_armor() -> float:
 ## Rüstung wie in Warcraft 3: 6 % weniger Schaden pro Punkt, abnehmend; negative Rüstung erhöht Schaden.
 ## Dazu der Faktor aus Schadensart gegen Rüstungsart (balance.json → damage_table).
 func take_damage(amount: float, damage_type := "") -> float:
+	if damage_type == "spells":
+		amount *= spell_factor
+	elif hit_reduction > 0.0:
+		amount = maxf(amount - hit_reduction, 0.0)
 	var a := effective_armor()
 	var factor := Database.damage_factor(damage_type, armor_type)
 	if a > 0.0:

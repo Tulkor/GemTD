@@ -1,0 +1,38 @@
+{
+	"id": "eeve_ornate_obelisk",
+	"name": "Verzierter Obelisk",
+	"name_original": "Ornate Obelisk",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 3,
+		"cost": 360,
+		"lumber": 0,
+		"from": "eeve_enchanted_obelisk",
+		"next": [
+			"eeve_runed_obelisk"
+		],
+		"wc3": "h029"
+	},
+	"tiers": [
+		{
+			"damage": [
+				432.0,
+				432.0
+			],
+			"range": 6.25,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.05,
+					"multiplier": 2.8
+				}
+			]
+		}
+	]
+}

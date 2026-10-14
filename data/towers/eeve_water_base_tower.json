@@ -1,0 +1,41 @@
+{
+	"id": "eeve_water_base_tower",
+	"name": "Wasser-Grundturm",
+	"name_original": "Water Base Tower",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "elemental",
+	"targets": "both",
+	"eeve": {
+		"element": "water",
+		"level": 1,
+		"cost": 48,
+		"lumber": 0,
+		"from": "eeve_barricade",
+		"next": [
+			"eeve_hydro_cannon",
+			"eeve_coral_flower",
+			"eeve_fountain_of_corrosion",
+			"eeve_ice_cube"
+		],
+		"wc3": "h0AQ"
+	},
+	"tiers": [
+		{
+			"damage": [
+				21.0,
+				26.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.55,
+					"factor": 0.4
+				}
+			]
+		}
+	]
+}

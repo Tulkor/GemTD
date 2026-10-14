@@ -1,0 +1,21 @@
+{
+	"id": "eeve_geier",
+	"name": "Geier",
+	"name_original": "Vulture",
+	"category": "eeve",
+	"hp": 50,
+	"speed": 1.953,
+	"armor": 0.0,
+	"armor_type": "eeve_none",
+	"bounty": 1,
+	"damage": 1,
+	"flying": true,
+	"color": "#b88a5a",
+	"size": 0.7,
+	"eeve": {
+		"kind": "air_mass",
+		"stage": 1,
+		"wc3": "h004"
+	},
+	"shape": "pyramid"
+}

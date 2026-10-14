@@ -1,0 +1,38 @@
+{
+	"id": "eeve_cube_of_betrayal",
+	"name": "Würfel des Verrats",
+	"name_original": "Cube of Betrayal",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "magic",
+	"targets": "both",
+	"eeve": {
+		"element": "magic",
+		"level": 2,
+		"cost": 250,
+		"lumber": 0,
+		"from": "eeve_magic_base_tower",
+		"next": [
+			"eeve_floating_cube_of_treachery"
+		],
+		"wc3": "h02O"
+	},
+	"tiers": [
+		{
+			"damage": [
+				98.0,
+				182.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "armor_reduce",
+					"amount": 3.0,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}
