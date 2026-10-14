@@ -3,6 +3,8 @@
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
 #   schnell (Standard): Prüfskripte, Smoke, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
+#   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
+#                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
 # Exit-Code 0 = alles grün.
 set -uo pipefail
@@ -88,7 +90,34 @@ do_test() {
 # Beim ersten Lauf in einem frischen Checkout Ressourcen importieren.
 [ -d .godot/imported ] || "$GODOT" --headless --import --path . >"$LOG_DIR/import.log" 2>&1
 
+# Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
+pick_changed() {
+  local base files f t=" tabelle ui maps "
+  base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
+  files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
+  for f in $files; do
+    case $f in
+      tools/*|docs/*|*.md|data/i18n/*) ;;
+      scripts/maul/*|data/maul/*|scenes/maul*|tests/maul_test*) t+="maul " ;;
+      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|tests/eeve_test*) t+="eeve " ;;
+      scripts/ui/lobby*|tests/lobby_test*) t+="lobby " ;;
+      scripts/net/*|scripts/autoload/net.gd|tests/net_test*|tests/coop_test*|tests/session_test*) t+="netz sitzung koop lobby " ;;
+      scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
+      data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
+      scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
+      *.gd|*.tscn|*.tres|*.gdshader|project.godot|data/*) echo "schnell"; return ;;
+    esac
+  done
+  echo "$t" | tr ' ' '\n' | awk 'NF && !seen[$0]++' | tr '\n' ' '
+}
+
 MODE=${1:-schnell}
+if [ "$MODE" = geaendert ]; then
+  MODE=$(pick_changed)
+  echo "Geänderte Dateien -> Tests: $MODE"
+  # shellcheck disable=SC2086
+  set -- $MODE
+fi
 case $MODE in
   schnell) set -- tabelle ui maps smoke eeve maul netz sitzung koop lobby ;;
   alle)    set -- tabelle ui maps smoke eeve maul netz sitzung koop lobby balance tempo spaet ;;
