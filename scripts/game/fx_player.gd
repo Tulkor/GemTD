@@ -10,7 +10,9 @@ extends Node3D
 const SHADER_ADD := preload("res://assets/shaders/fx_add.gdshader")
 const SHADER_MIX := preload("res://assets/shaders/fx_mix.gdshader")
 ## Größe der Unity-Effekte im Spiel (Unity-Einheiten → Spielfeld; ein Gegner ist ~0,4 groß).
-const HIT_SCALE := 0.32
+const HIT_SCALE := 0.4
+## Treffer etwas zur Kamera hin versetzen, damit der Gegnerkörper sie nicht verdeckt.
+const HIT_TOWARD_CAMERA := 0.35
 ## Obergrenzen, damit späte Wellen mit vielen Towern nicht ruckeln.
 const MAX_EFFECTS := 160
 const MAX_SPRITES := 2500
@@ -31,8 +33,9 @@ func play_hit(fx: Dictionary, pos: Vector3, scale_factor: float = 1.0) -> void:
 	var state := []
 	for l in layers:
 		state.append({"acc": 0.0, "bursts": [], "alive": 0})
-	_effects.append({"kind": "hit", "def": e, "layers": layers, "state": state, "t": 0.0, "pos": pos,
-		"basis": _camera_basis(), "scale": HIT_SCALE * scale_factor, "shift": float(fx.get("shift", 0.0)),
+	var basis := _camera_basis()
+	_effects.append({"kind": "hit", "def": e, "layers": layers, "state": state, "t": 0.0,
+		"pos": pos + basis.z * HIT_TOWARD_CAMERA * scale_factor, "basis": basis, "scale": HIT_SCALE * scale_factor, "shift": float(fx.get("shift", 0.0)),
 		"sat": float(fx.get("sat", 1.0)), "length": float(e.get("length", 1.0))})
 
 
@@ -126,7 +129,7 @@ func _emit(fx: Dictionary, delta: float) -> void:
 		var lt1 := t1 - start
 		if lt1 < 0.0:
 			continue
-		var limit := fx.length if bool(l.get("loop", false)) else dur
+		var limit: float = fx.length if bool(l.get("loop", false)) else dur
 		if lt0 > limit:
 			continue
 		var max_n := int(l.get("max", 1000))
@@ -304,7 +307,8 @@ func _draw_shot(s: Dictionary) -> void:
 	var t: float = s.age / s.life
 	var frames := int(e.get("frames", 1))
 	var frame := float(mini(int(t * frames), frames - 1))
-	var col := Color.WHITE
+	var col := Color.WHITE * float(e.get("brightness", 1.0))
+	col.a = 1.0
 	var kind := str(e.get("kind", "line"))
 	if kind == "nova":
 		var d: float = s.radius * 2.0 * float(e.get("size", 1.0))

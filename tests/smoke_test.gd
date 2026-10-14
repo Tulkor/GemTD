@@ -589,6 +589,7 @@ func _ready() -> void:
 	await _setup_test()
 	await _maul_test()
 	await _idle_speed_test()
+	await _fx_test()
 
 	# Alle Tower-Dateien gültig
 	for id in Database.tower_ids():
@@ -1228,3 +1229,35 @@ func _idle_speed_test() -> void:
 	check(e.boost == 1.0 and e.traveled - before <= e.speed * 0.05 + 0.001, "in Reichweite normal schnell")
 	g.queue_free()
 	await get_tree().process_frame
+
+
+## Treffer- und Schuss-Effekte: Daten vollständig, jeder Tower bekommt Effekte, Abspielen läuft durch.
+func _fx_test() -> void:
+	check(FxData.hit_ids().size() >= 20, "Treffer-Effekte geladen: %d" % FxData.hit_ids().size())
+	check(FxData.shot_ids(["line", "projectile", "nova"]).size() >= 4, "Schuss-Effekte geladen")
+	var missing := []
+	for id in FxData.hit_ids():
+		for l in FxData.hit(id).get("layers", []):
+			if not ResourceLoader.exists(str(l.get("tex", ""))):
+				missing.append(l.get("tex", ""))
+	for id in FxData.shot_ids(["line", "projectile", "nova"]):
+		if not ResourceLoader.exists(str(FxData.shot(id).get("sheet", ""))):
+			missing.append(FxData.shot(id).get("sheet", ""))
+	check(missing.is_empty(), "Effekt-Texturen vorhanden %s" % [missing])
+	var without := []
+	for id in Database.tower_ids():
+		var set := FxData.for_tower(id, 0)
+		if not set.has("hit") or not set.has("shot"):
+			without.append(id)
+	check(without.is_empty(), "jeder Tower hat Treffer- und Schuss-Effekt %s" % [without])
+	check(FxData.for_tower("ruby").get("shot", {}).get("id", "") == "fire_orb", "Rubin (Splash) schießt Feuer")
+	check(FxData.for_tower("amethyst").get("hit", {}).get("id", "").contains("pink") or FxData.for_tower("amethyst").get("hit", {}).get("id", "").contains("purple"), "Amethyst trifft lila")
+	var eff := Effects.new()
+	add_child(eff)
+	eff.add_beam(Vector3.ZERO, Vector3(2, 0, 1), Color.RED, "t:ruby:0")
+	eff.add_beam(Vector3(1, 0, 1), Vector3(1, 1.5, 1), Color.WHITE, "n:paraiba_tourmaline:0:2.0")
+	check(eff.fx.busy(), "Effekte laufen")
+	for i in 120:
+		eff.fx._process(1.0 / 60.0)
+	check(not eff.fx.busy(), "Effekte laufen nach 2 s aus")
+	eff.queue_free()

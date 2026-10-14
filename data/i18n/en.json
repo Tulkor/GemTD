@@ -903,5 +903,9 @@
 	"Gems setzen, kombinieren, Labyrinth bauen. 50 Wellen, Rezepte und Spezial-Tower.": "Place gems, combine them, build the maze. 50 waves, recipes and special towers.",
 	"Barrikaden bauen, zu Element-Towern aufwerten, 57 Level (noch solo)": "Build barricades, upgrade them to element towers, 57 levels (solo for now)",
 	"Filiale eröffnen, Tower kaufen und aufwerten (solo im Zentrum)": "Open a branch, buy towers and upgrade them (solo in the center)",
-	"Dieser Modus wählt seine Karte selbst vor dem Start.": "This mode picks its own map before the start."
+	"Dieser Modus wählt seine Karte selbst vor dem Start.": "This mode picks its own map before the start.",
+	"Treffer-Effekt": "Hit effect",
+	"Schuss-Effekt": "Shot effect",
+	"Automatisch (nach Farbe)": "Automatic (by color)",
+	"Keiner": "None"
 }

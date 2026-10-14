@@ -87,7 +87,7 @@ static func for_tower(tower_id: String, tier: int = 0) -> Dictionary:
 	var hit_id := _pick(str(def.get("hit_fx", AUTO)), _hits, func(): return _auto_hit(col))
 	if hit_id != "":
 		out["hit"] = _tint(_hits[hit_id], hit_id, col)
-	var shot_id := _pick(str(def.get("shot_fx", AUTO)), _shots, func(): return _auto_shot(types))
+	var shot_id := _pick(str(def.get("shot_fx", AUTO)), _shots, func(): return _auto_shot(types, col))
 	if shot_id != "":
 		out["shot"] = _tint(_shots[shot_id], shot_id, col)
 	if "nova" in types:
@@ -139,12 +139,18 @@ static func _auto_hit(col: Color) -> String:
 	return best
 
 
-## Schuss: nach Fähigkeit (Regeln in shots.json → "auto"), sonst der Standard-Schuss.
-static func _auto_shot(types: Array) -> String:
+## Schuss: nach Fähigkeit, dann nach Farbton (Regeln in shots.json → "auto"), sonst der Standard-Schuss.
+static func _auto_shot(types: Array, col: Color) -> String:
 	var by_ability: Dictionary = _rules.get("ability", {})
 	for t in types:
 		if by_ability.has(t):
 			return str(by_ability[t])
+	if col.s >= PALE:
+		for r in _rules.get("hue", []):
+			var lo := float(r[0])
+			var hi := float(r[1])
+			if (col.h >= lo and col.h <= hi) if lo <= hi else (col.h >= lo or col.h <= hi):
+				return str(r[2])
 	return str(_rules.get("default", ""))
 
 
