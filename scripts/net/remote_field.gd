@@ -123,7 +123,7 @@ func apply_enemies(packet: Dictionary) -> void:
 			enemies.erase(id)
 	if effects != null:
 		for b in packet.get("b", []):
-			effects.add_beam(b[0], b[1], b[2])
+			effects.add_beam(b[0], b[1], b[2], str(b[3]) if b.size() > 3 else "")
 
 
 func _clear_units() -> void:

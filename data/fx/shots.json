@@ -1,0 +1,78 @@
+{
+	"_quelle": "FootageCrate (productioncrate.com), Videos von Lukas, umgewandelt mit tools/fx/video_zu_sheet.py",
+	"auto": {
+		"_info": "Automatische Wahl, wenn ein Tower kein shot_fx setzt: erst nach Fähigkeit, sonst default. nova: Effekt für die Fähigkeit nova.",
+		"ability": {
+			"bounce": "lightning_arc",
+			"splash": "fire_orb"
+		},
+		"default": "magic_beam",
+		"nova": "ruby_nova"
+	},
+	"effects": {
+		"magic_beam": {
+			"name": "FootageCrate Magic_Spell_12",
+			"kind": "line",
+			"sheet": "res://assets/fx/shot/magic_beam.png",
+			"cols": 4,
+			"rows": 7,
+			"frames": 27,
+			"aspect": 7.016,
+			"color": "#ffbdd2",
+			"hue": 0.948,
+			"saturation": 0.257,
+			"video_length": 0.9,
+			"length": 0.3,
+			"width": 0.35,
+			"add": true
+		},
+		"fire_orb": {
+			"name": "FootageCrate Wizard_Apparition_Side_1",
+			"kind": "projectile",
+			"sheet": "res://assets/fx/shot/fire_orb.png",
+			"cols": 14,
+			"rows": 1,
+			"frames": 14,
+			"aspect": 2.219,
+			"color": "#ffb2ae",
+			"hue": 0.008,
+			"saturation": 0.318,
+			"video_length": 0.467,
+			"length": 0.4,
+			"width": 0.5,
+			"add": true
+		},
+		"lightning_arc": {
+			"name": "FootageCrate Flash_Lightning_Arc",
+			"kind": "line",
+			"sheet": "res://assets/fx/shot/lightning_arc.png",
+			"cols": 6,
+			"rows": 1,
+			"frames": 6,
+			"aspect": 2.188,
+			"color": "#ffa445",
+			"hue": 0.086,
+			"saturation": 0.73,
+			"video_length": 0.2,
+			"length": 0.2,
+			"width": 0.6,
+			"add": true
+		},
+		"ruby_nova": {
+			"name": "FootageCrate Ruby_Magic_Shield_Block_Front_1",
+			"kind": "nova",
+			"sheet": "res://assets/fx/shot/ruby_nova.png",
+			"cols": 10,
+			"rows": 2,
+			"frames": 12,
+			"aspect": 1.0,
+			"color": "#ff8f7a",
+			"hue": 0.026,
+			"saturation": 0.521,
+			"video_length": 0.4,
+			"length": 0.45,
+			"size": 1.0,
+			"add": true
+		}
+	}
+}

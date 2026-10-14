@@ -235,7 +235,7 @@ func _attack(e) -> void:
 	var crit := ability("crit")
 	if not crit.is_empty() and randf() < float(crit.chance):
 		dmg *= float(crit.multiplier)
-	game.add_beam(position + Vector3(0, 0.9, 0), e.position, color)
+	game.add_beam(position + Vector3(0, 0.9, 0), _hit_point(e), color, fx_key())
 	var target_pos: Vector2 = e.pos
 	_hit(e, dmg)
 	var splash := ability("splash")
@@ -259,7 +259,7 @@ func _attack(e) -> void:
 					next = other
 			if next == null:
 				break
-			game.add_beam(current.position, next.position, color)
+			game.add_beam(_hit_point(current), _hit_point(next), color, fx_key())
 			hit.append(next)
 			_hit(next, bdmg)
 			current = next
@@ -304,6 +304,16 @@ func _hit(e, dmg: float) -> void:
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
 
 
+## Schuss- und Treffer-Effekt dieses Towers (effects.gd, fx_data.gd)
+func fx_key() -> String:
+	return "t:%s:%d" % [tower_id, tier]
+
+
+## Mitte des Gegnerkörpers, dort sitzt der Treffer-Effekt
+func _hit_point(e) -> Vector3:
+	return e.position + Vector3(0, 0.0 if e.flying else 0.2 * e.size, 0)
+
+
 ## Zauber um das Ziel herum (Frostnova, Blitz, Messerfächer …).
 func _nova(target, ab: Dictionary) -> void:
 	var center: Vector2 = target.pos
@@ -316,7 +326,7 @@ func _nova(target, ab: Dictionary) -> void:
 		total_damage += other.take_damage(float(ab.damage) * (1.0 + kill_bonus()), "spells")
 		if other.dead:
 			kills += 1
-	game.add_beam(Board3D.to_3d(center, 0.1), Board3D.to_3d(center, 1.5), Color.WHITE)
+	game.add_beam(Board3D.to_3d(center, 0.1), Board3D.to_3d(center, 1.5), Color.WHITE, "n:%s:%d:%s" % [tower_id, tier, float(ab.get("radius", 2.0))])
 
 
 func info_text() -> String:

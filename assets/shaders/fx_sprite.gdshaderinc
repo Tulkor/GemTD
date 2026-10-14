@@ -1,0 +1,40 @@
+// Sprites der Treffer- und Schuss-Effekte (fx_player.gd). Lage und Größe rechnet fx_player.gd pro Partikel,
+// hier nur Bildausschnitt (Sprite-Sheet), Farbe und Farbton-Drehung.
+// INSTANCE_CUSTOM: x = Bild im Sheet, y = Farbton-Drehung (0..1), z = Sättigung (Faktor)
+// Eingebunden von fx_add.gdshader (additiv) und fx_mix.gdshader (Alpha).
+
+uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_disable;
+uniform vec2 tiles = vec2(1.0, 1.0);
+uniform vec2 uv_scale = vec2(1.0, 1.0);
+uniform vec2 uv_offset = vec2(0.0, 0.0);
+uniform float brightness = 1.0;
+
+varying vec4 custom;
+
+void vertex() {
+	custom = INSTANCE_CUSTOM;
+}
+
+vec3 hue_rotate(vec3 c, float turns) {
+	// Drehung um die Graue Achse (Rodrigues), erhält die Helligkeit grob
+	float a = turns * 6.2831853;
+	vec3 k = vec3(0.57735);
+	float ca = cos(a);
+	return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca);
+}
+
+void fragment() {
+	float frame = floor(custom.x + 0.001);
+	vec2 cell = vec2(mod(frame, tiles.x), floor(frame / tiles.x));
+	vec2 uv = (UV * uv_scale + uv_offset);
+	uv = (fract(uv) + cell) / tiles;
+	vec4 t = texture(tex, uv) * COLOR;
+	vec3 rgb = t.rgb;
+	if (abs(custom.y) > 0.001) {
+		rgb = max(hue_rotate(rgb, custom.y), vec3(0.0));
+	}
+	float grey = dot(rgb, vec3(0.299, 0.587, 0.114));
+	rgb = mix(vec3(grey), rgb, custom.z) * brightness;
+	ALBEDO = rgb;
+	ALPHA = clamp(t.a, 0.0, 1.0);
+}
