@@ -20,7 +20,8 @@ Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten
 
 ## Werkzeuge: erst diese benutzen, statt Abläufe neu zu schreiben
 Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`), `godot` liegt in `~/.local/bin`. Die Windows-Vorlage (1 GB) lädt erst `tools/build_windows.sh`.
-- Tests: `tools/run_tests.sh` (schnell: Prüfskripte, Smoke, Netz, Sitzung, Koop, Lobby) oder `alle` (dazu Balance, Tempo, späte Wellen), einzeln z. B. `tools/run_tests.sh smoke koop`, oder `geaendert` (nur die Tests, die zu den geänderten Dateien passen; Standard nach eigenen Änderungen). Gibt nur eine Zeile pro Test aus, Logs in `/tmp/gemtd-tests/`.
+- Vor PR oder Merge: `tools/vor_pr.sh [--alle]` zieht main nach, startet die passenden Tests, zeigt Stil-Hinweise der geänderten Dateien und endet mit `BEREIT` oder `NICHT BEREIT: <Grund>`. Von Hand bleibt nur, Screenshots von Oberflächen anzusehen.
+- Tests: `tools/run_tests.sh` (schnell: Prüfskripte, alle Skripte laden (`skripte`), Smoke, Netz, Sitzung, Koop, Lobby) oder `alle` (dazu Balance, Tempo, späte Wellen), einzeln z. B. `tools/run_tests.sh smoke koop`, oder `geaendert` (nur die Tests, die zu den geänderten Dateien passen; Standard nach eigenen Änderungen). Gibt nur eine Zeile pro Test aus, Logs in `/tmp/gemtd-tests/`.
 - Build (nur wenn Lukas ausdrücklich fragt): `tools/build_windows.sh` → nächste Nummer in `/mnt/project-files/builds/`, Tests vorher, Git-Tag `v0.<N>`. Release-Notes-Entwurf: `python3 tools/release_notes.py <N>`.
 - Screenshots: `tools/screenshot.sh --runden=3 --phase=wahl --auswahl --winkel=schraeg,oben --name=…` (Optionen in `tools/screenshot.gd`), Bilder unter `/mnt/project-files/screens/`.
 - Tower-Tabelle: `python3 tools/tower_tabelle.py --kopieren`; der Git-Hook `tools/git-hooks/pre-commit` macht das bei Commits mit Tower-Daten automatisch.

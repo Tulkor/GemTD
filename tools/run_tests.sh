@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, Smoke, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
+#   schnell (Standard): Prüfskripte, alle Skripte laden, Smoke, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
 #   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
 #                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
@@ -73,6 +73,7 @@ do_test() {
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
+    skripte) run_one skripte skripte_test ;;
     smoke)   run_one smoke smoke_test ;;
     maul)    run_one maul maul_test ;;
     eeve)    run_one eeve eeve_test ;;
@@ -92,7 +93,7 @@ do_test() {
 
 # Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
 pick_changed() {
-  local base files f t=" tabelle ui maps "
+  local base files f t=" tabelle ui maps skripte "
   base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   for f in $files; do
@@ -119,8 +120,8 @@ if [ "$MODE" = geaendert ]; then
   set -- $MODE
 fi
 case $MODE in
-  schnell) set -- tabelle ui maps smoke eeve maul netz sitzung koop lobby ;;
-  alle)    set -- tabelle ui maps smoke eeve maul netz sitzung koop lobby balance tempo spaet ;;
+  schnell) set -- tabelle ui maps skripte smoke eeve maul netz sitzung koop lobby ;;
+  alle)    set -- tabelle ui maps skripte smoke eeve maul netz sitzung koop lobby balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()
