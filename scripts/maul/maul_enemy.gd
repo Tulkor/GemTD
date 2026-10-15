@@ -46,3 +46,16 @@ func _update_visual() -> void:
 		_body_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_body_mat.albedo_color = _body_mat.albedo_color.lerp(Color("b38cff"), 0.4)
 		_body_mat.albedo_color.a = minf(_body_mat.albedo_color.a, 0.6)
+
+
+## Koop-Mitspieler: der Gegner läuft nur beim Host, hier gleitet er zur gemeldeten Stelle (maul_sync.gd).
+var net_pos := Vector2.ZERO
+
+
+func _process(delta: float) -> void:
+	if game == null or not game.mirror:
+		super._process(delta)
+		return
+	pos = net_pos if pos.distance_to(net_pos) > 3.0 else pos.lerp(net_pos, clampf(delta * 12.0, 0.0, 1.0))
+	_sync_position()
+	_update_visual()

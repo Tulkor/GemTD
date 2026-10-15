@@ -1,0 +1,40 @@
+{
+	"id": "eeve_lightning_trap",
+	"name": "Blitzfalle",
+	"name_original": "Lightning Trap",
+	"category": "eeve",
+	"color": "#7fb2ff",
+	"model": "res://assets/models/crystals/crystal_20.glb",
+	"damage_type": "electric",
+	"targets": "ground",
+	"eeve": {
+		"element": "storm",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h06O",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				468.0,
+				1404.0
+			],
+			"range": 0.16,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "nova",
+					"damage": 2500,
+					"radius": 1.95,
+					"text": "Bei jedem Treffer: 2500 Zauberschaden im Radius 1,9 um das Ziel"
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

@@ -1,0 +1,45 @@
+{
+	"id": "eeve_magic_mushrooms",
+	"name": "Magische Pilze",
+	"name_original": "Magic Mushrooms",
+	"category": "eeve",
+	"color": "#859eaf",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h01Y",
+		"elements": [
+			"magic",
+			"nature"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1297.0,
+				1433.0
+			],
+			"range": 5.86,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "pulse",
+					"every": 10.0,
+					"radius": 0.0,
+					"slow": 0.5,
+					"duration": 3.0,
+					"center": "target",
+					"max": 1,
+					"text": "Verhexen alle 10 s: ein Gegner wird 3 s zum Tier (−50 % Tempo)"
+				}
+			]
+		}
+	]
+}

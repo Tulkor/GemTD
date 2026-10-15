@@ -1,7 +1,7 @@
 class_name EevePanel
 extends PanelContainer
 ## Seitenleiste von eeveTD: Holz, Food, Elementpunkte mit den sechs Elementen (wie das Tech Center im Original),
-## der Knopf für das nächste Level und die letzten Meldungen (Einkommen, neue Punkte).
+## die Fallen (ab Elementstufe 4 direkt baubar), der Knopf für das nächste Level und die letzten Meldungen.
 
 var game  # eeve_game.gd
 var _lumber: Label
@@ -9,6 +9,8 @@ var _food: Label
 var _points: Label
 var _rows := {}   ## Element -> {level: Label, pips: HBoxContainer, plus: Button}
 var _next: Button
+var _traps: VBoxContainer
+var _traps_key := ""
 var _log: Label
 
 
@@ -68,6 +70,15 @@ func _ready() -> void:
 		plus.tooltip_text = tr("Elementpunkt in %s setzen") % tr(str(e.name))
 		_rows[id] = {"pips": pips, "plus": plus, "color": Color(str(e.color))}
 
+	var th := UiUtil.label("Fallen", v, 15)
+	th.uppercase = true
+	th.add_theme_font_override("font", UiTheme.font(true))
+	th.tooltip_text = tr("Fallen liegen auf dem Weg, Gegner laufen darüber. Sie treffen nur Bodengegner.")
+	th.mouse_filter = Control.MOUSE_FILTER_PASS
+	_traps = VBoxContainer.new()
+	_traps.add_theme_constant_override("separation", 4)
+	v.add_child(_traps)
+
 	_next = UiUtil.button("", v, func(): game.submit({"type": "start_level"}))
 	_next.focus_mode = Control.FOCUS_NONE
 	_next.custom_minimum_size.y = 40
@@ -113,6 +124,7 @@ func refresh() -> void:
 				p.color = Color(UiTheme.BORDER, 0.35)
 		var plus: Button = r.plus
 		plus.disabled = not game.can_add_point(id)
+	_refresh_traps()
 	_log.text = "\n".join(game.log_lines)
 	refresh_timer()
 
@@ -124,3 +136,44 @@ func refresh_timer() -> void:
 	_next.visible = waiting
 	if waiting:
 		_next.text = tr("Level %d starten · %d s") % [game.wave_index + 1, ceili(maxf(game.level_pause, 0.0))]
+
+
+## Knöpfe für die Fallen der Elemente auf Stufe 4 oder höher; neu gebaut nur, wenn sich etwas ändert.
+func _refresh_traps() -> void:
+	var list := []
+	for id in game.trap_ids():
+		var e: Dictionary = Database.towers[id].eeve
+		if game.elements.get(str(e.element), 0) >= int(e.level):
+			list.append([id, game.trap_reason(id)])
+	var key: String = str(list) + game.placing_trap
+	if key == _traps_key:
+		return
+	_traps_key = key
+	for c in _traps.get_children():
+		_traps.remove_child(c)
+		c.queue_free()
+	if list.is_empty():
+		var hint := UiUtil.wrap_label(tr("Fallen gibt es ab Elementstufe 4."), _traps, 256)
+		hint.add_theme_font_size_override("font_size", 12)
+		hint.add_theme_color_override("font_color", UiTheme.MUTED)
+		return
+	for entry in list:
+		var id: String = entry[0]
+		var e: Dictionary = Database.towers[id].eeve
+		var text := "%s · %d G + %d %s" % [Database.tower_label(id, 0), int(e.cost), int(e.lumber), tr("Holz")]
+		var b := UiUtil.button(text, _traps, func(): game.start_trap_placement(id))
+		b.focus_mode = Control.FOCUS_NONE
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.custom_minimum_size = Vector2(256, 30)
+		b.add_theme_font_size_override("font_size", 12)
+		b.disabled = entry[1] != "" and game.placing_trap != id
+		b.tooltip_text = Database.tower_label(id, 0) + "\n" + "\n".join(
+				(Database.tower_tier(id, 0).get("abilities", []) as Array).map(func(ab): return Abilities.describe(ab)))
+		if entry[1] != "":
+			b.tooltip_text += "\n" + str(entry[1])
+		if game.placing_trap == id:
+			b.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN))
+			b.add_theme_stylebox_override("hover", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN))
+			b.add_theme_color_override("font_color", UiTheme.BG)
+			b.add_theme_color_override("font_hover_color", UiTheme.BG)

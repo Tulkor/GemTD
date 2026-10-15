@@ -26,7 +26,11 @@ func _ready() -> void:
 			if not Database.towers.has(n):
 				broken.append("%s → %s" % [id, n])
 	check(broken.is_empty(), "alle Aufwertungen zeigen auf vorhandene Tower %s" % [broken])
-	check((Database.towers["eeve_barricade"].eeve.next as Array).size() == 6, "Barrikade wird zu sechs Element-Grundtürmen")
+	check(ids.size() == 108, "108 eeve-Tower wie im Original: %d" % ids.size())
+	check((Database.towers["eeve_barricade"].eeve.next as Array).size() == 7, "Barrikade wird zu sechs Element-Grundtürmen oder zum Dual-Grundturm")
+	check((Database.towers["eeve_dual_element_base_tower"].eeve.next as Array).size() == 15, "Dual-Grundturm hat 15 Dual-Tower")
+	var trap_count := ids.filter(func(id): return Database.towers[id].get("kind", "") == "trap").size()
+	check(trap_count == 6, "sechs Fallen, eine je Element: %d" % trap_count)
 	for s in range(1, 11):
 		for kind in ["ground", "ground_mass", "air", "air_mass", "boss"]:
 			if EeveWaves.enemy_for(s, kind) == "":
@@ -100,5 +104,101 @@ func _ready() -> void:
 	check(game.phase == game.Phase.BUILD and game.wave_index == 1, "Level 1 vorbei, Pause vor Level 2")
 	check(game.enemies_killed + (50 - game.lives) / 4 >= 10, "alle 10 Gegner getötet oder durch (Kills %d, Leben %d)" % [game.enemies_killed, game.lives])
 	check(game.food_cap == 42, "Food nach Level 1: %d (erwartet 42)" % game.food_cap)
+
+	# Fallen: ab Elementstufe 4, 900 Gold + 1 Holz, liegen auf dem Weg und versperren ihn nicht
+	game.gold = 20000
+	game.lumber = 5
+	game.food_cap = 60
+	check(game.trap_reason("eeve_earthbind_trap") != "", "Falle ohne Erde 4 gesperrt")
+	game.elements.earth = 4
+	check(game.trap_reason("eeve_earthbind_trap") == "", "Falle mit Erde 4 baubar")
+	var path: PackedVector2Array = game.pathfinder.compute_path()
+	var length_before: float = game.path_length
+	var spot: Vector2i = game.NO_CELL
+	# gleich hinter dem Start, damit die Gegner darüber laufen, bevor die Tower sie töten
+	for i in range(2, path.size()):
+		var a := Vector2i(path[i]) - Vector2i.ONE  # Wegpunkte sind Felder
+		if game.can_build_trap("eeve_earthbind_trap", a):
+			spot = a
+			break
+	check(spot != game.NO_CELL, "Platz für eine Falle auf dem Weg gefunden")
+	var gold_trap: int = game.gold
+	check(game.submit({"type": "trap", "id": "eeve_earthbind_trap", "cell": spot}), "Erdfessel-Falle bauen")
+	var trap: Tower = game.traps.get(spot)
+	check(trap != null and trap is EeveTower and game.gold == gold_trap - 900 and game.lumber == 4, "Falle kostet 900 Gold und 1 Holz")
+	game._update_paths()
+	check(is_equal_approx(game.path_length, length_before), "Falle versperrt den Weg nicht")
+	check(not game.can_build(spot) and not game.can_build_trap("eeve_earthbind_trap", spot), "auf der Falle kann nichts anderes stehen")
+
+	# Dual-Tower: Barrikade → Dual-Grundturm (ab 3 + 3) → kostenlos zum Dual-Tower der beiden Elemente
+	var dcell := Vector2i(10, 60)
+	check(game.submit({"type": "build", "cell": dcell}), "Barrikade für den Dual-Tower")
+	var d: Tower = game.towers.get(dcell)
+	var dopts: Array = game.tower_options(d)
+	var di: int = dopts.map(func(o): return o.id).find("eeve_dual_element_base_tower")
+	check(di >= 0 and dopts[di].reason != "", "Dual-Grundturm ohne zwei Elemente auf 3 gesperrt")
+	game.elements.water = 3
+	game.elements.nature = 3
+	dopts = game.tower_options(d)
+	check(dopts[di].reason == "" and int(dopts[di].cost) == 1998 and int(dopts[di].lumber) == 1, "Dual-Grundturm: 1998 Gold + 1 Holz")
+	check(game.submit({"type": "option", "tower": game.tower_ref(d), "index": di, "action": "eeve_upgrade", "id": "eeve_dual_element_base_tower"}),
+		"zum Dual-Grundturm aufwerten")
+	dopts = game.tower_options(d)
+	var dual_ids: Array = dopts.filter(func(o): return o.action == "eeve_upgrade").map(func(o): return o.id)
+	# Erde ist von der Falle auf 4: Wasser + Natur, Wasser + Erde, Erde + Natur
+	dual_ids.sort()
+	check(dual_ids == ["eeve_acid_fountain", "eeve_gaea_spring", "eeve_thornweed_field"],
+		"nur Dual-Tower, deren beide Elemente auf 3 sind: %s" % [dual_ids])
+	var gold_dual: int = game.gold
+	check(game.submit({"type": "option", "tower": game.tower_ref(d), "index": 0, "action": "eeve_upgrade", "id": "eeve_acid_fountain"}),
+		"zum Säurebrunnen aufwerten")
+	check(d.tower_id == "eeve_acid_fountain" and game.gold == gold_dual, "Dual-Tower kostenlos")
+	check(is_equal_approx(d.damage_bonus, 0.3), "Elementbonus Dual-Tower aus beiden Elementen: %s" % d.damage_bonus)
+
+	# Zeitkristall betäubt alle Gegner, Wolke nimmt einmalig Leben: Level 2 spielen
+	game.elements.magic = 3
+	var ccell := Vector2i(14, 60)
+	while not game.can_build(ccell) and ccell.x < 80:
+		ccell.x += 2
+	check(game.submit({"type": "build", "cell": ccell}), "Barrikade für den Zeitkristall")
+	var c: Tower = game.towers.get(ccell)
+	c.set_tower("eeve_icy_time_crystal", 0)
+	game.submit({"type": "start_level"})
+	await get_tree().process_frame
+	Engine.time_scale = 8.0
+	var stunned := false
+	frames = 0
+	while game.phase == game.Phase.WAVE and frames < 20000:
+		await get_tree().process_frame
+		frames += 1
+		if not stunned:
+			stunned = game.enemies.any(func(e): return e.stun_time > 0.0)
+	Engine.time_scale = 1.0
+	check(game.phase == game.Phase.BUILD and game.wave_index == 2, "Level 2 vorbei")
+	check(stunned, "Zeitsperre des Eisigen Zeitkristalls betäubt Gegner")
+	var ground: bool = not Database.enemies[str(game.waves[1].groups[0].enemy)].get("flying", false)
+	check(not ground or trap.total_damage > 0.0, "Falle trifft Bodengegner, die darüber laufen (Schaden %d)" % trap.total_damage)
+
+	# Kegelangriff (Feuerspeiender Schneemann): trifft im Kegel vor dem Tower, nicht daneben oder dahinter
+	c.set_tower("eeve_fire_breathing_snowman", 0)
+	var probes := {}
+	for k in ["ziel", "im_kegel", "daneben", "dahinter"]:
+		var en := Enemy.new()
+		en.game = game
+		en.max_hp = 1e7
+		en.hp = 1e7
+		probes[k] = en
+	probes.ziel.pos = c.pos + Vector2(2.0, 0.0)
+	probes.im_kegel.pos = c.pos + Vector2(4.0, 1.0)
+	probes.daneben.pos = c.pos + Vector2(2.0, 2.0)
+	probes.dahinter.pos = c.pos + Vector2(-1.0, 0.0)
+	var keep: Array = game.enemies
+	game.enemies = probes.values()
+	c._attack(probes.ziel)
+	game.enemies = keep
+	check(probes.ziel.hp < 1e7 and probes.im_kegel.hp < 1e7, "Kegel trifft Ziel und Gegner im Kegel")
+	check(probes.daneben.hp == 1e7 and probes.dahinter.hp == 1e7, "Kegel trifft nichts daneben oder hinter dem Tower")
+	for en in probes.values():
+		en.free()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)

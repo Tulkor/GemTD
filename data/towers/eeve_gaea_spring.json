@@ -1,0 +1,42 @@
+{
+	"id": "eeve_gaea_spring",
+	"name": "Gaia-Quelle",
+	"name_original": "Gaea Spring",
+	"category": "eeve",
+	"color": "#77a999",
+	"model": "res://assets/models/crystals/crystal_20.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h09Z",
+		"elements": [
+			"water",
+			"earth"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1390.0,
+				1536.0
+			],
+			"range": 6.25,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "amplify",
+					"chance": 0.2,
+					"bonus": 0.25,
+					"duration": 5.0,
+					"text": "20 % Chance, das Ziel 5 s zu ertränken: es nimmt 25 % mehr Schaden"
+				}
+			]
+		}
+	]
+}

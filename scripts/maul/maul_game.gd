@@ -5,9 +5,14 @@ extends Node3D
 ## sich die Leben. Regeln aus data/maul/rules.json, Level aus waves.json (siehe Designdokument).
 ##
 ## Wie in game.gd laufen alle Spieleraktionen als Befehle über submit(cmd) → execute(cmd) mit
-## Spielernummer, damit Koop später nur noch die Befehle übertragen muss (der Host rechnet).
+## Spielernummer. Im Koop (maul_sync.gd) rechnet nur der Host, die Mitspieler schicken ihre Befehle
+## und zeigen den gemeldeten Stand. Spieler i baut in Gebiet P(i+1), der Host im Zentrum.
 ## Tower und Gegner sind die GemTD-Klassen (MaulTower, MaulEnemy) und rufen dieselben
 ## Funktionen auf wie in game.gd (find_targets, enemies_in_radius, on_enemy_killed …).
+##
+## Etappe 2 (pro.json): Hauptgebäude mit Bonus (+5 % Schaden je Stufe) oder Rabatt (5 % des
+## Kaufpreises zurück), XP über Spiele hinweg (maul_xp.gd) mit XPert-Towern, die Profi-Filialen
+## mit Items (Post, IKEA, Fitness, Waffenladen), Wasser (Gärtnerei), Zombies und Drohnen (maul_unit.gd).
 
 enum Phase { SETUP, COUNTDOWN, WAVE, GAME_OVER, VICTORY }
 
@@ -24,6 +29,12 @@ class Player:
 	var level_kills := 0
 	var reveal_until := -1.0
 	var reveal_ready := 0.0
+	var bonus := 0            ## Stufe Bonus-Upgrade bzw. Rabatt im Hauptgebäude (0–5)
+	var xp := 10              ## Erfahrung in Zehnteln (10 = 1,0 XP)
+	var xp_pot := 0.0
+	var research := {}        ## TUI: Forschung → Stufe
+	var aok_lives := 0        ## AOK: in diesem Level zurückgeholte Leben
+	var away := false
 
 var rules: Dictionary
 var levels: Array
@@ -35,11 +46,19 @@ var hud: MaulHud
 var pathfinder: Pathfinder   ## mit Towern
 var ghost_finder: Pathfinder ## nur Gelände (Geist-Level)
 
-## Koop-Platzhalter: im Koop rechnet nur der Host, mirror = Mitspieler
+## Koop (maul_sync.gd): im Koop rechnet nur der Host, mirror = Mitspieler
+var sync: MaulSync = null
+## Für Net._coop_end (verlässt der Host die Partie, gehen die Mitspieler zurück ins Menü)
+var coop: MaulSync:
+	get:
+		return sync
 var mirror := false
 var local_player := 0
 var acting := 0
 var players: Array = []
+var sandbox := false        ## Option „Sandbox“: feste 800 XP (alles offen), Durchbrüche kosten keine Leben, keine XP
+var levels_done := 0
+var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -54,7 +73,12 @@ var play_time := 0.0
 var towers := {}             ## Anker → MaulTower
 var occupied := {}           ## Feld → Anker
 var enemies: Array = []
+var units: Array = []        ## Zombies und Drohnen (MaulUnit)
 var selected: MaulTower = null
+var selected_unit: MaulUnit = null
+var pending := {}            ## wartende Klick-Aktion: {type: "move_items", from: Anker}
+var _next_unit_id := 1
+var notes := {}              ## Koop: Spieler → [Zähler, Meldung] für Mitspieler
 var build_id := ""           ## gewählter Tower zum Bauen (nur lokal)
 var message := ""
 var message_time := 0.0
@@ -97,13 +121,25 @@ func _ready() -> void:
 	_zone_towers.resize(map.zones.size())
 	_zone_towers.fill(0)
 	difficulty = int(rules.get("default_difficulty", 1))
-	var p := Player.new()
-	p.name = tr("Du")
-	p.zone = 0
-	players.append(p)
+	var coop_info: Dictionary = Session.coop
+	Session.coop = {}
+	var names: Array = coop_info.get("names", [])
+	if coop_info.is_empty():
+		names = [tr("Du")]
+	local_player = int(coop_info.get("player", 0))
+	acting = local_player
+	mirror = coop_info.get("role", "") == "client"
+	for i in mini(names.size(), map.zones.size()):
+		var p := Player.new()
+		p.name = str(names[i])
+		p.zone = i
+		players.append(p)
+	players[local_player].xp = MaulXp.load_xp()
+	xp_start = players[local_player].xp
 
 	CameraRig.add_environment(self)
 	board = MaulBoard.new()
+	board.own_zone = players[local_player].zone
 	board.map = map
 	add_child(board)
 	effects = Effects.new()
@@ -121,17 +157,29 @@ func _ready() -> void:
 	hud.game = self
 	add_child(hud)
 	_refresh_paths()
+	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
+	if not coop_info.is_empty():
+		sync = MaulSync.new()
+		sync.game = self
+		sync.host = not mirror
+		add_child(sync)
+		Net.game = self
 
 
 # --- Start ---------------------------------------------------------------------
 
-## Nach der Filialwahl: Gold, Leben und Countdown bis Level 1.
-func start_game(shop_id: String, diff: int, play_mode: String) -> void:
+## Nach der Filialwahl: Gold, Leben und Countdown bis Level 1. Im Koop startet der Host (Schwierigkeit,
+## Modus, Sandbox gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
+func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false) -> void:
+	if mirror:
+		submit({"type": "shop", "shop": shop_id, "xp": players[local_player].xp})
+		return
 	if phase != Phase.SETUP:
 		return
 	difficulty = clampi(diff, 0, rules.get("difficulties", []).size() - 1)
 	mode = play_mode
+	sandbox = sandbox_on
 	var d := MaulData.difficulty(difficulty)
 	max_lives = int(d.get("lives", 150))
 	lives = max_lives
@@ -144,12 +192,34 @@ func start_game(shop_id: String, diff: int, play_mode: String) -> void:
 	for i in m:
 		var pl: Player = players[i]
 		pl.gold = int(rules.start_gold) / m + (int(rules.start_gold_red) if i == 0 else 0)
-	players[local_player].shop = shop_id
+		if sandbox:
+			pl.xp = int(MaulXp.cfg().get("sandbox", 8000))
 	countdown = float(rules.first_delay_many if m >= 4 else rules.first_delay)
 	phase = Phase.COUNTDOWN
-	hud.hide_setup()
-	hud.build_shop()
+	_pick_shop(local_player, shop_id)
 	_refresh_hud()
+
+
+## Filiale für Spieler p eröffnen (Zufall: "random" = Standard, "random_pro" = Profi).
+func _pick_shop(p: int, shop_id: String) -> bool:
+	var pl: Player = players[p]
+	if pl.shop != "" or phase == Phase.SETUP or phase >= Phase.GAME_OVER:
+		return false
+	var pro_ok := MaulXp.pro_unlocked(pl.xp) and specials_on()
+	if shop_id == "random" or shop_id == "random_pro":
+		var kind := "pro" if shop_id == "random_pro" else "standard"
+		var pool := MaulData.shops().filter(func(s): return str(s.kind) == kind)
+		if pool.is_empty():
+			return false
+		shop_id = str(pool[randi() % pool.size()].id)
+	var s := MaulData.shop(shop_id)
+	if s.is_empty() or str(s.kind) == "xpert" or (str(s.kind) == "pro" and not pro_ok):
+		return false
+	pl.shop = shop_id
+	if p == local_player:
+		hud.hide_setup()
+		hud.build_shop()
+	return true
 
 
 func shop_of(p := -1) -> String:
@@ -182,6 +252,9 @@ func _process(delta: float) -> void:
 					_start_level(level + 1)
 			Phase.WAVE:
 				_process_wave(delta)
+		_water(delta)
+	elif phase == Phase.COUNTDOWN:
+		countdown = maxf(countdown - delta, 0.0)
 	_hud_timer -= delta / maxf(Engine.time_scale, 0.001)
 	if _hud_timer <= 0.0:
 		_hud_timer = 0.2
@@ -258,6 +331,7 @@ func _start_level(n: int) -> void:
 	level_lost = 0
 	for p in players:
 		p.level_kills = 0
+		p.aok_lives = 0
 	spawn_queue.clear()
 	for i in spawn_count():
 		spawn_queue.append([i, per])
@@ -424,6 +498,8 @@ func _end_level() -> void:
 	# Fehlerfrei: +5 Leben
 	if level_lost == 0:
 		lives = mini(lives + int(rules.leak.no_leak_bonus), max_lives)
+	levels_done = n
+	_end_level_pro(n)
 	# Einkommen
 	var inc: Dictionary = rules.income
 	income_pot = floori((income_pot + int(inc.add)) * float(inc.growth))
@@ -439,6 +515,7 @@ func _end_level() -> void:
 	for t in towers.values():
 		if shop_of(t.owner_player) == "obi":
 			t.value = floori(t.value * 0.99)
+	_fitness_upkeep()
 	if n >= levels.size():
 		_finish(Phase.VICTORY)
 		return
@@ -600,7 +677,30 @@ func on_enemy_killed(e) -> void:
 	players[p].gold += int(e.bounty)
 	players[p].kills += 1
 	players[p].level_kills += 1
+	# AOK: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
+	var aok: Dictionary = MaulData.pro().aok
+	if players[p].shop == "aok" and lives < max_lives and randf() < float(aok.life_chance):
+		var room: int = int(aok.life_max_per_level) - players[p].aok_lives
+		var gain := mini(maxi(e.leak_cost / 2, 1), room)
+		if gain > 0:
+			players[p].aok_lives += gain
+			gain_lives(gain)
+	# Contained Darkness frisst Leichen in der Nähe, nach 5 wird sie für 30 s zur Unleashed Darkness
+	var dk: Dictionary = MaulData.pro().undertaker.darkness
+	for t in towers.values():
+		if t.tower_id == str(dk.tower) and not t.is_unleashed() and t.pos.distance_to(e.pos) <= float(dk.radius):
+			t.corpses += 1
+			if t.corpses >= int(dk.corpses):
+				t.corpses = 0
+				t.unleashed_until = game_time + float(dk.duration)
+				if t == selected:
+					hud.refresh_selection()
 	_remove_enemy(e)
+	_refresh_hud()
+
+
+func gain_lives(n: int) -> void:
+	lives = mini(lives + n, max_lives)
 	_refresh_hud()
 
 
@@ -620,7 +720,7 @@ func on_enemy_leaked(e) -> void:
 		_teleport(me, base)
 		return
 	enemies_leaked += 1
-	var cost := mini(me.leak_cost, lives)
+	var cost := 0 if sandbox else mini(me.leak_cost, lives)
 	lives -= cost
 	level_lost += cost
 	_remove_enemy(me)
@@ -692,6 +792,11 @@ func is_detected(e) -> bool:
 		if is_instance_valid(t) and e.pos.distance_to(t.pos) <= float(t.ability("detect").radius):
 			e.detected_until = game_time + 0.5
 			return true
+	for u in units:
+		var r: float = u.detect_radius()
+		if r > 0.0 and e.pos.distance_to(u.pos) <= r:
+			e.detected_until = game_time + 0.5
+			return true
 	return false
 
 
@@ -726,6 +831,8 @@ func enemies_in_radius(p: Vector2, radius: float) -> Array:
 ## fx (Schuss-/Treffer-Effekt der GemTD-Tower) gibt es im Maul noch nicht, nur die Linie
 func add_beam(from: Vector3, to: Vector3, col: Color, _fx: String = "") -> void:
 	effects.add_beam(from, to, col)
+	if sync != null and not mirror:
+		sync.add_beam(from, to, col)
 
 
 ## Ring aus kurzen Strahlen (Donnerschlag).
@@ -734,7 +841,7 @@ func add_ring(p: Vector2, r: float, col: Color) -> void:
 	for i in n:
 		var a := TAU * i / n
 		var b := TAU * (i + 1) / n
-		effects.add_beam(Board3D.to_3d(p + Vector2(cos(a), sin(a)) * r, 0.15), Board3D.to_3d(p + Vector2(cos(b), sin(b)) * r, 0.15), col)
+		add_beam(Board3D.to_3d(p + Vector2(cos(a), sin(a)) * r, 0.15), Board3D.to_3d(p + Vector2(cos(b), sin(b)) * r, 0.15), col)
 
 
 func add_gold(amount: int, p := -1) -> void:
@@ -768,10 +875,57 @@ func tower_value(p := -1) -> int:
 	return n
 
 
+func food_limit(p: int) -> int:
+	var small := ["tui", "waffenladen"]
+	return int(MaulData.pro().get("food_small", 6)) if small.has(shop_of(p)) else int(rules.food)
+
+
+## Ist ein Tower ein XP-Tower (Token n00B) oder ein Ultimate-Tower (n00H, auch deren Upgrades)?
+static func tower_slot(def: Dictionary) -> String:
+	var t := def
+	while not t.is_empty():
+		var req: Array = t.get("requires", [])
+		if req.has("n00B"):
+			return "xp"
+		if req.has("n00H"):
+			return "ultimate"
+		if t.get("upgrade_from") == null:
+			break
+		t = MaulData.tower(str(t.upgrade_from))
+	return ""
+
+
+## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOK,
+## höchstens ein XP- und ein Ultimate-Tower. ignore: Tower, der gerade aufgewertet wird.
+func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> String:
+	for req in def.get("requires", []):
+		var need := MaulXp.needed(str(req))
+		if need > 0 and players[p].xp < need:
+			return tr("Braucht %d XP") % (need / 10)
+		match str(req):
+			"R00S":
+				if levels_done < int(MaulData.pro().get("ultimate_level", 20)):
+					return tr("Erst ab Level %d") % (int(MaulData.pro().get("ultimate_level", 20)) + 1)
+			"R00U":
+				if shop_of(p) == "aok":
+					return tr("Nicht mit der AOK")
+	var slot := tower_slot(def)
+	if slot != "" and ignore == null:
+		for t in towers.values():
+			if t.owner_player == p and tower_slot(t.def) == slot:
+				return tr("Nur ein XP-Tower erlaubt") if slot == "xp" else tr("Nur ein Ultimate-Tower erlaubt")
+	if str(def.get("id", "")) == str(MaulData.pro().drones.charger):
+		for t in towers.values():
+			if t.owner_player == p and t.tower_id == def.id:
+				return tr("Nur ein Drone Charger erlaubt")
+	return ""
+
+
 ## Grund, warum Spieler p hier nicht bauen kann ("" = geht). check_path: Wege prüfen (teuer).
 func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> String:
 	var def := MaulData.tower(id)
-	if def.is_empty() or str(def.get("shop", "")) != shop_of(p):
+	var own := str(def.get("shop", ""))
+	if def.is_empty() or (own != shop_of(p) and own != "xpert") or shop_of(p) == "":
 		return tr("Kein Tower deiner Filiale")
 	if phase == Phase.SETUP or phase >= Phase.GAME_OVER:
 		return tr("Gerade kann nicht gebaut werden")
@@ -784,10 +938,13 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 			return tr("Zu nah am Wegpunkt")
 		if occupied.has(c):
 			return tr("Hier steht schon ein Tower")
+	var why := requirement_problem(def, p)
+	if why != "":
+		return why
 	if int(def.get("cost", 0)) > players[p].gold:
 		return tr("Zu wenig Gold")
-	if tower_count(p) >= int(rules.food):
-		return tr("Kein Platz mehr (höchstens %d Tower)") % int(rules.food)
+	if tower_count(p) >= food_limit(p):
+		return tr("Kein Platz mehr (höchstens %d Tower)") % food_limit(p)
 	if boss_alive():
 		return tr("Solange ein Boss lebt, wird nicht gebaut")
 	var here := {}
@@ -804,6 +961,9 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	if mirror:
+		sync.send(cmd)
+		return true
 	return execute(cmd)
 
 
@@ -816,22 +976,44 @@ func execute(cmd: Dictionary) -> bool:
 	acting = local_player
 	if ok:
 		_refresh_hud()
+		if selected != null and is_instance_valid(selected):
+			hud.refresh_selection()
 	return ok
+
+
+## Gold ausgeben; Filialen mit Rabatt bekommen 5 % je Stufe zurück.
+func _pay(p: int, cost: int) -> void:
+	var pl: Player = players[p]
+	pl.gold -= cost
+	if str(MaulData.shop(pl.shop).get("bonus", "")) == "rebate" and pl.bonus > 0:
+		pl.gold += floori(cost * float(MaulData.pro().bonus.rebate_step) * pl.bonus)
+
+
+func _tower(p: int, cell) -> MaulTower:
+	var t: MaulTower = towers.get(cell, null) if cell is Vector2i else null
+	return t if t != null and t.owner_player == p else null
 
 
 func _execute(cmd: Dictionary) -> bool:
 	var p := acting
 	match str(cmd.get("type", "")):
+		"shop":
+			if mirror:
+				return false
+			players[p].xp = clampi(int(cmd.get("xp", players[p].xp)), 0, int(MaulXp.cfg().get("max", 9999))) if not sandbox else players[p].xp
+			if _pick_shop(p, str(cmd.get("shop", ""))):
+				return true
+			_tell(p, tr("Diese Filiale ist gesperrt"))
+			return false
 		"build":
 			var a: Vector2i = cmd.cell
 			var id := str(cmd.tower)
 			var why := build_problem(id, a, p, true)
 			if why != "":
-				if p == local_player:
-					show_message(why)
+				_tell(p, why)
 				return false
 			var def := MaulData.tower(id)
-			players[p].gold -= int(def.cost)
+			_pay(p, int(def.cost))
 			var t := MaulTower.new()
 			t.owner_player = p
 			board.add_child(t)
@@ -841,35 +1023,38 @@ func _execute(cmd: Dictionary) -> bool:
 			return true
 		"sell":
 			var t: MaulTower = towers.get(cmd.cell, null)
-			if t == null or t.owner_player != p:
+			if t == null or (t.owner_player != p and map.zone_at(t.cell) != players[p].zone):
 				return false
-			players[p].gold += sell_value(t)
+			players[t.owner_player].gold += sell_value(t)
 			_unregister(t)
 			t.queue_free()
 			return true
 		"upgrade":
-			var t: MaulTower = towers.get(cmd.cell, null)
-			var to := str(cmd.to)
-			if t == null or t.owner_player != p or not t.def.get("upgrades_to", []).has(to):
+			var t := _tower(p, cmd.get("cell"))
+			var to := str(cmd.get("to", ""))
+			if t == null or not t.def.get("upgrades_to", []).has(to):
 				return false
 			var def := MaulData.tower(to)
-			if int(def.cost) > players[p].gold:
-				if p == local_player:
-					show_message(tr("Zu wenig Gold"))
+			var why := requirement_problem(def, p, t)
+			if why == "" and int(def.cost) > players[p].gold:
+				why = tr("Zu wenig Gold")
+			if why != "":
+				_tell(p, why)
 				return false
-			players[p].gold -= int(def.cost)
+			_pay(p, int(def.cost))
 			t.set_tower(to, 0)
-			t.value += int(def.cost)
+			t.value = int(def.value) if def.get("swap", false) else t.value + int(def.cost)
 			t.set_selected(t == selected)
 			_update_detect()
-			if t == selected:
-				hud.refresh_selection()
 			return true
 		"start_now":
 			if phase == Phase.COUNTDOWN and p == 0:
 				countdown = 0.0
 				return true
 			return false
+		"speed":
+			Engine.time_scale = clampf(float(cmd.get("f", 1.0)), 1.0, 4.0)
+			return true
 		"reveal":
 			var me: Player = players[p]
 			if me.reveal_ready > game_time or MaulData.rules().detect_shops.has(me.shop):
@@ -877,11 +1062,416 @@ func _execute(cmd: Dictionary) -> bool:
 			me.reveal_until = game_time + float(rules.reveal.duration)
 			me.reveal_ready = game_time + float(rules.reveal.cooldown)
 			return true
+		"bonus":
+			var me: Player = players[p]
+			var kind := str(MaulData.shop(me.shop).get("bonus", ""))
+			if not has_bonus(p) or me.bonus >= int(MaulData.pro().bonus.levels):
+				return false
+			var cost := MaulData.bonus_cost(me.bonus + 1, kind == "rebate", players.size())
+			if cost > me.gold:
+				_tell(p, tr("Zu wenig Gold"))
+				return false
+			me.gold -= cost
+			me.bonus += 1
+			return true
+		"research":
+			var me: Player = players[p]
+			var r: Dictionary = MaulData.pro().tui.research.get(str(cmd.get("id", "")), {})
+			var lv: int = me.research.get(str(cmd.id), 0)
+			if me.shop != "tui" or r.is_empty() or lv >= int(r.max):
+				return false
+			if int(r.cost) > me.gold:
+				_tell(p, tr("Zu wenig Gold"))
+				return false
+			me.gold -= int(r.cost)
+			me.research[str(cmd.id)] = lv + 1
+			return true
+		"item":
+			return _buy_item(p, _tower(p, cmd.get("cell")), str(cmd.get("item", "")))
+		"item_sell":
+			var t := _tower(p, cmd.get("cell"))
+			var i := int(cmd.get("slot", -1))
+			if t == null or i < 0 or i >= t.items.size():
+				return false
+			players[p].gold += floori(int(MaulData.item(str(t.items[i])).get("cost", 0)) * float(rules.sell_refund))
+			t.items.remove_at(i)
+			return true
+		"move_items":
+			var from := _tower(p, cmd.get("from"))
+			var to := _tower(p, cmd.get("to"))
+			if from == null or to == null or from == to or from.slots() == 0 or to.slots() == 0:
+				return false
+			while not from.items.is_empty() and to.items.size() < to.slots():
+				to.items.append(from.items.pop_front())
+				_combine(to)
+			return true
+		"copy":
+			var t := _tower(p, cmd.get("cell"))
+			var to := str(cmd.get("to", ""))
+			var cs: Dictionary = MaulData.pro().copyshop
+			var def := MaulData.tower(to)
+			if t == null or t.tower_id != str(cs.copier) or def.is_empty() or not cs.shops.has(str(def.shop)):
+				return false
+			var cost := copy_cost(to)
+			if cost > players[p].gold:
+				_tell(p, tr("Zu wenig Gold"))
+				return false
+			players[p].gold -= cost
+			t.set_tower(to, 0)
+			t.value = int(def.get("value", def.cost))
+			_update_detect()
+			return true
+		"summon":
+			var t := _tower(p, cmd.get("cell"))
+			var id := str(cmd.get("unit", ""))
+			if t == null or not MaulData.pro().undertaker.summons.get(t.tower_id, []).has(id):
+				return false
+			if float(t.summon_ready.get(id, 0.0)) > game_time:
+				return false
+			t.summon_ready[id] = game_time + float(MaulData.unit(id).get("summon_cd", 10))
+			spawn_unit(id, p, t)
+			return true
+		"drone":
+			var t := _tower(p, cmd.get("cell"))
+			var kind := str(cmd.get("kind", ""))
+			var dr: Dictionary = MaulData.pro().drones
+			if t == null or t.tower_id != str(dr.charger) or not ["battle", "support"].has(kind):
+				return false
+			if units.filter(func(u): return u.owner_player == p and u.drone).size() >= int(dr.max):
+				_tell(p, tr("Höchstens %d Drohnen") % int(dr.max))
+				return false
+			var cost := int(MaulData.unit(kind).get("cost", 20))
+			if cost > players[p].gold:
+				_tell(p, tr("Zu wenig Gold"))
+				return false
+			_pay(p, cost)
+			spawn_unit(kind, p, t)
+			return true
+		"module":
+			return _buy_module(p, unit_by_id(int(cmd.get("unit", -1))), str(cmd.get("item", "")))
+		"module_sell":
+			var u := unit_by_id(int(cmd.get("unit", -1)))
+			var slot := str(cmd.get("slot", ""))
+			if u == null or u.owner_player != p or not u.modules.has(slot):
+				return false
+			players[p].gold += floori(int(MaulData.item(str(u.modules[slot])).get("cost", 0)) * float(rules.sell_refund))
+			u.modules.erase(slot)
+			u.energy = minf(u.energy, u.max_energy())
+			return true
+		"post":
+			var u := unit_by_id(int(cmd.get("unit", -1)))
+			if u == null or u.owner_player != p:
+				return false
+			var at := Vector2(float(cmd.get("x", 0)), float(cmd.get("y", 0)))
+			if map.zone_at(Vector2i(floori(at.x / Board3D.CELL), floori(at.y / Board3D.CELL))) != players[p].zone:
+				_tell(p, tr("Nur im eigenen Gebiet"))
+				return false
+			u.post = at
+			return true
 	return false
 
 
+## Meldung an Spieler p: lokal sofort, an Mitspieler über den nächsten Stand (maul_sync.gd → notes).
+func _tell(p: int, text: String) -> void:
+	if p == local_player:
+		show_message(text)
+	elif sync != null:
+		notes[p] = [int(notes.get(p, [0, ""])[0]) + 1, text]
+
+
+func has_bonus(p: int) -> bool:
+	var s := shop_of(p)
+	return s != "" and str(MaulData.shop(s).get("bonus", "")) != "" and not ["gaertnerei", "waffenladen"].has(s)
+
+
+## Copyshop: Punktwert × 1,05 − 9 Gold (Tower unter 9 Gold sind gratis).
+func copy_cost(id: String) -> int:
+	var cs: Dictionary = MaulData.pro().copyshop
+	var v := int(MaulData.tower(id).get("value", 0))
+	return 0 if v < int(cs.minus) else floori(v * float(cs.factor) - float(cs.minus))
+
+
+## Läden, die Spieler p für dieses Item gebaut hat (Item gibt es nur, wenn so ein Laden steht).
+func store_has(p: int, item_id: String) -> bool:
+	var st: Dictionary = MaulData.pro().stores
+	for t in towers.values():
+		if t.owner_player == p and st.get(t.tower_id, []).has(item_id):
+			return true
+	return false
+
+
+## Items, die Spieler p gerade kaufen kann (aus seinen Läden), nach Preis.
+func items_for(p: int, kind: String) -> Array:
+	var st: Dictionary = MaulData.pro().stores
+	var seen := {}
+	for t in towers.values():
+		if t.owner_player == p:
+			for id in st.get(t.tower_id, []):
+				var it := MaulData.item(str(id))
+				if str(it.get("kind", "weapon")) == kind:
+					seen[str(id)] = true
+	var list := seen.keys()
+	list.sort_custom(func(x, y): return int(MaulData.item(x).cost) < int(MaulData.item(y).cost))
+	return list
+
+
+func _buy_item(p: int, t: MaulTower, id: String) -> bool:
+	var it := MaulData.item(id)
+	if t == null or it.is_empty() or not store_has(p, id):
+		return false
+	var cost := int(it.get("cost", 0))
+	if cost > players[p].gold:
+		_tell(p, tr("Zu wenig Gold"))
+		return false
+	if str(it.get("kind", "weapon")) == "drug":
+		if not MaulData.pro().fitness.upkeep.has(t.tower_id):
+			return false
+		_pay(p, cost)
+		_take_drug(t, it)
+		return true
+	if t.items.size() >= t.slots():
+		_tell(p, tr("Alle Slots belegt"))
+		return false
+	_pay(p, cost)
+	t.items.append(id)
+	_combine(t)
+	return true
+
+
+## IKEA: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
+func _combine(t: MaulTower) -> void:
+	var again := true
+	while again:
+		again = false
+		for c in MaulData.pro().get("combos", []):
+			var i := t.items.find(c[0])
+			if i < 0:
+				continue
+			var j := -1
+			for k in t.items.size():
+				if k != i and t.items[k] == c[1]:
+					j = k
+					break
+			if j < 0:
+				continue
+			t.items.remove_at(maxi(i, j))
+			t.items.remove_at(mini(i, j))
+			t.items.append(str(c[2]))
+			_tell(t.owner_player, tr("Combo: %s") % MaulData.item_name(str(c[2])))
+			again = true
+			break
+
+
+## Fitness: Doping wirkt sofort und dauerhaft; starke Mittel bringen Nebenwirkungen (Dosis/300 Stufen).
+func _take_drug(t: MaulTower, it: Dictionary) -> void:
+	var fit: Dictionary = MaulData.pro().fitness
+	var dmg := 0.0
+	if it.has("damage"):
+		var d = it.damage
+		dmg = randf_range(float(d[0]), float(d[1])) if d is Array else float(d)
+	t.flat += roundf(dmg)
+	var s = it.get("side", 0)
+	var add := 0.0
+	if str(s) == "dose":
+		add = dmg / float(fit.side_dose)
+	else:
+		add = float(s)
+	if add > 0.0:
+		add *= float(fit.resist.get(t.tower_id, 1.0))
+	t.side = maxi(t.side + roundi(add), 0)
+	if it.has("stun"):
+		t.drugs["stun"] = [float(it.stun_chance), float(it.stun)]
+	if it.has("frost"):
+		t.drugs["frost"] = float(it.frost)
+	if it.has("slow_aura"):
+		t.drugs["slow_aura"] = float(it.slow_aura)
+	t._update_extra()
+
+
+func _buy_module(p: int, u: MaulUnit, id: String) -> bool:
+	var it := MaulData.item(id)
+	if u == null or u.owner_player != p or not u.drone or str(it.get("kind", "")) != "module" or not store_has(p, id):
+		return false
+	var slot := str(it.slot)
+	if it.get("battle_only", false) and u.unit_id != "battle":
+		_tell(p, tr("Hilfsdrohnen tragen keine Kanonen"))
+		return false
+	if u.modules.has(slot):
+		_tell(p, tr("Dieser Modultyp ist schon eingebaut"))
+		return false
+	if u.modules.size() >= int(MaulData.pro().drones.slots):
+		_tell(p, tr("Alle Slots belegt"))
+		return false
+	if int(it.cost) > players[p].gold:
+		_tell(p, tr("Zu wenig Gold"))
+		return false
+	_pay(p, int(it.cost))
+	u.modules[slot] = id
+	return true
+
+
 func sell_value(t: MaulTower) -> int:
-	return floori(t.value * float(rules.sell_refund))
+	return floori((t.value + t.items_value()) * float(rules.sell_refund))
+
+
+# --- Profi-Filialen: Schaden, Wasser, Einheiten, Levelende -------------------------------
+
+## Faktor auf den Schaden aller Tower von Spieler p: Bonus-Upgrade +5 % je Stufe, AOK mit vollen
+## Leben +33 %, First/Second Aid +40/+50 % (nicht stapelbar).
+func damage_factor_for(p: int) -> float:
+	if p < 0 or p >= players.size():
+		return 1.0
+	var pl: Player = players[p]
+	var f := 1.0
+	if has_bonus(p) and str(MaulData.shop(pl.shop).get("bonus", "")) == "damage":
+		f += pl.bonus * float(MaulData.pro().bonus.damage_step)
+	if pl.shop == "aok":
+		var aok: Dictionary = MaulData.pro().aok
+		if lives >= max_lives:
+			f += float(aok.full_lives_bonus)
+		var aura := 0.0
+		for t in towers.values():
+			if t.owner_player == p:
+				aura = maxf(aura, float(aok.auras.get(t.tower_id, 0.0)))
+		f += aura
+	return f
+
+
+func damage_factor(t) -> float:
+	return damage_factor_for(t.owner_player)
+
+
+## Zusätzlicher Schaden pro Treffer: TUI-Forschung (Grundschaden, Profischaden für die Endstufen).
+func flat_bonus_for(t) -> float:
+	var pl: Player = players[t.owner_player] if t.owner_player < players.size() else null
+	if pl == null or pl.shop != "tui" or str(t.def.get("shop", "")) != "tui":
+		return 0.0
+	var r: Dictionary = MaulData.pro().tui.research
+	var v := float(pl.research.get("damage", 0)) * float(r.damage.step)
+	if r.advanced.towers.has(t.tower_id):
+		v += float(pl.research.get("advanced", 0)) * float(r.advanced.step)
+	return v
+
+
+func range_bonus_for(t) -> float:
+	var pl: Player = players[t.owner_player] if t.owner_player < players.size() else null
+	if pl == null or pl.shop != "tui" or str(t.def.get("shop", "")) != "tui":
+		return 0.0
+	return float(pl.research.get("range", 0)) * float(MaulData.pro().tui.research.range.step)
+
+
+## Gärtnerei: Bewässerungsanlagen füllen alle eigenen Pflanzen in Reichweite auf.
+func _water(delta: float) -> void:
+	if phase == Phase.SETUP or phase >= Phase.GAME_OVER:
+		return
+	var g: Dictionary = MaulData.pro().garden
+	var irr: Dictionary = g.irrigation
+	var r := float(g.radius)
+	for src in towers.values():
+		if not irr.has(src.tower_id):
+			continue
+		var rate := float(irr[src.tower_id]) * delta
+		for t in towers.values():
+			if t.owner_player != src.owner_player:
+				continue
+			var pl: Dictionary = t.plant()
+			if pl.is_empty() or t.pos.distance_to(src.pos) > r:
+				continue
+			t.water = minf(t.water + rate, float(pl.water))
+
+
+## Kultstätten heilen die Zombies ihres Besitzers in der Nähe (HP pro Sekunde).
+func cult_heal_at(at: Vector2, p: int) -> float:
+	var u: Dictionary = MaulData.pro().undertaker
+	var best := 0.0
+	for t in towers.values():
+		if t.owner_player == p and u.cults.has(t.tower_id) and t.pos.distance_to(at) <= float(u.cult_radius):
+			best = maxf(best, float(u.cults[t.tower_id]))
+	return best
+
+
+func charger_of(p: int) -> MaulTower:
+	var id := str(MaulData.pro().drones.charger)
+	for t in towers.values():
+		if t.owner_player == p and t.tower_id == id:
+			return t
+	return null
+
+
+func spawn_unit(id: String, p: int, from: MaulTower) -> MaulUnit:
+	var u := MaulUnit.new()
+	u.net_id = _next_unit_id
+	_next_unit_id += 1
+	u.home = from.cell if from != null else NO_CELL
+	board.add_child(u)
+	u.setup(self, id, p, from.pos + Vector2(0.8, 0.0) if from != null else map.zone_center(players[p].zone))
+	units.append(u)
+	return u
+
+
+func remove_unit(u: MaulUnit) -> void:
+	units.erase(u)
+	if selected_unit == u:
+		select_unit(null)
+	u.queue_free()
+
+
+func unit_by_id(id: int) -> MaulUnit:
+	for u in units:
+		if u.net_id == id:
+			return u
+	return null
+
+
+## Fitness: nach jedem Level Anabolika zahlen (3/25/75/200 Gold), dafür gibt es gleich viel Stärke.
+## Fehlt das Geld, setzt der Tower ein Level aus. Nebenwirkungen sinken um eine Stufe.
+func _fitness_upkeep() -> void:
+	var up: Dictionary = MaulData.pro().fitness.upkeep
+	for t in towers.values():
+		if not up.has(t.tower_id):
+			continue
+		var cost := int(up[t.tower_id])
+		var pl: Player = players[t.owner_player]
+		t.side = maxi(t.side - 1, 0)
+		if pl.gold >= cost:
+			pl.gold -= cost
+			t.flat += cost
+			t.paused = false
+		else:
+			t.paused = true
+			_tell(t.owner_player, tr("Kalter Entzug: %s setzt ein Level aus") % t.label())
+
+
+## AOK-Bonus und XP am Levelende.
+func _end_level_pro(n: int) -> void:
+	var aok: Dictionary = MaulData.pro().aok
+	for p in players:
+		if p.shop == "aok" and level_lost > 0:
+			p.gold += mini(n * floori(float(aok.gold_factor) * level_lost), n * int(aok.gold_cap))
+	var x := MaulXp.cfg()
+	if sandbox or players.size() < int(x.get("min_players", 1)):
+		return
+	var ke := float(MaulData.difficulty(difficulty).get("xp", 1.0))
+	for i in players.size():
+		var pl: Player = players[i]
+		var before := pl.xp
+		var res := MaulXp.gain(pl.xp, pl.xp_pot, n, players.size(), ke)
+		pl.xp = int(res[0])
+		pl.xp_pot = float(res[1])
+		if i == local_player and pl.xp != before:
+			MaulXp.save_xp(pl.xp)
+			_announce_unlocks(before, pl.xp)
+
+
+func _announce_unlocks(before: int, now: int) -> void:
+	if not MaulXp.pro_unlocked(before) and MaulXp.pro_unlocked(now):
+		show_message(tr("%s XP: Profi-Filialen freigeschaltet!") % MaulXp.text(now), 6.0)
+		return
+	for t in MaulData.xpert().get("towers", []):
+		for req in t.get("requires", []):
+			var need := MaulXp.needed(str(req))
+			if need > before and need <= now:
+				show_message(tr("%s XP: %s freigeschaltet!") % [MaulXp.text(now), str(t.name)], 6.0)
 
 
 func _register(t: MaulTower) -> void:
@@ -922,9 +1512,13 @@ func select(t: MaulTower) -> void:
 	if selected != null and is_instance_valid(selected):
 		selected.set_selected(false)
 	selected = t
+	pending = {}
 	if t != null:
 		t.set_selected(true)
 		build_id = ""
+		if selected_unit != null and is_instance_valid(selected_unit):
+			selected_unit.set_selected(false)
+		selected_unit = null
 	hud.refresh_selection()
 	hud.refresh_shop()
 
@@ -970,6 +1564,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and not camera_rig.right_dragged:
 			build_id = ""
 			select(null)
+			select_unit(null)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var i := BUILD_KEYS.find(event.physical_keycode)
 		if i >= 0 and not event.ctrl_pressed:
@@ -981,6 +1576,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				build_id = ""
 				select(null)
+				select_unit(null)
 			KEY_1:
 				set_speed(1.0)
 			KEY_2:
@@ -1000,13 +1596,59 @@ func _on_click(keep := false) -> void:
 			build_id = ""
 			hud.refresh_shop()
 		return
+	if pending.get("type", "") == "move_items":
+		var from: Vector2i = pending.from
+		pending = {}
+		if occupied.has(c):
+			submit({"type": "move_items", "from": from, "to": occupied[c]})
+		hud.refresh_selection()
+		return
+	var hit = board._mouse_ground(camera_rig.camera)
+	var u := unit_at(hit) if hit != null else null
+	if u != null:
+		select_unit(u)
+		return
+	# Gewählte eigene Einheit: Klick ins Gelände setzt ihren Posten
+	if selected_unit != null and selected_unit.owner_player == local_player and hit != null and not occupied.has(c):
+		submit({"type": "post", "unit": selected_unit.net_id, "x": hit.x, "y": hit.y})
+		return
 	if occupied.has(c):
 		select(towers[occupied[c]])
 	else:
 		select(null)
 
 
+## Einheit unter dem Mauszeiger (Weltkoordinaten), sonst null.
+func unit_at(at: Vector2) -> MaulUnit:
+	var best := 0.45
+	var out: MaulUnit = null
+	for u in units:
+		var d: float = u.pos.distance_to(at)
+		if d < best:
+			best = d
+			out = u
+	return out
+
+
+func select_unit(u: MaulUnit) -> void:
+	if selected_unit != null and is_instance_valid(selected_unit):
+		selected_unit.set_selected(false)
+	selected_unit = u
+	pending = {}
+	if u != null:
+		u.set_selected(true)
+		if selected != null and is_instance_valid(selected):
+			selected.set_selected(false)
+		selected = null
+		build_id = ""
+	hud.refresh_selection()
+
+
+## Spieltempo: im Koop bestimmt es der Host, Mitspieler schicken ihren Wunsch als Befehl.
 func set_speed(f: float) -> void:
+	if mirror:
+		submit({"type": "speed", "f": f})
+		return
 	Engine.time_scale = f
 	hud.refresh_live()
 
@@ -1025,3 +1667,7 @@ func _refresh_hud() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	if Net.game == self:
+		Net.game = null
+	if sync != null and not mirror:
+		Net.end_coop()

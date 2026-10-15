@@ -4,3 +4,4 @@ export/
 # Beim Import aus den .glb-Modellen erzeugte Texturen
 assets/models/**/*_texture_*.png
 assets/models/**/*_Atlas.png
+__pycache__/

@@ -1,0 +1,44 @@
+{
+	"id": "eeve_acid_fountain",
+	"name": "Säurebrunnen",
+	"name_original": "Acid Fountain",
+	"category": "eeve",
+	"color": "#3acca4",
+	"model": "res://assets/models/crystals/crystal_08.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h013",
+		"elements": [
+			"water",
+			"nature"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1699.0,
+				1877.0
+			],
+			"range": 5.47,
+			"cooldown": 2.5,
+			"abilities": [
+				{
+					"type": "area_debuff",
+					"radius": 1.95,
+					"armor": 3.0,
+					"slow": 0.1,
+					"dps": 60.0,
+					"duration": 15.0,
+					"text": "Ätzt Gegner im Radius 2,0 um das Ziel: −3 Rüstung, −10 % Tempo, 60 Schaden/s für 15 s"
+				}
+			]
+		}
+	]
+}

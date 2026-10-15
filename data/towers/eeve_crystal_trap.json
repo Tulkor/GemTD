@@ -1,0 +1,39 @@
+{
+	"id": "eeve_crystal_trap",
+	"name": "Kristallfalle",
+	"name_original": "Crystal Trap",
+	"category": "eeve",
+	"color": "#c46bff",
+	"model": "res://assets/models/crystals/crystal_23.glb",
+	"damage_type": "magic",
+	"targets": "ground",
+	"eeve": {
+		"element": "magic",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h026",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				702.0,
+				2106.0
+			],
+			"range": 0.08,
+			"cooldown": 1.2,
+			"abilities": [
+				{
+					"type": "armor_reduce",
+					"amount": 6.0,
+					"duration": 7.0
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

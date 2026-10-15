@@ -1,0 +1,50 @@
+{
+	"id": "eeve_volcano",
+	"name": "Vulkan",
+	"name_original": "Volcano",
+	"category": "eeve",
+	"color": "#df723a",
+	"model": "res://assets/models/crystals/crystal_23.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h03P",
+		"elements": [
+			"earth",
+			"fire"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1081.0,
+				1195.0
+			],
+			"range": 5.47,
+			"cooldown": 2.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 1.56,
+					"factor": 0.7
+				},
+				{
+					"type": "poison",
+					"dps": 250,
+					"duration": 8.0
+				},
+				{
+					"type": "slow",
+					"factor": 0.07,
+					"duration": 8.0
+				}
+			]
+		}
+	]
+}

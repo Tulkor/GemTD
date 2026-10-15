@@ -243,6 +243,9 @@ func _attack(e) -> void:
 		for other in game.enemies_in_radius(target_pos, float(splash.radius)):
 			if other != e and can_target(other):
 				_hit(other, dmg * float(splash.factor))
+	var cone := ability("cone")
+	if not cone.is_empty() and (not cone.has("chance") or randf() < float(cone.chance)):
+		_cone(target_pos, cone, dmg, e)
 	var bounce := ability("bounce")
 	if not bounce.is_empty():
 		var hit := [e]
@@ -263,6 +266,8 @@ func _attack(e) -> void:
 			hit.append(next)
 			_hit(next, bdmg)
 			current = next
+	if _has_projectile_mods():
+		_projectile(e, target_pos, dmg)
 
 
 ## Treffer-Effekte. Jede Fähigkeit mit "chance" löst nur mit dieser Wahrscheinlichkeit aus.
@@ -302,6 +307,161 @@ func _hit(e, dmg: float) -> void:
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
+
+## Geschosse wie in Path of Exile (pierce, fork, chain). Bei jedem Treffer gilt die Reihenfolge aus PoE:
+## 1. Durchbohren, solange noch Durchbohrungen übrig sind: weiter in derselben Richtung.
+## 2. sonst Gabeln, solange noch Gabelungen übrig sind: zwei neue Geschosse schräg nach vorn.
+## 3. sonst Verketten, solange noch Sprünge übrig sind: weiter zum nächsten Gegner im Radius.
+## Nach dem ersten Ziel fliegt ein Geschoss noch eine Reichweite weit (Gabeln: "reach", Ketten: "radius").
+## Jedes Geschoss trifft denselben Gegner nur einmal; Gabel-Geschosse erben die getroffenen Gegner
+## und die übrigen Gabelungen und Sprünge. Die Schüsse sind sofort da (wie die Strahlen), Flächenschaden
+## und Treffer-Effekte gelten bei jedem Treffer.
+const SHOT_HIT_RADIUS := 0.35  ## so nah (Towerbreiten) muss ein Gegner an der Flugbahn sein
+const SHOT_MAX_HITS := 64      ## Obergrenze pro Schuss, damit sich Gabeln und Ketten nicht aufschaukeln
+
+
+func _has_projectile_mods() -> bool:
+	return not (ability("pierce").is_empty() and ability("fork").is_empty() and ability("chain").is_empty())
+
+
+## Weiter nach dem Treffer des ersten Ziels (das hat _attack schon getroffen).
+func _projectile(first, at: Vector2, dmg: float) -> void:
+	var pierce := ability("pierce")
+	var fork := ability("fork")
+	var chain := ability("chain")
+	var dir := (at - pos).normalized()
+	if dir == Vector2.ZERO:
+		dir = Vector2.RIGHT
+	var shot := {
+		"pierce": int(pierce.get("count", 0)),
+		"forks": int(fork.get("count", 0)),
+		"chains": int(chain.get("count", 0)),
+		"hit": [first],
+		"dmg": dmg,
+	}
+	# Flüge: {from, from3, dir, reach} geradeaus oder {from3, target} auf einen Gegner, dazu der Zustand
+	var flights := []
+	_after_hit(shot, first, at, Board3D.to_3d(at, first.position.y), dir, range_cells(), flights)
+	var hits := 1
+	while not flights.is_empty() and hits < SHOT_MAX_HITS:
+		var f: Dictionary = flights.pop_front()
+		var e = f.get("target")
+		var along := 0.0
+		if e == null:
+			var found := _first_on_line(f.from, f.dir, f.reach, f.hit)
+			if found.is_empty():
+				game.add_beam(f.from3, Board3D.to_3d(f.from + f.dir * f.reach, 0.5), color)
+				continue
+			e = found.enemy
+			along = found.along
+		elif e.dead:
+			continue
+		game.add_beam(f.from3, e.position, color)
+		var hit_dir: Vector2 = f.dir if f.has("dir") else (e.pos - f.from).normalized()
+		hits += 1
+		f.hit.append(e)
+		_hit(e, f.dmg)
+		var splash := ability("splash")
+		if not splash.is_empty():
+			for other in game.enemies_in_radius(e.pos, float(splash.radius)):
+				if other != e and can_target(other):
+					_hit(other, f.dmg * float(splash.factor))
+		_after_hit(f, e, e.pos, e.position, hit_dir, float(f.get("reach", 0.0)) - along, flights)
+
+
+## Entscheidet nach einem Treffer, wie das Geschoss weiterfliegt (Reihenfolge wie in PoE, siehe oben).
+func _after_hit(shot: Dictionary, e, at: Vector2, at3: Vector3, dir: Vector2, reach_left: float, flights: Array) -> void:
+	if dir == Vector2.ZERO:
+		dir = Vector2.RIGHT
+	if int(shot.pierce) > 0:
+		var ab := ability("pierce")
+		var next := shot.duplicate()
+		next.pierce = int(shot.pierce) - 1
+		next.dmg = float(shot.dmg) * float(ab.get("factor", 1.0))
+		next.merge({"from": at, "from3": at3, "dir": dir, "reach": maxf(reach_left, 0.0)}, true)
+		next.erase("target")
+		if next.reach > 0.0:
+			flights.append(next)
+		return
+	if int(shot.forks) > 0:
+		var ab := ability("fork")
+		for side in [-1.0, 1.0]:
+			var next := shot.duplicate()
+			next.hit = (shot.hit as Array).duplicate()
+			next.forks = int(shot.forks) - 1
+			next.dmg = float(shot.dmg) * float(ab.get("factor", 1.0))
+			next.merge({"from": at, "from3": at3, "dir": dir.rotated(deg_to_rad(float(ab.get("angle", 30.0))) * side),
+					"reach": float(ab.get("reach", 3.0))}, true)
+			next.erase("target")
+			flights.append(next)
+		return
+	if int(shot.chains) > 0:
+		var ab := ability("chain")
+		var target = null
+		var best := INF
+		for other in game.enemies_in_radius(at, float(ab.get("radius", 2.5))):
+			var d: float = other.pos.distance_to(at)
+			if d < best and can_target(other) and not other in shot.hit:
+				best = d
+				target = other
+		if target == null:
+			return
+		var next := shot.duplicate()
+		next.chains = int(shot.chains) - 1
+		next.dmg = float(shot.dmg) * float(ab.get("factor", 1.0))
+		next.merge({"from": at, "from3": at3, "target": target}, true)
+		next.erase("dir")
+		next.erase("reach")
+		flights.append(next)
+
+
+## Erster Gegner auf der Flugbahn, der noch nicht getroffen wurde: {enemy, along} oder {}.
+func _first_on_line(from: Vector2, dir: Vector2, reach: float, hit: Array) -> Dictionary:
+	var best := {}
+	for other in game.enemies_in_radius(from, reach + SHOT_HIT_RADIUS):
+		if other in hit or not can_target(other):
+			continue
+		var rel: Vector2 = other.pos - from
+		var along := rel.dot(dir)
+		if along < 0.0 or along > reach or absf(rel.cross(dir)) > SHOT_HIT_RADIUS:
+			continue
+		if best.is_empty() or along < float(best.along):
+			best = {"enemy": other, "along": along}
+	return best
+
+
+## Kegel vom Tower in Richtung Ziel: trifft alle Gegner darin. Breite (Radius quer zur Richtung) wächst
+## von width_start am Tower bis width_end am Ende (length). Mit "damage" ein Zauber mit eigenem Schaden
+## (das Ziel inklusive), sonst trifft der Angriff selbst alle weiteren Gegner im Kegel.
+func _cone(target_pos: Vector2, ab: Dictionary, dmg: float, target) -> void:
+	var dir := (target_pos - pos).normalized()
+	if dir == Vector2.ZERO:
+		return
+	var length := float(ab.get("length", range_cells()))
+	var w0 := float(ab.get("width_start", 0.5))
+	var w1 := float(ab.get("width_end", 1.5))
+	var spell := ab.has("damage")
+	for other in game.enemies_in_radius(pos, length + w1):
+		if not can_target(other) or (other == target and not spell):
+			continue
+		var rel: Vector2 = other.pos - pos
+		var along := rel.dot(dir)
+		if along < 0.0 or along > length:
+			continue
+		if absf(rel.cross(dir)) > lerpf(w0, w1, along / length):
+			continue
+		if spell:
+			other.last_hit_by = owner_player
+			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus()), "spells")
+			if other.dead:
+				kills += 1
+		else:
+			_hit(other, dmg)
+	# Umriss des Kegels kurz aufblitzen lassen
+	var side := Vector2(-dir.y, dir.x)
+	var corners := [pos + side * w0, pos + dir * length + side * w1, pos + dir * length - side * w1, pos - side * w0]
+	for i in 3:
+		game.add_beam(Board3D.to_3d(corners[i], 0.15), Board3D.to_3d(corners[i + 1], 0.15), color)
 
 
 ## Schuss- und Treffer-Effekt dieses Towers (effects.gd, fx_data.gd)

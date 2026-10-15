@@ -1,0 +1,41 @@
+{
+	"id": "eeve_fire_breathing_snowman",
+	"name": "Feuerspeiender Schneemann",
+	"name_original": "Fire Breathing Snowman",
+	"category": "eeve",
+	"color": "#979189",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "spells",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h054",
+		"elements": [
+			"water",
+			"fire"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				3000,
+				3000
+			],
+			"range": 4.69,
+			"cooldown": 2.5,
+			"abilities": [
+				{
+					"type": "cone",
+					"length": 4.69,
+					"width_start": 1.17,
+					"width_end": 2.34
+				}
+			]
+		}
+	]
+}

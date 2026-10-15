@@ -26,9 +26,9 @@
 			"name": "Shopping Maul",
 			"ready": true,
 			"min_players": 1,
-			"max_players": 1,
+			"max_players": 8,
 			"scene": "res://scenes/maul_game.tscn",
-			"hint": "Filiale eröffnen, Tower kaufen und aufwerten (solo im Zentrum)",
+			"hint": "Filiale eröffnen, Tower kaufen und aufwerten, Profi-Filialen ab 25 XP, Koop bis 8 Spieler",
 			"needs_map": false
 		}
 	]
