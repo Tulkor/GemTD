@@ -267,12 +267,18 @@ func _ready() -> void:
 	check(st.missing == 0, "Rezeptstatus Giftplatte mit 'einer von' erfüllt")
 	check(Recipes.used_in("emerald", 2).has("jade") and Recipes.used_in("emerald", 2).has("poison_slate"), "Normaler Smaragd wird für Jade und Giftplatte gebraucht")
 	game.hud.set_selection({"title": "Smaragd", "color": Color.GREEN, "body": "", "used_in": Recipes.used_in("emerald", 2)})
-	var used_n := Recipes.used_in("emerald", 2).size()
+	# Fallen erscheinen nur, wenn sie gerade kombinierbar sind
+	var used_n := Recipes.used_in("emerald", 2).filter(func(sid): return Database.towers[sid].get("kind", "tower") != "trap" \
+			or Recipes.ready_now(sid, game.hud.owned, game.hud.owned_now)).size()
 	check(game.hud.used_row.get_child_count() == 1 and game.hud.used_page_label.text == "1 / %d" % used_n, "Wird gebraucht für: ein Rezept pro Seite, Seite 1 / %d" % used_n)
 	game.hud._turn_used_page(1)
-	check(game.hud.used_page_label.text == "2 / %d" % used_n, "Pfeil blättert weiter")
+	check(game.hud.used_page_label.text == "%d / %d" % [posmod(1, used_n) + 1, used_n], "Pfeil blättert weiter")
 	game.hud._turn_used_page(-2)
-	check(game.hud.used_page_label.text == "%d / %d" % [used_n, used_n], "Pfeil zurück springt ans Ende")
+	check(game.hud.used_page_label.text == "%d / %d" % [posmod(-1, used_n) + 1, used_n], "Pfeil zurück springt ans Ende")
+	game.hud.set_owned([["emerald", 2, true]], {"pool": [["emerald", 2, true], ["ruby", 0, true]], "wave": false})
+	check(not game.hud._used_ids.has("poison_slate"), "Giftplatte ohne zweite Zutat nicht unter \"Wird gebraucht für\": %s" % [game.hud._used_ids])
+	game.hud.set_owned([["emerald", 2, true]], {"pool": [["emerald", 2, true], ["opal", 1, true]], "wave": false})
+	check(game.hud._used_ids.has("poison_slate"), "Giftplatte erscheint, sobald sie in der Auswahl kombinierbar ist")
 	game.hud.set_selection({})
 	check(not game.hud.used_col.visible, "nach dem Abwählen kein \"Wird gebraucht für\" mehr")
 	# Reihenfolge: meiste vorhandene Zutaten zuerst, bei Gleichstand Tower vor Fallen

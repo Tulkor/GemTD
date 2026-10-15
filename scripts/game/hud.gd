@@ -1311,7 +1311,11 @@ func toggle_recipe_book() -> void:
 
 func _refresh_used_in() -> void:
 	var raw = _selection.get("used_in", null)
-	var sort_key := [raw, owned]
+	if raw != null:
+		# Fallen nur zeigen, wenn sie gerade wirklich kombinierbar sind (sonst wirken sie wie ein möglicher Merge)
+		raw = (raw as Array).filter(func(sid): return str(Database.towers.get(sid, {}).get("kind", "tower")) != "trap" \
+				or Recipes.ready_now(sid, owned, owned_now))
+	var sort_key := [raw, owned, owned_now]
 	if sort_key != _used_raw:
 		if raw != (_used_raw[0] if _used_raw != null else null):
 			used_page = 0

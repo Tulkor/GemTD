@@ -29,6 +29,13 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_difficulty = int(MaulData.rules().get("default_difficulty", 1))
+	# Neustart: die Wahl der letzten Runde vorauswählen
+	var last: Dictionary = Session.maul_choice
+	_difficulty = int(last.get("difficulty", _difficulty))
+	_mode = str(last.get("mode", _mode))
+	_sandbox = bool(last.get("sandbox", _sandbox))
+	_kind = str(last.get("kind", _kind))
+	_shop = str(last.get("shop", _shop))
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
@@ -282,4 +289,5 @@ func _start() -> void:
 		_waiting = true
 		_refresh()
 		return
+	Session.maul_choice = {"shop": _shop, "kind": _kind, "difficulty": _difficulty, "mode": _mode, "sandbox": _sandbox}
 	game.start_game(_shop, _difficulty, _mode, _sandbox)

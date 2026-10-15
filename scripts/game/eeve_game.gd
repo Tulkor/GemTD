@@ -36,6 +36,8 @@ func _ready() -> void:
 		element_caps[id] = int(rules.get("point_max_normal", 4))
 	points = int(rules.get("start_points", 1))
 	food_cap = int(rules.get("start_food", 40))
+	difficulty = int(Session.eeve_choice.get("difficulty", difficulty))
+	field_type = int(Session.eeve_choice.get("field", field_type))
 	super._ready()
 	if map == null:
 		return
@@ -118,6 +120,7 @@ func _execute(cmd: Dictionary) -> bool:
 func _apply_setup(diff: int, field: int) -> void:
 	difficulty = clampi(diff, 0, (rules.get("difficulties", []) as Array).size() - 1)
 	field_type = clampi(field, 0, (rules.get("fields", []) as Array).size() - 1)
+	Session.eeve_choice = {"difficulty": difficulty, "field": field_type}
 	waves = _make_waves()
 	_place_field_rocks(int(rules.fields[field_type].get("rocks", 0)))
 	level_pause = float(rules.get("first_pause", 45))
