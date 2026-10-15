@@ -13,6 +13,7 @@ extends "res://scripts/game/game.gd"
 
 const ELEMENT_IDS := ["nature", "earth", "fire", "storm", "magic", "water"]
 const BARRICADE := "eeve_barricade"
+const ROW_GAP := 0.2  ## Versatz der Reihenplätze einer Massenwelle (Towerbreiten)
 
 var rules: Dictionary = {}
 var difficulty := 2        ## Index in rules.difficulties
@@ -190,6 +191,24 @@ func _start_level() -> void:
 		lumber += 1
 		_note(tr("Neuer Elementpunkt und 1 Holz!"))
 	super._start_wave()
+	_queue_rows()
+
+
+## Massenwellen kommen wie im Original in Reihen (4 nebeneinander, dann 0,15 s Pause): innerhalb einer
+## Reihe ohne Abstand, die Reihenplätze laufen leicht versetzt los (_spawn_enemy).
+func _queue_rows() -> void:
+	var slot := 0
+	for i in spawn_queue.size():
+		var g: Dictionary = spawn_queue[i]
+		var row := int(g.get("row", 1))
+		if row <= 1:
+			continue
+		var c := g.duplicate()
+		c["row_slot"] = slot
+		if slot < row - 1:
+			c["interval"] = 0.0
+		spawn_queue[i] = c
+		slot = (slot + 1) % row
 
 
 func _start_wave() -> void:
@@ -255,6 +274,24 @@ func _apply_enemy_difficulty(e: Enemy, g: Dictionary) -> void:
 		e.spell_factor = 0.0
 	if props.has("reduct"):
 		e.hit_reduction = float(EeveWaves.prop(rules, "reduct").get("reduction", 15))
+
+
+## Reihenplätze 2–4 einer Massenwelle starten ein Stück weiter vorn, damit sie nicht genau übereinander liegen.
+func _spawn_enemy(g: Dictionary, lane := -1) -> void:
+	var before := enemies.size()
+	super._spawn_enemy(g, lane)
+	var slot := int(g.get("row_slot", 0))
+	if slot > 0:
+		for i in range(before, enemies.size()):
+			enemies[i].place_on_path(slot * ROW_GAP)
+
+
+## Ein Boss kostet wie im Original 40 · (1 − r⁴) Leben, r = Anteil der schon abgezogenen Leben.
+func on_enemy_leaked(e: Enemy) -> void:
+	if e.boss and e.damage > 0 and e.max_hp > 0.0:
+		var r := clampf(1.0 - e.hp / e.max_hp, 0.0, 1.0)
+		e.damage = int(e.damage * (1.0 - pow(r, 4)))
+	super.on_enemy_leaked(e)
 
 
 func queued_hp() -> float:

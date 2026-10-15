@@ -57,6 +57,16 @@ func _ready() -> void:
 	# 20 % Boss, 25 % Luft-Zweig, 55 % Boden-Zweig, in den Zweigen 35 % Masse
 	check(absi(types.get("boss", 0) - 400) < 80 and absi(types.get("air", 0) + types.get("air_mass", 0) - 500) < 90
 		and absi(types.get("ground", 0) - 715) < 100, "Wellentypen gewürfelt: %s" % [types])
+	# Abstände wie im Original: Boden/Luft 1,2 s, Masse in Reihen zu 4 alle 0,15 s
+	var mass_wave := {}
+	for w in waves:
+		if str(w.eeve.kind).ends_with("_mass"):
+			mass_wave = w
+			break
+	check(is_equal_approx(float(waves[0].groups[0].interval), 1.2), "Level 1: alle 1,2 s ein Gegner")
+	check(mass_wave.is_empty() or (int(mass_wave.groups[0].count) == 40 and int(mass_wave.groups[0].row) == 4
+		and is_equal_approx(float(mass_wave.groups[0].interval), 0.15)), "Masse: 40 Gegner, Reihen zu 4 alle 0,15 s")
+	check(int(waves[54].groups[0].row) == 4 and int(waves[55].groups[0].row) == 1, "Massen-Challenge in Reihen, Luft-Challenge einzeln")
 	check(is_equal_approx(Database.damage_factor("electric", "eeve_small"), 1.2) and is_equal_approx(Database.damage_factor("spells", "eeve_hero"), 0.5),
 		"Schadenstabelle aus der Karte")
 
@@ -94,6 +104,14 @@ func _ready() -> void:
 	game.submit({"type": "start_level"})
 	await get_tree().process_frame
 	check(game.phase == game.Phase.WAVE, "Level 1 läuft")
+	var saved_queue: Array = game.spawn_queue.duplicate()
+	game.spawn_queue = []
+	for i in 8:
+		game.spawn_queue.append({"enemy": "eeve_huhn", "count": 8, "interval": 0.15, "row": 4})
+	game._queue_rows()
+	check(is_zero_approx(float(game.spawn_queue[0].interval)) and is_equal_approx(float(game.spawn_queue[3].interval), 0.15)
+		and int(game.spawn_queue[5].row_slot) == 1, "Massenwelle: 4 Gegner je Reihe ohne Abstand, dann 0,15 s")
+	game.spawn_queue = saved_queue
 	check(game.gold == gold_before + floori(gold_before * 0.05) + 14, "Zinsen und Einkommen zu Level 1 (%d → %d)" % [gold_before, game.gold])
 	Engine.time_scale = 8.0
 	var frames := 0
