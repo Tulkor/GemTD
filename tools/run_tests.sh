@@ -89,8 +89,13 @@ do_test() {
   esac
 }
 
-# Beim ersten Lauf in einem frischen Checkout Ressourcen importieren.
-[ -d .godot/imported ] || "$GODOT" --headless --import --path . >"$LOG_DIR/import.log" 2>&1
+# Beim ersten Lauf in einem frischen Checkout Ressourcen importieren, und neu, wenn ein Skript
+# neuer ist als der Klassen-Cache (sonst fehlen neue class_name nach einem Merge und Tests hängen bis zum Timeout).
+CACHE=.godot/global_script_class_cache.cfg
+if [ ! -d .godot/imported ] || [ ! -f $CACHE ] || [ -n "$(find scripts tests tools -name '*.gd' -newer $CACHE -print -quit)" ]; then
+  "$GODOT" --headless --import --path . >"$LOG_DIR/import.log" 2>&1
+  touch $CACHE
+fi
 
 # Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
 pick_changed() {
