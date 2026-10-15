@@ -1,3 +1,4 @@
 * text=auto eol=lf
 *.png binary
 *.bat text eol=crlf
+data/i18n/*.json merge=json_schluessel

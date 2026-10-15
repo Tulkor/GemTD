@@ -1,4 +1,5 @@
 extends Node
+## Lauf: trio
 ## Gemischte Sitzung mit drei Prozessen (eeveTD): der Host spielt allein, A und B zusammen auf einem Feld,
 ## das A rechnet (Befehle von B gehen über den Host weiter an A).
 ##   godot --headless --path . res://tests/gemischt_test.tscn -- --role=host   (und --role=a, --role=b)

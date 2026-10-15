@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte (Tower-Tabelle, Texte, Maps, Werkzeuge), alle Skripte laden, Smoke, Geschosse,
-#                       eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby, Gemischt
-#   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
+#   schnell (Standard): Prüfskripte (Tower-Tabelle, Texte, Maps, Werkzeuge) und alle Tests unter tests/
+#                       außer den langen ("## Lauf: fest": Balance, Tempo, späte Wellen)
+#   alle:               dazu die langen
 #   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
 #                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
@@ -35,7 +35,7 @@ summary() {  # name log exit start
     [ -z "$warn" ] || echo "$warn" | head -n 3 | sed 's/^ */    ⚠ /'
   else
     FAILED=1
-    printf '✗ %-14s Exit %s, %s Fehler (Log: %s)\n' "$name" "$code" "$fail" "$log"
+    printf '✗ %-14s Exit %s, %s Fehler (mehr: tools/log_auszug.sh %s)\n' "$name" "$code" "$fail" "$name"
     grep -E '^FAIL|SCRIPT ERROR|Parse Error|ERROR' "$log" | grep -vE "$NOISE" | head -n 15 | sed 's/^/    /'
   fi
 }
@@ -104,26 +104,53 @@ for f in sys.argv[1:]: ast.parse(open(f, encoding="utf-8").read(), f)' $py || ba
   return $bad
 }
 
+# Tests finden sich selbst: jede tests/<stamm>_test.tscn ist ein Test. Die zweite Zeile der .gd sagt, wie er läuft:
+#   ## Lauf: einzeln|paar|trio|fest [Argumente] [(Name kurzname)]
+# paar = Host + Client, trio = Host + a + b, fest = feste Bildrate, nur in "alle". Ohne Zeile: einzeln.
+# Ein neuer Test braucht also keinen Eintrag hier.
+test_info() {  # stamm -> ART ARGS NAME
+  local line
+  line=$(sed -n '2,6{s/^## Lauf: *//p}' "tests/$1_test.gd" 2>/dev/null | head -n1)
+  NAME=$1
+  if [[ $line =~ \(Name\ ([a-z_]+)\) ]]; then NAME=${BASH_REMATCH[1]}; line=${line%%(*}; fi
+  read -r ART ARGS <<<"${line:-einzeln}"
+}
+
+all_tests() {  # Kurznamen aller Tests; $1 = "ohne_fest" lässt die langen Balance-Läufe weg
+  local f stem
+  for f in tests/*_test.tscn; do
+    stem=$(basename "$f" _test.tscn); test_info "$stem"
+    [ "${1:-}" = ohne_fest ] && [ "$ART" = fest ] && continue
+    echo "$NAME"
+  done
+}
+
+resolve() {  # Kurzname oder Stamm -> STEM (leer, wenn unbekannt)
+  local f stem
+  STEM=""
+  for f in tests/*_test.tscn; do
+    stem=$(basename "$f" _test.tscn); test_info "$stem"
+    if [ "$1" = "$stem" ] || [ "$1" = "$NAME" ]; then STEM=$stem; return; fi
+  done
+}
+
 do_test() {
   case $1 in
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
     werkzeuge) run_check werkzeuge check_tools ;;
-    skripte) run_one skripte skripte_test ;;
-    smoke)   run_one smoke smoke_test ;;
-    maul)    run_one maul maul_test ;;
-    eeve)    run_one eeve eeve_test ;;
-    geschosse) run_one geschosse geschoss_test ;;
-    netz)    run_pair netz net_test ;;
-    sitzung) run_pair sitzung session_test ;;
-    koop)    run_pair koop coop_test ;;
-    lobby)   run_pair lobby lobby_test ;;
-    gemischt) run_trio gemischt gemischt_test ;;
-    balance) run_fixed balance balance_test ;;
-    tempo)   run_fixed tempo speed_test -- --runs=1 ;;
-    spaet)   run_fixed spaet late_balance_test ;;
-    *) echo "Unbekannter Test: $1"; FAILED=1 ;;
+    *)
+      resolve "$1"
+      [ -n "$STEM" ] || { echo "Unbekannter Test: $1 (vorhanden: $(all_tests | tr '\n' ' '))"; FAILED=1; return; }
+      test_info "$STEM"
+      # shellcheck disable=SC2086
+      case $ART in
+        paar) run_pair "$NAME" "${STEM}_test" ;;
+        trio) run_trio "$NAME" "${STEM}_test" ;;
+        fest) if [ -n "$ARGS" ]; then run_fixed "$NAME" "${STEM}_test" -- $ARGS; else run_fixed "$NAME" "${STEM}_test"; fi ;;
+        *)    if [ -n "$ARGS" ]; then run_one "$NAME" "${STEM}_test" -- $ARGS; else run_one "$NAME" "${STEM}_test"; fi ;;
+      esac ;;
   esac
 }
 
@@ -137,12 +164,8 @@ pick_changed() {
   for f in $files; do
     case $f in
       tests/*_test.*)
-        n=$(basename "$f"); n=${n%_test.*}
-        case $n in
-          net) n=netz ;; session) n=sitzung ;; coop) n=koop ;; geschoss) n=geschosse ;;
-          speed) n=tempo ;; late_balance) n=spaet ;; skripte) n="" ;;
-        esac
-        t+="$n " ;;
+        n=$(basename "$f"); resolve "${n%_test.*}"
+        [ -z "$STEM" ] || { test_info "$STEM"; t+="$NAME "; } ;;
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/fx/*|assets/fx/*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse eeve maul " ;;
@@ -167,12 +190,17 @@ if [ "$MODE" = geaendert ]; then
   set -- $MODE
 fi
 case $MODE in
-  schnell) set -- tabelle ui maps werkzeuge skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt ;;
-  alle)    set -- tabelle ui maps werkzeuge skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt balance tempo spaet ;;
+  # shellcheck disable=SC2046
+  schnell) set -- tabelle ui maps werkzeuge $(all_tests ohne_fest) ;;
+  # shellcheck disable=SC2046
+  alle)    set -- tabelle ui maps werkzeuge $(all_tests) ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()
-for t in "$@"; do case $t in balance|tempo|spaet) SEQ+=("$t") ;; *) PAR+=("$t") ;; esac; done
+for t in "$@"; do
+  resolve "$t"; ART=""; [ -z "$STEM" ] || test_info "$STEM"
+  if [ "$ART" = fest ]; then SEQ+=("$t"); else PAR+=("$t"); fi
+done
 for t in "${PAR[@]}"; do
   ( FAILED=0; do_test "$t" > "$LOG_DIR/$t.sum"; echo $FAILED > "$LOG_DIR/$t.rc" ) &
 done
