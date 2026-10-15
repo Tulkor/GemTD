@@ -32,6 +32,9 @@ var dead := false
 var slow_factor := 0.0
 ## Tempo-Faktor außerhalb jeder Tower-Reichweite (balance.json → idle_speed_factor), sonst 1
 var boost := 1.0
+## Wie lange der Gegner im letzten Bild schon in Reichweite war (Sekunden): ein Tower, der auf ihn gewartet
+## hat, holt nur so viel Rückstand nach (tower.gd), sonst schösse er bei 4× im Mittel ein halbes Bild zu früh.
+var covered_for := 0.0
 var slow_time := 0.0
 var poison_dps := 0.0
 var poison_time := 0.0
@@ -131,6 +134,7 @@ func _process(delta: float) -> void:
 	# hält genau am Rand an und geht den Rest des Bilds normal schnell. Ohne die genaue Stelle stünde er
 	# bis zu einem Schritt tief in der Reichweite und wäre entsprechend kürzer darin.
 	boost = 1.0 if game == null or game.is_covered(self) else game.idle_speed_factor()
+	covered_for = delta if boost <= 1.0 else 0.0
 	if boost > 1.0:
 		var left := move * boost
 		while left > 0.0 and path_index < path.size():
@@ -151,7 +155,9 @@ func _process(delta: float) -> void:
 				_restore(before)
 				_advance(hi)
 				boost = 1.0
-				_advance((left - hi) / game.idle_speed_factor())
+				var rest: float = (left - hi) / game.idle_speed_factor()
+				covered_for = rest / move * delta
+				_advance(rest)
 				break
 			left -= step
 	else:
