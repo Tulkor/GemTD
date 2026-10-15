@@ -1416,12 +1416,13 @@ func enemies_in_radius(p: Vector2, radius: float) -> Array:
 	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
 
 
-func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
-	effects.add_beam(from, to, col)
+## fx: Schuss-/Treffer-Effekt, siehe effects.gd
+func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
+	effects.add_beam(from, to, col, fx)
 	if coop != null and not mirror:
-		coop.add_beam(from, to, col)
+		coop.add_beam(from, to, col, fx)
 	if net_sync:
-		net_sync.add_beam(from, to, col)
+		net_sync.add_beam(from, to, col, fx)
 
 
 func on_enemy_killed(e: Enemy) -> void:

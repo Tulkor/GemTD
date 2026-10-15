@@ -42,9 +42,9 @@ func _on_watchers_changed() -> void:
 
 
 ## Schusslinie für Zuschauer merken (game.gd → add_beam).
-func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
+func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
 	if not Net.watchers.is_empty() and _beams.size() < MAX_BEAMS:
-		_beams.append([from, to, col])
+		_beams.append([from, to, col, fx] if fx != "" else [from, to, col])
 
 
 func _process(delta: float) -> void:

@@ -101,9 +101,9 @@ func _update_away() -> void:
 
 
 ## Schusslinie für die Mitspieler merken (game.gd → add_beam).
-func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
+func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
 	if _beams.size() < MAX_BEAMS:
-		_beams.append([from, to, col])
+		_beams.append([from, to, col, fx] if fx != "" else [from, to, col])
 
 
 ## Feldstand für die Mitspieler. "tstats" (Kills, Schaden je Tower) ändert sich laufend und zählt nicht
@@ -336,7 +336,7 @@ func apply_enemies(packet: Dictionary) -> void:
 		g.spawn_queue.pop_front()
 	g.wave_live = packet.get("wl", g.wave_live)
 	for b in packet.get("b", []):
-		g.effects.add_beam(b[0], b[1], b[2])
+		g.effects.add_beam(b[0], b[1], b[2], str(b[3]) if b.size() > 3 else "")
 
 
 func _group_for(enemy_id: String) -> Dictionary:

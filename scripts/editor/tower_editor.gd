@@ -214,11 +214,28 @@ func _build_form() -> void:
 	var tgt := _option(target_row, TARGET_LABELS, TARGETS.find(current.get("targets", "both")))
 	tgt.item_selected.connect(func(i): current["targets"] = TARGETS[i])
 
+	_fx_option("Treffer-Effekt", "hit_fx", FxData.hit_ids(), general)
+	_fx_option("Schuss-Effekt", "shot_fx", FxData.shot_ids(), general)
+
 	if current.get("category", "gem") == "special":
 		_build_recipe()
 	_build_tiers()
 	if current.get("category", "gem") == "special":
 		_build_upgrades()
+
+
+## Auswahl eines Effekts aus data/fx/ (fx_data.gd). "auto" wird nicht gespeichert.
+func _fx_option(text: String, key: String, ids: Array, parent: Node) -> void:
+	var r := UiUtil.row(text, parent, 220)
+	var values: Array = [FxData.AUTO, FxData.NONE] + ids
+	var labels: Array = [tr("Automatisch (nach Farbe)"), tr("Keiner")] + ids
+	var o := _option(r, labels, values.find(str(current.get(key, FxData.AUTO))))
+	o.item_selected.connect(func(i):
+		if values[i] == FxData.AUTO:
+			current.erase(key)
+		else:
+			current[key] = values[i]
+		FxData.clear_cache())
 
 
 func _line_edit(text: String, key: String, parent: Node) -> void:
