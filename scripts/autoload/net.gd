@@ -164,7 +164,8 @@ func leave() -> void:
 
 ## Port im Router per UPnP freigeben (im Hintergrund, die Suche dauert bis zu zwei Sekunden).
 func _open_port(port: int) -> void:
-	if OS.has_feature("headless") or _upnp_thread != null:
+	# Tests laufen mit --headless: dort keinen Router fragen (der Thread lief sonst beim Beenden noch)
+	if DisplayServer.get_name() == "headless" or _upnp_thread != null:
 		return
 	upnp_state = "busy"
 	upnp_ip = ""
@@ -248,6 +249,9 @@ static func _is_private(ip: String) -> bool:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:   # beim Beenden die Freigabe im Router wieder entfernen
+		if _upnp_thread != null:   # laufende Suche abwarten, sonst stürzt Godot beim Beenden ab
+			_upnp_thread.wait_to_finish()
+			_upnp_thread = null
 		_close_port()
 
 
