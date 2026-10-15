@@ -135,7 +135,15 @@ func refresh_timer() -> void:
 	var waiting: bool = game.phase == game.Phase.BUILD and game.setup_done
 	_next.visible = waiting
 	if waiting:
-		_next.text = tr("Level %d starten · %d s") % [game.wave_index + 1, ceili(maxf(game.level_pause, 0.0))]
+		var secs := ceili(maxf(game.level_pause, 0.0))
+		if game.players.size() > 1:
+			# Koop: das Level startet früher, wenn alle bereit sind
+			var here: Array = range(game.players.size()).filter(func(i): return not game.players[i].away)
+			var ready: int = here.filter(func(i): return game.ready_players.has(i)).size()
+			_next.text = tr("Bereit %d/%d · %d s") % [ready, here.size(), secs]
+			_next.disabled = game.ready_players.has(game.local_player)
+		else:
+			_next.text = tr("Level %d starten · %d s") % [game.wave_index + 1, secs]
 
 
 ## Knöpfe für die Fallen der Elemente auf Stufe 4 oder höher; neu gebaut nur, wenn sich etwas ändert.

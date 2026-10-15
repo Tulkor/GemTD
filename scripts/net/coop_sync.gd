@@ -8,6 +8,9 @@ extends Node
 ##                vom Host wird ins eigene Spiel übernommen, so laufen Anzeige und Regeln (welche Optionen ein
 ##                Tower hat) mit demselben Code wie solo. Gegner laufen wie beim Zuschauen auf dem gemeldeten
 ##                Weg weiter (enemy.gd → _remote_step).
+##   Andere Modi auf game.gd (eeveTD) hängen sich mit eigenen Methoden an, falls vorhanden:
+##                coop_commands() weitere erlaubte Befehle, new_tower() Tower-Klasse für Mitspieler,
+##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode").
 
 const STATE_INTERVAL := 1.0
 const CHECK_INTERVAL := 0.05
@@ -73,7 +76,8 @@ func _process(delta: float) -> void:
 
 ## Befehl eines Mitspielers (Spielernummer p). Nur bekannte Befehle, die Spielernummer setzt der Host.
 func receive(p: int, cmd: Dictionary) -> bool:
-	if not COMMANDS.has(str(cmd.get("type", ""))):
+	var allowed: Array = COMMANDS + (game.coop_commands() if game.has_method("coop_commands") else [])
+	if not allowed.has(str(cmd.get("type", ""))):
 		return false
 	cmd.player = p
 	return game.execute(cmd)
@@ -123,7 +127,7 @@ func snapshot() -> Dictionary:
 	for p in game.players:
 		ps.append({"name": p.name, "gold": p.gold, "stage": p.stage, "away": p.away,
 			"round": p.round_towers.map(func(t): return game.tower_ref(t))})
-	return {
+	var s := {
 		"phase": game.phase,
 		"wave": game.wave_index,
 		"lives": game.lives,
@@ -143,6 +147,9 @@ func snapshot() -> Dictionary:
 		"rocks": rs,
 		"tstats": stats,
 	}
+	if game.has_method("coop_snapshot"):
+		s.mode = game.coop_snapshot()
+	return s
 
 
 static func structure_hash(s: Dictionary) -> int:
@@ -204,7 +211,7 @@ func apply_state(s: Dictionary) -> void:
 		if t == null:
 			if not Database.towers.has(id):
 				continue
-			t = Tower.new()
+			t = g.new_tower() if g.has_method("new_tower") else Tower.new()
 			t.is_new = bool(d[5])
 			t.owner_player = int(d[6])
 			g.board.add_child(t)
@@ -243,6 +250,8 @@ func apply_state(s: Dictionary) -> void:
 	g.score_stats = s.get("score_stats", {})
 	g.final_boss = s.get("final_boss", g.final_boss)
 	g.leaks_per_wave = s.get("leaks", {})
+	if s.has("mode") and g.has_method("apply_coop_snapshot"):
+		g.apply_coop_snapshot(s.mode)
 	if s.get("setup", true) and not g.setup_done:
 		Session.difficulty = int(s.get("difficulty", Session.difficulty))
 		Session.score_mode = bool(s.get("score_mode", false))

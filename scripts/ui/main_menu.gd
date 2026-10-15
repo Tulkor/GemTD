@@ -548,10 +548,11 @@ func _start_session() -> void:
 		# Modus mit eigener Karte (Shopping Maul): alle zusammen in einer Partie
 		Net.session.mode = Net.vote_winner(false)
 		Net.start_coop({"name": str(Database.mode(Net.session.mode).get("name", ""))})
-	elif lobby.coop_mode and m != null and not Net.session.get("loaded", false):
+	elif lobby.coop_selected() and m != null and not Net.session.get("loaded", false):
 		Net.start_coop(m.to_dict())
 	elif m != null or not Net.session.get("map", {}).is_empty():
-		Net.start_session(m.to_dict() if m != null else {})
+		# Eigene Felder, gemischt mit Koop-Gruppen (gleiche Feldnummer in der Lobby)
+		Net.start_session(m.to_dict() if m != null else {}, lobby.field_groups())
 
 
 ## Spielstand laden: Einzelspiel geht direkt weiter, eine Mehrspieler-Sitzung wird gehostet.

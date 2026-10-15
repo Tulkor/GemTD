@@ -246,8 +246,11 @@ func save_mode() -> String:
 		return "none"
 	if mirror:
 		return "client"
+	if coop != null and Net.is_active():
+		# Gemischte Sitzung: den Stand einer Koop-Gruppe, die ein Mitspieler rechnet, speichert der Host mit
+		return "host" if Net.is_host() else "client"
 	if coop != null:
-		return "host" if Net.is_active() else "single"
+		return "single"
 	if Net.is_active():
 		return "host" if Net.is_host() else "client"
 	return "single"
@@ -260,7 +263,7 @@ func save_game() -> bool:
 		return false
 	if Session.save_id == "":
 		Session.save_id = SaveGame.new_id()
-	return SaveGame.write({"id": Session.save_id, "kind": "single", "meta": SaveGame.meta_for(self), "state": st})
+	return SaveGame.write({"id": Session.save_id, "kind": "single", "mode": Session.game_kind, "meta": SaveGame.meta_for(self), "state": st})
 
 
 ## Koop (Host): das gemeinsame Feld mit allen Spielern speichern, Spielernummern bleiben an den Spieler-IDs.
@@ -269,7 +272,7 @@ func save_coop() -> bool:
 	if st.is_empty():
 		return false
 	var names: Array = players.map(func(p): return p.name)
-	return SaveGame.write({"id": str(Net.session.get("id", SaveGame.new_id())), "kind": "coop",
+	return SaveGame.write({"id": str(Net.session.get("id", SaveGame.new_id())), "kind": "coop", "mode": Session.game_kind,
 		"meta": SaveGame.meta_for(self, {"players": names}), "map": map.to_dict(), "host_uid": Net.uid,
 		"coop": Net.session.get("coop", []), "state": st})
 
@@ -280,7 +283,7 @@ func leave(save: bool, quit := false) -> void:
 	if save:
 		hud.set_leave_busy(tr("Speichere …"))
 		var ok := false
-		if save_mode() == "host" and coop != null:
+		if save_mode() == "host" and coop != null and Net.is_coop():
 			ok = save_coop()
 		elif save_mode() == "host":
 			ok = await Net.save_session(self)
@@ -289,7 +292,7 @@ func leave(save: bool, quit := false) -> void:
 		if not ok:
 			hud.set_leave_busy(tr("Speichern fehlgeschlagen"), true)
 			return
-	elif Net.is_active() and coop == null:
+	elif Net.is_active() and not mirror and not Net.is_coop():
 		Net.report_state(SaveGame.capture(self))
 	if quit:
 		get_tree().quit()

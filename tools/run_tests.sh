@@ -59,6 +59,22 @@ run_pair() {  # name scene: Host und Client als zwei Prozesse
   summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : cc ))
 }
 
+run_trio() {  # name scene: Host und zwei Mitspieler (a, b) als drei Prozesse
+  local name=$1 scene=$2
+  local hl="$LOG_DIR/$name-host.log" al="$LOG_DIR/$name-a.log" bl="$LOG_DIR/$name-b.log"
+  timeout 600 "$GODOT" --headless --path . "res://tests/$scene.tscn" -- --role=host >"$hl" 2>&1 &
+  local hp=$!
+  sleep 1
+  timeout 600 "$GODOT" --headless --path . "res://tests/$scene.tscn" -- --role=a >"$al" 2>&1 &
+  local ap=$!
+  timeout 600 "$GODOT" --headless --path . "res://tests/$scene.tscn" -- --role=b >"$bl" 2>&1
+  local bc=$?
+  wait $ap; local ac=$?
+  wait $hp; local hc=$?
+  cat "$hl" "$al" "$bl" > "$LOG_DIR/$name.log"
+  summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : (ac != 0 ? ac : bc) ))
+}
+
 run_check() {  # name command...
   local name=$1; shift
   local log="$LOG_DIR/$name.log"
@@ -82,6 +98,7 @@ do_test() {
     sitzung) run_pair sitzung session_test ;;
     koop)    run_pair koop coop_test ;;
     lobby)   run_pair lobby lobby_test ;;
+    gemischt) run_trio gemischt gemischt_test ;;
     balance) run_fixed balance balance_test ;;
     tempo)   run_fixed tempo speed_test -- --runs=1 ;;
     spaet)   run_fixed spaet late_balance_test ;;
@@ -108,7 +125,7 @@ pick_changed() {
       scripts/maul/*|data/maul/*|scenes/maul*|tests/maul_test*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|tests/eeve_test*) t+="eeve " ;;
       scripts/ui/lobby*|tests/lobby_test*) t+="lobby " ;;
-      scripts/net/*|scripts/autoload/net.gd|tests/net_test*|tests/coop_test*|tests/session_test*) t+="netz sitzung koop lobby " ;;
+      scripts/net/*|scripts/autoload/net.gd|tests/net_test*|tests/coop_test*|tests/session_test*|tests/gemischt_test*) t+="netz sitzung koop lobby gemischt " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
@@ -126,8 +143,8 @@ if [ "$MODE" = geaendert ]; then
   set -- $MODE
 fi
 case $MODE in
-  schnell) set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby ;;
-  alle)    set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby balance tempo spaet ;;
+  schnell) set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt ;;
+  alle)    set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()

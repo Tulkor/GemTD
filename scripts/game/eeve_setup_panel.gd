@@ -2,6 +2,7 @@ class_name EeveSetupPanel
 extends Control
 ## Einstellungen vor dem ersten Level von eeveTD: Schwierigkeit und Feldtyp (data/eeve.json).
 ## „Los geht's“ schickt den Befehl setup an eeve_game.gd; das Fenster schließt sich, sobald game.setup_done gilt.
+## Koop: oben die Mitspieler, nur der Host wählt, die anderen warten (ihr Fenster schließt der Stand vom Host).
 
 var game  # eeve_game.gd
 var difficulty := 2
@@ -32,6 +33,9 @@ func _ready() -> void:
 	UiTheme.title(UiUtil.label("eeveTD", v, 26))
 	var info := UiUtil.wrap_label(tr("%d Level · Barrikaden bauen, zu Element-Towern aufwerten, Elementpunkte verteilen") % int(game.rules.get("levels", 57)), v, 590)
 	info.add_theme_color_override("font_color", UiTheme.MUTED)
+	var coop: bool = game.players.size() > 1
+	if coop:
+		_coop_box(v)
 
 	UiTheme.caption("Schwierigkeit", v)
 	var grid := GridContainer.new()
@@ -64,10 +68,35 @@ func _ready() -> void:
 	_field_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_update_text()
 
+	if game.mirror:
+		for b in grid.get_children() + h.get_children():
+			b.disabled = true
+		var wait := UiUtil.wrap_label("Der Host wählt Schwierigkeit und Feld, gleich geht es los …", v, 590)
+		wait.add_theme_color_override("font_color", UiTheme.CYAN)
+		return
 	var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "difficulty": difficulty, "field": field}))
 	go.custom_minimum_size.y = 50
 	go.add_theme_font_size_override("font_size", 20)
 	UiTheme.accent_button(go, UiTheme.GOLD, UiTheme.GOLD_DARK)
+
+
+## Koop: Mitspieler und was für alle gilt.
+func _coop_box(v: VBoxContainer) -> void:
+	UiTheme.caption(tr("Koop · %d Spieler") % game.players.size(), v)
+	var names := HBoxContainer.new()
+	names.add_theme_constant_override("separation", 6)
+	v.add_child(names)
+	for i in game.players.size():
+		var p: PlayerState = game.players[i]
+		var b := PanelContainer.new()
+		var own: bool = i == game.local_player
+		b.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.CYAN if own else UiTheme.PANEL, UiTheme.CYAN if own else UiTheme.BORDER, 0, 2, 6))
+		names.add_child(b)
+		var l := UiUtil.label((p.name if p.name != "" else tr("Spieler %d") % (i + 1)) + (" · Host" if i == 0 else ""), b, 14)
+		l.add_theme_color_override("font_color", UiTheme.GOLD_DARK if own else UiTheme.TEXT)
+	var extra := roundi((game.coop_hp_factor() - 1.0) * 100)
+	var rules := UiUtil.wrap_label(tr("Ein Feld, gemeinsame Leben. Jeder hat eigenes Gold, Food, Holz und eigene Elementpunkte und wertet nur seine Tower auf. Gegner +%d %% Leben.") % extra, v, 590)
+	rules.add_theme_color_override("font_color", UiTheme.MUTED)
 
 
 func _process(_delta: float) -> void:

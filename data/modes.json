@@ -16,9 +16,9 @@
 			"name": "eeveTD",
 			"ready": true,
 			"min_players": 1,
-			"max_players": 1,
+			"max_players": 4,
 			"scene": "res://scenes/eeve_game.tscn",
-			"hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level (noch solo)",
+			"hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop oder eigene Felder bis 4 Spieler",
 			"needs_map": true
 		},
 		{
