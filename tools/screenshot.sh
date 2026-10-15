@@ -12,7 +12,7 @@ ARGS=()
 for a in "$@"; do
   case $a in --groesse=*) SIZE=${a#--groesse=} ;; *) ARGS+=("$a") ;; esac
 done
-[ -d .godot/imported ] || godot --headless --import --path . >/dev/null 2>&1
+tools/godot_import.sh
 LOG=$(mktemp)
 xvfb-run -a -s "-screen 0 ${SIZE}x24" godot --rendering-driver opengl3 --resolution "$SIZE" --path . \
   res://tools/screenshot.tscn -- "${ARGS[@]}" >"$LOG" 2>&1 || true

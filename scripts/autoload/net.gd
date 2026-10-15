@@ -164,7 +164,7 @@ func leave() -> void:
 
 ## Port im Router per UPnP freigeben (im Hintergrund, die Suche dauert bis zu zwei Sekunden).
 func _open_port(port: int) -> void:
-	if OS.has_feature("headless") or _upnp_thread != null:
+	if DisplayServer.get_name() == "headless" or _upnp_thread != null:
 		return
 	upnp_state = "busy"
 	upnp_ip = ""
@@ -207,7 +207,7 @@ func _close_port() -> void:
 
 
 func _fetch_public_ip() -> void:
-	if OS.has_feature("headless"):
+	if DisplayServer.get_name() == "headless":
 		return
 	if _ip_request == null:
 		_ip_request = HTTPRequest.new()

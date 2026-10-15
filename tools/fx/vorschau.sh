@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export PATH="$HOME/.local/bin:$PATH"
-godot --headless --import --path . >/dev/null 2>&1 || true
+tools/godot_import.sh
 LOG=$(mktemp)
 xvfb-run -a -s "-screen 0 1600x1000x24" godot --rendering-driver opengl3 --resolution 1600x1000 --path . \
   res://tools/fx/vorschau.tscn -- "$@" >"$LOG" 2>&1 || true
