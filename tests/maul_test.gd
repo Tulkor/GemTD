@@ -81,6 +81,8 @@ func _ready() -> void:
 	print("Leben %d, durchgelassen %d, JE %.2f, Gold %d, Tower %d" % [game.lives, game.enemies_leaked, game.je, game.players[0].gold, game.towers.size()])
 	game.queue_free()
 	await get_tree().process_frame
+	await _pro_tests()
+	await _coop_tests()
 	print("FERTIG mit %d Fehlern" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -95,3 +97,124 @@ func _spots(game: MaulGame, zone: Rect2i) -> Array:
 	var mid := Vector2(zone.get_center())
 	list.sort_custom(func(a, b): return Vector2(a).distance_to(mid) < Vector2(b).distance_to(mid))
 	return list
+
+
+## Etappe 2: XP, Hauptgebäude, Profi-Filialen, Items, Einheiten (Sandbox, damit alles offen ist).
+func _pro_tests() -> void:
+	check(not MaulXp.pro_unlocked(10) and MaulXp.pro_unlocked(250), "Profi-Filialen ab 25 XP")
+	var a: Array = MaulXp.gain(10, 0.0, 10, 1, 1.0)
+	var b: Array = MaulXp.gain(5000, 0.0, 10, 1, 1.0)
+	check(int(a[0]) > 10, "XP nach Level 10: %s" % MaulXp.text(int(a[0])))
+	check(int(b[0]) - 5000 < int(a[0]) - 10, "Hohe XP wachsen langsamer")
+	check(MaulXp.text(123) == "12,3", "XP-Text 12,3")
+	check(MaulData.bonus_cost(1, false, 1) == 500 and MaulData.bonus_cost(4, false, 1) == 4000, "Bonus kostet n·⌊√n⌋·500")
+	check(MaulData.bonus_cost(2, true, 2) == 300, "Rabatt für 2 Spieler halb so teuer")
+
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	check(not game._pick_shop(0, "post"), "Ohne Start keine Filiale")
+	game.start_game("post", 1, "group", true)
+	check(game.shop_of() == "post" and game.sandbox, "Sandbox: Profi-Filiale Post eröffnet")
+	var me: MaulGame.Player = game.players[0]
+	me.gold = 100000
+	# Hauptgebäude: Post hat Rabatt
+	check(game.submit({"type": "bonus"}) and me.bonus == 1, "Rabatt-Stufe 1 gekauft")
+	check(me.gold == 100000 - 300, "Rabatt Stufe 1 kostet 300")
+	var zone: Rect2i = game.map.zones[0].rect
+	var spots := _spots(game, zone).filter(func(c): return game.build_problem("h01P", c, 0) == "")
+	check(game.submit({"type": "build", "tower": "h01P", "cell": spots[0]}), "Paketladen gebaut")
+	var g0 := me.gold
+	check(game.submit({"type": "build", "tower": "h01O", "cell": spots[1]}), "Postamt (2 Slots) gebaut")
+	check(me.gold == g0 - 120 + 6, "Rabatt: 5 %% von 120 zurück (%d)" % (g0 - me.gold))
+	var office: MaulTower = game.towers[spots[1]]
+	check(office.slots() == 2, "Postamt hat 2 Slots")
+	check(game.items_for(0, "weapon").has("I000"), "Paketladen verkauft Werbesendung")
+	check(game.submit({"type": "item", "cell": office.cell, "item": "I002"}), "Item gekauft")
+	check(game.submit({"type": "item", "cell": office.cell, "item": "I002"}), "zweites Item gekauft")
+	check(not game.submit({"type": "item", "cell": office.cell, "item": "I000"}), "Slots voll")
+	check(game.sell_value(office) > floori(office.value * 0.75), "Verkaufswert enthält die Items")
+	check(game.submit({"type": "item_sell", "cell": office.cell, "slot": 0}) and office.items.size() == 1, "Item verkauft")
+	# XPert: ein XP-Tower erlaubt
+	check(game.submit({"type": "build", "tower": "h00S", "cell": spots[2]}), "XP-Tower Haystack gebaut")
+	check(game.build_problem("h01L", spots[3], 0) != "", "zweiter XP-Tower gesperrt")
+	check(game.requirement_problem(MaulData.tower("o01J"), 0) != "", "Ultimate erst ab Level 21")
+	# Schaden: Fitness-Doping und Bonusfaktor
+	var t := MaulTower.new()
+	t.owner_player = 0
+	game.board.add_child(t)
+	t.setup(game, Vector2i(-10, -10), "H03A", 0)
+	game._take_drug(t, MaulData.item("I00U"))
+	check(t.flat == 25.0, "Amphetamin: +25 Schaden")
+	game._take_drug(t, MaulData.item("I01T"))
+	check(t.side == 10 and is_equal_approx(t.side_factor(), 0.5), "Steroide: 10 Stufen Nebenwirkungen")
+	# IKEA-Combo
+	var combo: Array = MaulData.pro().combos[0]
+	t.items = [combo[0], combo[1]]
+	game._combine(t)
+	check(t.items == [combo[2]], "Combo %s + %s → %s" % combo)
+	t.queue_free()
+	# Einheiten: Zombie zerfällt, Drohne verbraucht Energie
+	var z := game.spawn_unit("u001", 0, null)
+	var d := game.spawn_unit("battle", 0, null)
+	var hp := z.hp
+	for i in 10:
+		await get_tree().process_frame
+	check(z.hp < hp, "Zombie verliert Leben (%.1f → %.1f)" % [hp, z.hp])
+	check(game.units.size() == 2 and d.drone, "2 Einheiten unterwegs")
+	check(d.max_energy() == 15.0, "Drohne hat 15 Energie")
+	d.modules["battery"] = "I018"
+	check(d.max_energy() == 25.0, "Batterie Mk1: +10 Energie")
+	check(game.submit({"type": "post", "unit": d.net_id, "x": game.map.zone_center(0).x, "y": game.map.zone_center(0).y}), "Posten gesetzt")
+	game.remove_unit(z)
+	check(game.units.size() == 1, "Zombie entfernt")
+	game.queue_free()
+	await get_tree().process_frame
+
+
+## Koop ohne Netz: Host- und Mitspieler-Spiel, Befehle und Stand laufen direkt (wie über ENet als Bytes).
+func _coop_tests() -> void:
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	var host: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(host)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(client)
+	await get_tree().process_frame
+	check(host.sync != null and client.mirror and client.local_player == 1, "Koop: Host und Mitspieler angelegt")
+	client.sync.command_sink = func(cmd): host.sync.receive(1, _wire(cmd))
+	var pump := func():
+		client.sync.apply_state(_wire(host.sync.snapshot()))
+		client.sync.apply_enemies(_wire(host.sync.enemy_packet()))
+	host.start_game("hm", 1, "group")
+	pump.call()
+	check(client.phase == MaulGame.Phase.COUNTDOWN, "Mitspieler sieht den Countdown")
+	client.start_game("aldi", 0, "group")
+	pump.call()
+	check(host.shop_of(1) == "aldi" and client.shop_of() == "aldi", "Mitspieler hat Aldi eröffnet")
+	check(not client.hud.setup_visible(), "Filialwahl beim Mitspieler zu")
+	var zone: Rect2i = host.map.zones[1].rect
+	var cheap := str(MaulData.buyable("aldi")[0].id)
+	var spot: Vector2i = _spots(host, zone).filter(func(c): return host.build_problem(cheap, c, 1) == "")[0]
+	client.submit({"type": "build", "tower": cheap, "cell": spot})
+	pump.call()
+	check(host.towers.has(spot) and host.towers[spot].owner_player == 1, "Host baut für den Mitspieler")
+	check(client.towers.has(spot), "Mitspieler sieht seinen Tower")
+	check(client.players[1].gold == host.players[1].gold, "Gold gleich: %d" % client.players[1].gold)
+	client.submit({"type": "build", "tower": cheap, "cell": _spots(host, host.map.zones[0].rect)[0]})
+	check(host.towers.size() == 1, "Mitspieler baut nicht im Gebiet des Hosts")
+	host.submit({"type": "start_now"})
+	for i in 30:
+		await get_tree().process_frame
+	pump.call()
+	check(client.phase == MaulGame.Phase.WAVE and client.level == 1, "Mitspieler sieht Level 1")
+	check(client.enemies.size() == host.enemies.size() and client.enemies.size() > 0, "Gegner gespiegelt: %d" % client.enemies.size())
+	host.queue_free()
+	client.queue_free()
+	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Wie über das Netz: als Bytes und zurück, damit nichts geteilt wird.
+func _wire(v):
+	return bytes_to_var(var_to_bytes(v))

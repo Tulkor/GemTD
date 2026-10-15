@@ -261,6 +261,13 @@ def tooltip_cooldown(t):
     return num(m.group(1)) if m else None
 
 
+# XPert (n000): XP- und Ultimate-Tower, die jede Filiale zusätzlich bauen kann
+XPERT = {"id_de": "n000", "id_en": "n000", "name_de": "XPert", "name_en": "XPert", "kind": "XPert",
+         "bonus_ability": "", "tooltip_de": "XP-Tower (je Spieler einer) und Ultimate-Tower (einer, ab Level 21).",
+         "rules": "XP-Tower brauchen das Token n00B, Ultimate-Tower n00H: je einer gleichzeitig.",
+         "manager_builds": ["h00S", "h01L", "h01M", "h01U", "h022", "h02P", "h02U", "h03D", "h03V", "o02M", "o01J"]}
+
+
 def build_towers(rs, out):
     d = json.load(open(os.path.join(rs, "maulwork", "maul_towers.json"), encoding="utf-8"))
     o = json.load(open(os.path.join(rs, "maul544f", "objects.json"), encoding="utf-8"))
@@ -268,7 +275,8 @@ def build_towers(rs, out):
     U = {x["id"]: x for x in o["w3u"]}
     towers = {t["id"]: t for t in d["towers"]}
     shops = []
-    for s in d["shops"]:
+    xpert = None
+    for s in d["shops"] + [XPERT]:
         ids = []
         todo = []
         queue = list(s["manager_builds"])
@@ -313,6 +321,7 @@ def build_towers(rs, out):
             if um.get("ua1w") in ("msplash", "artillery", "aline") and um.get("ua1q"):
                 abilities.insert(0, {"type": "splash", "radius": round(float(um["ua1q"]) / TOWER, 2), "factor": 0.5})
             hk = re.search(r"\((\w)\)", t.get("hotkey_name") or "")
+            extra = {"requires": t["requires"]} if t.get("requires") else {}
             list_.append({
                 "id": t["id"],
                 "name": t["name"],
@@ -329,6 +338,7 @@ def build_towers(rs, out):
                 "hotkey": hk.group(1) if hk else "",
                 "tooltip": t.get("tooltip") or "",
                 "build_time": t.get("build_time") or 0,
+                **extra,
             })
         # Wert eines Upgrades = Wert des Ausgangsturms + Aufpreis (zählt beim Verkaufen)
         by_id = {x["id"]: x for x in list_}
@@ -340,7 +350,7 @@ def build_towers(rs, out):
                 total += chain["cost"]
             x["value"] = total
         list_.sort(key=lambda x: (x["upgrade_from"] is not None, x["cost"]))
-        shops.append({
+        entry = {
             "id": SHOP_IDS.get(s["name_de"], s["id_de"]),
             "name": s["name_de"],
             "name_en": s["name_en"],
@@ -351,10 +361,18 @@ def build_towers(rs, out):
             "rules": s.get("rules") or "",
             "towers": list_,
             "todo": todo,
-        })
+        }
+        if s is XPERT:
+            entry["id"] = "xpert"
+            entry["kind"] = "xpert"
+            entry["bonus"] = ""
+            entry["color"] = "#ffe14f"
+            xpert = entry
+        else:
+            shops.append(entry)
     with open(out, "w", encoding="utf-8") as f:
-        json.dump({"source": "Shopping Maul 5.44f, maulwork/maul_towers.json + objects.json", "shops": shops},
-                  f, ensure_ascii=False, indent="\t")
+        json.dump({"source": "Shopping Maul 5.44f, maulwork/maul_towers.json + objects.json", "shops": shops,
+                   "xpert": xpert}, f, ensure_ascii=False, indent="\t")
     print("Filialen: %d, Tower: %d" % (len(shops), sum(len(s["towers"]) for s in shops)))
     for s in shops:
         if s["todo"]:
