@@ -63,6 +63,9 @@ static func default_for(type: String) -> Dictionary:
 
 static func describe(ab: Dictionary) -> String:
 	var type := str(ab.get("type", "?"))
+	# Gleicher Typname mit eigener Bedeutung in einem Modus (z. B. eeveTD-Kettenblitz "chain"): dessen Text
+	if ab.has("text") and type in ["pierce", "fork", "chain"] and not ab.has("count"):
+		return str(TranslationServer.translate(str(ab.text)))
 	match type:
 		"splash":
 			return str(TranslationServer.translate("Flächenschaden %d%% im Radius %.1f")) % [float(ab.factor) * 100, float(ab.radius)]
