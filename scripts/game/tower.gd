@@ -356,7 +356,7 @@ func _projectile(first, at: Vector2, dmg: float) -> void:
 			along = found.along
 		elif e.dead:
 			continue
-		game.add_beam(f.from3, e.position, color)
+		game.add_beam(f.from3, _hit_point(e), color, fx_key())
 		var hit_dir: Vector2 = f.dir if f.has("dir") else (e.pos - f.from).normalized()
 		hits += 1
 		f.hit.append(e)
