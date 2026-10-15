@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, alle Skripte laden, Smoke, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
+#   schnell (Standard): Prüfskripte, alle Skripte laden, Smoke, Geschosse, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
 #   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
 #                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
@@ -77,6 +77,7 @@ do_test() {
     smoke)   run_one smoke smoke_test ;;
     maul)    run_one maul maul_test ;;
     eeve)    run_one eeve eeve_test ;;
+    geschosse) run_one geschosse geschoss_test ;;
     netz)    run_pair netz net_test ;;
     sitzung) run_pair sitzung session_test ;;
     koop)    run_pair koop coop_test ;;
@@ -120,8 +121,8 @@ if [ "$MODE" = geaendert ]; then
   set -- $MODE
 fi
 case $MODE in
-  schnell) set -- tabelle ui maps skripte smoke eeve maul netz sitzung koop lobby ;;
-  alle)    set -- tabelle ui maps skripte smoke eeve maul netz sitzung koop lobby balance tempo spaet ;;
+  schnell) set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby ;;
+  alle)    set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()
