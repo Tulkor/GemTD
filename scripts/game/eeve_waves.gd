@@ -6,6 +6,7 @@ extends RefCounted
 ##   in beiden Zweigen zu 35 % die Masse-Variante. Dazu ab Level 4 null bis zwei Eigenschaften.
 ## Leben je Gegner: HP(L) = (HP_Basis − (L_Ende − L) · k · f_Typ) · f_Schwierigkeit · f_Eigenschaften,
 ## k = 100 · Stufe² (Boden, Boss) bzw. (75 + 25 · Stufe) · Stufe (Luft), Stufe = abgerundet(L / 5,5) + 1.
+## Abstände wie im Kartenskript: Boden und Luft alle 1,2 s einer, Masse in 10 Reihen zu je 4 alle 0,15 s.
 
 const TYPE_LABELS := {"ground": "Boden", "ground_mass": "Masse", "air": "Flieger", "air_mass": "Masse", "boss": "Boss",
 		"challenge": "Challenge"}
@@ -91,7 +92,8 @@ static func generate(rules: Dictionary, diff: Dictionary, r: RandomNumberGenerat
 			waves.append({"type": "Challenge", "eeve": {"kind": "challenge", "stage": stage, "props": []}, "groups": [{
 				"enemy": str(c.enemy), "count": int(c.count), "hp": float(cd.get("hp", 1000)),
 				"armor": float(cd.get("armor", 0)) + armor_bonus, "damage": 0,
-				"interval": float(interval.get("mass" if int(c.count) > 1 else "boss", 1.0)), "props": []}]})
+				"interval": float(interval.get("mass" if int(c.count) > 1 else "boss", 1.0)),
+				"row": int(rules.get("mass_row", 1)) if int(c.count) > 1 else 1, "props": []}]})
 			continue
 		var kind := roll_kind(rules, level, r)
 		var props := roll_props(rules, level, kind, r)
@@ -99,19 +101,22 @@ static func generate(rules: Dictionary, diff: Dictionary, r: RandomNumberGenerat
 		var d: Dictionary = Database.enemies.get(id, {})
 		var wt: Dictionary = rules.get("wave_types", {}).get(kind, {})
 		var k := 100.0 * stage * stage if str(wt.get("k", "ground")) == "ground" else (75.0 + 25.0 * stage) * stage
-		var hp := float(d.get("hp", 100)) - (stage_end(stage) - level) * k * float(wt.get("hp_factor", 1.0))
-		hp *= float(diff.get("hp", 1.0))
+		# Ganzzahlig und abgeschnitten wie im Kartenskript (R2I nach jedem Schritt)
+		var cut := int(int((stage_end(stage) - level) * k) * float(wt.get("hp_factor", 1.0)))
+		var hp := float(int((int(d.get("hp", 100)) - cut) * float(diff.get("hp", 1.0))))
+		var prop_factor := 1.0
 		var armor := float(d.get("armor", 0)) + armor_bonus
 		var speed := float(d.get("speed", 2.3))
 		for pid in props:
 			var p := prop(rules, pid)
-			hp *= float(p.get("hp", 1.0))
+			prop_factor *= float(p.get("hp", 1.0))
 			armor += float(p.get("armor", 0))
 			speed += float(p.get("speed", 0))
+		hp = float(int(hp * prop_factor))
 		speed = minf(speed, float(rules.get("max_speed", 4.078)))
 		var mass := kind.ends_with("_mass")
 		waves.append({"type": TYPE_LABELS.get(kind, "Boden"), "eeve": {"kind": kind, "stage": stage, "props": props}, "groups": [{
 			"enemy": id, "count": int(wt.get("count", 10)), "hp": maxf(roundf(hp), 1.0), "armor": armor, "speed": speed,
 			"interval": float(interval.get("mass" if mass else ("boss" if kind == "boss" else "normal"), 1.0)),
-			"props": props}]})
+			"row": int(rules.get("mass_row", 1)) if mass else 1, "props": props}]})
 	return waves

@@ -14,7 +14,8 @@
 	"point_max": 8,
 	"element_bonus_per_level": 0.1,
 	"first_pause": 45,
-	"spawn_interval": {"normal": 1.0, "mass": 0.35, "boss": 1.0},
+	"spawn_interval": {"normal": 1.2, "mass": 0.15, "boss": 1.0},
+	"mass_row": 4,
 	"max_speed": 4.078,
 	"elements": [
 		{"id": "nature", "name": "Natur", "color": "#46d160", "strengths": "Abprall-Angriff, Gift mit Verlangsamung, Tempo-Aura", "weakness": "kein Flächenschaden"},

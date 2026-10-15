@@ -1076,6 +1076,8 @@
 	"Level %d geschafft": "Level %d cleared",
 	"%s: „Starten“ startet alle Verbundenen zusammen, jeder mit eigenem Gebiet und eigenem Gold, die Leben sind gemeinsam. Schwierigkeit und Modus wählt der Host.": "%s: “Start” starts everyone connected together, each with their own area and gold, lives are shared. The host picks difficulty and mode.",
 	"Starten: %s": "Start: %s",
+	"UI-Größe": "UI size",
+	"Verkleinert Menüs und Spieloberfläche, die Spielansicht bleibt gleich.": "Shrinks menus and the game interface, the game view stays the same.",
 	"Level %d startet gleich · N = bereit, los geht's, wenn alle bereit sind · freies Feld anklicken = Barrikade": "Level %d starts soon · N = ready, starts once everyone is ready · click a free cell = barricade",
 	"Bereit %d/%d · %d s": "Ready %d/%d · %d s",
 	"Der Host wählt Schwierigkeit und Feld, gleich geht es los …": "The host picks difficulty and field, starting shortly …",

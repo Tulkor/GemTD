@@ -165,8 +165,11 @@ func _ready() -> void:
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
 	hud.restart_requested.connect(func():
 		Session.save_id = ""
-		# Koop neu starten geht nur gemeinsam über die Lobby
-		Session.goto(Session.GAME if coop == null else Session.MAIN_MENU))
+		# Gleiche Szene wie jetzt (eeveTD bleibt eeveTD); Koop neu starten geht nur gemeinsam über die Lobby
+		if coop != null:
+			Session.goto(Session.MAIN_MENU)
+		else:
+			Session.goto(scene_file_path if scene_file_path != "" else Session.game_scene()))
 	hud.save_mode = save_mode
 	hud.save_and_leave_requested.connect(func(quit): leave(true, quit))
 	hud.leave_requested.connect(func(quit): leave(false, quit))

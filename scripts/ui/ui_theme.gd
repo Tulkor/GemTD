@@ -107,11 +107,32 @@ static func get_theme() -> Theme:
 	t.set_stylebox("grabber", "VScrollBar", box(BORDER_2, Color.TRANSPARENT, 0, 0, 3))
 	t.set_stylebox("grabber_highlight", "VScrollBar", box(GOLD, Color.TRANSPARENT, 0, 0, 3))
 	t.set_stylebox("grabber_pressed", "VScrollBar", box(CYAN, Color.TRANSPARENT, 0, 0, 3))
+	# Regler: dünne Spur, gefüllter Teil pink, eckiger Cyan-Griff
+	var track := box(BORDER, Color.TRANSPARENT, 0, 0, 0)
+	track.content_margin_top = 3
+	track.content_margin_bottom = 3
+	t.set_stylebox("slider", "HSlider", track)
+	var filled := box(GOLD, Color.TRANSPARENT, 0, 0, 0)
+	filled.content_margin_top = 3
+	filled.content_margin_bottom = 3
+	t.set_stylebox("grabber_area", "HSlider", filled)
+	t.set_stylebox("grabber_area_highlight", "HSlider", filled)
+	t.set_icon("grabber", "HSlider", _square_icon(CYAN, 18))
+	t.set_icon("grabber_highlight", "HSlider", _square_icon(TEXT, 18))
+	t.set_icon("grabber_disabled", "HSlider", _square_icon(BORDER_2, 18))
 	_theme = t
 	return t
 
 
 static var _icons: Dictionary = {}
+
+
+## Eckiges Quadrat mit dunklem Rand, z. B. als Regler-Griff.
+static func _square_icon(c: Color, px: int) -> Texture2D:
+	var img := Image.create(px, px, false, Image.FORMAT_RGBA8)
+	img.fill(BAR)
+	img.fill_rect(Rect2i(2, 2, px - 4, px - 4), c)
+	return ImageTexture.create_from_image(img)
 
 ## Kleine Symbole für Aktionsknöpfe: "up" (grüner Pfeil), "down" (roter Pfeil), "combine" (Kombinieren).
 static func icon(kind: String, px := 22) -> Texture2D:
