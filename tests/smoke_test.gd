@@ -22,6 +22,15 @@ func _ready() -> void:
 		DirAccess.remove_absolute(RunHistory.path)
 	await get_tree().process_frame
 	check(Database.towers.size() >= 8, "Tower geladen: %d" % Database.towers.size())
+	# UI-Größe: skaliert die 2D-Oberfläche, 50 bis 100 %, gespeichert
+	var ui_before: float = Display.ui_scale
+	Display.set_ui_scale(0.3)
+	check(is_equal_approx(Display.ui_scale, 0.5) and is_equal_approx(get_tree().root.content_scale_factor, 0.5), "UI-Größe: nicht unter 50 %")
+	Display.set_ui_scale(0.75)
+	var ui_cfg := ConfigFile.new()
+	ui_cfg.load(Display.SETTINGS)
+	check(is_equal_approx(float(ui_cfg.get_value("display", "ui_scale", 0.0)), 0.75) and is_equal_approx(get_tree().root.content_scale_factor, 0.75), "UI-Größe 75 % gespeichert und angewendet")
+	Display.set_ui_scale(ui_before)
 	check(Database.enemies.size() >= 1, "Gegner geladen: %d" % Database.enemies.size())
 	check(not Database.list_maps().is_empty(), "Maps gefunden")
 	# Wellentypen: jede vierte Welle Flieger, versetzt dazu Massenwellen, dazu Bosse

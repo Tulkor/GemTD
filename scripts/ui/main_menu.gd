@@ -11,6 +11,7 @@ var play_button: Button
 var cards: Array[Button] = []
 var mode_cards: Array[ModeCard] = []
 var settings: Control
+var ui_scale_slider: HSlider
 var lobby: LobbyPanel
 var loader: LoadPanel
 var net_tile: Button
@@ -324,6 +325,7 @@ func _build_settings() -> void:
 		Display.set_fullscreen(i == 1)
 		res.disabled = i == 1
 		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
+	ui_scale_slider = _ui_scale_row(grid)
 	var hint := UiUtil.wrap_label("Änderungen gelten sofort und bleiben gespeichert.", v, 400)
 	hint.add_theme_font_size_override("font_size", 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
@@ -332,6 +334,43 @@ func _build_settings() -> void:
 	done.custom_minimum_size.y = 46
 	UiTheme.accent_button(done, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.3))
 	settings.hide()
+
+
+## UI-Größe 50–100 %: die Zahl folgt dem Regler sofort, umgestellt wird beim Loslassen,
+## sonst springt der Regler beim Ziehen unter der Maus weg.
+func _ui_scale_row(grid: GridContainer) -> HSlider:
+	var l := UiUtil.label(tr("UI-Größe"), grid, 15)
+	l.custom_minimum_size.x = 150
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_child(h)
+	var s := HSlider.new()
+	s.min_value = Display.UI_SCALE_MIN * 100.0
+	s.max_value = Display.UI_SCALE_MAX * 100.0
+	s.step = 5
+	s.value = roundf(Display.ui_scale * 100.0)
+	s.focus_mode = Control.FOCUS_NONE
+	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	s.custom_minimum_size.y = 24
+	s.tooltip_text = tr("Verkleinert Menüs und Spieloberfläche, die Spielansicht bleibt gleich.")
+	h.add_child(s)
+	var n := UiUtil.label("%d %%" % roundi(s.value), h, 16)
+	n.custom_minimum_size.x = 64
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	n.add_theme_font_override("font", UiTheme.font(true))
+	n.add_theme_color_override("font_color", UiTheme.CYAN)
+	var dragging := [false]
+	s.drag_started.connect(func(): dragging[0] = true)
+	s.drag_ended.connect(func(_changed):
+		dragging[0] = false
+		Display.set_ui_scale(s.value / 100.0))
+	s.value_changed.connect(func(v):
+		n.text = "%d %%" % roundi(v)
+		if not dragging[0]:
+			Display.set_ui_scale(v / 100.0))
+	return s
 
 
 func _settings_option(text: String, grid: GridContainer) -> OptionButton:

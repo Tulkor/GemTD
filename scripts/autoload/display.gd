@@ -1,5 +1,5 @@
 extends Node
-## Anzeige: Vollbild oder Fenster und die Fenstergröße. Gespeichert in user://settings.cfg.
+## Anzeige: Vollbild oder Fenster, die Fenstergröße und die UI-Größe. Gespeichert in user://settings.cfg.
 
 const SETTINGS := "user://settings.cfg"
 const RESOLUTIONS: Array[Vector2i] = [
@@ -9,6 +9,9 @@ const RESOLUTIONS: Array[Vector2i] = [
 
 var fullscreen := false
 var resolution := Vector2i(1400, 900)
+const UI_SCALE_MIN := 0.5
+const UI_SCALE_MAX := 1.0
+var ui_scale := 1.0  ## Größe der ganzen Oberfläche, 0,5 bis 1,0 (3D-Ansicht bleibt gleich)
 
 
 func _ready() -> void:
@@ -16,6 +19,7 @@ func _ready() -> void:
 	if cfg.load(SETTINGS) == OK:
 		fullscreen = bool(cfg.get_value("display", "fullscreen", false))
 		resolution = cfg.get_value("display", "resolution", resolution)
+		ui_scale = clampf(float(cfg.get_value("display", "ui_scale", 1.0)), UI_SCALE_MIN, UI_SCALE_MAX)
 	_apply()
 
 
@@ -31,7 +35,15 @@ func set_resolution(size: Vector2i) -> void:
 	_save()
 
 
+func set_ui_scale(v: float) -> void:
+	ui_scale = clampf(v, UI_SCALE_MIN, UI_SCALE_MAX)
+	_apply()
+	_save()
+
+
 func _apply() -> void:
+	# Bei Stretch "canvas_items" skaliert das nur die 2D-Oberfläche, die 3D-Ansicht bleibt scharf
+	get_tree().root.content_scale_factor = ui_scale
 	if DisplayServer.get_name() == "headless":
 		return
 	if fullscreen:
@@ -50,4 +62,5 @@ func _save() -> void:
 	cfg.load(SETTINGS)
 	cfg.set_value("display", "fullscreen", fullscreen)
 	cfg.set_value("display", "resolution", resolution)
+	cfg.set_value("display", "ui_scale", ui_scale)
 	cfg.save(SETTINGS)
