@@ -31,6 +31,8 @@ var game_kind := "gemtd"
 var difficulty := 1
 ## eeveTD: zuletzt gewählte Schwierigkeit und Feldtyp ({difficulty, field}), beim Neustart vorausgewählt.
 var eeve_choice: Dictionary = {}
+## Shopping Maul: zuletzt gewählte Einstellungen ({shop, kind, difficulty, mode, sandbox}), beim Neustart vorausgewählt.
+var maul_choice: Dictionary = {}
 ## Wertung: false = Leben (Spiel endet bei 0), true = Punkte (Kills geben Punkte, Durchbrüche kosten welche).
 var score_mode := false
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
