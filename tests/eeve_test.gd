@@ -69,6 +69,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	check(game.gold == 200 and game.lives == 50 and game.food_cap == 40, "Start: 200 Gold, 50 Leben, 40 Food")
 	check(game.phase == game.Phase.BUILD and game.level_pause > 0.0, "Pause vor Level 1")
+	check(game.scene_file_path == Session.EEVE_GAME, "Nochmal spielen startet wieder eeveTD (gleiche Szene)")
 	var cell := Vector2i(30, 60)
 	check(game.submit({"type": "build", "cell": cell}), "Barrikade bauen")
 	var t: Tower = game.towers.get(cell)
