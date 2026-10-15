@@ -1,0 +1,43 @@
+{
+	"id": "eeve_noxious_tendril_trap",
+	"name": "Giftranken-Falle",
+	"name_original": "Noxious Tendril Trap",
+	"category": "eeve",
+	"color": "#46d160",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "chaos",
+	"targets": "ground",
+	"eeve": {
+		"element": "nature",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h045",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				40.0,
+				50.0
+			],
+			"range": 5.47,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "multishot",
+					"targets": 99
+				},
+				{
+					"type": "poison",
+					"dps": 100,
+					"duration": 30.0
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

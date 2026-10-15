@@ -203,11 +203,18 @@ func _prepare_maul(game: Node) -> void:
 
 ## eeveTD: kleines Labyrinth aus Barrikaden vor dem Eingang, einige davon zu Towern aufgewertet.
 ## --phase=welle startet Level 1, --auswahl wählt einen Tower aus.
+## --fallen: dazu Feuer 4 mit einem Flammenrost auf dem Weg und ein Dual-Tower (Feuerbeerenstrauch, Feld 32,68),
+## --auswahl wählt ihn.
 func _prepare_eeve(game: Node) -> void:
 	game.gold = 3000
 	game.lumber = 2
 	game.points = 6
-	for el in ["nature", "nature", "nature", "fire", "fire", "storm"]:
+	var points := ["nature", "nature", "nature", "fire", "fire", "storm"]
+	if opts.has("fallen"):
+		game.points = 8
+		game.gold = 6000
+		points += ["fire", "fire"]
+	for el in points:
 		game.add_element_point(el)
 	# Zwei versetzte Mauern vor dem Eingang (unten Mitte), Gegner laufen im Bogen herum
 	var walls := []
@@ -229,12 +236,24 @@ func _prepare_eeve(game: Node) -> void:
 			var i: int = opts.map(func(o): return o.id).find(id)
 			if i >= 0:
 				game._apply_option(t, opts[i])
+	if opts.has("fallen"):
+		var d: Tower = game.towers.get(Vector2i(32, 68))
+		for id in ["eeve_dual_element_base_tower", "eeve_fire_berry_bush"]:
+			var o: Array = game.tower_options(d)
+			game._apply_option(d, o[o.map(func(x): return x.id).find(id)])
+		game.lumber = 2
+		# Falle auf den Weg zwischen den beiden Mauern
+		var path := Array(game.pathfinder.compute_path())
+		path.sort_custom(func(a, b): return a.distance_to(Vector2(42, 72)) < b.distance_to(Vector2(42, 72)))
+		for p in path:
+			if game.build_trap("eeve_flame_grate", Vector2i(p) - Vector2i.ONE):
+				break
 	game.gold = 412
 	game.log_lines = []
 	if opts.get("phase", "bau") == "welle":
 		game.submit({"type": "start_level"})
 	if opts.has("auswahl"):
-		game._select(game.towers.get(Vector2i(44, 76)))
+		game._select(game.towers.get(Vector2i(32, 68) if opts.has("fallen") else Vector2i(44, 76)))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:

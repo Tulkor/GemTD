@@ -243,6 +243,9 @@ func _attack(e) -> void:
 		for other in game.enemies_in_radius(target_pos, float(splash.radius)):
 			if other != e and can_target(other):
 				_hit(other, dmg * float(splash.factor))
+	var cone := ability("cone")
+	if not cone.is_empty() and (not cone.has("chance") or randf() < float(cone.chance)):
+		_cone(target_pos, cone, dmg, e)
 	var bounce := ability("bounce")
 	if not bounce.is_empty():
 		var hit := [e]
@@ -425,6 +428,40 @@ func _first_on_line(from: Vector2, dir: Vector2, reach: float, hit: Array) -> Di
 		if best.is_empty() or along < float(best.along):
 			best = {"enemy": other, "along": along}
 	return best
+
+
+## Kegel vom Tower in Richtung Ziel: trifft alle Gegner darin. Breite (Radius quer zur Richtung) wächst
+## von width_start am Tower bis width_end am Ende (length). Mit "damage" ein Zauber mit eigenem Schaden
+## (das Ziel inklusive), sonst trifft der Angriff selbst alle weiteren Gegner im Kegel.
+func _cone(target_pos: Vector2, ab: Dictionary, dmg: float, target) -> void:
+	var dir := (target_pos - pos).normalized()
+	if dir == Vector2.ZERO:
+		return
+	var length := float(ab.get("length", range_cells()))
+	var w0 := float(ab.get("width_start", 0.5))
+	var w1 := float(ab.get("width_end", 1.5))
+	var spell := ab.has("damage")
+	for other in game.enemies_in_radius(pos, length + w1):
+		if not can_target(other) or (other == target and not spell):
+			continue
+		var rel: Vector2 = other.pos - pos
+		var along := rel.dot(dir)
+		if along < 0.0 or along > length:
+			continue
+		if absf(rel.cross(dir)) > lerpf(w0, w1, along / length):
+			continue
+		if spell:
+			other.last_hit_by = owner_player
+			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus()), "spells")
+			if other.dead:
+				kills += 1
+		else:
+			_hit(other, dmg)
+	# Umriss des Kegels kurz aufblitzen lassen
+	var side := Vector2(-dir.y, dir.x)
+	var corners := [pos + side * w0, pos + dir * length + side * w1, pos + dir * length - side * w1, pos - side * w0]
+	for i in 3:
+		game.add_beam(Board3D.to_3d(corners[i], 0.15), Board3D.to_3d(corners[i + 1], 0.15), color)
 
 
 ## Zauber um das Ziel herum (Frostnova, Blitz, Messerfächer …).

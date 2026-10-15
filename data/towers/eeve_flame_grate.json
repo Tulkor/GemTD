@@ -1,0 +1,47 @@
+{
+	"id": "eeve_flame_grate",
+	"name": "Flammenrost",
+	"name_original": "Flame Grate",
+	"category": "eeve",
+	"color": "#ff5a2a",
+	"model": "res://assets/models/crystals/crystal_19.glb",
+	"damage_type": "elemental",
+	"targets": "ground",
+	"eeve": {
+		"element": "fire",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h03S",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				175.0,
+				175.0
+			],
+			"range": 0.08,
+			"cooldown": 0.2,
+			"abilities": [
+				{
+					"type": "stacking_damage",
+					"per_hit": 200,
+					"duration": 3.0,
+					"text": "Jeder Treffer auf dasselbe Ziel macht 200 Schaden mehr als der letzte"
+				},
+				{
+					"type": "death_explosion",
+					"damage": 3000,
+					"radius": 1.95,
+					"duration": 3.0,
+					"text": "Brennende Gegner explodieren beim Tod: 3000 Schaden im Radius 2,0"
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

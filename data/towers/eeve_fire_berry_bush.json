@@ -1,0 +1,43 @@
+{
+	"id": "eeve_fire_berry_bush",
+	"name": "Feuerbeerenstrauch",
+	"name_original": "Fire Berry Bush",
+	"category": "eeve",
+	"color": "#a29545",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h011",
+		"elements": [
+			"fire",
+			"nature"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1334.0,
+				1474.0
+			],
+			"range": 5.47,
+			"cooldown": 1.8,
+			"abilities": [
+				{
+					"type": "rage",
+					"bonus": 0.4,
+					"radius": 3.52,
+					"duration": 8.0,
+					"every": 15.0,
+					"text": "Alle 15 s: +40 % Schaden für Tower im Radius 3,5 für 8 s"
+				}
+			]
+		}
+	]
+}

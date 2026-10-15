@@ -1,0 +1,39 @@
+{
+	"id": "eeve_earthbind_trap",
+	"name": "Erdfessel-Falle",
+	"name_original": "Earthbind Trap",
+	"category": "eeve",
+	"color": "#c08a4a",
+	"model": "res://assets/models/crystals/crystal_18.glb",
+	"damage_type": "physical",
+	"targets": "ground",
+	"eeve": {
+		"element": "earth",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h07V",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				2633.0,
+				7897.0
+			],
+			"range": 0.08,
+			"cooldown": 6.0,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 1.0,
+					"duration": 2.5
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

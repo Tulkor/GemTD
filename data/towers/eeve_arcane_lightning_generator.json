@@ -1,0 +1,43 @@
+{
+	"id": "eeve_arcane_lightning_generator",
+	"name": "Arkaner Blitzgenerator",
+	"name_original": "Arcane Lightning Generator",
+	"category": "eeve",
+	"color": "#a18eff",
+	"model": "res://assets/models/crystals/crystal_13.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h06V",
+		"elements": [
+			"storm",
+			"magic"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1250.0,
+				1382.0
+			],
+			"range": 7.81,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "cone",
+					"chance": 0.2,
+					"damage": 1600,
+					"length": 7.81,
+					"width_start": 1.17,
+					"width_end": 2.34
+				}
+			]
+		}
+	]
+}

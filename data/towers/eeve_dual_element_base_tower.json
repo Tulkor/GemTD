@@ -1,0 +1,47 @@
+{
+	"id": "eeve_dual_element_base_tower",
+	"name": "Dual-Grundturm",
+	"name_original": "Dual Element Base Tower",
+	"category": "eeve",
+	"color": "#d8d8e8",
+	"model": "res://assets/models/crystals/crystal_20.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 1998,
+		"lumber": 1,
+		"from": "eeve_barricade",
+		"next": [
+			"eeve_acid_fountain",
+			"eeve_arcane_lava_piles",
+			"eeve_arcane_lightning_generator",
+			"eeve_fire_berry_bush",
+			"eeve_fire_breathing_snowman",
+			"eeve_gaea_spring",
+			"eeve_icy_time_crystal",
+			"eeve_lightning_rock_elemental",
+			"eeve_magic_mushrooms",
+			"eeve_runed_rock",
+			"eeve_natural_maelstrom",
+			"eeve_radiating_cloud",
+			"eeve_red_lightning_generator",
+			"eeve_thornweed_field",
+			"eeve_volcano"
+		],
+		"wc3": "h0AT",
+		"dual_base": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				20.0,
+				30.0
+			],
+			"range": 5.47,
+			"cooldown": 1.0,
+			"abilities": []
+		}
+	]
+}

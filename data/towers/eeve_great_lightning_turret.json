@@ -31,7 +31,8 @@
 					"type": "nova",
 					"chance": 0.06,
 					"damage": 2400,
-					"radius": 2.81
+					"radius": 2.81,
+					"text": "6 % Chance: 2400 Zauberschaden im Radius 2,8 um das Ziel"
 				}
 			]
 		}

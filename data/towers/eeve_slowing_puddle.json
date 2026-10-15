@@ -1,0 +1,44 @@
+{
+	"id": "eeve_slowing_puddle",
+	"name": "Bremspfütze",
+	"name_original": "Slowing Puddle",
+	"category": "eeve",
+	"color": "#2fc8e8",
+	"model": "res://assets/models/crystals/crystal_24.glb",
+	"damage_type": "elemental",
+	"targets": "ground",
+	"eeve": {
+		"element": "water",
+		"level": 4,
+		"cost": 900,
+		"lumber": 1,
+		"from": "",
+		"next": [],
+		"wc3": "h04K",
+		"trap": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				234.0,
+				702.0
+			],
+			"range": 0.08,
+			"cooldown": 0.6,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.78,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.17,
+					"duration": 8.0
+				}
+			]
+		}
+	],
+	"kind": "trap",
+	"model_scale": 0.3
+}

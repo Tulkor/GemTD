@@ -1,0 +1,40 @@
+{
+	"id": "eeve_thornweed_field",
+	"name": "Dornkrautfeld",
+	"name_original": "Thornweed Field",
+	"category": "eeve",
+	"color": "#83ad55",
+	"model": "res://assets/models/crystals/crystal_20.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h010",
+		"elements": [
+			"earth",
+			"nature"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				1445.0,
+				1597.0
+			],
+			"range": 5.47,
+			"cooldown": 1.8,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.15,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+	"id": "eeve_arcane_lava_piles",
+	"name": "Arkane Lavahaufen",
+	"name_original": "Arcane Lava Piles",
+	"category": "eeve",
+	"color": "#e16294",
+	"model": "res://assets/models/crystals/crystal_11.glb",
+	"damage_type": "chaos",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 3,
+		"cost": 0,
+		"lumber": 0,
+		"from": "eeve_dual_element_base_tower",
+		"next": [],
+		"wc3": "h03V",
+		"elements": [
+			"magic",
+			"fire"
+		]
+	},
+	"tiers": [
+		{
+			"damage": [
+				476.0,
+				526.0
+			],
+			"range": 3.91,
+			"cooldown": 0.7,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.1,
+					"multiplier": 10.0
+				}
+			]
+		}
+	]
+}
