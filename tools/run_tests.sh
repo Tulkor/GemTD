@@ -96,7 +96,7 @@ run_check() {  # name command...
 
 check_tools() {  # Python- und Shell-Werkzeuge unter tools/ auf Syntaxfehler prüfen (ohne __pycache__ zu schreiben)
   local py sh bad=0
-  py=$(git ls-files 'tools/*.py'); sh=$(git ls-files 'tools/*.sh' tools/git-hooks/)
+  py=$(git ls-files 'tools/*.py'); sh=$(git ls-files 'tools/*.sh'; git ls-files tools/git-hooks/ | grep -v '\.py$')
   python3 -c 'import ast, sys
 for f in sys.argv[1:]: ast.parse(open(f, encoding="utf-8").read(), f)' $py || bad=1
   for f in $sh; do bash -n "$f" || bad=1; done
@@ -201,7 +201,14 @@ for t in "$@"; do
   resolve "$t"; ART=""; [ -z "$STEM" ] || test_info "$STEM"
   if [ "$ART" = fest ]; then SEQ+=("$t"); else PAR+=("$t"); fi
 done
-for t in "${PAR[@]}"; do
+# Höchstens JOBS Tests gleichzeitig (Standard: Anzahl Kerne): bei voller Überlast verpasst der Netz-Test
+# Meldungen und misst scheinbare Korrektursprünge. Die längsten zuerst, damit sie nicht am Ende allein laufen.
+JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
+ORDER=()
+for t in smoke maul eeve koop netz sitzung gemischt; do [[ " ${PAR[*]} " == *" $t "* ]] && ORDER+=("$t"); done
+for t in "${PAR[@]}"; do [[ " ${ORDER[*]} " == *" $t "* ]] || ORDER+=("$t"); done
+for t in "${ORDER[@]}"; do
+  while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n; done
   ( FAILED=0; do_test "$t" > "$LOG_DIR/$t.sum"; echo $FAILED > "$LOG_DIR/$t.rc" ) &
 done
 wait
