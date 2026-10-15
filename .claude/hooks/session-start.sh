@@ -10,6 +10,8 @@ fi
 "$CLAUDE_PROJECT_DIR/tools/setup_godot.sh" --ohne-vorlage
 # Git-Hook: Tower-Tabelle wird bei Commits mit Tower-Daten automatisch neu erzeugt.
 git -C "$CLAUDE_PROJECT_DIR" config core.hooksPath tools/git-hooks
+# Merge-Treiber: neue Übersetzungen beider Branches in en.json ohne Konflikt zusammenführen.
+git -C "$CLAUDE_PROJECT_DIR" config merge.json_schluessel.driver "python3 tools/git-hooks/json_merge.py %O %A %B %P"
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$CLAUDE_ENV_FILE"
 fi

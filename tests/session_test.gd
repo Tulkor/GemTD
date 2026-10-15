@@ -1,4 +1,5 @@
 extends Node
+## Lauf: paar (Name sitzung)
 ## Sitzungs-Test (Speichern im Mehrspieler und Wiedereinsteigen) mit zwei Prozessen:
 ##   godot --headless --path . res://tests/session_test.tscn -- --role=host
 ##   godot --headless --path . res://tests/session_test.tscn -- --role=client
@@ -69,7 +70,9 @@ func _play_round(g: Node, seed_value: int) -> void:
 
 
 func _new_game(old) -> Node:
-	await _wait(func(): return Net.game != null and Net.game != old and is_instance_valid(Net.game) and Net.game.is_inside_tree(), 15.0)
+	# Nur die Id festhalten: das alte Spiel wird freigegeben, eine eingefangene Referenz darauf meldet Godot als Fehler.
+	var old_id: int = old.get_instance_id() if is_instance_valid(old) else 0
+	await _wait(func(): return is_instance_valid(Net.game) and Net.game.get_instance_id() != old_id and Net.game.is_inside_tree(), 15.0)
 	await get_tree().process_frame
 	return Net.game
 

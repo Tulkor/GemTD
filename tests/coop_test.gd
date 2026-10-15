@@ -1,4 +1,5 @@
 extends Node
+## Lauf: paar (Name koop)
 ## Koop-Test über eine echte Verbindung mit zwei Prozessen:
 ##   godot --headless --path . res://tests/coop_test.tscn -- --role=host
 ##   godot --headless --path . res://tests/coop_test.tscn -- --role=client
@@ -121,5 +122,5 @@ func _client() -> void:
 	g.leave(false)
 	check(await _wait(func(): return Net.game == null or not is_instance_valid(Net.game), 5.0), "Ben hat das Spiel verlassen")
 	# Ende der Partie kommt vom Host
-	await _wait(func(): return Net.status_text != "" and "beendet" in Net.status_text, 60.0)
+	await _wait(func(): return "beendet" in Net.status_text or not Net.is_active(), 60.0)
 	check("beendet" in Net.status_text or not Net.is_active(), "Host hat die Partie beendet: %s" % Net.status_text)

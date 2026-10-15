@@ -287,7 +287,7 @@ func _show_detail(r: Dictionary) -> void:
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 10)
-	detail.add_child(UiUtil.label("", detail, 4))
+	UiUtil.label("", detail, 4)
 	detail.add_child(actions)
 	var again := UiUtil.button("Map nochmal spielen", actions, func(): replay_requested.emit(r))
 	again.focus_mode = Control.FOCUS_NONE

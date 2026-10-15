@@ -208,7 +208,7 @@ func _close_port() -> void:
 
 
 func _fetch_public_ip() -> void:
-	if OS.has_feature("headless"):
+	if DisplayServer.get_name() == "headless":
 		return
 	if _ip_request == null:
 		_ip_request = HTTPRequest.new()

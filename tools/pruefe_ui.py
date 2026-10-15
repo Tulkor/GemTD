@@ -58,7 +58,10 @@ def main():
     for a in sys.argv[1:]:
         if a.startswith("--eintragen="):
             eintragen(a.split("=", 1)[1])
-    en = json.loads(EN.read_text(encoding="utf-8"))
+    pairs = json.loads(EN.read_text(encoding="utf-8"), object_pairs_hook=lambda p: p)
+    en = dict(pairs)
+    seen = set()
+    double = [k for k, _ in pairs if k in seen or seen.add(k)]
     used = {}
     for f in sorted((ROOT / "scripts").rglob("*.gd")):
         for no, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
@@ -78,6 +81,8 @@ def main():
         print("FEHLT  %s  %r" % (where, s))
     for k in empty:
         print("LEER   en.json  %r" % k)
+    for k in double:
+        print("DOPPELT en.json  %r" % k)
     if "--alle" in sys.argv:
         code = "\n".join(f.read_text(encoding="utf-8") for f in (ROOT / "scripts").rglob("*.gd"))
         data = "\n".join(f.read_text(encoding="utf-8") for f in (ROOT / "data").rglob("*.json") if f != EN)
@@ -97,7 +102,9 @@ def main():
         VORLAGE.write_text(json.dumps({k: "" for k in missing}, ensure_ascii=False, indent="\t") + "\n", encoding="utf-8")
         print("Vorlage: %s (%d Texte, englische Werte eintragen, dann --eintragen=%s)" % (VORLAGE, len(missing), VORLAGE))
     print("Texte: %d geprüft, %d ohne Übersetzung, %d leer" % (len(used), len(missing), len(empty)))
-    sys.exit(1 if missing or empty else 0)
+    if double:
+        print("%d Schlüssel doppelt in en.json (meist ein Merge-Rest, späteren Eintrag löschen)" % len(double))
+    sys.exit(1 if missing or empty or double else 0)
 
 
 if __name__ == "__main__":

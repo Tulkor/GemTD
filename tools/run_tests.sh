@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, alle Skripte laden, Smoke, Geschosse, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
-#   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
+#   schnell (Standard): Prüfskripte (Tower-Tabelle, Texte, Maps, Werkzeuge) und alle Tests unter tests/
+#                       außer den langen ("## Lauf: fest": Balance, Tempo, späte Wellen)
+#   alle:               dazu die langen
 #   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
 #                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
+# Pro Test eine Zeile mit Dauer. "⚠" darunter = Godot meldet Fehler, obwohl der Test grün ist
+# (ERROR/WARNING außerhalb von NOISE/EXPECTED); das sind meist echte, nur unbemerkte Fehler.
 # Exit-Code 0 = alles grün.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -18,16 +21,21 @@ command -v "$GODOT" >/dev/null || { echo "Godot fehlt: tools/setup_godot.sh --oh
 FAILED=0
 # Zeilen, die headless immer kommen und nichts bedeuten.
 NOISE='Parameter "m" is null|^Godot Engine|^\s*at: |^$'
+# Von Tests absichtlich ausgelöst (Smoke: veränderte Spielstand-Datei wird abgelehnt).
+EXPECTED='MD5 sum of the decrypted file'
 
-summary() {  # name log exit
-  local name=$1 log=$2 code=$3 ok fail
+summary() {  # name log exit start
+  local name=$1 log=$2 code=$3 ok fail secs warn
+  secs=$(( SECONDS - ${4:-$SECONDS} ))
   ok=$(grep -c '^OK' "$log" 2>/dev/null || true)
   fail=$(grep -cE '^FAIL|SCRIPT ERROR|Parse Error' "$log" 2>/dev/null || true)
   if [ "$code" -eq 0 ] && [ "$fail" -eq 0 ]; then
-    printf '✓ %-14s %s\n' "$name" "$( [ "$ok" -gt 0 ] && echo "$ok OK" || tail -n1 "$log")"
+    printf '✓ %-14s %-12s %3ss\n' "$name" "$( [ "$ok" -gt 0 ] && echo "$ok OK" || tail -n1 "$log")" "$secs"
+    warn=$(grep -E '^(ERROR|WARNING|USER ERROR|USER WARNING):' "$log" | grep -vE "$NOISE|$EXPECTED" | sort | uniq -c | sort -rn)
+    [ -z "$warn" ] || echo "$warn" | head -n 3 | sed 's/^ */    ⚠ /'
   else
     FAILED=1
-    printf '✗ %-14s Exit %s, %s Fehler (Log: %s)\n' "$name" "$code" "$fail" "$log"
+    printf '✗ %-14s Exit %s, %s Fehler (mehr: tools/log_auszug.sh %s)\n' "$name" "$code" "$fail" "$name"
     grep -E '^FAIL|SCRIPT ERROR|Parse Error|ERROR' "$log" | grep -vE "$NOISE" | head -n 15 | sed 's/^/    /'
   fi
 }
@@ -35,20 +43,22 @@ summary() {  # name log exit
 run_one() {  # name scene [args...]
   local name=$1 scene=$2; shift 2
   local log="$LOG_DIR/$name.log"
+  local t0=$SECONDS
   timeout 900 "$GODOT" --headless --path . "res://tests/$scene.tscn" "$@" >"$log" 2>&1
-  summary "$name" "$log" $?
+  summary "$name" "$log" $? $t0
 }
 
 run_fixed() {  # Balance-Tests mit fester Bildrate
   local name=$1 scene=$2; shift 2
   local log="$LOG_DIR/$name.log"
+  local t0=$SECONDS
   timeout 1800 "$GODOT" --headless --fixed-fps 60 --path . "res://tests/$scene.tscn" "$@" >"$log" 2>&1
-  summary "$name" "$log" $?
+  summary "$name" "$log" $? $t0
 }
 
 run_pair() {  # name scene: Host und Client als zwei Prozesse
   local name=$1 scene=$2
-  local hl="$LOG_DIR/$name-host.log" cl="$LOG_DIR/$name-client.log"
+  local hl="$LOG_DIR/$name-host.log" cl="$LOG_DIR/$name-client.log" t0=$SECONDS
   timeout 600 "$GODOT" --headless --path . "res://tests/$scene.tscn" -- --role=host >"$hl" 2>&1 &
   local hp=$!
   sleep 1
@@ -56,12 +66,12 @@ run_pair() {  # name scene: Host und Client als zwei Prozesse
   local cc=$?
   wait $hp; local hc=$?
   cat "$hl" "$cl" > "$LOG_DIR/$name.log"
-  summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : cc ))
+  summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : cc )) $t0
 }
 
 run_trio() {  # name scene: Host und zwei Mitspieler (a, b) als drei Prozesse
   local name=$1 scene=$2
-  local hl="$LOG_DIR/$name-host.log" al="$LOG_DIR/$name-a.log" bl="$LOG_DIR/$name-b.log"
+  local hl="$LOG_DIR/$name-host.log" al="$LOG_DIR/$name-a.log" bl="$LOG_DIR/$name-b.log" t0=$SECONDS
   timeout 600 "$GODOT" --headless --path . "res://tests/$scene.tscn" -- --role=host >"$hl" 2>&1 &
   local hp=$!
   sleep 1
@@ -72,7 +82,7 @@ run_trio() {  # name scene: Host und zwei Mitspieler (a, b) als drei Prozesse
   wait $ap; local ac=$?
   wait $hp; local hc=$?
   cat "$hl" "$al" "$bl" > "$LOG_DIR/$name.log"
-  summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : (ac != 0 ? ac : bc) ))
+  summary "$name" "$LOG_DIR/$name.log" $(( hc != 0 ? hc : (ac != 0 ? ac : bc) )) $t0
 }
 
 run_check() {  # name command...
@@ -84,48 +94,85 @@ run_check() {  # name command...
   else FAILED=1; printf '✗ %-14s\n' "$name"; head -n 15 "$log" | sed 's/^/    /'; fi
 }
 
+check_tools() {  # Python- und Shell-Werkzeuge unter tools/ auf Syntaxfehler prüfen (ohne __pycache__ zu schreiben)
+  local py sh bad=0
+  py=$(git ls-files 'tools/*.py'); sh=$(git ls-files 'tools/*.sh'; git ls-files tools/git-hooks/ | grep -v '\.py$')
+  python3 -c 'import ast, sys
+for f in sys.argv[1:]: ast.parse(open(f, encoding="utf-8").read(), f)' $py || bad=1
+  for f in $sh; do bash -n "$f" || bad=1; done
+  [ $bad -eq 0 ] && echo "Werkzeuge: $(echo $py | wc -w) Python, $(echo $sh | wc -w) Shell ohne Syntaxfehler"
+  return $bad
+}
+
+# Tests finden sich selbst: jede tests/<stamm>_test.tscn ist ein Test. Die zweite Zeile der .gd sagt, wie er läuft:
+#   ## Lauf: einzeln|paar|trio|fest [Argumente] [(Name kurzname)]
+# paar = Host + Client, trio = Host + a + b, fest = feste Bildrate, nur in "alle". Ohne Zeile: einzeln.
+# Ein neuer Test braucht also keinen Eintrag hier.
+test_info() {  # stamm -> ART ARGS NAME
+  local line
+  line=$(sed -n '2,6{s/^## Lauf: *//p}' "tests/$1_test.gd" 2>/dev/null | head -n1)
+  NAME=$1
+  if [[ $line =~ \(Name\ ([a-z_]+)\) ]]; then NAME=${BASH_REMATCH[1]}; line=${line%%(*}; fi
+  read -r ART ARGS <<<"${line:-einzeln}"
+}
+
+all_tests() {  # Kurznamen aller Tests; $1 = "ohne_fest" lässt die langen Balance-Läufe weg
+  local f stem
+  for f in tests/*_test.tscn; do
+    stem=$(basename "$f" _test.tscn); test_info "$stem"
+    [ "${1:-}" = ohne_fest ] && [ "$ART" = fest ] && continue
+    echo "$NAME"
+  done
+}
+
+resolve() {  # Kurzname oder Stamm -> STEM (leer, wenn unbekannt)
+  local f stem
+  STEM=""
+  for f in tests/*_test.tscn; do
+    stem=$(basename "$f" _test.tscn); test_info "$stem"
+    if [ "$1" = "$stem" ] || [ "$1" = "$NAME" ]; then STEM=$stem; return; fi
+  done
+}
+
 do_test() {
   case $1 in
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
-    skripte) run_one skripte skripte_test ;;
-    smoke)   run_one smoke smoke_test ;;
-    maul)    run_one maul maul_test ;;
-    eeve)    run_one eeve eeve_test ;;
-    geschosse) run_one geschosse geschoss_test ;;
-    netz)    run_pair netz net_test ;;
-    sitzung) run_pair sitzung session_test ;;
-    koop)    run_pair koop coop_test ;;
-    lobby)   run_pair lobby lobby_test ;;
-    gemischt) run_trio gemischt gemischt_test ;;
-    balance) run_fixed balance balance_test ;;
-    tempo)   run_fixed tempo speed_test -- --runs=1 ;;
-    spaet)   run_fixed spaet late_balance_test ;;
-    *) echo "Unbekannter Test: $1"; FAILED=1 ;;
+    werkzeuge) run_check werkzeuge check_tools ;;
+    *)
+      resolve "$1"
+      [ -n "$STEM" ] || { echo "Unbekannter Test: $1 (vorhanden: $(all_tests | tr '\n' ' '))"; FAILED=1; return; }
+      test_info "$STEM"
+      # shellcheck disable=SC2086
+      case $ART in
+        paar) run_pair "$NAME" "${STEM}_test" ;;
+        trio) run_trio "$NAME" "${STEM}_test" ;;
+        fest) if [ -n "$ARGS" ]; then run_fixed "$NAME" "${STEM}_test" -- $ARGS; else run_fixed "$NAME" "${STEM}_test"; fi ;;
+        *)    if [ -n "$ARGS" ]; then run_one "$NAME" "${STEM}_test" -- $ARGS; else run_one "$NAME" "${STEM}_test"; fi ;;
+      esac ;;
   esac
 }
 
-# Beim ersten Lauf in einem frischen Checkout Ressourcen importieren, und neu, wenn ein Skript
-# neuer ist als der Klassen-Cache (sonst fehlen neue class_name nach einem Merge und Tests hängen bis zum Timeout).
-CACHE=.godot/global_script_class_cache.cfg
-if [ ! -d .godot/imported ] || [ ! -f $CACHE ] || [ -n "$(find scripts tests tools -name '*.gd' -newer $CACHE -print -quit)" ]; then
-  "$GODOT" --headless --import --path . >"$LOG_DIR/import.log" 2>&1
-  touch $CACHE
-fi
+tools/godot_import.sh "$LOG_DIR/import.log"
 
 # Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
 pick_changed() {
-  local base files f t=" tabelle ui maps skripte "
+  local base files f n t=" tabelle ui maps werkzeuge skripte "
   base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   for f in $files; do
     case $f in
+      tests/*_test.*)
+        n=$(basename "$f"); resolve "${n%_test.*}"
+        [ -z "$STEM" ] || { test_info "$STEM"; t+="$NAME "; } ;;
+      tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/*|docs/*|*.md|data/i18n/*) ;;
-      scripts/maul/*|data/maul/*|scenes/maul*|tests/maul_test*) t+="maul " ;;
-      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|tests/eeve_test*) t+="eeve " ;;
-      scripts/ui/lobby*|tests/lobby_test*) t+="lobby " ;;
-      scripts/net/*|scripts/autoload/net.gd|tests/net_test*|tests/coop_test*|tests/session_test*|tests/gemischt_test*) t+="netz sitzung koop lobby gemischt " ;;
+      data/fx/*|assets/fx/*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse eeve maul " ;;
+      scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
+      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
+      scripts/ui/lobby*) t+="lobby gemischt " ;;
+      scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
@@ -143,13 +190,25 @@ if [ "$MODE" = geaendert ]; then
   set -- $MODE
 fi
 case $MODE in
-  schnell) set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt ;;
-  alle)    set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby gemischt balance tempo spaet ;;
+  # shellcheck disable=SC2046
+  schnell) set -- tabelle ui maps werkzeuge $(all_tests ohne_fest) ;;
+  # shellcheck disable=SC2046
+  alle)    set -- tabelle ui maps werkzeuge $(all_tests) ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()
-for t in "$@"; do case $t in balance|tempo|spaet) SEQ+=("$t") ;; *) PAR+=("$t") ;; esac; done
-for t in "${PAR[@]}"; do
+for t in "$@"; do
+  resolve "$t"; ART=""; [ -z "$STEM" ] || test_info "$STEM"
+  if [ "$ART" = fest ]; then SEQ+=("$t"); else PAR+=("$t"); fi
+done
+# Höchstens JOBS Tests gleichzeitig (Standard: Anzahl Kerne): bei voller Überlast verpasst der Netz-Test
+# Meldungen und misst scheinbare Korrektursprünge. Die längsten zuerst, damit sie nicht am Ende allein laufen.
+JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
+ORDER=()
+for t in smoke maul eeve koop netz sitzung gemischt; do [[ " ${PAR[*]} " == *" $t "* ]] && ORDER+=("$t"); done
+for t in "${PAR[@]}"; do [[ " ${ORDER[*]} " == *" $t "* ]] || ORDER+=("$t"); done
+for t in "${ORDER[@]}"; do
+  while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n; done
   ( FAILED=0; do_test "$t" > "$LOG_DIR/$t.sum"; echo $FAILED > "$LOG_DIR/$t.rc" ) &
 done
 wait
@@ -158,4 +217,5 @@ for t in "${PAR[@]}"; do
   [ "$(cat "$LOG_DIR/$t.rc")" = 0 ] || FAILED=1
 done
 for t in "${SEQ[@]}"; do do_test "$t"; done
+echo "Gesamt: ${SECONDS}s"
 exit $FAILED
