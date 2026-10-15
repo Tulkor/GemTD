@@ -66,6 +66,9 @@ func _ready() -> void:
 	check(is_equal_approx(float(waves[0].groups[0].interval), 1.2), "Level 1: alle 1,2 s ein Gegner")
 	check(mass_wave.is_empty() or (int(mass_wave.groups[0].count) == 40 and int(mass_wave.groups[0].row) == 4
 		and is_equal_approx(float(mass_wave.groups[0].interval), 0.15)), "Masse: 40 Gegner, Reihen zu 4 alle 0,15 s")
+	var eg: GDScript = load("res://scripts/game/eeve_game.gd")
+	check(eg.boss_leak_damage(20, 11.0, 100.0) == 31 and eg.boss_leak_damage(5, 100.0, 100.0) == 105
+		and eg.boss_leak_damage(30, 0.0, 100.0) == 30, "Boss kostet Level + Rest-Leben in Prozent")
 	check(int(waves[54].groups[0].row) == 4 and int(waves[55].groups[0].row) == 1, "Massen-Challenge in Reihen, Luft-Challenge einzeln")
 	check(is_equal_approx(Database.damage_factor("electric", "eeve_small"), 1.2) and is_equal_approx(Database.damage_factor("spells", "eeve_hero"), 0.5),
 		"Schadenstabelle aus der Karte")

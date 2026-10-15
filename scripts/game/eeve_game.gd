@@ -286,11 +286,15 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 			enemies[i].place_on_path(slot * ROW_GAP)
 
 
-## Ein Boss kostet wie im Original 40 · (1 − r⁴) Leben, r = Anteil der schon abgezogenen Leben.
+## Ein Boss kostet Level + verbleibende Leben in Prozent (Wunsch von Lukas, im Original 40 · (1 − r⁴)):
+## Level 20 mit 11 % Rest kostet 31 Leben, ein unverletzter Boss Level + 100.
+static func boss_leak_damage(level: int, hp: float, max_hp: float) -> int:
+	return level + roundi(100.0 * clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0))
+
+
 func on_enemy_leaked(e: Enemy) -> void:
-	if e.boss and e.damage > 0 and e.max_hp > 0.0:
-		var r := clampf(1.0 - e.hp / e.max_hp, 0.0, 1.0)
-		e.damage = int(e.damage * (1.0 - pow(r, 4)))
+	if e.boss and e.damage > 0:
+		e.damage = boss_leak_damage(wave_index + 1, e.hp, e.max_hp)
 	super.on_enemy_leaked(e)
 
 
