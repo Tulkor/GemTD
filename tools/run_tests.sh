@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Führt die Tests aus und gibt nur eine Zusammenfassung aus. Volle Ausgaben liegen in $LOG_DIR.
 # Aufruf: tools/run_tests.sh [schnell|alle|<name> ...]
-#   schnell (Standard): Prüfskripte, Smoke, Geschosse, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
+#   schnell (Standard): Prüfskripte, alle Skripte laden, Smoke, Geschosse, eeveTD, Shopping Maul, Netz, Sitzung, Koop, Lobby
 #   alle:               dazu Balance (Welle 1), Tempo und späte Wellen
+#   geaendert:          nur die Tests, die zu den geänderten Dateien gegenüber origin/main passen
+#                       (plus Prüfskripte); unbekannte Code-Änderungen -> schnell
 #   <name>:             einzelne Tests, z. B. tools/run_tests.sh smoke koop
 # Exit-Code 0 = alles grün.
 set -uo pipefail
@@ -71,6 +73,7 @@ do_test() {
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
+    skripte) run_one skripte skripte_test ;;
     smoke)   run_one smoke smoke_test ;;
     maul)    run_one maul maul_test ;;
     eeve)    run_one eeve eeve_test ;;
@@ -89,10 +92,37 @@ do_test() {
 # Beim ersten Lauf in einem frischen Checkout Ressourcen importieren.
 [ -d .godot/imported ] || "$GODOT" --headless --import --path . >"$LOG_DIR/import.log" 2>&1
 
+# Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
+pick_changed() {
+  local base files f t=" tabelle ui maps skripte "
+  base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
+  files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
+  for f in $files; do
+    case $f in
+      tools/*|docs/*|*.md|data/i18n/*) ;;
+      scripts/maul/*|data/maul/*|scenes/maul*|tests/maul_test*) t+="maul " ;;
+      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|tests/eeve_test*) t+="eeve " ;;
+      scripts/ui/lobby*|tests/lobby_test*) t+="lobby " ;;
+      scripts/net/*|scripts/autoload/net.gd|tests/net_test*|tests/coop_test*|tests/session_test*) t+="netz sitzung koop lobby " ;;
+      scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
+      data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
+      scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
+      *.gd|*.tscn|*.tres|*.gdshader|project.godot|data/*) echo "schnell"; return ;;
+    esac
+  done
+  echo "$t" | tr ' ' '\n' | awk 'NF && !seen[$0]++' | tr '\n' ' '
+}
+
 MODE=${1:-schnell}
+if [ "$MODE" = geaendert ]; then
+  MODE=$(pick_changed)
+  echo "Geänderte Dateien -> Tests: $MODE"
+  # shellcheck disable=SC2086
+  set -- $MODE
+fi
 case $MODE in
-  schnell) set -- tabelle ui maps smoke geschosse eeve maul netz sitzung koop lobby ;;
-  alle)    set -- tabelle ui maps smoke geschosse eeve maul netz sitzung koop lobby balance tempo spaet ;;
+  schnell) set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby ;;
+  alle)    set -- tabelle ui maps skripte smoke geschosse eeve maul netz sitzung koop lobby balance tempo spaet ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=()

@@ -15,6 +15,7 @@ var _level: Label
 var _next: Label
 var _timer: Label
 var _gold: Label
+var _xp: Label
 var _value: Label
 var _lives: Label
 var _diff: Label
@@ -26,6 +27,14 @@ var _shop_list: VBoxContainer
 var _shop_buttons: Array = []
 var _reveal_button: Button
 var _shop_panel: PanelContainer
+var _tab := "shop"
+var _tab_buttons := {}
+var _shop_page: VBoxContainer
+var _xpert_list: VBoxContainer
+var _xpert_buttons: Array = []
+var _main_box: VBoxContainer
+var _live: Array = []      ## [Knopf, Callable] – Abklingzeiten, mehrmals pro Sekunde aufgefrischt
+var _copy_pick := ""
 
 var _sel_panel: PanelContainer
 var _sel_box: VBoxContainer
@@ -48,10 +57,10 @@ func _ready() -> void:
 	_build_selection()
 	_build_minimap()
 	_banner = UiUtil.label("", root, 20)
-	_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_banner.offset_top = 64
+	_banner.offset_bottom = 94
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_banner.add_theme_font_override("font", UiTheme.font(true))
 	_banner.add_theme_color_override("font_color", UiTheme.GOLD)
 	_banner.add_theme_color_override("font_shadow_color", UiTheme.CYAN)
@@ -78,6 +87,10 @@ func _build_top_bar() -> void:
 	_timer = _stat(row, "Start in")
 	_gold = _stat(row, "Gold")
 	_gold.add_theme_color_override("font_color", UiTheme.COIN)
+	_xp = _stat(row, "XP")
+	_xp.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	_xp.tooltip_text = "Erfahrung bleibt über Spiele hinweg erhalten. Ab 25 XP öffnen die Profi-Filialen, die XP-Tower des XPert ab 25 bis 800 XP."
+	_xp.mouse_filter = Control.MOUSE_FILTER_PASS
 	_value = _stat(row, "Towerwert")
 	_lives = _stat(row, "Leben")
 	_diff = _stat(row, "Diff")
@@ -121,7 +134,8 @@ func _build_menu() -> void:
 	UiTheme.title(UiUtil.label("Menü", box), 22)
 	var resume := UiUtil.button("Weiterspielen", box, func(): panel.hide())
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
-	UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
+	if game.sync == null:
+		UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
 	UiUtil.button("Hauptmenü", box, func(): Session.goto(Session.MAIN_MENU))
 	_menu = panel
 
@@ -141,16 +155,149 @@ func _build_shop() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	_shop_panel.add_child(box)
-	_shop_title = UiTheme.title(UiUtil.label("", box), 20)
-	UiTheme.caption("Tower kaufen (Taste)", box)
+	# Reiter: eigene Filiale, XPert (XP- und Ultimate-Tower), Hauptgebäude (Bonus/Rabatt, Forschung)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 4)
+	box.add_child(tabs)
+	for e in [["shop", "Filiale"], ["xpert", "XPert"], ["main", "Zentrale"]]:
+		var id: String = e[0]
+		var b := UiUtil.button(e[1], tabs, func(): _set_tab(id))
+		b.toggle_mode = true
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		_tab_buttons[id] = b
+	_tab_buttons["main"].tooltip_text = "Hauptgebäude: Bonus-Upgrade oder Rabatt, beim TUI die Forschung"
+	_shop_page = VBoxContainer.new()
+	_shop_page.add_theme_constant_override("separation", 6)
+	box.add_child(_shop_page)
+	_shop_title = UiTheme.title(UiUtil.label("", _shop_page), 20)
+	UiTheme.caption("Tower kaufen (Taste)", _shop_page)
 	_shop_list = VBoxContainer.new()
 	_shop_list.add_theme_constant_override("separation", 3)
-	box.add_child(_shop_list)
-	_reveal_button = UiUtil.button("Aufdecken", box, func(): game.submit({"type": "reveal"}))
+	_shop_page.add_child(_shop_list)
+	_reveal_button = UiUtil.button("Aufdecken", _shop_page, func(): game.submit({"type": "reveal"}))
 	_reveal_button.tooltip_text = "Macht 30 s lang alle Unsichtbaren angreifbar, danach 60 s Pause."
-	var hint := UiUtil.wrap_label("Grau = zu wenig Gold. Klick oder Taste wählt, dann ins eigene Gebiet setzen. Umschalt hält die Wahl, Rechtsklick bricht ab.", box, SHOP_WIDTH - 24)
+	var hint := UiUtil.wrap_label("Grau = zu wenig Gold. Klick oder Taste wählt, dann ins eigene Gebiet setzen. Umschalt hält die Wahl, Rechtsklick bricht ab.", _shop_page, SHOP_WIDTH - 24)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hint.add_theme_font_size_override("font_size", 12)
+	_xpert_list = VBoxContainer.new()
+	_xpert_list.add_theme_constant_override("separation", 3)
+	box.add_child(_xpert_list)
+	_main_box = VBoxContainer.new()
+	_main_box.add_theme_constant_override("separation", 6)
+	box.add_child(_main_box)
+	_set_tab("shop")
+
+
+func _set_tab(id: String) -> void:
+	_tab = id
+	for k in _tab_buttons:
+		_tab_buttons[k].set_pressed_no_signal(k == id)
+	_shop_page.visible = id == "shop"
+	_xpert_list.visible = id == "xpert"
+	_main_box.visible = id == "main"
+	if id == "xpert":
+		_build_xpert()
+	elif id == "main":
+		_build_main()
+
+
+## Reiter XPert: XP-Tower (einer pro Spieler, ab 25 … 800 XP) und Ultimate-Tower (ab Level 21).
+func _build_xpert() -> void:
+	for c in _xpert_list.get_children():
+		c.queue_free()
+	_xpert_buttons.clear()
+	var t := UiTheme.title(UiUtil.label("XPert", _xpert_list), 20)
+	t.add_theme_color_override("font_color", Color.from_string(str(MaulData.xpert().get("color", "#ffe14f")), UiTheme.COIN))
+	var info := UiUtil.wrap_label("Jede Filiale darf einen XP-Tower und einen Ultimate-Tower bauen. Was gesperrt ist, zeigt der Grund.", _xpert_list, SHOP_WIDTH - 24)
+	info.add_theme_color_override("font_color", UiTheme.MUTED)
+	info.add_theme_font_size_override("font_size", 12)
+	for d in MaulData.buyable("xpert"):
+		var b := Button.new()
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(SHOP_WIDTH - 24, 30)
+		b.toggle_mode = true
+		b.tooltip_text = tower_text(d)
+		var id := str(d.id)
+		b.pressed.connect(func(): game.choose_build(id))
+		var row := HBoxContainer.new()
+		row.set_anchors_preset(Control.PRESET_FULL_RECT)
+		row.offset_left = 6
+		row.offset_right = -6
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(row)
+		var name := UiUtil.label(str(d.name), row, 13)
+		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name.clip_text = true
+		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var cost := UiUtil.label(MaulHud.big(int(d.cost)), row, 13)
+		cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_xpert_list.add_child(b)
+		_xpert_buttons.append([b, d, cost])
+	_refresh_xpert()
+
+
+func _refresh_xpert() -> void:
+	var p := game.local_player
+	var gold: int = game.players[p].gold
+	for e in _xpert_buttons:
+		var b: Button = e[0]
+		var d: Dictionary = e[1]
+		var why := game.requirement_problem(d, p)
+		b.set_pressed_no_signal(game.build_id == str(d.id))
+		b.disabled = why != ""
+		var cost: Label = e[2]
+		cost.text = why if why != "" else MaulHud.big(int(d.cost))
+		cost.add_theme_color_override("font_color", UiTheme.MUTED if why != "" else (UiTheme.MISSING if int(d.cost) > gold else UiTheme.COIN))
+		cost.add_theme_font_size_override("font_size", 11 if why != "" else 13)
+
+
+## Reiter Zentrale (Hauptgebäude): Bonus-Upgrade (+5 % Schaden je Stufe) oder Rabatt (5 % zurück),
+## beim TUI die Forschung, dazu die eigene Erfahrung.
+func _build_main() -> void:
+	for c in _main_box.get_children():
+		c.queue_free()
+	var p := game.local_player
+	var me: MaulGame.Player = game.players[p]
+	UiTheme.title(UiUtil.label("Hauptgebäude", _main_box), 20)
+	var shop := MaulData.shop(me.shop)
+	var kind := str(shop.get("bonus", ""))
+	var cfg: Dictionary = MaulData.pro().bonus
+	if game.has_bonus(p):
+		var levels := int(cfg.levels)
+		var step := float(cfg.rebate_step if kind == "rebate" else cfg.damage_step)
+		UiTheme.caption("Rabatt" if kind == "rebate" else "Bonus-Upgrade", _main_box)
+		var now := UiUtil.wrap_label((tr("Stufe %d/%d: %d %% Rabatt auf alle Käufe") if kind == "rebate" else tr("Stufe %d/%d: +%d %% Schaden für alle Tower")) % [me.bonus, levels, roundi(me.bonus * step * 100)], _main_box, SHOP_WIDTH - 24)
+		now.add_theme_font_size_override("font_size", 13)
+		if me.bonus < levels:
+			var cost := MaulData.bonus_cost(me.bonus + 1, kind == "rebate", game.players.size())
+			var b := UiUtil.button(tr("Stufe %d kaufen: %s Gold") % [me.bonus + 1, MaulHud.big(cost)], _main_box, func(): game.submit({"type": "bonus"}))
+			UiTheme.accent_button(b, UiTheme.GOLD, UiTheme.BAR)
+			b.disabled = cost > me.gold
+	else:
+		UiUtil.wrap_label("Diese Filiale hat kein Bonus-Upgrade.", _main_box, SHOP_WIDTH - 24).add_theme_color_override("font_color", UiTheme.MUTED)
+	if me.shop == "tui":
+		UiTheme.caption("Forschung", _main_box)
+		for id in ["range", "damage", "advanced"]:
+			var r: Dictionary = MaulData.pro().tui.research[id]
+			var lv := int(me.research.get(id, 0))
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 6)
+			_main_box.add_child(row)
+			var l := UiUtil.label(tr("%s %d/%d") % [tr(str(r.name)), lv, int(r.max)], row, 13)
+			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			l.tooltip_text = tr("+%s je Stufe") % TowerStats.num(float(r.step), 2)
+			l.mouse_filter = Control.MOUSE_FILTER_PASS
+			var rid: String = id
+			var b := UiUtil.button(MaulHud.big(int(r.cost)), row, func(): game.submit({"type": "research", "id": rid}))
+			b.disabled = lv >= int(r.max) or int(r.cost) > me.gold
+	UiTheme.caption("Erfahrung", _main_box)
+	var xp_text := tr("%s XP, Sandbox: es gibt keine neuen XP") % MaulXp.text(me.xp) if game.sandbox else tr("%s XP. Nach jedem Level gibt es neue, das nächste Zehntel wird immer teurer.") % MaulXp.text(me.xp)
+	var xl := UiUtil.wrap_label(xp_text, _main_box, SHOP_WIDTH - 24)
+	xl.add_theme_font_size_override("font_size", 13)
+	xl.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
 
 
 ## Ladenliste für die gewählte Filiale aufbauen.
@@ -193,6 +340,7 @@ func build_shop() -> void:
 		_shop_buttons.append([b, int(t.cost), id, cost])
 	_reveal_button.visible = not MaulData.rules().detect_shops.has(game.shop_of())
 	_shop_panel.visible = true
+	_set_tab(_tab)
 	refresh_shop()
 
 
@@ -217,6 +365,8 @@ func refresh_shop() -> void:
 		var poor: bool = entry[1] > gold
 		b.modulate = Color(1, 1, 1, 0.45) if poor else Color.WHITE
 		(entry[3] as Label).add_theme_color_override("font_color", UiTheme.MISSING if poor else UiTheme.COIN)
+	if _tab == "xpert" and _shop_panel.visible:
+		_refresh_xpert()
 	if _reveal_button.visible:
 		var me: MaulGame.Player = game.players[game.local_player]
 		var wait := me.reveal_ready - game.game_time
@@ -252,25 +402,33 @@ func refresh_selection() -> void:
 	for c in _sel_box.get_children():
 		_sel_box.remove_child(c)
 		c.queue_free()
+	_live.clear()
+	var u: MaulUnit = game.selected_unit if game.selected_unit != null and is_instance_valid(game.selected_unit) else null
 	var t: MaulTower = game.selected
-	_sel_panel.visible = t != null
+	_sel_panel.visible = t != null or u != null
+	if u != null:
+		_unit_panel(u)
+		return
 	if t == null:
 		return
 	var d := t.def
 	UiTheme.title(UiUtil.label(str(d.get("name", "")), _sel_box), 18)
 	var sub := UiUtil.label("%s · %s" % [damage_type_name(str(d.get("damage_type", ""))), targets_name(str(d.get("targets", "both")))], _sel_box, 13)
 	sub.add_theme_color_override("font_color", UiTheme.MUTED)
+	if t.owner_player != game.local_player:
+		sub.text += " · " + game.players[t.owner_player].name
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 14)
 	_sel_box.add_child(grid)
 	var dmg: Array = d.get("damage", [0, 0])
 	var cd := float(d.get("cooldown", 0))
-	var bonus := 1.0 + t.damage_bonus
-	for pair in [["Schaden", TowerStats.dmg_text(float(dmg[0]) * bonus, float(dmg[1]) * bonus) if cd > 0.0 else "–"],
+	var bonus := game.damage_factor(t) * t.side_factor()
+	var add := t.flat + game.flat_bonus_for(t)
+	for pair in [["Schaden", TowerStats.dmg_text((float(dmg[0]) + add) * bonus, (float(dmg[1]) + add) * bonus) if cd > 0.0 else "–"],
 			["Tempo", (TowerStats.num(cd, 2) + " s") if cd > 0.0 else "–"],
-			["Reichweite", TowerStats.num(float(d.get("range", 0)))],
-			["DPS", "%d" % roundi(dps(d) * bonus)]]:
+			["Reichweite", TowerStats.num(t.range_cells())],
+			["DPS", "%d" % roundi((dps(d) + (add / cd if cd > 0.0 else 0.0)) * bonus)]]:
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 0)
 		grid.add_child(box)
@@ -281,21 +439,245 @@ func refresh_selection() -> void:
 		UiUtil.wrap_label(line, _sel_box, 316).add_theme_font_size_override("font_size", 13)
 	var done := UiUtil.label(tr("%s Schaden · %d Kills") % [MaulHud.big(roundi(t.total_damage)), t.kills], _sel_box, 13)
 	done.add_theme_color_override("font_color", UiTheme.MUTED)
-	if t.owner_player != game.local_player:
+	var mine := t.owner_player == game.local_player
+	_pro_info(t, mine)
+	if not mine:
 		return
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 8)
+	row.add_theme_constant_override("v_separation", 6)
+	row.custom_minimum_size.x = 316
 	_sel_box.add_child(row)
 	var sell := UiUtil.button(tr("Verkaufen +%s") % MaulHud.big(game.sell_value(t)), row, func(): game.submit({"type": "sell", "cell": t.cell}))
 	sell.tooltip_text = "75 % des Towerwerts zurück (Taste Entf)"
+	var gold: int = game.players[game.local_player].gold
 	for up in d.get("upgrades_to", []):
 		var ud := MaulData.tower(str(up))
 		if ud.is_empty():
 			continue
 		var b := UiUtil.button(tr("%s +%s") % [str(ud.name), MaulHud.big(int(ud.cost))], row, func(): game.submit({"type": "upgrade", "cell": t.cell, "to": str(up)}))
 		UiTheme.accent_button(b, UiTheme.GOLD, UiTheme.BAR)
-		b.tooltip_text = tower_text(ud)
-		b.disabled = int(ud.cost) > game.players[game.local_player].gold
+		var why := game.requirement_problem(ud, game.local_player, t)
+		b.tooltip_text = tower_text(ud) + ("\n" + why if why != "" else "")
+		b.disabled = int(ud.cost) > gold or why != ""
+	_pro_actions(t, gold)
+
+
+## Anzeige der Profi-Werte eines Towers (für alle sichtbar).
+func _pro_info(t: MaulTower, mine: bool) -> void:
+	var pro := MaulData.pro()
+	var lines := []
+	if pro.fitness.upkeep.has(t.tower_id):
+		lines.append(tr("Stärke +%s, Nebenwirkungen: %d (−%d %%)") % [MaulHud.big(roundi(t.flat)), t.side, roundi((1.0 - t.side_factor()) * 100)])
+		lines.append(tr("Anabolika: %s Gold nach jedem Level") % MaulHud.big(int(pro.fitness.upkeep[t.tower_id])))
+		if t.paused:
+			lines.append(tr("Kalter Entzug: setzt dieses Level aus"))
+	var plant := t.plant()
+	if not plant.is_empty():
+		lines.append(tr("Wasser: %d / %d, %s") % [roundi(t.water), int(plant.water), tr("greift an") if t.active else tr("trocken, ab 90 % aktiv")])
+	if pro.garden.irrigation.has(t.tower_id):
+		lines.append(tr("Bewässert Pflanzen im Umkreis %s mit %s l/s") % [TowerStats.num(float(pro.garden.radius)), MaulHud.big(int(pro.garden.irrigation[t.tower_id]))])
+	if pro.undertaker.cults.has(t.tower_id):
+		lines.append(tr("Heilt Zombies im Umkreis um %s/s") % MaulHud.big(int(pro.undertaker.cults[t.tower_id])))
+	if t.tower_id == str(pro.undertaker.darkness.tower):
+		if t.is_unleashed():
+			lines.append(tr("Entfesselt: noch %d s") % ceili(t.unleashed_until - game.game_time))
+		else:
+			lines.append(tr("Leichen: %d / %d, dann 30 s entfesselt") % [t.corpses, int(pro.undertaker.darkness.corpses)])
+	if t.slots() > 0:
+		lines.append(tr("Slots: %d / %d") % [t.items.size(), t.slots()])
+	for line in lines:
+		var l := UiUtil.wrap_label(line, _sel_box, 316)
+		l.add_theme_font_size_override("font_size", 13)
+		l.add_theme_color_override("font_color", UiTheme.CYAN)
+	# Eingelegte Items
+	for i in t.items.size():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_sel_box.add_child(row)
+		var it := MaulData.item(str(t.items[i]))
+		var l := UiUtil.label(MaulData.item_name(str(t.items[i])), row, 13)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.tooltip_text = item_text(it)
+		l.mouse_filter = Control.MOUSE_FILTER_PASS
+		if mine:
+			var slot := i
+			var refund := floori(int(it.get("cost", 0)) * float(MaulData.rules().sell_refund))
+			UiUtil.button(tr("Verkaufen +%s") % MaulHud.big(refund), row, func(): game.submit({"type": "item_sell", "cell": t.cell, "slot": slot})).add_theme_font_size_override("font_size", 12)
+
+
+## Knöpfe der Profi-Filialen für einen eigenen Tower: Items, Doping, Kopieren, Beschwören, Drohnen.
+func _pro_actions(t: MaulTower, gold: int) -> void:
+	var pro := MaulData.pro()
+	var p := game.local_player
+	if t.slots() > 0:
+		if not t.items.is_empty():
+			var mv := UiUtil.button("Items verschieben", _sel_box, func():
+				game.pending = {"type": "move_items", "from": t.cell}
+				game.show_message(tr("Klick auf den Tower, der die Items bekommen soll")))
+			mv.tooltip_text = "Alle Items in einen anderen eigenen Tower mit freien Slots legen"
+		_item_grid(game.items_for(p, "weapon"), gold, func(id): game.submit({"type": "item", "cell": t.cell, "item": id}),
+			t.items.size() >= t.slots(), "Items kaufen", "Erst einen Laden bauen (Post: Package Store, IKEA: Store)")
+	if pro.fitness.upkeep.has(t.tower_id):
+		_item_grid(game.items_for(p, "drug"), gold, func(id): game.submit({"type": "item", "cell": t.cell, "item": id}),
+			false, "Doping", "Erst Erich´s Pharmacy bauen")
+	if t.tower_id == str(pro.copyshop.copier):
+		_copy_picker(t, gold)
+	for id in pro.undertaker.summons.get(t.tower_id, []):
+		var uid := str(id)
+		var ud := MaulData.unit(uid)
+		var b := UiUtil.button("", _sel_box, func(): game.submit({"type": "summon", "cell": t.cell, "unit": uid}))
+		b.tooltip_text = unit_text(ud)
+		var name := MaulData.name_of(ud, uid)
+		_live.append([b, func():
+			var wait := float(t.summon_ready.get(uid, 0.0)) - game.game_time
+			b.disabled = wait > 0.0
+			b.text = tr("%s beschwören") % name if wait <= 0.0 else tr("%s in %d s") % [name, ceili(wait)]])
+	if t.tower_id == str(pro.drones.charger):
+		var n := game.units.filter(func(u): return u.owner_player == p and u.drone).size()
+		UiTheme.caption(tr("Drohnen %d/%d") % [n, int(pro.drones.max)], _sel_box)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_sel_box.add_child(row)
+		for kind in ["battle", "support"]:
+			var k: String = kind
+			var ud := MaulData.unit(k)
+			var b := UiUtil.button(tr("%s %s") % [MaulData.name_of(ud, k), MaulHud.big(int(ud.cost))], row, func(): game.submit({"type": "drone", "cell": t.cell, "kind": k}))
+			b.tooltip_text = unit_text(ud)
+			b.disabled = n >= int(pro.drones.max) or int(ud.cost) > gold
+	_refresh_live_buttons()
+
+
+## Kaufliste in zwei Spalten (Items, Doping, Module). full: alle Slots belegt.
+func _item_grid(ids: Array, gold: int, buy: Callable, full: bool, caption: String, empty_text: String) -> void:
+	UiTheme.caption(caption, _sel_box)
+	if ids.is_empty():
+		var l := UiUtil.wrap_label(empty_text, _sel_box, 316)
+		l.add_theme_font_size_override("font_size", 12)
+		l.add_theme_color_override("font_color", UiTheme.MUTED)
+		return
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	_sel_box.add_child(grid)
+	for id in ids:
+		var it := MaulData.item(str(id))
+		var iid := str(id)
+		var b := UiUtil.button("%s %s" % [MaulData.item_name(iid), MaulHud.big(int(it.cost))], grid, func(): buy.call(iid))
+		b.custom_minimum_size = Vector2(156, 26)
+		b.clip_text = true
+		b.add_theme_font_size_override("font_size", 11)
+		b.tooltip_text = item_text(it)
+		b.disabled = full or int(it.cost) > gold
+
+
+## Copyshop: Tower einer Standard-Filiale oder der AOK wählen und für Wert × 1,05 − 9 Gold kopieren.
+func _copy_picker(t: MaulTower, gold: int) -> void:
+	UiTheme.caption("Kopieren", _sel_box)
+	var opt := OptionButton.new()
+	opt.focus_mode = Control.FOCUS_NONE
+	opt.custom_minimum_size = Vector2(316, 30)
+	opt.clip_text = true
+	_sel_box.add_child(opt)
+	var list := []
+	for id in MaulData.towers():
+		var d: Dictionary = MaulData.tower(id)
+		if MaulData.pro().copyshop.shops.has(str(d.shop)) and game.requirement_problem(d, game.local_player) == "":
+			list.append(d)
+	list.sort_custom(func(a, b): return int(a.get("value", a.cost)) < int(b.get("value", b.cost)))
+	for d in list:
+		opt.add_item("%s (%s) %s" % [str(d.name), str(MaulData.shop(str(d.shop)).name), MaulHud.big(game.copy_cost(str(d.id)))])
+		opt.set_item_metadata(opt.item_count - 1, str(d.id))
+	var at := 0
+	for i in opt.item_count:
+		if str(opt.get_item_metadata(i)) == _copy_pick:
+			at = i
+	if opt.item_count > 0:
+		opt.select(at)
+		_copy_pick = str(opt.get_item_metadata(at))
+	var b := UiUtil.button("", _sel_box, func(): game.submit({"type": "copy", "cell": t.cell, "to": _copy_pick}))
+	UiTheme.accent_button(b, UiTheme.GOLD, UiTheme.BAR)
+	var update := func():
+		var cost := game.copy_cost(_copy_pick) if _copy_pick != "" else 0
+		b.text = tr("Kopieren: %s Gold") % MaulHud.big(cost)
+		b.disabled = _copy_pick == "" or cost > game.players[game.local_player].gold
+		b.tooltip_text = tower_text(MaulData.tower(_copy_pick)) if _copy_pick != "" else ""
+	opt.item_selected.connect(func(i):
+		_copy_pick = str(opt.get_item_metadata(i))
+		update.call())
+	update.call()
+
+
+## Zombie oder Drohne: Werte, Module, Posten.
+func _unit_panel(u: MaulUnit) -> void:
+	UiTheme.title(UiUtil.label(u.label(), _sel_box), 18)
+	var mine := u.owner_player == game.local_player
+	var sub := UiUtil.label(tr("Drohne") if u.drone else tr("Zombie"), _sel_box, 13)
+	sub.add_theme_color_override("font_color", UiTheme.MUTED)
+	if not mine:
+		sub.text += " · " + game.players[u.owner_player].name
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 14)
+	_sel_box.add_child(grid)
+	var vals := {}
+	for cap in ["Energie" if u.drone else "Leben", "Schaden", "Tempo", "Reichweite"]:
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 0)
+		grid.add_child(box)
+		UiTheme.caption(cap, box)
+		var v := UiUtil.label("", box, 15)
+		v.add_theme_font_override("font", UiTheme.font(true))
+		vals[cap] = v
+	var stats := UiUtil.label("", _sel_box, 13)
+	stats.add_theme_color_override("font_color", UiTheme.MUTED)
+	_live.append([null, func():
+		if not is_instance_valid(u):
+			return
+		if u.drone:
+			vals["Energie"].text = "%d/%d" % [roundi(u.energy), roundi(u.max_energy())]
+		else:
+			vals["Leben"].text = "%d/%d" % [roundi(u.hp), roundi(u.max_hp)]
+		vals["Schaden"].text = MaulHud.big(roundi(u.damage()))
+		vals["Tempo"].text = TowerStats.num(u.cooldown(), 2) + " s"
+		vals["Reichweite"].text = TowerStats.num(u.range_cells())
+		stats.text = tr("%s Schaden · %d Kills") % [MaulHud.big(roundi(u.total_damage)), u.kills]])
+	var desc := UiUtil.wrap_label(tr("Verliert Leben mit der Zeit, Kultstätten heilen ihn.") if not u.drone else tr("Verbraucht im Level Energie und lädt am Drone Charger auf."), _sel_box, 316)
+	desc.add_theme_font_size_override("font_size", 12)
+	if not mine:
+		_refresh_live_buttons()
+		return
+	var hint := UiUtil.wrap_label("Klick ins eigene Gebiet setzt den Posten, dort greift die Einheit an.", _sel_box, 316)
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", UiTheme.CYAN)
+	if u.drone:
+		var slots := int(MaulData.pro().drones.slots)
+		UiTheme.caption(tr("Module %d/%d") % [u.modules.size(), slots], _sel_box)
+		for slot in u.modules:
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 6)
+			_sel_box.add_child(row)
+			var id := str(u.modules[slot])
+			var l := UiUtil.label(MaulData.item_name(id), row, 13)
+			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			l.tooltip_text = item_text(MaulData.item(id))
+			l.mouse_filter = Control.MOUSE_FILTER_PASS
+			var sl := str(slot)
+			var refund := floori(int(MaulData.item(id).get("cost", 0)) * float(MaulData.rules().sell_refund))
+			UiUtil.button(tr("Verkaufen +%s") % MaulHud.big(refund), row, func(): game.submit({"type": "module_sell", "unit": u.net_id, "slot": sl})).add_theme_font_size_override("font_size", 12)
+		var gold: int = game.players[game.local_player].gold
+		var ids := game.items_for(game.local_player, "module").filter(func(id):
+			var it := MaulData.item(str(id))
+			return not u.modules.has(str(it.slot)) and (u.unit_id == "battle" or not it.get("battle_only", false)))
+		_item_grid(ids, gold, func(id): game.submit({"type": "module", "unit": u.net_id, "item": id}),
+			u.modules.size() >= slots, "Module kaufen", "Erst eine Fabrik bauen (FAC-1 bis FAC-3)")
+	_refresh_live_buttons()
+
+
+func _refresh_live_buttons() -> void:
+	for e in _live:
+		e[1].call()
 
 
 # --- Texte zu Towern -----------------------------------------------------------------
@@ -402,6 +784,57 @@ static func tower_text(d: Dictionary) -> String:
 	return "\n".join(lines)
 
 
+## Tooltip für Items, Doping und Module.
+static func item_text(it: Dictionary) -> String:
+	var lines := [MaulData.name_of(it) + "  ·  " + MaulHud.big(int(it.get("cost", 0))) + " " + _t("Gold")]
+	if it.has("cooldown") and it.has("damage"):
+		lines.append(_t("Schaden %s alle %s s, Reichweite %s") % [MaulHud.big(int(it.damage)), TowerStats.num(float(it.cooldown), 2), TowerStats.num(float(it.get("range", 0)))])
+		if str(it.get("targets", "both")) != "both":
+			lines.append(targets_name(str(it.targets)))
+	elif it.has("damage"):
+		var d = it.damage
+		lines.append(_t("+%s Schaden pro Treffer") % ("%d–%d" % [int(d[0]), int(d[1])] if d is Array else MaulHud.big(int(d))))
+	if it.has("stun"):
+		lines.append(_t("%d %% Chance auf %s s Betäubung") % [roundi(float(it.stun_chance) * 100), _n(float(it.stun))])
+	if it.has("frost"):
+		lines.append(_t("Verlangsamt um %d %% für %s s") % [roundi(float(it.frost) * 100), _n(1.0)])
+	if it.has("slow_aura"):
+		lines.append(_t("Aura: verlangsamt um %d %% (Radius %s)") % [roundi(float(it.slow_aura) * 100), _t("Reichweite")])
+	var side = it.get("side", 0)
+	if str(side) == "dose":
+		lines.append(_t("Nebenwirkungen je nach Dosis"))
+	elif float(side) > 0.0:
+		lines.append(_t("Nebenwirkungen: +%d Stufen") % int(side))
+	elif float(side) < 0.0:
+		lines.append(_t("Senkt die Nebenwirkungen um %d Stufe") % -int(side))
+	for e in [["speed", "Tempo +%s"], ["detect", "Enttarnt Unsichtbare (Radius %s)"], ["energy", "Energie +%s"], ["bonus_damage", "Schaden +%s"],
+			["attack_speed", "Angriffstempo +%s"], ["static", "Statik: %s Schaden/s um die Drohne"]]:
+		if it.has(e[0]):
+			var v := float(it[e[0]])
+			lines.append(_t(e[1]) % (("%d %%" % roundi(v * 100)) if e[0] == "attack_speed" else _n(v)))
+	if it.get("battle_only", false):
+		lines.append(_t("Nur für Kampfdrohnen"))
+	return "\n".join(lines)
+
+
+static func unit_text(u: Dictionary) -> String:
+	var lines := [MaulData.name_of(u)]
+	lines.append(_t("Schaden %s alle %s s, Reichweite %s") % [MaulHud.big(int(u.get("damage", 0))), TowerStats.num(float(u.get("cooldown", 1)), 2), TowerStats.num(float(u.get("range", 0)))])
+	if u.has("hp"):
+		lines.append(_t("%d Leben, verliert %d pro Sekunde, Abklingzeit %d s") % [int(u.hp), int(u.decay), int(u.summon_cd)])
+	if u.has("drain"):
+		lines.append(_t("Verbraucht %d Energie pro Sekunde im Level") % int(u.drain))
+	if u.has("chain"):
+		lines.append(_t("Trifft %d Ziele") % int(u.chain))
+	if u.has("splash") or u.has("nova"):
+		lines.append(_t("Flächenschaden %d %% (Radius %s)") % [50, _n(float(u.get("splash", u.get("nova", 0))))])
+	if u.has("frost"):
+		lines.append(_t("Verlangsamt um %d %% für %s s") % [roundi(float(u.frost) * 100), _n(1.0)])
+	if u.has("life_chance"):
+		lines.append(_t("%d %% Chance pro Kill auf ein Leben") % roundi(float(u.life_chance) * 100))
+	return "\n".join(lines)
+
+
 ## 1234567 → 1.234.567
 static func big(v: int) -> String:
 	var s := str(absi(v))
@@ -443,13 +876,16 @@ func refresh() -> void:
 	_next.text = ", ".join(parts)
 	(_next.get_parent().get_child(0) as Label).text = _t("Nächstes").to_upper() if game.phase != MaulGame.Phase.WAVE else _t("Läuft").to_upper()
 	_gold.text = MaulHud.big(game.players[game.local_player].gold)
+	_xp.text = MaulXp.text(game.players[game.local_player].xp) if not game.sandbox else tr("Sandbox")
 	_value.text = MaulHud.big(game.tower_value())
 	_lives.text = "%d / %d" % [game.lives, game.max_lives]
 	_lives.add_theme_color_override("font_color", UiTheme.HAVE if game.lives * 3 > game.max_lives else UiTheme.MISSING)
 	_diff.text = "%d %%" % roundi(game.je * 100.0)
 	refresh_live()
 	refresh_shop()
-	if game.selected != null:
+	if _tab == "main" and _shop_panel.visible:
+		_build_main()
+	if game.selected != null or game.selected_unit != null:
 		refresh_selection()
 
 
@@ -472,6 +908,7 @@ func refresh_live() -> void:
 		_speed_buttons[i].set_pressed_no_signal(is_equal_approx(Engine.time_scale, [1.0, 2.0, 4.0][i]))
 	if _reveal_button.visible:
 		refresh_shop()
+	_refresh_live_buttons()
 	_minimap.queue_redraw()
 
 
@@ -491,6 +928,16 @@ func hide_setup() -> void:
 	if _setup != null:
 		_setup.queue_free()
 		_setup = null
+
+
+func setup_visible() -> bool:
+	return _setup != null
+
+
+## Koop-Mitspieler: der Host hat gestartet, jetzt ist die Filialwahl offen.
+func refresh_setup() -> void:
+	if _setup != null:
+		_setup.refresh()
 
 
 func show_game_over(victory: bool) -> void:
@@ -518,9 +965,14 @@ func show_game_over(victory: bool) -> void:
 		tr(str(d.get("name", ""))), game.level, game.levels.size(), game.lives, game.enemies_killed, game.enemies_leaked,
 		roundi(game.je_min * 100), roundi(game.je_max * 100), roundi(game.play_time / 60.0)]
 	UiUtil.label(stats, box, 15)
+	var me: MaulGame.Player = game.players[game.local_player]
+	if not game.sandbox:
+		var xp := UiUtil.label(tr("Erfahrung: %s XP (+%s)") % [MaulXp.text(me.xp), MaulXp.text(me.xp - game.xp_start)], box, 15)
+		xp.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	box.add_child(row)
-	var again := UiUtil.button("Nochmal", row, func(): Session.goto(Session.MAUL))
-	UiTheme.accent_button(again, UiTheme.GOLD, UiTheme.BAR)
+	if game.sync == null:
+		var again := UiUtil.button("Nochmal", row, func(): Session.goto(Session.MAUL))
+		UiTheme.accent_button(again, UiTheme.GOLD, UiTheme.BAR)
 	UiUtil.button("Hauptmenü", row, func(): Session.goto(Session.MAIN_MENU))

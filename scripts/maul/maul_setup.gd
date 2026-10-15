@@ -1,18 +1,26 @@
 class_name MaulSetup
 extends ColorRect
 ## Vor Level 1: Schwierigkeit, Modus und Filiale wählen („Filiale eröffnen“).
-## Die 11 Standard-Filialen sind wählbar, die Profi-Filialen stehen gesperrt darunter.
+## Zwei Reiter: die 11 Standard-Filialen und die 9 Profi-Filialen (ab 25 XP und nur mit Speziallevels).
+## Im Koop wählt der Host Schwierigkeit, Modus und Sandbox, jeder Mitspieler nur seine Filiale.
 
 const CARD_WIDTH := 236.0
 
 var game: MaulGame
 var _shop := ""
+var _kind := "standard"
 var _difficulty := 1
 var _mode := "group"
+var _sandbox := false
+var _waiting := false      ## Mitspieler hat gewählt, der Host hat noch nicht gestartet
 var _cards := {}
 var _diff_buttons: Array = []
 var _mode_buttons: Array = []
+var _kind_buttons := {}
+var _sandbox_button: Button
+var _grid: GridContainer
 var _detail: Label
+var _xp: Label
 var _open: Button
 
 
@@ -30,48 +38,71 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
-	UiTheme.title(UiUtil.label("Filiale eröffnen", box), 28)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 20)
+	box.add_child(head)
+	var title := UiTheme.title(UiUtil.label("Filiale eröffnen", head), 28)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_xp = UiUtil.label("", head, 15)
+	_xp.add_theme_font_override("font", UiTheme.font(true))
+	_xp.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	var opts := HBoxContainer.new()
-	opts.add_theme_constant_override("separation", 30)
-	box.add_child(opts)
-	var diff_box := VBoxContainer.new()
-	opts.add_child(diff_box)
-	UiTheme.caption("Schwierigkeit", diff_box)
-	var diff_row := HBoxContainer.new()
-	diff_box.add_child(diff_row)
-	var diffs: Array = MaulData.rules().get("difficulties", [])
-	for i in diffs.size():
-		var d: Dictionary = diffs[i]
-		var b := UiUtil.button(str(d.name), diff_row, _set_difficulty.bind(i))
-		b.tooltip_text = tr("%d Leben, Gegner-Leben ×%s") % [int(d.lives), TowerStats.num(float(d.factor), 2)]
-		_diff_buttons.append(b)
-	var mode_box := VBoxContainer.new()
-	opts.add_child(mode_box)
-	UiTheme.caption("Modus", mode_box)
-	var mode_row := HBoxContainer.new()
-	mode_box.add_child(mode_row)
-	for m in [["group", "Gruppe", "Alle Gegner eines Levels kommen auf einmal."], ["line", "Linie", "Die Gegner kommen nacheinander, alle 0,8 s einer pro Spawn."]]:
-		var id: String = m[0]
-		var b := UiUtil.button(m[1], mode_row, _set_mode.bind(id))
-		b.tooltip_text = m[2]
-		_mode_buttons.append([b, id])
+	if not game.mirror:
+		var opts := HBoxContainer.new()
+		opts.add_theme_constant_override("separation", 30)
+		box.add_child(opts)
+		var diff_box := VBoxContainer.new()
+		opts.add_child(diff_box)
+		UiTheme.caption("Schwierigkeit", diff_box)
+		var diff_row := HBoxContainer.new()
+		diff_box.add_child(diff_row)
+		var diffs: Array = MaulData.rules().get("difficulties", [])
+		for i in diffs.size():
+			var d: Dictionary = diffs[i]
+			var b := _toggle(str(d.name), diff_row, _set_difficulty.bind(i))
+			b.tooltip_text = tr("%d Leben, Gegner-Leben ×%s") % [int(d.lives), TowerStats.num(float(d.factor), 2)]
+			_diff_buttons.append(b)
+		var mode_box := VBoxContainer.new()
+		opts.add_child(mode_box)
+		UiTheme.caption("Modus", mode_box)
+		var mode_row := HBoxContainer.new()
+		mode_box.add_child(mode_row)
+		for m in [["group", "Gruppe", "Alle Gegner eines Levels kommen auf einmal."], ["line", "Linie", "Die Gegner kommen nacheinander, alle 0,8 s einer pro Spawn."]]:
+			var id: String = m[0]
+			var b := _toggle(m[1], mode_row, _set_mode.bind(id))
+			b.tooltip_text = m[2]
+			_mode_buttons.append([b, id])
+		var sb_box := VBoxContainer.new()
+		opts.add_child(sb_box)
+		UiTheme.caption("Übungsrunde", sb_box)
+		_sandbox_button = _toggle("Sandbox", sb_box, func():
+			_sandbox = not _sandbox
+			_refresh())
+		_sandbox_button.tooltip_text = "Zum Ausprobieren: 800 XP (alles freigeschaltet), Durchbrüche kosten keine Leben, es gibt keine neuen XP."
+	else:
+		var info := UiUtil.wrap_label("Koop: der Host wählt Schwierigkeit und Modus, jeder eröffnet seine eigene Filiale in seinem Gebiet. Die Leben sind gemeinsam.", box, CARD_WIDTH * 4 + 30)
+		info.add_theme_color_override("font_color", UiTheme.CYAN)
+		info.add_theme_font_size_override("font_size", 14)
 
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	box.add_child(grid)
-	var pro := []
-	for s in MaulData.shops():
-		if str(s.kind) != "standard":
-			pro.append(str(s.name))
-			continue
-		_add_card(grid, str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), UiTheme.GOLD), str(s.bonus))
-	_add_card(grid, "random", tr("Zufall"), tr("Eine der 11 Standard-Filialen"), UiTheme.PURPLE_LIGHT, "")
-	var locked := UiUtil.wrap_label(tr("Profi-Filialen (gesperrt, ab 25 XP): %s") % ", ".join(pro), box, CARD_WIDTH * 4 + 30)
-	locked.add_theme_color_override("font_color", UiTheme.MUTED)
-	locked.add_theme_font_size_override("font_size", 13)
+	var kinds := HBoxContainer.new()
+	kinds.add_theme_constant_override("separation", 6)
+	box.add_child(kinds)
+	for e in [["standard", "Standard-Filialen"], ["pro", "Profi-Filialen"]]:
+		var k: String = e[0]
+		_kind_buttons[k] = _toggle(e[1], kinds, func():
+			_kind = k
+			_shop = ""
+			_build_cards())
+		_kind_buttons[k].custom_minimum_size.x = 220
+	_kind_buttons["pro"].tooltip_text = "Ab 25 XP"
+
+	_grid = GridContainer.new()
+	_grid.columns = 4
+	_grid.add_theme_constant_override("h_separation", 10)
+	_grid.add_theme_constant_override("v_separation", 10)
+	_grid.custom_minimum_size.y = 112 * 3 + 20
+	box.add_child(_grid)
 
 	var bottom := HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 16)
@@ -82,15 +113,39 @@ func _ready() -> void:
 	UiUtil.button("Zurück", bottom, func(): Session.goto(Session.MAIN_MENU))
 	_open = UiUtil.button("Filiale eröffnen", bottom, _start)
 	UiTheme.accent_button(_open, UiTheme.GOLD, UiTheme.BAR)
+	_build_cards()
+
+
+func _toggle(text: String, parent: Node, on_pressed: Callable) -> Button:
+	var b := UiUtil.button(text, parent, on_pressed)
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	return b
+
+
+func _build_cards() -> void:
+	for c in _grid.get_children():
+		_grid.remove_child(c)
+		c.queue_free()
+	_cards.clear()
+	for s in MaulData.shops():
+		if str(s.kind) == _kind:
+			_add_card(str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), UiTheme.GOLD), str(s.bonus))
+	if _kind == "pro":
+		_add_card("random_pro", tr("Profi-Zufall"), tr("Eine der 9 Profi-Filialen"), UiTheme.PURPLE_LIGHT, "")
+	else:
+		_add_card("random", tr("Zufall"), tr("Eine der 11 Standard-Filialen"), UiTheme.PURPLE_LIGHT, "")
 	_refresh()
 
 
-func _add_card(grid: GridContainer, id: String, name: String, text: String, col: Color, bonus: String) -> void:
+func _add_card(id: String, name: String, text: String, col: Color, bonus: String) -> void:
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(CARD_WIDTH, 112)
 	b.toggle_mode = true
 	b.pressed.connect(_set_shop.bind(id))
-	grid.add_child(b)
+	_grid.add_child(b)
 	var m := MarginContainer.new()
 	m.set_anchors_preset(Control.PRESET_FULL_RECT)
 	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -105,7 +160,7 @@ func _add_card(grid: GridContainer, id: String, name: String, text: String, col:
 	title.add_theme_font_override("font", UiTheme.font(true))
 	title.add_theme_color_override("font_color", col)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var short := text.replace("Reichweite:", tr("Reichweite")).replace("  ", " ")
+	var short := _short(text)
 	var info := UiUtil.label(short, v, 11)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -114,11 +169,21 @@ func _add_card(grid: GridContainer, id: String, name: String, text: String, col:
 	info.max_lines_visible = 5
 	info.add_theme_color_override("font_color", UiTheme.DIM)
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if bonus != "":
-		var tag := UiUtil.label(tr("Rabatt statt Bonus") if bonus == "rebate" else tr("Bonus-Upgrade"), v, 11)
+	b.tooltip_text = text.replace("  ", "\n")
+	var tag: Label = null
+	if bonus != "" or _kind == "pro":
+		tag = UiUtil.label("", v, 11)
 		tag.add_theme_color_override("font_color", UiTheme.CYAN)
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cards[id] = [b, title, info]
+	_cards[id] = [b, title, info, tag, bonus, col]
+
+
+## Kartentext: bei Profi-Filialen nur die Besonderheiten (die Werte stehen im Tooltip).
+func _short(text: String) -> String:
+	var i := text.find("Besonderheiten:")
+	if _kind == "pro" and i >= 0:
+		return text.substr(i + 15).replace(" / ", " ").strip_edges()
+	return text.replace("Reichweite:", tr("Reichweite")).replace("  ", " ")
 
 
 func _set_difficulty(i: int) -> void:
@@ -136,25 +201,68 @@ func _set_shop(id: String) -> void:
 	_refresh()
 
 
+## Profi-Filialen offen? Mit Sandbox immer, sonst ab 25 XP; nie ohne Speziallevels.
+func _pro_open() -> bool:
+	var diff := game.difficulty if game.mirror else _difficulty
+	if not bool(MaulData.difficulty(diff).get("specials", true)):
+		return false
+	var sandbox := game.sandbox if game.mirror else _sandbox
+	return sandbox or MaulXp.pro_unlocked(game.players[game.local_player].xp)
+
+
+func refresh() -> void:
+	if _waiting and game.phase != MaulGame.Phase.SETUP:
+		_waiting = false
+		game.start_game(_shop, _difficulty, _mode, _sandbox)
+	_refresh()
+
+
 func _refresh() -> void:
+	var xp: int = game.players[game.local_player].xp
+	var sandbox := game.sandbox if game.mirror else _sandbox
+	_xp.text = tr("Sandbox: 800 XP") if sandbox else tr("Deine Erfahrung: %s XP") % MaulXp.text(xp)
 	for i in _diff_buttons.size():
 		_diff_buttons[i].set_pressed_no_signal(i == _difficulty)
-		_diff_buttons[i].toggle_mode = true
-		_diff_buttons[i].set_pressed_no_signal(i == _difficulty)
 	for e in _mode_buttons:
-		e[0].toggle_mode = true
 		e[0].set_pressed_no_signal(e[1] == _mode)
+	if _sandbox_button != null:
+		_sandbox_button.set_pressed_no_signal(_sandbox)
+	for k in _kind_buttons:
+		_kind_buttons[k].set_pressed_no_signal(k == _kind)
+	var pro_open := _pro_open()
+	if _kind == "pro" and not pro_open and _shop != "":
+		_shop = ""
 	for id in _cards:
+		var c: Array = _cards[id]
+		var locked: bool = _kind == "pro" and not pro_open
 		var on: bool = id == _shop
-		_cards[id][0].set_pressed_no_signal(on)
+		c[0].set_pressed_no_signal(on)
+		c[0].disabled = locked
 		# Ausgewählt: Cyan-Fläche, darauf dunkle Schrift
-		_cards[id][1].add_theme_color_override("font_color", UiTheme.BAR if on else _card_color(id))
-		_cards[id][2].add_theme_color_override("font_color", UiTheme.BAR if on else UiTheme.DIM)
-	_open.disabled = _shop == ""
-	if _shop == "":
+		c[1].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MUTED if locked else c[5]))
+		c[2].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MUTED if locked else UiTheme.DIM))
+		if c[3] != null:
+			var bonus: String = c[4]
+			if locked:
+				c[3].text = tr("Gesperrt: ab %d XP") % int(MaulXp.cfg().get("pro_shops", 25))
+			elif bonus == "" or ["gaertnerei", "waffenladen"].has(id):
+				c[3].text = tr("ohne Bonus-Upgrade") if _kind == "pro" and id != "random_pro" else ""
+			else:
+				c[3].text = tr("Rabatt statt Bonus") if bonus == "rebate" else tr("Bonus-Upgrade")
+			c[3].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MISSING if locked else UiTheme.CYAN))
+	_open.disabled = _shop == "" or _waiting
+	_open.text = tr("Warte auf den Host …") if _waiting else tr("Filiale eröffnen")
+	if _kind == "pro" and not pro_open:
+		if not bool(MaulData.difficulty(game.difficulty if game.mirror else _difficulty).get("specials", true)):
+			_detail.text = tr("Profi-Filialen gibt es nur mit Speziallevels.")
+		else:
+			_detail.text = tr("Profi-Filialen öffnen ab 25 XP. Du hast %s XP, nach jedem Level gibt es neue. Mit Sandbox kannst du sie ausprobieren.") % MaulXp.text(xp)
+	elif _shop == "":
 		_detail.text = tr("Wähle eine Filiale.")
 	elif _shop == "random":
 		_detail.text = tr("Zufall: eine der 11 Standard-Filialen")
+	elif _shop == "random_pro":
+		_detail.text = tr("Profi-Zufall: eine der 9 Profi-Filialen")
 	else:
 		var list := MaulData.buyable(_shop)
 		var s := MaulData.shop(_shop)
@@ -162,14 +270,16 @@ func _refresh() -> void:
 
 
 func _card_color(id: String) -> Color:
-	if id == "random":
+	if id.begins_with("random"):
 		return UiTheme.PURPLE_LIGHT
 	return Color.from_string(str(MaulData.shop(id).get("color", "#ff4fd8")), UiTheme.GOLD)
 
 
 func _start() -> void:
-	var id := _shop
-	if id == "random":
-		var std := MaulData.shops().filter(func(s): return str(s.kind) == "standard")
-		id = str(std[randi() % std.size()].id)
-	game.start_game(id, _difficulty, _mode)
+	if _shop == "":
+		return
+	if game.mirror and game.phase == MaulGame.Phase.SETUP:
+		_waiting = true
+		_refresh()
+		return
+	game.start_game(_shop, _difficulty, _mode, _sandbox)

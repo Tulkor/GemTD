@@ -227,6 +227,12 @@ func _ready() -> void:
 	_refresh()
 
 
+## Wählt der Modus, der gerade vorne liegt, seine Karte selbst (needs_map false, z. B. Shopping Maul)?
+## Dann spielen alle zusammen in einer Partie (Koop), Map und Spielfeld-Wahl entfallen.
+func no_map_mode() -> bool:
+	return not bool(Database.mode(Net.vote_winner(false)).get("needs_map", true))
+
+
 ## Pfad der gewählten Map für eine neue Sitzung ("" = keine).
 func map_path() -> String:
 	return _map_path
@@ -285,14 +291,19 @@ func _refresh() -> void:
 		started = bool(s.get("started", false))
 		loaded = bool(s.get("loaded", false))
 		var voting := not started and not loaded
-		_host_box.visible = voting
+		var no_map := no_map_mode()
+		_host_box.visible = voting and not no_map
 		if voting:
 			_fill_maps(Net.vote_winner(false))
 		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(_map_name())
+		if no_map and str(s.get("map_name", "")) == "":
+			map_name = mode_name
 		if not started and s.has("coop"):
 			_session_text.text = tr("Gespeicherter Koop auf %s. „Starten“ setzt das gemeinsame Feld fort, wer fehlt, kann später einsteigen.") % map_name
 		elif started and s.has("coop"):
 			_session_text.text = tr("Koop auf %s läuft. Mitspieler, die das Spiel verlassen haben, steigen über „Mitspielen“ wieder ein.") % map_name
+		elif voting and no_map:
+			_session_text.text = tr("%s: „Starten“ startet alle Verbundenen zusammen, jeder mit eigenem Gebiet und eigenem Gold, die Leben sind gemeinsam. Schwierigkeit und Modus wählt der Host.") % mode_name
 		elif not started and coop_mode and not loaded:
 			_session_text.text = tr("Koop auf %s: „Starten“ startet alle Verbundenen auf einem gemeinsamen Feld, Schwierigkeit und Wertung vom Host.") % map_name
 		elif started:
@@ -302,8 +313,8 @@ func _refresh() -> void:
 		else:
 			_session_text.text = tr("Neue Sitzung auf %s: „Starten“ startet alle Verbundenen gleichzeitig.") % map_name
 		_start_button.visible = not started
-		_start_button.text = tr("Starten: %s · %s") % [mode_name, map_name] if voting else tr("Starten")
-		_start_button.disabled = voting and (_map_path == "" or Net.vote_tally().is_empty())
+		_start_button.text = (tr("Starten: %s") % mode_name if no_map else tr("Starten: %s · %s") % [mode_name, map_name]) if voting else tr("Starten")
+		_start_button.disabled = voting and ((_map_path == "" and not no_map) or Net.vote_tally().is_empty())
 		_play_button.visible = started
 	else:
 		_addresses.visible = false
