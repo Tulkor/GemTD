@@ -2,7 +2,8 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
-##   --seite=single|history|lobby   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --seite=single|history|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
@@ -63,9 +64,14 @@ func _ready() -> void:
 			var kind: String = str(md.get("game", "gemtd")) if md is Dictionary else "gemtd"
 			Session.game_kind = kind
 			node = load(Session.game_scene()).instantiate()
+	if opts.has("ui"):
+		Display.ui_scale = clampf(float(opts.ui) / 100.0, Display.UI_SCALE_MIN, Display.UI_SCALE_MAX)
+		Display._apply()
 	add_child(node)
 	await _frames(5)
-	if scene == "menu" and opts.has("seite"):
+	if scene == "menu" and opts.get("seite", "") == "einstellungen":
+		node._open_settings()
+	elif scene == "menu" and opts.has("seite"):
 		node.show_page(opts.seite)
 		await _frames(3)
 	if scene == "menu" and opts.has("lobby"):
