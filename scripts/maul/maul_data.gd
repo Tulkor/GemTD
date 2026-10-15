@@ -2,7 +2,7 @@ class_name MaulData
 extends RefCounted
 ## Daten von Shopping Maul (data/maul/): Karte, Filialen mit Towern, Level, Regeln.
 ## map.json, shops.json und waves.json erzeugt tools/wc3/maul_daten.py aus der Kartendatei 5.44f,
-## rules.json ist von Hand gepflegt.
+## rules.json und pro.json (XP, Hauptgebäude, Profi-Filialen, Items, Korrekturen an Towern) sind von Hand gepflegt.
 
 const DIR := "res://data/maul/"
 
@@ -28,29 +28,68 @@ static func levels() -> Array:
 	return _load("waves").get("levels", [])
 
 
+static func pro() -> Dictionary:
+	return _load("pro")
+
+
 static func shops() -> Array:
 	return _load("shops").get("shops", [])
 
 
+## XP- und Ultimate-Tower, die jede Filiale zusätzlich bauen kann (Filiale "xpert").
+static func xpert() -> Dictionary:
+	return _load("shops").get("xpert", {})
+
+
 static func shop(id: String) -> Dictionary:
+	if id == "xpert":
+		return xpert()
 	for s in shops():
 		if s.id == id:
 			return s
 	return {}
 
 
-## Alle Tower aller Filialen nach ID.
+## Alle Tower aller Filialen (und des XPert) nach ID, mit den Korrekturen aus pro.json.
 static func towers() -> Dictionary:
 	if not _cache.has("_towers"):
 		var all := {}
-		for s in shops():
+		var fix: Dictionary = pro().get("overrides", {})
+		for s in shops() + ([xpert()] if not xpert().is_empty() else []):
 			for t in s.towers:
-				var d: Dictionary = t.duplicate()
+				var d: Dictionary = t.duplicate(true)
 				d["shop"] = s.id
 				d["color"] = s.color
+				d.merge(fix.get(t.id, {}), true)
 				all[t.id] = d
 		_cache["_towers"] = all
 	return _cache["_towers"]
+
+
+static func item(id: String) -> Dictionary:
+	return pro().get("items", {}).get(id, {})
+
+
+static func unit(id: String) -> Dictionary:
+	return pro().get("units", {}).get(id, {})
+
+
+## Name eines Items oder einer Einheit in der eingestellten Sprache (pro.json: name, name_en).
+static func name_of(d: Dictionary, fallback := "") -> String:
+	if Loc.language == "en" and d.has("name_en"):
+		return str(d.name_en)
+	return str(d.get("name", fallback))
+
+
+static func item_name(id: String) -> String:
+	return name_of(item(id), id)
+
+
+## Kosten der Bonus-/Rabatt-Stufe n für m Spieler: n · ⌊√n⌋ · Grundpreis / m.
+static func bonus_cost(n: int, rebate: bool, m: int) -> int:
+	var b: Dictionary = pro().get("bonus", {})
+	var base := int(b.get("rebate_cost" if rebate else "damage_cost", 500))
+	return n * floori(sqrt(n)) * base / maxi(m, 1)
 
 
 static func tower(id: String) -> Dictionary:

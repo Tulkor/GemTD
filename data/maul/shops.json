@@ -4219,7 +4219,10 @@
 					],
 					"hotkey": "C",
 					"tooltip": "DMG: 1.500 dmg/s (0,5s) / RG: 3.300 / Special: Multitarget (3), Increases the damage of all your towers by 40% (does not stack with similar effects), Support unit available",
-					"build_time": 30
+					"build_time": 30,
+					"requires": [
+						"R00S"
+					]
 				},
 				{
 					"id": "h018",
@@ -5337,5 +5340,480 @@
 				"Drone Charger: Recharge (AHab)"
 			]
 		}
-	]
+	],
+	"xpert": {
+		"id": "xpert",
+		"name": "XPert",
+		"name_en": "XPert",
+		"kind": "xpert",
+		"bonus": "",
+		"color": "#ffe14f",
+		"text": "XP-Tower (je Spieler einer) und Ultimate-Tower (einer, ab Level 21).",
+		"rules": "XP-Tower brauchen das Token n00B, Ultimate-Tower n00H: je einer gleichzeitig.",
+		"towers": [
+			{
+				"id": "h00S",
+				"name": "Haystack",
+				"cost": 50,
+				"value": 50,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 0.9,
+				"range": 8.59,
+				"targets": "ground",
+				"damage_type": "normal",
+				"abilities": [
+					{
+						"type": "burn_aura",
+						"radius": 3.91,
+						"dps": 16.0,
+						"targets": "both"
+					}
+				],
+				"hotkey": "E",
+				"tooltip": "DMG: 18 dmg/s (1s) / RG: 500 / Special: Damages all units in range",
+				"build_time": 5,
+				"requires": [
+					"R00E",
+					"n00B"
+				]
+			},
+			{
+				"id": "h01L",
+				"name": "Frigde",
+				"cost": 100,
+				"value": 100,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					351,
+					351
+				],
+				"cooldown": 2.0,
+				"range": 8.2,
+				"targets": "both",
+				"damage_type": "normal",
+				"abilities": [
+					{
+						"type": "slow_aura",
+						"radius": 3.91,
+						"factor": 0.1
+					},
+					{
+						"type": "slow",
+						"factor": 0.3,
+						"duration": 1.0
+					}
+				],
+				"hotkey": "R",
+				"tooltip": "DMG: 175 dmg/s (2s) / RG: 1050 / Special: Area Freezer, Frost",
+				"build_time": 5,
+				"requires": [
+					"R00F",
+					"n00B"
+				]
+			},
+			{
+				"id": "h01M",
+				"name": "Bunker",
+				"cost": 400,
+				"value": 400,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 1.1,
+				"range": 4.3,
+				"targets": "air",
+				"damage_type": "pierce",
+				"abilities": [],
+				"hotkey": "A",
+				"tooltip": "DMG: 1.600 dmg/s (0,1s) / RG: 500 / Special: Item attack",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00G"
+				]
+			},
+			{
+				"id": "h01U",
+				"name": "Pigfarm",
+				"cost": 999,
+				"value": 999,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 1.1,
+				"range": 4.3,
+				"targets": "air",
+				"damage_type": "pierce",
+				"abilities": [
+					{
+						"type": "chain_spell",
+						"damage": 9339.0,
+						"targets": 5,
+						"falloff": 0.55,
+						"cooldown": 2.9,
+						"range": 6.25
+					}
+				],
+				"hotkey": "S",
+				"tooltip": "DMG: 4.500 dmg/s (-s) / RG: - / Special: Resurrection, Poison, Only Ground!",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00H"
+				]
+			},
+			{
+				"id": "h03D",
+				"name": "Hydrant",
+				"cost": 1000,
+				"value": 1000,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					3201,
+					3201
+				],
+				"cooldown": 1.0,
+				"range": 7.81,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "slow",
+						"factor": 0.3,
+						"duration": 3.0
+					}
+				],
+				"hotkey": "Y",
+				"tooltip": "DMG: 3.200 dmg/s (1s) / RG: 1.000 / Special: Upgradeable, Frost",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00Q"
+				]
+			},
+			{
+				"id": "h022",
+				"name": "Tentacle",
+				"cost": 2000,
+				"value": 2000,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					2,
+					2
+				],
+				"cooldown": 1.0,
+				"range": 8.68,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [],
+				"hotkey": "D",
+				"tooltip": "DMG: 6.600 dmg/s (1s) / RG: 1111 / Special: Tentacle?!",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00I"
+				]
+			},
+			{
+				"id": "o01J",
+				"name": "Headquaters",
+				"cost": 2500,
+				"value": 2500,
+				"upgrade_from": null,
+				"upgrades_to": [
+					"o02P"
+				],
+				"damage": [
+					1321,
+					1321
+				],
+				"cooldown": 0.25,
+				"range": 25.39,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "stun",
+						"chance": 0.1,
+						"duration": 0.33
+					}
+				],
+				"hotkey": "Q",
+				"tooltip": "DMG: 5.280 dmg/s (0,25s) / RG: 3.250 / Special: Stun",
+				"build_time": 60,
+				"requires": [
+					"R00U",
+					"R00S",
+					"n00H"
+				]
+			},
+			{
+				"id": "h02P",
+				"name": "Allspark",
+				"cost": 3333,
+				"value": 3333,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 1.0,
+				"range": 8.68,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "burn_aura",
+						"radius": 3.91,
+						"dps": 2000.0,
+						"targets": "both"
+					},
+					{
+						"type": "slow_aura",
+						"radius": 3.91,
+						"factor": 0.1
+					}
+				],
+				"hotkey": "F",
+				"tooltip": "DMG: 2.000 dmg/s (1s) / RG: 500 / Special: Area freezer, Damages all units in range",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00J"
+				]
+			},
+			{
+				"id": "h02U",
+				"name": "EMP",
+				"cost": 4000,
+				"value": 4000,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 1.0,
+				"range": 8.68,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "nova_spell",
+						"damage": 3101.0,
+						"radius": 3.91,
+						"cooldown": 4.9,
+						"slow": 0.25,
+						"slow_duration": 3.0
+					}
+				],
+				"hotkey": "Y",
+				"tooltip": "DMG: 2.780 dmg/s (5s) / RG: 500 / Special: EMP-Shock",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00K"
+				]
+			},
+			{
+				"id": "o02M",
+				"name": "Plan B",
+				"cost": 5000,
+				"value": 5000,
+				"upgrade_from": null,
+				"upgrades_to": [
+					"o02N"
+				],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 0.25,
+				"range": 25.39,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "burn_aura",
+						"radius": 7.81,
+						"dps": 1000.0,
+						"targets": "both"
+					}
+				],
+				"hotkey": "W",
+				"tooltip": "DMG: 1.000 dmg/s (1s) / RG: 1.000 / Special: Damages all units in range",
+				"build_time": 60,
+				"requires": [
+					"R00S",
+					"n00H"
+				]
+			},
+			{
+				"id": "h03V",
+				"name": "SDI Uplink",
+				"cost": 15000,
+				"value": 15000,
+				"upgrade_from": null,
+				"upgrades_to": [],
+				"damage": [
+					0,
+					0
+				],
+				"cooldown": 1.1,
+				"range": 4.3,
+				"targets": "air",
+				"damage_type": "pierce",
+				"abilities": [],
+				"hotkey": "C",
+				"tooltip": "DMG: 30.000 dmg/s (0,2s) / RG: 7.500 / Special: Orbital defense uplink",
+				"build_time": 5,
+				"requires": [
+					"n00B",
+					"R00R"
+				]
+			},
+			{
+				"id": "o02P",
+				"name": "Global Headquaters",
+				"cost": 5000,
+				"value": 7500,
+				"upgrade_from": "o01J",
+				"upgrades_to": [
+					"o02Q"
+				],
+				"damage": [
+					3500,
+					3500
+				],
+				"cooldown": 0.2,
+				"range": 42.97,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "stun",
+						"chance": 0.1,
+						"duration": 0.33
+					}
+				],
+				"hotkey": "U",
+				"tooltip": "DMG: 17.500 dmg/s (0,2s) / RG: 5.500 / Special: Stun",
+				"build_time": 60
+			},
+			{
+				"id": "o02N",
+				"name": "Revised Plan B",
+				"cost": 10000,
+				"value": 15000,
+				"upgrade_from": "o02M",
+				"upgrades_to": [
+					"o02O"
+				],
+				"damage": [
+					27750,
+					27750
+				],
+				"cooldown": 0.5,
+				"range": 7.81,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "burn_aura",
+						"radius": 7.81,
+						"dps": 1000.0,
+						"targets": "both"
+					}
+				],
+				"hotkey": "U",
+				"tooltip": "DMG: 57.500 + 1.000 dmg/s (0,5s/1s) / RG: 1.000 / Special: Dual attack (normal + static charge)",
+				"build_time": 60,
+				"requires": [
+					"R00U",
+					"R00G"
+				]
+			},
+			{
+				"id": "o02Q",
+				"name": "Galactic Headquaters",
+				"cost": 10000,
+				"value": 17500,
+				"upgrade_from": "o02P",
+				"upgrades_to": [],
+				"damage": [
+					4000,
+					4000
+				],
+				"cooldown": 0.1,
+				"range": 58.59,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "stun",
+						"chance": 0.1,
+						"duration": 0.33
+					}
+				],
+				"hotkey": "U",
+				"tooltip": "DMG: 40.000 dmg/s (0,1s) / RG: 7.500 / Special: Stun",
+				"build_time": 1,
+				"requires": [
+					"R00G"
+				]
+			},
+			{
+				"id": "o02O",
+				"name": "Ultimate Plan B",
+				"cost": 15000,
+				"value": 30000,
+				"upgrade_from": "o02N",
+				"upgrades_to": [],
+				"damage": [
+					25000,
+					25000
+				],
+				"cooldown": 0.25,
+				"range": 7.81,
+				"targets": "both",
+				"damage_type": "chaos",
+				"abilities": [
+					{
+						"type": "burn_aura",
+						"radius": 7.81,
+						"dps": 3448.0,
+						"targets": "both"
+					}
+				],
+				"hotkey": "U",
+				"tooltip": "DMG: 100.000 + 3.450 dmg/s (0,25s/1s) / RG: 1.000 / Special: Dual attack (normal + static charge)",
+				"build_time": 1,
+				"requires": [
+					"R00L"
+				]
+			}
+		],
+		"todo": [
+			"Bunker: Bunker (Apxf)",
+			"Pigfarm: A061 (Agyd)",
+			"Tentacle: Tentacle?! (Afak)",
+			"SDI Uplink: Orbital defense uplink (ACbh)",
+			"SDI Uplink: Orbital uplink (Apxf)"
+		]
+	}
 }

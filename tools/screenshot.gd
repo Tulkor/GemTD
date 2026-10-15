@@ -4,13 +4,16 @@ extends Node
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
 ##   --seite=single|history|lobby   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
-##                           --welle (nächstes Level starten), --auswahl, --warten=S; Kamera aufs Zentrum
+##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum;
+##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
+##                           --profi (Filialwahl: Reiter Profi-Filialen), --bauen=h01P,h02O (diese Tower zuerst)
 ##   --map=<id>              Map aus data/maps (Standard classic)
 ##   --runden=N              N Runden automatisch spielen (Gems am Weg setzen, ersten behalten, Welle 8× laufen)
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
 ##   --welle=N               nächste Welle ist Welle N (Debug-Sprung)
 ##   --phase=bau|wahl|welle  Stand für das Bild (Standard bau); welle startet die Welle
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
+##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
@@ -108,6 +111,13 @@ func _prepare(game: Node) -> void:
 	if phase == "welle":
 		game._select(game.round_towers[0])
 		game._on_option_chosen(0)
+	if opts.has("faehigkeiten"):
+		for t in game.towers.values():
+			t.stats = t.stats.duplicate(true)
+			var list: Array = t.stats.get("abilities", [])
+			for type in String(opts.faehigkeiten).split(","):
+				list.append(Abilities.default_for(type))
+			t.stats["abilities"] = list
 	if opts.has("auswahl"):
 		if not game.round_towers.is_empty():
 			game._select(game.round_towers[0])
@@ -124,9 +134,14 @@ func _prepare(game: Node) -> void:
 func _prepare_maul(game: Node) -> void:
 	game.camera_rig.set_process(false)
 	if not opts.has("filiale"):
+		if opts.has("profi"):
+			game.hud._setup._kind = "pro"
+			game.hud._setup._build_cards()
 		return
 	var shop: String = opts.filiale
-	game.start_game(shop, 1, "group")
+	game.start_game(shop, 1, "group", opts.has("sandbox"))
+	if opts.has("gold"):
+		game.players[0].gold = int(opts.gold)
 	var zone: Rect2i = game.map.zones[0].rect
 	var spots := []
 	for y in range(zone.position.y + 1, zone.end.y - 2, 4):
@@ -136,6 +151,10 @@ func _prepare_maul(game: Node) -> void:
 	spots.sort_custom(func(a, b): return Vector2(a).distance_to(mid) < Vector2(b).distance_to(mid))
 	var build := func():
 		var list: Array = MaulData.buyable(shop)
+		for id in str(opts.get("bauen", "")).split(",", false):
+			for a in spots:
+				if game.submit({"type": "build", "tower": id, "cell": a}):
+					break
 		for a in spots:
 			var best := ""
 			for t in list:
@@ -144,6 +163,12 @@ func _prepare_maul(game: Node) -> void:
 			if best == "":
 				break
 			game.submit({"type": "build", "tower": best, "cell": a})
+		# Profi-Filialen: Slots mit Items füllen, Drohnen und Zombies holen
+		for t in game.towers.values():
+			for id in game.items_for(0, "weapon"):
+				game.submit({"type": "item", "cell": t.cell, "item": id})
+			if t.tower_id == "h02O":
+				game.submit({"type": "drone", "cell": t.cell, "kind": "battle"})
 	build.call()
 	for i in int(opts.get("level", "0")):
 		game.submit({"type": "start_now"})
@@ -159,7 +184,15 @@ func _prepare_maul(game: Node) -> void:
 	if opts.has("welle"):
 		game.submit({"type": "start_now"})
 	if opts.has("auswahl") and not game.towers.is_empty():
-		game.select(game.towers.values()[0])
+		var pick: Node = game.towers.values()[0]
+		for t in game.towers.values():
+			if t.slots() > 0 or t.tower_id == str(opts.get("auswahl")):
+				pick = t
+		game.select(pick)
+	if opts.has("einheit") and not game.units.is_empty():
+		game.select_unit(game.units[0])
+	if opts.has("reiter"):
+		game.hud._set_tab(str(opts.reiter))
 	game.camera_rig.look_at_point(game.map.zone_center(0), float(opts.get("abstand", "34")))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))

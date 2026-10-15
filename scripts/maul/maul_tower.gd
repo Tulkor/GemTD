@@ -4,11 +4,29 @@ extends Tower
 ## Upgrades sind eigene Tower mit "upgrade_from"). Schießt wie ein GemTD-Tower und wirkt dazu
 ## Zauber mit eigener Abklingzeit: Donnerschlag (nova_spell), Kettenblitz (chain_spell),
 ## Schockwelle (wave_spell). Vorerst als Neon-Säule in der Filialfarbe, höher je teurer.
+##
+## Profi-Filialen (Etappe 2, Daten in pro.json):
+##   Post/IKEA: items = eingelegte Waffen (Slots je Tower), jede feuert mit eigener Abklingzeit.
+##   Fitness:   flat = gesammelte Stärke und Doping-Schaden, side = Nebenwirkungsstufen, paused = Kalter Entzug.
+##   Gärtnerei: water = Füllstand; Pflanzen greifen nur aktiv (ab 90 %, aus unter 75 %) und mit Wasser an.
+##   Bestatter: corpses = gefressene Leichen der Contained Darkness, unleashed_until = Zeit als Unleashed Darkness.
 
 const SPELLS := ["nova_spell", "chain_spell", "wave_spell"]
 
 var value := 0             ## Gold, das im Tower steckt (Kauf und Upgrades); Verkauf bringt 75 %
+var items: Array = []      ## eingelegte Items (Post, IKEA)
+var flat := 0.0            ## zusätzlicher Schaden pro Treffer (Fitness: Stärke und Doping)
+var side := 0              ## Nebenwirkungsstufen (Fitness)
+var paused := false        ## Fitness: Anabolika nicht bezahlt, greift dieses Level nicht an
+var drugs := {}            ## Fitness: "stun", "frost", "slow_aura" aus dem Doping
+var water := 0.0           ## Gärtnerei: Wasser in Litern
+var active := false        ## Gärtnerei: Pflanze hat genug Wasser und greift an
+var corpses := 0           ## Contained Darkness
+var unleashed_until := -1.0
+var summon_ready := {}     ## Einheit -> Spielzeit, ab der sie wieder beschworen werden kann
 var _spell_cd := {}        ## Index der Fähigkeit -> Restzeit
+var _item_cd := {}         ## Slot -> Restzeit
+var _extra: Array = []     ## Fähigkeiten aus dem Doping
 
 
 func set_tower(id: String, _t: int) -> void:
@@ -19,7 +37,45 @@ func set_tower(id: String, _t: int) -> void:
 	color = Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
 	place_at(cell)
 	_spell_cd.clear()
+	_item_cd.clear()
+	_update_extra()
 	_build_visual()
+
+
+func slots() -> int:
+	return int(MaulData.pro().get("slots", {}).get(tower_id, 0))
+
+
+func plant() -> Dictionary:
+	return MaulData.pro().get("garden", {}).get("plants", {}).get(tower_id, {})
+
+
+func is_unleashed() -> bool:
+	return game != null and unleashed_until > game.game_time
+
+
+## Doping-Fähigkeiten (Betäubung, Frost, Verlangsamungsaura) zu den Fähigkeiten des Towers.
+func _update_extra() -> void:
+	_extra = []
+	if drugs.has("stun"):
+		_extra.append({"type": "stun", "chance": float(drugs.stun[0]), "duration": float(drugs.stun[1])})
+	if drugs.has("frost"):
+		_extra.append({"type": "slow", "factor": float(drugs.frost), "duration": 1.0})
+	if drugs.has("slow_aura"):
+		_extra.append({"type": "slow_aura", "radius": range_cells(), "factor": float(drugs.slow_aura)})
+
+
+func abilities() -> Array:
+	return stats.get("abilities", []) + _extra if not _extra.is_empty() else stats.get("abilities", [])
+
+
+func range_cells() -> float:
+	var r := float(stats.get("range", 3.0))
+	if is_unleashed():
+		r = float(MaulData.pro().undertaker.darkness.range)
+	if game != null:
+		r += game.range_bonus_for(self)
+	return r
 
 
 func label() -> String:
@@ -31,6 +87,10 @@ func kill_bonus() -> float:
 
 
 func can_attack() -> bool:
+	if paused or not plant().is_empty():
+		return false
+	if is_unleashed():
+		return true
 	var dmg: Array = stats.get("damage", [0, 0])
 	return float(stats.get("cooldown", 0)) > 0.0 and float(dmg[1]) > 0.0
 
@@ -39,20 +99,40 @@ func can_target(e) -> bool:
 	return super.can_target(e) and (game == null or game.is_detected(e))
 
 
+func target_mode() -> String:
+	if is_unleashed():
+		return str(MaulData.pro().undertaker.darkness.targets)
+	return super.target_mode()
+
+
 func cooldown() -> float:
 	var f: float = game.frost_factor(self) if game != null else 1.0
-	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus) * f
+	var cd := float(MaulData.pro().undertaker.darkness.cooldown) if is_unleashed() else float(stats.get("cooldown", 1.0))
+	return cd / (1.0 + speed_bonus) * f
+
+
+## Faktor durch Nebenwirkungen (Fitness): −5 % je Stufe, höchstens −90 %.
+func side_factor() -> float:
+	return maxf(1.0 - side * float(MaulData.pro().get("fitness", {}).get("side_step", 0.05)), 0.1)
 
 
 func _roll_damage() -> float:
 	var dmg: Array = stats.get("damage", [1, 1])
-	return randf_range(float(dmg[0]), float(dmg[1])) * (1.0 + damage_bonus)
+	var base := randf_range(float(dmg[0]), float(dmg[1]))
+	if is_unleashed():
+		base = float(MaulData.pro().undertaker.darkness.damage)
+	base += flat + (game.flat_bonus_for(self) if game != null else 0.0)
+	return base * (game.damage_factor(self) if game != null else 1.0) * side_factor()
 
 
 func _process(delta: float) -> void:
 	super._process(delta)
 	if game == null or game.mirror or not game.is_wave_running():
 		return
+	if not items.is_empty():
+		_fire_items(delta)
+	if not plant().is_empty():
+		_fire_plant(delta)
 	var list := abilities()
 	for i in list.size():
 		var ab: Dictionary = list[i]
@@ -65,9 +145,62 @@ func _process(delta: float) -> void:
 		_spell_cd[i] = maxf(left, -delta)
 
 
+## Eingelegte Items (Post, IKEA): jedes ist eine eigene Waffe mit Schaden, Abklingzeit und Reichweite.
+func _fire_items(delta: float) -> void:
+	for i in items.size():
+		var it := MaulData.item(str(items[i]))
+		if not it.has("cooldown"):
+			continue
+		var left: float = _item_cd.get(i, 0.0) - delta
+		if left <= 0.0:
+			var mode := str(it.get("targets", "both"))
+			var target = null
+			for e in game.find_targets_in(self, float(it.range), 8):
+				if (mode == "air" and not e.flying) or (mode == "ground" and e.flying):
+					continue
+				target = e
+				break
+			if target != null:
+				game.add_beam(position + Vector3(0, 0.9, 0), target.position, color.lerp(Color.WHITE, 0.3))
+				_hit(target, float(it.damage) * game.damage_factor(self))
+				left += float(it.cooldown) * game.frost_factor(self)
+		_item_cd[i] = maxf(left, -delta)
+
+
+## Gärtnerei: aktiv ab 90 % Wasser, aus unter 75 %. Jeder Schuss kostet Wasser (gegen Luft das Doppelte).
+func _fire_plant(delta: float) -> void:
+	var p := plant()
+	var g: Dictionary = MaulData.pro().garden
+	var cap := float(p.water)
+	if active and water < cap * float(g.off):
+		active = false
+	elif not active and water >= cap * float(g.on):
+		active = true
+	if not active:
+		return
+	cooldown_left = maxf(cooldown_left - delta, -delta)
+	if cooldown_left > 0.0:
+		return
+	var targets: Array = game.find_targets(self, 1)
+	if targets.is_empty():
+		return
+	var e = targets[0]
+	var cost := float(p.air_cost if e.flying else p.cost)
+	if water < cost:
+		return
+	water -= cost
+	game.add_beam(position + Vector3(0, 0.6, 0), e.position, color)
+	var dmg: float = float(p.air_damage if e.flying else p.damage) * game.damage_factor(self)
+	e.last_hit_by = owner_player
+	total_damage += e.take_spell_damage(dmg)
+	if e.dead:
+		kills += 1
+	cooldown_left += cooldown()
+
+
 ## Zauber wirken, wenn ein Ziel in Reichweite ist. true = gewirkt.
 func _cast(ab: Dictionary) -> bool:
-	var bonus := 1.0 + damage_bonus
+	var bonus: float = game.damage_factor(self)
 	match str(ab.type):
 		"nova_spell":
 			var near: Array = game.enemies_in_radius(pos, float(ab.radius)).filter(func(e): return can_target(e))
@@ -88,7 +221,7 @@ func _cast(ab: Dictionary) -> bool:
 				return false
 			var hit := [first]
 			var current = first
-			var dmg := float(ab.damage) * bonus
+			var dmg: float = float(ab.damage) * bonus
 			game.add_beam(position + Vector3(0, 1.0, 0), first.position, Color.WHITE)
 			_spell_hit(first, dmg)
 			for i in int(ab.get("targets", 3)) - 1:
@@ -140,6 +273,14 @@ func _spell_hit(e, dmg: float) -> void:
 
 func info_text() -> String:
 	return label()
+
+
+## Wert der eingelegten Items (zählt beim Verkaufen mit).
+func items_value() -> int:
+	var v := 0
+	for id in items:
+		v += int(MaulData.item(str(id)).get("cost", 0))
+	return v
 
 
 # --- Darstellung ---------------------------------------------------------------
