@@ -14,7 +14,7 @@ class FakeGame:
 	func enemies_in_radius(p: Vector2, radius: float) -> Array:
 		return test.enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
 
-	func add_beam(_from: Vector3, _to: Vector3, _col: Color) -> void:
+	func add_beam(_from: Vector3, _to: Vector3, _col: Color, _fx: String = "") -> void:
 		test.beams += 1
 
 	func on_enemy_killed(_e) -> void:
