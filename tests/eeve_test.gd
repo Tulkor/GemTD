@@ -200,5 +200,77 @@ func _ready() -> void:
 	check(probes.daneben.hp == 1e7 and probes.dahinter.hp == 1e7, "Kegel trifft nichts daneben oder hinter dem Tower")
 	for en in probes.values():
 		en.free()
+	game.queue_free()
+	await get_tree().process_frame
+	await _coop_tests()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
+
+
+## Koop ohne Netz: Host- und Mitspieler-Spiel, Befehle und Stand laufen direkt (wie über ENet als Bytes).
+func _coop_tests() -> void:
+	Session.skip_setup = false
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	var host: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(host)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(client)
+	await get_tree().process_frame
+	check(host.coop != null and client.mirror and client.local_player == 1, "Koop: Host und Mitspieler angelegt")
+	client.coop.command_sink = func(cmd): host.coop.receive(1, _wire(cmd))
+	var pump := func():
+		client.coop.apply_state(_wire(host.coop.snapshot()))
+		client.coop.apply_enemies(_wire(host.coop.enemy_packet()))
+	check(host.players.size() == 2 and host.players[1].gold == 200, "jeder Spieler startet mit 200 Gold")
+	client.submit({"type": "setup", "difficulty": 0, "field": 0})
+	check(not host.setup_done, "nur der Host wählt die Einstellungen")
+	host.submit({"type": "setup", "difficulty": 3, "field": 0})
+	pump.call()
+	check(client.setup_done and client.difficulty == 3 and client.wave_seed == host.wave_seed, "Mitspieler übernimmt Einstellungen und Wellen")
+	check(is_equal_approx(float(client.waves[5].groups[0].hp), float(host.waves[5].groups[0].hp)), "gleiche Wellen bei Host und Mitspieler")
+	check(is_equal_approx(host.coop_hp_factor(), 1.75), "Gegner mit 2 Spielern +75 %% Leben: %s" % host.coop_hp_factor())
+	# Mitspieler baut und setzt einen Elementpunkt, beides für sich
+	var cell := Vector2i(30, 60)
+	client.submit({"type": "build", "cell": cell})
+	client.submit({"type": "element", "element": "fire"})
+	pump.call()
+	var t: Tower = host.towers.get(cell)
+	check(t != null and t.owner_player == 1, "Host baut die Barrikade für den Mitspieler")
+	check(client.towers.has(cell) and client.towers[cell] is EeveTower, "Mitspieler sieht seine Barrikade")
+	check(host.players[1].gold == 198 and host.players[0].gold == 200 and client.gold == 198, "Gold je Spieler (Gast %d)" % client.gold)
+	check(host.ep(1).elements.fire == 1 and host.ep(0).elements.fire == 0 and client.elements.fire == 1 and client.points == 0,
+		"Elementpunkte je Spieler")
+	check(host.tower_options(t).is_empty(), "Host wertet den Tower des Mitspielers nicht auf")
+	var opts: Array = client.tower_options(client.towers[cell])
+	var fire: int = opts.map(func(o): return o.id).find("eeve_fire_base_tower")
+	check(fire >= 0 and opts[fire].reason == "", "Mitspieler darf mit seinem Feuerpunkt aufwerten")
+	client.submit({"type": "option", "tower": client.tower_ref(client.towers[cell]), "index": fire, "action": "eeve_upgrade", "id": "eeve_fire_base_tower"})
+	pump.call()
+	check(t.tower_id == "eeve_fire_base_tower" and client.towers[cell].tower_id == "eeve_fire_base_tower", "Feuer-Grundturm bei beiden")
+	check(int(client.towers[cell].get_meta("spent", 0)) == int(t.get_meta("spent", 0)) and int(t.get_meta("spent", 0)) > 2, "Ausgegeben kommt beim Mitspieler an")
+	# Level startet erst, wenn beide bereit sind
+	host.submit({"type": "start_level"})
+	await get_tree().process_frame
+	check(host.phase == host.Phase.BUILD and host.ready_players.has(0), "Host bereit, Level wartet auf den Gast")
+	client.submit({"type": "start_level"})
+	await get_tree().process_frame
+	await get_tree().process_frame
+	pump.call()
+	check(host.phase == host.Phase.WAVE and client.phase == client.Phase.WAVE, "beide bereit: Level 1 läuft bei beiden")
+	check(host.players[1].gold > 198 - 50 and client.log_lines.size() > 0, "Einkommen und Meldung für den Gast")
+	var frames := 0
+	while host.enemies.is_empty() and frames < 600:
+		await get_tree().process_frame
+		frames += 1
+	pump.call()
+	check(client.enemies.size() == host.enemies.size() and client.enemies.size() > 0, "Gegner gespiegelt: %d" % client.enemies.size())
+	host.queue_free()
+	client.queue_free()
+	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Wie über das Netz: als Bytes und zurück, damit nichts geteilt wird.
+func _wire(v):
+	return bytes_to_var(var_to_bytes(v))

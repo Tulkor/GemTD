@@ -2,6 +2,7 @@
 	"_comment": "Regeln für eeveTD (Vorbild: eeve! TD v1.01 von geX). Quelle: Kartendatei, siehe Design-Dokument und tools/wc3/eeve/eeve_daten.py.",
 	"levels": 57,
 	"lives": 50,
+	"coop_hp_per_player": 0.75,
 	"start_gold": 200,
 	"start_food": 40,
 	"start_points": 1,

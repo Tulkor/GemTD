@@ -1075,5 +1075,12 @@
 	"Profi-Filialen": "Pro branches",
 	"Level %d geschafft": "Level %d cleared",
 	"%s: „Starten“ startet alle Verbundenen zusammen, jeder mit eigenem Gebiet und eigenem Gold, die Leben sind gemeinsam. Schwierigkeit und Modus wählt der Host.": "%s: “Start” starts everyone connected together, each with their own area and gold, lives are shared. The host picks difficulty and mode.",
-	"Starten: %s": "Start: %s"
+	"Starten: %s": "Start: %s",
+	"Level %d startet gleich · N = bereit, los geht's, wenn alle bereit sind · freies Feld anklicken = Barrikade": "Level %d starts soon · N = ready, starts once everyone is ready · click a free cell = barricade",
+	"Bereit %d/%d · %d s": "Ready %d/%d · %d s",
+	"Der Host wählt Schwierigkeit und Feld, gleich geht es los …": "The host picks difficulty and field, starting shortly …",
+	"Koop · %d Spieler": "Co-op · %d players",
+	"Spieler %d": "Player %d",
+	"Ein Feld, gemeinsame Leben. Jeder hat eigenes Gold, Food, Holz und eigene Elementpunkte und wertet nur seine Tower auf. Gegner +%d %% Leben.": "One field, shared lives. Everyone has their own gold, food, lumber and element points and upgrades only their own towers. Enemies +%d %% life.",
+	"Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop bis 4 Spieler": "Build barricades, upgrade them to element towers, 57 levels, co-op up to 4 players"
 }

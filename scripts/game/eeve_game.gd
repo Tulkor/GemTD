@@ -10,6 +10,10 @@ extends "res://scripts/game/game.gd"
 ## Fallen (Elementstufe 4) baut man direkt auf den Weg, Gegner laufen darüber. Ab 3 Punkten in zwei Elementen
 ## wird eine Barrikade zum Dual-Grundturm und der kostenlos zum Dual-Tower dieser beiden Elemente.
 ## Tower und Fallen sind EeveTower (eeve_tower.gd) mit den Sonderfähigkeiten der Dual-Tower und Fallen.
+##
+## Koop (Lobby, coop_sync.gd): alle bauen auf einem Feld, die Leben sind gemeinsam. Jeder hat eigenes Gold, Food,
+## Holz und eigene Elementpunkte (eeve_players) und wertet nur eigene Tower auf. Die Gegner haben je weiterem
+## Spieler mehr Leben (coop_hp_per_player), das nächste Level startet früher, wenn alle bereit sind.
 
 const ELEMENT_IDS := ["nature", "earth", "fire", "storm", "magic", "water"]
 const BARRICADE := "eeve_barricade"
@@ -17,13 +21,36 @@ const BARRICADE := "eeve_barricade"
 var rules: Dictionary = {}
 var difficulty := 2        ## Index in rules.difficulties
 var field_type := 0        ## Index in rules.fields
+var wave_seed := 0         ## Zufall der Wellen; Koop-Mitspieler erzeugen damit dieselben Wellen wie der Host
 var level_pause := 0.0     ## Sekunden bis zum nächsten Level (nur Phase BUILD)
-var lumber := 0
-var food_cap := 40
-var points := 0            ## noch nicht verteilte Elementpunkte
-var elements := {}         ## Element -> Stufe
-var element_caps := {}     ## Element -> höchste Stufe (4 + zufällige Punkte)
-var log_lines: Array = []  ## letzte Meldungen (Einkommen, Punkte) für die Seitenleiste
+var ready_players := {}    ## Koop: Spieler, die das nächste Level sofort wollen (alle bereit = Start)
+## Was jedem Spieler allein gehört, je Spielernummer (siehe ep()). Die Werte unten lesen und schreiben
+## den Spieler, der gerade handelt (acting), wie gold in game.gd.
+var eeve_players: Array = []
+var lumber: int:
+	get:
+		return ep().lumber
+	set(v):
+		ep().lumber = v
+var food_cap: int:
+	get:
+		return ep().food_cap
+	set(v):
+		ep().food_cap = v
+var points: int:           ## noch nicht verteilte Elementpunkte
+	get:
+		return ep().points
+	set(v):
+		ep().points = v
+var elements: Dictionary:  ## Element -> Stufe
+	get:
+		return ep().elements
+var element_caps: Dictionary:  ## Element -> höchste Stufe (4 + zufällige Punkte)
+	get:
+		return ep().caps
+var log_lines: Array:      ## letzte Meldungen (Einkommen, Punkte) für die Seitenleiste
+	get:
+		return ep().log
 var clock := 0.0           ## Spielzeit in Wellen (für zeitlich begrenzte Effekte der Tower)
 var placing_trap := ""     ## Falle, die gerade gesetzt wird (Klick aufs Feld), "" = keine
 var eeve_panel: EevePanel
@@ -31,16 +58,12 @@ var eeve_panel: EevePanel
 
 func _ready() -> void:
 	rules = Database.eeve
-	for id in ELEMENT_IDS:
-		elements[id] = 0
-		element_caps[id] = int(rules.get("point_max_normal", 4))
-	points = int(rules.get("start_points", 1))
-	food_cap = int(rules.get("start_food", 40))
 	super._ready()
 	if map == null:
 		return
 	lives = int(rules.get("lives", 50))
-	gold = int(rules.get("start_gold", 200))
+	for p in players:
+		p.gold = int(rules.get("start_gold", 200))
 	level_pause = float(rules.get("first_pause", 45))
 	_style_hud()
 	_refresh_hud()
@@ -56,6 +79,20 @@ func _style_hud() -> void:
 	eeve_panel.game = self
 	hud.left_col.add_child(eeve_panel)
 	hud.left_col.move_child(eeve_panel, 0)
+
+
+## Elemente, Food, Holz und Meldungen eines Spielers (-1 = der gerade handelt), bei Bedarf neu angelegt.
+func ep(p := -1) -> Dictionary:
+	var i := maxi(0, acting if p < 0 else p)
+	while eeve_players.size() <= i:
+		var els := {}
+		var caps := {}
+		for id in ELEMENT_IDS:
+			els[id] = 0
+			caps[id] = int(rules.get("point_max_normal", 4))
+		eeve_players.append({"elements": els, "caps": caps, "points": int(rules.get("start_points", 1)),
+				"food_cap": int(rules.get("start_food", 40)), "lumber": 0, "log": []})
+	return eeve_players[i]
 
 
 # --- Einstellungen und Wellen ------------------------------------------------------
@@ -77,9 +114,26 @@ func diff_rules() -> Dictionary:
 
 
 func _make_waves() -> Array:
+	wave_seed = rng.randi()
+	return _waves_from_seed()
+
+
+## Wellen aus wave_seed und Schwierigkeit; im Koop mit mehr Leben je weiterem Spieler.
+func _waves_from_seed() -> Array:
 	var r := RandomNumberGenerator.new()
-	r.seed = rng.randi()
-	return EeveWaves.generate(rules, diff_rules(), r)
+	r.seed = wave_seed
+	var list := EeveWaves.generate(rules, diff_rules(), r)
+	var f := coop_hp_factor()
+	if f != 1.0:
+		for w in list:
+			for g in w.get("groups", []):
+				if g.has("hp"):
+					g.hp = float(g.hp) * f
+	return list
+
+
+func coop_hp_factor() -> float:
+	return 1.0 + float(rules.get("coop_hp_per_player", 0.0)) * maxi(players.size() - 1, 0)
 
 
 func _execute(cmd: Dictionary) -> bool:
@@ -98,7 +152,11 @@ func _execute(cmd: Dictionary) -> bool:
 		"start_level":
 			if phase != Phase.BUILD or not setup_done:
 				return false
-			level_pause = 0.0
+			# Koop: erst wenn alle (die da sind) bereit sind
+			ready_players[acting] = true
+			if range(players.size()).all(func(i): return ready_players.has(i) or players[i].away):
+				level_pause = 0.0
+			_refresh_hud()
 			return true
 		"option":
 			var t := tower_from_ref(cmd.get("tower", {}))
@@ -160,12 +218,14 @@ func _enter_build() -> void:
 	# Nach jeder Golem-Challenge (Level 11, 22, 33, 44) ein zufälliger Elementpunkt über die Grenze hinaus
 	var done := wave_index  # gerade beendetes Level (1-basiert)
 	if done > 0 and str(rules.get("challenges", {}).get(str(done), {}).get("enemy", "")) != "" and done % 11 == 0 and done <= 44:
-		var el: String = ELEMENT_IDS[rng.randi() % ELEMENT_IDS.size()]
-		if elements[el] < int(rules.get("point_max", 8)):
-			element_caps[el] = mini(element_caps[el] + 1, int(rules.get("point_max", 8)))
-			elements[el] += 1
-			_note(tr("Challenge geschafft: +1 Stufe %s (zufällig)") % element_name(el))
-			_update_auras()
+		for p in players.size():
+			var st := ep(p)
+			var el: String = ELEMENT_IDS[rng.randi() % ELEMENT_IDS.size()]
+			if st.elements[el] < int(rules.get("point_max", 8)):
+				st.caps[el] = mini(st.caps[el] + 1, int(rules.get("point_max", 8)))
+				st.elements[el] += 1
+				_note(tr("Challenge geschafft: +1 Stufe %s (zufällig)") % element_name(el), p)
+		_update_auras()
 	level_pause = float(diff_rules().get("pause", 20)) if wave_index > 0 else float(rules.get("first_pause", 45))
 	_refresh_hud()
 
@@ -176,19 +236,20 @@ func _start_level() -> void:
 		_finish(Phase.VICTORY)
 		return
 	var level := wave_index + 1
+	var food_steps: Array = rules.get("food_per_level", [1, 2])
 	for p in players.size():
 		var ps: PlayerState = players[p]
 		var interest := floori(ps.gold * float(rules.get("interest", 0.05)))
 		var income: int = level * int(rules.income.per_level) + int(rules.income.base)
 		ps.gold += interest + income
-		if p == local_player:
-			_note(tr("Level %d: +%d Gold Zinsen, +%d Gold Einkommen") % [level, interest, income])
-	var food_steps: Array = rules.get("food_per_level", [1, 2])
-	food_cap += int(food_steps[level % food_steps.size()])
-	if level % int(rules.get("point_every", 7)) == 0:
-		points += 1
-		lumber += 1
-		_note(tr("Neuer Elementpunkt und 1 Holz!"))
+		_note(tr("Level %d: +%d Gold Zinsen, +%d Gold Einkommen") % [level, interest, income], p)
+		var st := ep(p)
+		st.food_cap += int(food_steps[level % food_steps.size()])
+		if level % int(rules.get("point_every", 7)) == 0:
+			st.points += 1
+			st.lumber += 1
+			_note(tr("Neuer Elementpunkt und 1 Holz!"), p)
+	ready_players.clear()
 	super._start_wave()
 
 
@@ -206,10 +267,11 @@ func gold_income_factor(_wave: int) -> float:
 	return 1.0
 
 
-func _note(text: String) -> void:
-	log_lines.append(text)
-	if log_lines.size() > 4:
-		log_lines.pop_front()
+func _note(text: String, p := -1) -> void:
+	var lines: Array = ep(p).log
+	lines.append(text)
+	if lines.size() > 4:
+		lines.pop_front()
 
 
 func add_ring(p: Vector2, r: float, col: Color) -> void:
@@ -243,6 +305,47 @@ func _finish(p: Phase) -> void:
 	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
 		null, run_summary())
 	_refresh_hud()
+
+
+# --- Koop (coop_sync.gd) -------------------------------------------------------------
+
+## Befehle, die Mitspieler zusätzlich zu denen von GemTD schicken dürfen.
+func coop_commands() -> Array:
+	return ["build", "trap", "element", "start_level"]
+
+
+## Mitspieler legen Tower vom Host als EeveTower an.
+func new_tower() -> Tower:
+	return EeveTower.new()
+
+
+## Was eeveTD über den Stand von GemTD hinaus an die Mitspieler schickt. Die Pause in ganzen Sekunden,
+## damit sich der Stand nicht jedes Bild ändert.
+func coop_snapshot() -> Dictionary:
+	var spent := {}
+	for t in all_towers():
+		spent["%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()]] = int(t.get_meta("spent", 0))
+	return {"difficulty": difficulty, "field": field_type, "seed": wave_seed, "pause": ceili(maxf(level_pause, 0.0)),
+		"ready": ready_players.keys(), "players": eeve_players.duplicate(true), "spent": spent}
+
+
+func apply_coop_snapshot(d: Dictionary) -> void:
+	var regen := int(d.get("seed", wave_seed)) != wave_seed or int(d.get("difficulty", difficulty)) != difficulty
+	difficulty = int(d.get("difficulty", difficulty))
+	field_type = int(d.get("field", field_type))
+	wave_seed = int(d.get("seed", wave_seed))
+	if regen:
+		waves = _waves_from_seed()
+	level_pause = float(d.get("pause", level_pause))
+	ready_players = {}
+	for p in d.get("ready", []):
+		ready_players[int(p)] = true
+	var ps: Array = d.get("players", [])
+	if not ps.is_empty():
+		eeve_players = ps
+	var spent: Dictionary = d.get("spent", {})
+	for t in all_towers():
+		t.set_meta("spent", int(spent.get("%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()], 0)))
 
 
 # --- Gegner ------------------------------------------------------------------------
@@ -302,9 +405,10 @@ func _update_auras() -> void:
 	for t in all_towers():
 		var e: Dictionary = t.def.get("eeve", {})
 		var els: Array = e.get("elements", [e.get("element", "")])
+		var own: Dictionary = ep(t.owner_player).elements
 		var lvl := 0.0
 		for el in els:
-			lvl += elements.get(el, 0)
+			lvl += own.get(el, 0)
 		lvl /= maxf(els.size(), 1)
 		if lvl <= 0.0:
 			continue
@@ -596,7 +700,10 @@ func _refresh_hud_local() -> void:
 		Phase.BUILD:
 			var next := wave_index + 1
 			var title := tr("Pause") if wave_index > 0 else tr("Aufbau")
-			hud.set_phase(title, tr("Level %d startet gleich · N = sofort starten · freies Feld anklicken = Barrikade") % next)
+			var hint := tr("Level %d startet gleich · N = sofort starten · freies Feld anklicken = Barrikade") % next
+			if players.size() > 1:
+				hint = tr("Level %d startet gleich · N = bereit, los geht's, wenn alle bereit sind · freies Feld anklicken = Barrikade") % next
+			hud.set_phase(title, hint)
 		Phase.WAVE:
 			var w: Dictionary = waves[wave_index] if wave_index < waves.size() else {}
 			hud.set_phase(tr("Level %d") % (wave_index + 1), tr("noch %d Gegner") % (enemies.size() + spawn_queue.size()) + _props_text(w))

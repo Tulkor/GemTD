@@ -18,6 +18,8 @@ extends Node
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
+##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
+##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -35,7 +37,10 @@ func _ready() -> void:
 			opts[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	rng.seed = int(opts.get("seed", "1"))
 	RunHistory.path = "user://screenshot_run_history.json"
-	Session.skip_setup = true
+	Session.skip_setup = not opts.has("einstellungen")
+	if opts.has("koop"):
+		var guest := opts.has("gast")
+		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
 	if opts.has("sprache"):
 		Loc.set_language(opts.sprache)
 	var out_dir: String = opts.get("aus", "/mnt/project-files/screens/auto")

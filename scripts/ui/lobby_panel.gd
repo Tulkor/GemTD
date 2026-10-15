@@ -233,6 +233,11 @@ func no_map_mode() -> bool:
 	return not bool(Database.mode(Net.vote_winner(false)).get("needs_map", true))
 
 
+## Startet die Sitzung als Koop? Gewählt oder vom Modus vorgegeben (coop_only, z. B. eeveTD).
+func coop_selected() -> bool:
+	return coop_mode or bool(Database.mode(Net.vote_winner(false)).get("coop_only", false))
+
+
 ## Pfad der gewählten Map für eine neue Sitzung ("" = keine).
 func map_path() -> String:
 	return _map_path
@@ -293,6 +298,11 @@ func _refresh() -> void:
 		var voting := not started and not loaded
 		var no_map := no_map_mode()
 		_host_box.visible = voting and not no_map
+		# Modus nur als Koop (eeveTD): „Eigene Felder“ gesperrt
+		var only_coop := bool(Database.mode(Net.vote_winner(false)).get("coop_only", false))
+		for i in _mode_buttons.size():
+			_mode_buttons[i].disabled = only_coop and i == 0
+			_mode_buttons[i].set_pressed_no_signal((i == 1) == coop_selected())
 		if voting:
 			_fill_maps(Net.vote_winner(false))
 		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(_map_name())
@@ -304,7 +314,7 @@ func _refresh() -> void:
 			_session_text.text = tr("Koop auf %s läuft. Mitspieler, die das Spiel verlassen haben, steigen über „Mitspielen“ wieder ein.") % map_name
 		elif voting and no_map:
 			_session_text.text = tr("%s: „Starten“ startet alle Verbundenen zusammen, jeder mit eigenem Gebiet und eigenem Gold, die Leben sind gemeinsam. Schwierigkeit und Modus wählt der Host.") % mode_name
-		elif not started and coop_mode and not loaded:
+		elif not started and coop_selected() and not loaded:
 			_session_text.text = tr("Koop auf %s: „Starten“ startet alle Verbundenen auf einem gemeinsamen Feld, Schwierigkeit und Wertung vom Host.") % map_name
 		elif started:
 			_session_text.text = tr("Die Sitzung läuft auf %s. Wer dazukommt, steigt über „Mitspielen“ ein, mit seinem gespeicherten Stand, falls es einen gibt.") % map_name
