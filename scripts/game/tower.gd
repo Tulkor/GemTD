@@ -184,7 +184,9 @@ func _process(delta: float) -> void:
 		return
 	# höchstens ein Frame Rückstand, sonst feuert ein Tower nach langer Pause mehrfach hintereinander
 	cooldown_left = maxf(cooldown_left - delta, -delta)
-	if cooldown_left > 0.0:
+	# Geschossen wird am Bildende. Wird der Tower erst im nächsten halben Bild bereit, schießt er schon jetzt,
+	# sonst kämen die Schüsse bei 4× im Mittel ein halbes Bild zu spät (und am Rand der Reichweite zu selten).
+	if cooldown_left > delta * 0.5:
 		return
 	var count := 1
 	var ms := ability("multishot")
@@ -193,6 +195,12 @@ func _process(delta: float) -> void:
 	var targets: Array = game.find_targets(self, count)
 	if targets.is_empty():
 		return
+	# Hat der Tower gewartet, zählt der Rückstand nur, solange ein Ziel schon in Reichweite war
+	if cooldown_left < 0.0:
+		var since := 0.0
+		for e in targets:
+			since = maxf(since, float(e.covered_for) if "covered_for" in e else delta)
+		cooldown_left = maxf(cooldown_left, -since)
 	for e in targets:
 		_attack(e)
 	# Überhang behalten, damit hohe Spielgeschwindigkeit (große Frames) die Feuerrate nicht senkt

@@ -22,6 +22,9 @@ var _sprites: Array = []   ## lebende Sprites
 var _batches: Dictionary = {}  ## Material-Schlüssel → {mmi, items}
 var _textures: Dictionary = {}
 var _cam_basis := Basis()
+## Eigener Zufall: wie viele Sprites entstehen, hängt von der Bildrate ab. Mit dem globalen randf()
+## verschöben sie die Würfe der Tower (Krit, Betäubung, Nova …), und 4× machte anderen Schaden als 1×.
+var _rng := RandomNumberGenerator.new()
 
 
 ## Treffer-Effekt am Punkt pos. fx = {"id", "shift", "sat"} aus FxData.for_tower.
@@ -153,7 +156,7 @@ func _emit(fx: Dictionary, delta: float) -> void:
 
 
 func _rand(r: Array) -> float:
-	return randf_range(float(r[0]), float(r[1])) if r.size() > 1 else float(r[0]) if r.size() > 0 else 0.0
+	return _rng.randf_range(float(r[0]), float(r[1])) if r.size() > 1 else float(r[0]) if r.size() > 0 else 0.0
 
 
 func _spawn(fx: Dictionary, i: int) -> void:
@@ -173,22 +176,22 @@ func _spawn(fx: Dictionary, i: int) -> void:
 		var r := float(shape.get("radius", 1.0))
 		match str(shape.get("type", "sphere")):
 			"cone":
-				var a := randf() * TAU * float(shape.get("arc", 360.0)) / 360.0
-				var rr := r * sqrt(randf())
+				var a := _rng.randf() * TAU * float(shape.get("arc", 360.0)) / 360.0
+				var rr := r * sqrt(_rng.randf())
 				local_pos = Vector3(cos(a) * rr, sin(a) * rr, 0.0)
 				var spread := deg_to_rad(float(shape.get("angle", 25.0))) * (rr / maxf(r, 0.0001))
 				dir = Vector3(sin(spread) * cos(a), sin(spread) * sin(a), -cos(spread))
 			"circle":
-				var a := randf() * TAU * float(shape.get("arc", 360.0)) / 360.0
+				var a := _rng.randf() * TAU * float(shape.get("arc", 360.0)) / 360.0
 				dir = Vector3(cos(a), sin(a), 0.0)
-				local_pos = dir * r * sqrt(randf())
+				local_pos = dir * r * sqrt(_rng.randf())
 			_:
-				dir = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1))
+				dir = Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-1, 1))
 				if dir.length_squared() < 0.0001:
 					dir = Vector3.UP
 				dir = dir.normalized()
 				var thick := clampf(float(shape.get("thickness", 1.0)), 0.0, 1.0)
-				local_pos = dir * r * lerpf(1.0, pow(randf(), 1.0 / 3.0), thick)
+				local_pos = dir * r * lerpf(1.0, pow(_rng.randf(), 1.0 / 3.0), thick)
 	var scale_v := Vector3(lsc[0], lsc[1], lsc[2])
 	var basis: Basis = fx.basis
 	var p: Vector3 = fx.pos + basis * ((Vector3(lpos[0], lpos[1], lpos[2]) + lrot * (local_pos * scale_v)) * sc)
@@ -201,7 +204,7 @@ func _spawn(fx: Dictionary, i: int) -> void:
 	var cols: Array = l.get("color", [[1, 1, 1, 1], [1, 1, 1, 1]])
 	var c0: Array = cols[0]
 	var c1: Array = cols[1] if cols.size() > 1 else cols[0]
-	var k := randf()
+	var k := _rng.randf()
 	var tint: Array = l.get("tint", [1, 1, 1, 1])
 	var col := Color(lerpf(c0[0], c1[0], k) * tint[0], lerpf(c0[1], c1[1], k) * tint[1], lerpf(c0[2], c1[2], k) * tint[2], lerpf(c0[3], c1[3], k) * tint[3])
 	var tiles: Array = l.get("tiles", [1, 1])

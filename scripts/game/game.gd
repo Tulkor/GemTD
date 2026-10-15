@@ -1262,7 +1262,14 @@ func _process_wave(delta: float) -> void:
 	spawn_timer -= delta
 	while spawn_timer <= 0.0 and not spawn_queue.is_empty():
 		var g: Dictionary = spawn_queue.pop_front()
+		var before := enemies.size()
 		_spawn_enemy(g)
+		# Der Gegner war schon -spawn_timer Sekunden vor Bildende fällig: diese Zeit nachlaufen, sonst
+		# hängen die Abstände der Gegner vom Bildraster ab (bei 4× bis zu ein Bild, mit Schnelllauf ×8).
+		var late := -spawn_timer
+		if late > 0.0:
+			for i in range(before, enemies.size()):
+				enemies[i]._process(late)
 		spawn_timer += float(g.get("interval", 1.0))
 	if spawn_queue.is_empty() and enemies.is_empty() and phase == Phase.WAVE:
 		wave_index += 1
