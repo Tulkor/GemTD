@@ -5,7 +5,9 @@ extends RefCounted
 ## eine geänderte Datei lässt sich also nicht mehr laden.
 ##
 ## Datei: {version, kind ("single"/"multi"), id, meta {name, map, wave, waves, lives, difficulty, time, players},
-##         state (single) oder players {uid: {name, state}} und map (multi)}
+##         state (single) oder players {uid: {name, state}} und map (multi), mode (TD-Modus, z. B. eevetd)}
+## Modi auf game.gd (eeveTD) speichern ihren eigenen Stand über save_extra()/load_extra(d) unter "mode"
+## und legen Tower über new_tower() an.
 
 const DIR := "user://saves"
 const EXT := ".gtd"
@@ -36,7 +38,7 @@ static func capture(game) -> Dictionary:
 		for f in ENEMY_FIELDS:
 			d[f] = e.get(f)
 		es.append(d)
-	return {
+	var st := {
 		"map": game.map.to_dict(),
 		"difficulty": Session.difficulty,
 		"phase": game.phase,
@@ -66,6 +68,9 @@ static func capture(game) -> Dictionary:
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
 	}
+	if game.has_method("save_extra"):
+		st.mode = game.save_extra()
+	return st
 
 
 ## Zustand in ein frisch aufgebautes Spiel (Map, Board, HUD stehen schon) übernehmen.
@@ -101,7 +106,7 @@ static func apply(game, s: Dictionary) -> void:
 		if not Database.towers.has(str(d.id)):
 			made.append(null)
 			continue
-		var t := Tower.new()
+		var t: Tower = game.new_tower() if game.has_method("new_tower") else Tower.new()
 		t.is_new = bool(d.get("new", false))
 		t.owner_player = int(d.get("owner", 0))
 		game.board.add_child(t)
@@ -142,6 +147,8 @@ static func apply(game, s: Dictionary) -> void:
 			ps.stage = game.Phase.BUILD
 		game.players.append(ps)
 	game.acting = clampi(game.local_player, 0, game.players.size() - 1)
+	if game.has_method("load_extra"):
+		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:
 		game.phase = game.Phase.WAVE
 		game.spawn_queue = s.get("spawn_queue", []).duplicate(true)
@@ -157,7 +164,7 @@ static func apply(game, s: Dictionary) -> void:
 			game.board.add_child(e)
 			var lp: Dictionary = game.lane_paths[e.lane]
 			e.setup(game, def, g, lp.air if def.get("flying", false) else lp.ground)
-			e.apply_difficulty(Session.difficulty_factor())
+			game._apply_enemy_difficulty(e, g)
 			e.max_hp = float(d.get("max_hp", e.max_hp))
 			e.hp = float(d.get("hp", e.hp))
 			for f in ENEMY_FIELDS:

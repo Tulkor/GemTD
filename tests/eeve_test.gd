@@ -203,6 +203,7 @@ func _ready() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await _coop_tests()
+	await _save_tests()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -268,6 +269,49 @@ func _coop_tests() -> void:
 	host.queue_free()
 	client.queue_free()
 	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Spielstand: Elemente, Food, Holz, Wellen und Tower kommen genau so zurück.
+func _save_tests() -> void:
+	Session.skip_setup = false
+	Session.game_kind = "eevetd"
+	var game: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.submit({"type": "setup", "difficulty": 4, "field": 1})
+	var cell := Vector2i(30, 60)
+	while not game.can_build(cell) and cell.x < 80:
+		cell.x += 2
+	game.submit({"type": "build", "cell": cell})
+	game.submit({"type": "element", "element": "water"})
+	var t: Tower = game.towers[cell]
+	var opts: Array = game.tower_options(t)
+	var i: int = opts.map(func(o): return o.id).find("eeve_water_base_tower")
+	game.submit({"type": "option", "tower": game.tower_ref(t), "index": i, "action": "eeve_upgrade", "id": "eeve_water_base_tower"})
+	game.lumber = 3
+	game.food_cap = 47
+	game.level_pause = 12.5
+	var st := SaveGame.capture(game)
+	var waves_before: Array = game.waves.map(func(w): return [w.type, w.groups[0].enemy, w.groups[0].hp])
+	var rocks: int = game.rocks.size()
+	var gold: int = game.gold
+	var spent := int(t.get_meta("spent", 0))
+	game.queue_free()
+	await get_tree().process_frame
+	Session.load_state = _wire(st)
+	var loaded: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(loaded)
+	await get_tree().process_frame
+	check(loaded.setup_done and loaded.difficulty == 4 and loaded.field_type == 1 and loaded.rocks.size() == rocks, "Spielstand: Schwierigkeit, Feld und Felsen")
+	check(loaded.waves.map(func(w): return [w.type, w.groups[0].enemy, w.groups[0].hp]) == waves_before, "Spielstand: dieselben Wellen")
+	check(loaded.elements.water == 1 and loaded.lumber == 3 and loaded.food_cap == 47 and loaded.points == 0, "Spielstand: Elemente, Holz und Food")
+	check(loaded.gold == gold and absf(loaded.level_pause - 12.5) < 0.5, "Spielstand: Gold %d (%d) und Pause %s" % [loaded.gold, gold, loaded.level_pause])
+	var lt: Tower = loaded.towers.get(cell)
+	check(lt is EeveTower and lt.tower_id == "eeve_water_base_tower" and int(lt.get_meta("spent", 0)) == spent if lt != null else false,
+		"Spielstand: Wasser-Grundturm als EeveTower mit ausgegebenem Gold")
+	check(is_equal_approx(lt.damage_bonus, 0.1) if lt != null else false, "Spielstand: Elementbonus wieder da")
+	loaded.queue_free()
 	await get_tree().process_frame
 
 

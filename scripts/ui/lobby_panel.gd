@@ -13,6 +13,9 @@ signal start_requested
 var maps: Array = []
 ## Koop gewählt: alle spielen zusammen auf einem Feld (der Host rechnet, siehe coop_sync.gd).
 var coop_mode := false
+## Feldwahl des Hosts: uid -> Feldnummer (ab 0). Gleiche Nummer = zusammen auf einem Feld (Koop-Gruppe),
+## so geht auch gemischt, z. B. zwei allein und zwei zusammen. Neue Spieler bekommen die Vorgabe von coop_mode.
+var fields: Dictionary = {}
 
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
@@ -161,6 +164,7 @@ func _ready() -> void:
 		var on: bool = coop
 		var b := UiUtil.button("Koop" if coop else "Eigene Felder", modes, func():
 			coop_mode = on
+			fields = {}
 			_refresh())
 		b.toggle_mode = true
 		b.button_group = group
@@ -233,9 +237,43 @@ func no_map_mode() -> bool:
 	return not bool(Database.mode(Net.vote_winner(false)).get("needs_map", true))
 
 
-## Startet die Sitzung als Koop? Gewählt oder vom Modus vorgegeben (coop_only, z. B. eeveTD).
+## Startet die Sitzung als reiner Koop (alle auf einem Feld)?
 func coop_selected() -> bool:
-	return coop_mode or bool(Database.mode(Net.vote_winner(false)).get("coop_only", false))
+	var g := field_groups()
+	return g.size() == 1 and (g[0].size() > 1 or coop_mode)
+
+
+## Verbundene Spieler (uids) in der Reihenfolge der Spielerliste.
+func _online_uids() -> Array:
+	return Net.session_slots().filter(func(sl): return sl.get("online", false)).map(func(sl): return str(sl.uid))
+
+
+func field_of(u: String) -> int:
+	if fields.has(u):
+		return int(fields[u])
+	return 0 if coop_mode else _online_uids().find(u)
+
+
+## Spieler nach Feld: [[uid, ...], ...], ein Eintrag je belegtem Feld.
+func field_groups() -> Array:
+	var by := {}
+	for u in _online_uids():
+		var f := field_of(u)
+		if not by.has(f):
+			by[f] = []
+		by[f].append(u)
+	var keys := by.keys()
+	keys.sort()
+	return keys.map(func(k): return by[k])
+
+
+## Feld eines Spielers weiterschalten (Host, Klick in der Spielerliste).
+func _next_field(u: String) -> void:
+	var n := maxi(_online_uids().size(), 1)
+	for x in _online_uids():
+		fields[x] = field_of(x)
+	fields[u] = (field_of(u) + 1) % n
+	_refresh()
 
 
 ## Pfad der gewählten Map für eine neue Sitzung ("" = keine).
@@ -298,11 +336,16 @@ func _refresh() -> void:
 		var voting := not started and not loaded
 		var no_map := no_map_mode()
 		_host_box.visible = voting and not no_map
-		# Modus nur als Koop (eeveTD): „Eigene Felder“ gesperrt
-		var only_coop := bool(Database.mode(Net.vote_winner(false)).get("coop_only", false))
-		for i in _mode_buttons.size():
-			_mode_buttons[i].disabled = only_coop and i == 0
-			_mode_buttons[i].set_pressed_no_signal((i == 1) == coop_selected())
+		# Feldwahl: Koop = alle auf Feld 1, Eigene Felder = jeder seins, sonst gemischt (keiner gedrückt)
+		var groups := field_groups()
+		var plan := {}
+		for g in groups:
+			for u in g:
+				plan[u] = field_of(u)
+		Net.set_fields(plan if voting and not no_map else {})
+		var all_own := groups.all(func(g): return g.size() == 1) and not coop_selected()
+		_mode_buttons[0].set_pressed_no_signal(all_own)
+		_mode_buttons[1].set_pressed_no_signal(coop_selected())
 		if voting:
 			_fill_maps(Net.vote_winner(false))
 		var map_name := tr(str(s.get("map_name", ""))) if str(s.get("map_name", "")) != "" else tr(_map_name())
@@ -316,6 +359,8 @@ func _refresh() -> void:
 			_session_text.text = tr("%s: „Starten“ startet alle Verbundenen zusammen, jeder mit eigenem Gebiet und eigenem Gold, die Leben sind gemeinsam. Schwierigkeit und Modus wählt der Host.") % mode_name
 		elif not started and coop_selected() and not loaded:
 			_session_text.text = tr("Koop auf %s: „Starten“ startet alle Verbundenen auf einem gemeinsamen Feld, Schwierigkeit und Wertung vom Host.") % map_name
+		elif voting and not coop_selected() and groups.any(func(g): return g.size() > 1):
+			_session_text.text = tr("Gemischt auf %s: wer dieselbe Feldnummer hat, spielt zusammen auf einem Feld, die anderen allein. Klick auf „Feld“ in der Spielerliste ändert die Zuordnung.") % map_name
 		elif started:
 			_session_text.text = tr("Die Sitzung läuft auf %s. Wer dazukommt, steigt über „Mitspielen“ ein, mit seinem gespeicherten Stand, falls es einen gibt.") % map_name
 		elif loaded:
@@ -488,6 +533,21 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_color_override("font_color", UiTheme.MUTED)
+	var field := int(slot.get("field", -1))
+	if field >= 0 and slot.get("online", false):
+		var u := str(slot.get("uid", ""))
+		var fb := UiUtil.button(tr("Feld %d") % (field + 1), row, func(): _next_field(u))
+		fb.focus_mode = Control.FOCUS_NONE
+		fb.custom_minimum_size = Vector2(84, 28)
+		fb.disabled = not Net.is_host()
+		fb.tooltip_text = tr("Gleiche Feldnummer = zusammen auf einem Feld (Koop). Klick = nächstes Feld.") if Net.is_host() \
+			else tr("Der Host teilt die Felder ein.")
+		var same: int = Net.session_slots().filter(func(sl): return int(sl.get("field", -1)) == field and sl.get("online", false)).size()
+		if same > 1:
+			fb.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2, 4))
+			fb.add_theme_stylebox_override("disabled", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2, 4))
+			fb.add_theme_color_override("font_color", UiTheme.GOLD_DARK)
+			fb.add_theme_color_override("font_disabled_color", UiTheme.GOLD_DARK)
 	if vote != "":
 		var vl := UiUtil.label(_mode_name(vote), row, 13)
 		vl.add_theme_color_override("font_color", UiTheme.GOLD)

@@ -1,5 +1,5 @@
 {
-	"_info": "TD-Modi im Hauptmenü und in der Lobby. ready: schon spielbar. min_players/max_players: erlaubte Spielerzahl (Lobby: nur diese Modi sind wählbar). scene: Einstieg des Modus, dort steht der Modus in Session.game_kind. Maps gehören über ihr Feld \"game\" zu einem Modus (ohne Feld: gemtd). needs_map false: der Modus wählt seine Karte selbst, die Map-Auswahl entfällt. coop_only: mit mehreren Spielern nur Koop (gemeinsames Feld), nicht „Eigene Felder“.",
+	"_info": "TD-Modi im Hauptmenü und in der Lobby. ready: schon spielbar. min_players/max_players: erlaubte Spielerzahl (Lobby: nur diese Modi sind wählbar). scene: Einstieg des Modus, dort steht der Modus in Session.game_kind. Maps gehören über ihr Feld \"game\" zu einem Modus (ohne Feld: gemtd). needs_map false: der Modus wählt seine Karte selbst, die Map-Auswahl entfällt.",
 	"modes": [
 		{
 			"id": "gemtd",
@@ -18,9 +18,8 @@
 			"min_players": 1,
 			"max_players": 4,
 			"scene": "res://scenes/eeve_game.tscn",
-			"hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop bis 4 Spieler",
-			"needs_map": true,
-			"coop_only": true
+			"hint": "Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop oder eigene Felder bis 4 Spieler",
+			"needs_map": true
 		},
 		{
 			"id": "shoppingmaul",

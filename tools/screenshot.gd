@@ -3,6 +3,8 @@ extends Node
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
 ##   --seite=single|history|lobby   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
+##                           (Host zuerst), --stimme=eevetd Modus vorwählen
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
 ##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
@@ -66,6 +68,8 @@ func _ready() -> void:
 	if scene == "menu" and opts.has("seite"):
 		node.show_page(opts.seite)
 		await _frames(3)
+	if scene == "menu" and opts.has("lobby"):
+		await _fake_lobby(node)
 	var angles: PackedStringArray = ["bild"]
 	if scene == "maul":
 		await _prepare_maul(node)
@@ -84,6 +88,24 @@ func _ready() -> void:
 		img.save_png(file)
 		print("BILD ", file)
 	get_tree().quit()
+
+
+## Lobby als Host mit erfundenen Mitspielern (nur fürs Bild, ohne echte Verbindungen).
+func _fake_lobby(menu: Node) -> void:
+	Net.my_name = "Lukas"
+	Net.host(24690)
+	var names := String(opts.lobby).split(",")
+	for i in names.size():
+		Net.players[100 + i] = {"name": names[i], "status": {}, "uid": "fake-%d" % i}
+	if opts.has("stimme"):
+		Net.vote(str(opts.stimme))
+	var lobby = menu.lobby
+	var list := String(opts.get("felder", "")).split(",", false)
+	var uids := [Net.uid] + range(names.size()).map(func(i): return "fake-%d" % i)
+	for i in mini(list.size(), uids.size()):
+		lobby.fields[uids[i]] = int(list[i])
+	Net.players_changed.emit()
+	await _frames(5)
 
 
 func _frames(n: int) -> void:

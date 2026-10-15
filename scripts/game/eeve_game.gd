@@ -58,13 +58,15 @@ var eeve_panel: EevePanel
 
 func _ready() -> void:
 	rules = Database.eeve
+	var fresh: bool = Session.load_state.is_empty()
 	super._ready()
 	if map == null:
 		return
-	lives = int(rules.get("lives", 50))
-	for p in players:
-		p.gold = int(rules.get("start_gold", 200))
-	level_pause = float(rules.get("first_pause", 45))
+	if fresh:
+		lives = int(rules.get("lives", 50))
+		for p in players:
+			p.gold = int(rules.get("start_gold", 200))
+		level_pause = float(rules.get("first_pause", 45))
 	_style_hud()
 	_refresh_hud()
 
@@ -346,6 +348,41 @@ func apply_coop_snapshot(d: Dictionary) -> void:
 	var spent: Dictionary = d.get("spent", {})
 	for t in all_towers():
 		t.set_meta("spent", int(spent.get("%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()], 0)))
+
+
+# --- Spielstand (save_game.gd) ---------------------------------------------------------
+
+func save_extra() -> Dictionary:
+	return {"difficulty": difficulty, "field": field_type, "seed": wave_seed, "pause": level_pause, "clock": clock,
+		"players": eeve_players.duplicate(true), "spent": all_towers().map(func(t): return int(t.get_meta("spent", 0)))}
+
+
+## made: Tower in der Reihenfolge des Spielstands (null = nicht mehr vorhanden).
+func load_extra(d: Dictionary, made: Array) -> void:
+	if d.is_empty():
+		return
+	difficulty = int(d.get("difficulty", difficulty))
+	field_type = int(d.get("field", field_type))
+	wave_seed = int(d.get("seed", wave_seed))
+	waves = _waves_from_seed()
+	level_pause = float(d.get("pause", level_pause))
+	clock = float(d.get("clock", 0.0))
+	eeve_players = []
+	for ps in d.get("players", []):
+		var st: Dictionary = ps.duplicate(true)
+		for k in ["elements", "caps"]:
+			var fixed := {}
+			for el in st.get(k, {}):
+				fixed[str(el)] = int(st[k][el])
+			st[k] = fixed
+		for k in ["points", "food_cap", "lumber"]:
+			st[k] = int(st.get(k, 0))
+		eeve_players.append(st)
+	var spent: Array = d.get("spent", [])
+	for i in mini(spent.size(), made.size()):
+		if made[i] != null:
+			made[i].set_meta("spent", int(spent[i]))
+	_update_auras()
 
 
 # --- Gegner ------------------------------------------------------------------------
