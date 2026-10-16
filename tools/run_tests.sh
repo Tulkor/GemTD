@@ -196,20 +196,32 @@ case $MODE in
   alle)    set -- tabelle ui maps werkzeuge $(all_tests) ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
-PAR=(); SEQ=()
+PAR=(); SEQ=(); declare -A WEIGHT
 for t in "$@"; do
   resolve "$t"; ART=""; [ -z "$STEM" ] || test_info "$STEM"
   if [ "$ART" = fest ]; then SEQ+=("$t"); else PAR+=("$t"); fi
+  case $ART in paar) WEIGHT[$t]=2 ;; trio) WEIGHT[$t]=3 ;; *) WEIGHT[$t]=1 ;; esac
 done
-# Höchstens JOBS Tests gleichzeitig (Standard: Anzahl Kerne): bei voller Überlast verpasst der Netz-Test
-# Meldungen und misst scheinbare Korrektursprünge. Die längsten zuerst, damit sie nicht am Ende allein laufen.
+# Höchstens JOBS Godot-Prozesse gleichzeitig (Standard: Anzahl Kerne; ein Paar zählt 2, ein Trio 3): bei
+# Überlast verpasst der Netz-Test Meldungen und misst scheinbare Korrektursprünge. Die längsten zuerst,
+# damit sie nicht am Ende allein laufen.
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
 ORDER=()
 for t in smoke maul eeve koop netz sitzung gemischt; do [[ " ${PAR[*]} " == *" $t "* ]] && ORDER+=("$t"); done
 for t in "${PAR[@]}"; do [[ " ${ORDER[*]} " == *" $t "* ]] || ORDER+=("$t"); done
+declare -A RUNNING  # pid -> Gewicht
+busy() {  # Summe der Gewichte noch laufender Tests
+  local pid n=0
+  for pid in "${!RUNNING[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then n=$((n + RUNNING[$pid])); else unset "RUNNING[$pid]"; fi
+  done
+  echo $n
+}
 for t in "${ORDER[@]}"; do
-  while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n; done
+  w=${WEIGHT[$t]:-1}; [ "$w" -gt "$JOBS" ] && w=$JOBS
+  while [ "$(busy)" -gt $((JOBS - w)) ]; do wait -n; done
   ( FAILED=0; do_test "$t" > "$LOG_DIR/$t.sum"; echo $FAILED > "$LOG_DIR/$t.rc" ) &
+  RUNNING[$!]=$w
 done
 wait
 for t in "${PAR[@]}"; do
