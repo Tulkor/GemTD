@@ -1,7 +1,7 @@
 {
 	"_quelle": "Kenney Particle Pack 1.1 (kenney.nl, CC0), erzeugt mit tools/fx/kenney_effekte.py",
 	"auto": {
-		"_info": "Automatische Wahl, wenn ein Tower kein shot_fx setzt: erst nach Fähigkeit (ability), dann nach Farbton der Towerfarbe (hue: von, bis, Effekt; blasse Farben zählen nicht), sonst default. nova: Effekt für die Fähigkeit nova.",
+		"_info": "Automatische Wahl, wenn ein Tower kein shot_fx setzt: erst nach Fähigkeit (ability), dann nach Farbton der Towerfarbe (hue: von, bis, Effekt; blasse Farben zählen nicht), sonst default. nova: Effekt für die Fähigkeit nova. hit_ability: Treffer-Effekt nach Fähigkeit (vor der Farbwahl).",
 		"ability": {
 			"bounce": "lightning_arc",
 			"splash": "fire_orb"
@@ -19,7 +19,10 @@
 			]
 		],
 		"default": "magic_beam",
-		"nova": "ruby_nova"
+		"nova": "ruby_nova",
+		"hit_ability": {
+			"splash": "bk_explosion"
+		}
 	},
 	"effects": {
 		"magic_beam": {

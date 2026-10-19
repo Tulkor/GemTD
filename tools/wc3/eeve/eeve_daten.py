@@ -29,6 +29,59 @@ COLORS = {"nature": "#46d160", "earth": "#c08a4a", "fire": "#ff5a2a", "storm": "
 DAMAGE = {"chaos": "chaos", "siege": "physical", "hero": "elemental", "normal": "electric", "pierce": "magic", "magic": "magic"}
 # Modelle aus dem Crystal Pack je Turmlinie (rein optisch)
 MODELS = ["crystal_08", "crystal_11", "crystal_13", "crystal_18", "crystal_19", "crystal_20", "crystal_23", "crystal_24"]
+# Passende Modelle aus den CC0-Paketen (assets/models/nature/, tools/modelle/auswahl.json) statt Kristall.
+# solid = eigene Farben, undurchsichtig; tint = in Elementfarbe als Glas wie die Kristalle.
+# flame = Flamme oben drauf (FlameFx), hit = Treffer-Effekt aus data/fx/hits.json.
+N = "res://assets/models/nature/%s.glb"
+SOLID = {"model_tint": False, "model_solid": True}
+LOOK = {
+    "Nature Base Tower": dict(SOLID, model=N % "bush_common_flowers"),
+    "Minor Bird Launcher": dict(SOLID, model=N % "pine_5"),
+    "Bird Launcher": dict(SOLID, model=N % "pine_2"),
+    "Greater Bird Launcher": dict(SOLID, model=N % "pine_1"),
+    "Xtreme Bird Launcher": dict(SOLID, model=N % "pine_3"),
+    "Wicked Bird Rampage WTF Tower": dict(SOLID, model=N % "common_tree_4"),
+    "Thorns Tower": dict(SOLID, model=N % "plant_1"),
+    "Itching Thorns Tower": dict(SOLID, model=N % "plant_1_big"),
+    "Orb of Life": dict(SOLID, model=N % "common_tree_3", hit_fx="kb_nature_rays"),
+    "Sacred Orb of Power": dict(SOLID, model=N % "common_tree_5", hit_fx="kb_nature_rays"),
+    "Nonhazardous Shroom Field": dict(SOLID, model=N % "mushroom_common"),
+    "Shroom Field": dict(SOLID, model=N % "mushroom_tan_group"),
+    "Hazardous Shroom Field": dict(SOLID, model=N % "mushroom_red_group"),
+    "Ultra Toxic Shroom Field": dict(SOLID, model=N % "mushroom_laetiporus"),
+    "Noxious Tendril Trap": dict(SOLID, model=N % "plant_7"),
+    "Magic Mushrooms": dict(SOLID, model=N % "mushroom_red_tall"),
+    "Fire Berry Bush": dict(SOLID, model=N % "bush_common", hit_fx="bk_fire"),
+    "Thornweed Field": dict(SOLID, model=N % "fern_1"),
+    "Gaea Spring": dict(SOLID, model=N % "lily_large"),
+    "Camp Fire": dict(SOLID, model=N % "campfire_pit", flame=0.55, flame_height=0.3, hit_fx="bk_fire"),
+    "Heat Stakes": dict(SOLID, model=N % "campfire_stones", flame=0.5, flame_height=0.2, hit_fx="bk_fire"),
+    "Brazier": dict(SOLID, model=N % "pot_large", flame=0.5, flame_height=0.7, hit_fx="bk_fire"),
+    "Blazing Brazier": dict(SOLID, model=N % "pot_large", flame=0.65, flame_height=0.7, hit_fx="bk_fire"),
+    "Hell Brazier": dict(SOLID, model=N % "pot_large", flame=0.8, flame_height=0.7, hit_fx="bk_fire"),
+    "Searing Totem": dict(model=N % "statue_head", flame=0.45, flame_height=0.95, hit_fx="bk_fire"),
+    "Flame Grate": dict(SOLID, model=N % "campfire_bricks", flame=0.35, flame_height=0.2, hit_fx="bk_fire"),
+    "Volcano": dict(SOLID, model=N % "rock_tall_e", flame=0.5, flame_height=0.95, hit_fx="bk_explosion"),
+    "Earth Base Tower": dict(SOLID, model=N % "rock_medium_1"),
+    "Lesser Rock Launcher": dict(SOLID, model=N % "rock_medium_2"),
+    "Rock Launcher": dict(SOLID, model=N % "rock_medium_3"),
+    "Greater Rock Launcher": dict(SOLID, model=N % "rock_tall_a"),
+    "Gold Mine": {"model": "res://assets/models/special/gold_ore.glb", "model_tint": False},
+    "Runed Rock": dict(model=N % "stone_tall_g"),
+    "Lightning Rock Elemental": dict(model=N % "stone_tall_a", hit_fx="kb_shock_ring"),
+    "Ultra FFS Mega Power Totem": dict(model=N % "statue_head"),
+    "Ruinous Obelisk": dict(model=N % "statue_column_damaged", hit_fx="kb_magic_ring"),
+    "Enchanted Obelisk": dict(model=N % "statue_obelisk", hit_fx="kb_magic_ring"),
+    "Ornate Obelisk": dict(model=N % "statue_column", hit_fx="kb_magic_ring"),
+    "Runed Obelisk": dict(model=N % "statue_obelisk", hit_fx="kb_magic_ring"),
+    "Glowing Engraved Obelisk of Ultimate Pwnage": dict(model=N % "statue_obelisk", hit_fx="kb_magic_ring"),
+    "Arcane Shrine": dict(model=N % "statue_ring", hit_fx="kb_magic_ring"),
+    "Altar of Magic": dict(model=N % "statue_block", hit_fx="kb_magic_ring"),
+    "Scaring Statue of Corruption": dict(model=N % "statue_head"),
+    "Stone of Wisdom": dict(model=N % "stone_tall_g"),
+}
+# Treffer für Sturm-Tower ohne eigenes Modell (Kristalle bleiben)
+STORM_HIT = "kb_shock_ring"
 
 NAMES = {
     "Barricade": "Barrikade",
@@ -294,6 +347,9 @@ def tower_json(uid, element, line, children, kind="tower"):
         },
         "tiers": [tier],
     }
+    if element == "storm":
+        d["hit_fx"] = STORM_HIT
+    d.update(LOOK.get(name, {}))
     if kind == "trap":
         d["kind"] = "trap"
         d["model_scale"] = 0.3

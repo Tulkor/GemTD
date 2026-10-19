@@ -4,7 +4,7 @@
 	"name_original": "Itching Thorns Tower",
 	"category": "eeve",
 	"color": "#46d160",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/nature/plant_1_big.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -32,5 +32,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

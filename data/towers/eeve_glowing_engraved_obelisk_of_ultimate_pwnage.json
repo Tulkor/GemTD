@@ -4,7 +4,7 @@
 	"name_original": "Glowing Engraved Obelisk of Ultimate Pwnage",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/nature/statue_obelisk.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {
@@ -32,5 +32,6 @@
 				}
 			]
 		}
-	]
+	],
+	"hit_fx": "kb_magic_ring"
 }

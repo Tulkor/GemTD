@@ -4,7 +4,7 @@
 	"name_original": "Runed Rock",
 	"category": "eeve",
 	"color": "#c27aa4",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/nature/stone_tall_g.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {

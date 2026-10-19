@@ -1,0 +1,272 @@
+{
+	"_info": "Ziel im Repo -> Quelle. Pakete: mega = Quaternius Stylized Nature MegaKit (Standard), kenney_nature = Kenney Nature Kit 2.1, kenney_survival = Kenney Survival Kit 2.0, kenney_city = Kenney City Kit Commercial 2.1, quaternius_city = Quaternius Ultimate Textured Building Pack (Dec 2019). Alle CC0, siehe assets/models/CREDITS.md.",
+	"assets/models/nature/bush_common_flowers.glb": {
+		"paket": "mega",
+		"datei": "Bush_Common_Flowers.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/bush_common.glb": {
+		"paket": "mega",
+		"datei": "Bush_Common.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/plant_1.glb": {
+		"paket": "mega",
+		"datei": "Plant_1.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/plant_1_big.glb": {
+		"paket": "mega",
+		"datei": "Plant_1_Big.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/plant_7.glb": {
+		"paket": "mega",
+		"datei": "Plant_7.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/plant_7_big.glb": {
+		"paket": "mega",
+		"datei": "Plant_7_Big.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/fern_1.glb": {
+		"paket": "mega",
+		"datei": "Fern_1.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/common_tree_3.glb": {
+		"paket": "mega",
+		"datei": "CommonTree_3.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/common_tree_4.glb": {
+		"paket": "mega",
+		"datei": "CommonTree_4.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/common_tree_5.glb": {
+		"paket": "mega",
+		"datei": "CommonTree_5.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/pine_1.glb": {
+		"paket": "mega",
+		"datei": "Pine_1.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/pine_2.glb": {
+		"paket": "mega",
+		"datei": "Pine_2.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/pine_3.glb": {
+		"paket": "mega",
+		"datei": "Pine_3.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/pine_5.glb": {
+		"paket": "mega",
+		"datei": "Pine_5.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/mushroom_common.glb": {
+		"paket": "mega",
+		"datei": "Mushroom_Common.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/mushroom_laetiporus.glb": {
+		"paket": "mega",
+		"datei": "Mushroom_Laetiporus.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/rock_medium_1.glb": {
+		"paket": "mega",
+		"datei": "Rock_Medium_1.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/rock_medium_2.glb": {
+		"paket": "mega",
+		"datei": "Rock_Medium_2.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/rock_medium_3.glb": {
+		"paket": "mega",
+		"datei": "Rock_Medium_3.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/flower_3_group.glb": {
+		"paket": "mega",
+		"datei": "Flower_3_Group.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/flower_4_group.glb": {
+		"paket": "mega",
+		"datei": "Flower_4_Group.gltf",
+		"tex": 256
+	},
+	"assets/models/nature/mushroom_tan_group.glb": {
+		"paket": "kenney_nature",
+		"datei": "mushroom_tanGroup.glb"
+	},
+	"assets/models/nature/mushroom_red_group.glb": {
+		"paket": "kenney_nature",
+		"datei": "mushroom_redGroup.glb"
+	},
+	"assets/models/nature/mushroom_red_tall.glb": {
+		"paket": "kenney_nature",
+		"datei": "mushroom_redTall.glb"
+	},
+	"assets/models/nature/campfire_stones.glb": {
+		"paket": "kenney_nature",
+		"datei": "campfire_stones.glb"
+	},
+	"assets/models/nature/campfire_bricks.glb": {
+		"paket": "kenney_nature",
+		"datei": "campfire_bricks.glb"
+	},
+	"assets/models/nature/pot_large.glb": {
+		"paket": "kenney_nature",
+		"datei": "pot_large.glb"
+	},
+	"assets/models/nature/rock_tall_a.glb": {
+		"paket": "kenney_nature",
+		"datei": "rock_tallA.glb"
+	},
+	"assets/models/nature/rock_tall_e.glb": {
+		"paket": "kenney_nature",
+		"datei": "rock_tallE.glb"
+	},
+	"assets/models/nature/stone_tall_a.glb": {
+		"paket": "kenney_nature",
+		"datei": "stone_tallA.glb"
+	},
+	"assets/models/nature/stone_tall_g.glb": {
+		"paket": "kenney_nature",
+		"datei": "stone_tallG.glb"
+	},
+	"assets/models/nature/statue_obelisk.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_obelisk.glb"
+	},
+	"assets/models/nature/statue_column.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_column.glb"
+	},
+	"assets/models/nature/statue_column_damaged.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_columnDamaged.glb"
+	},
+	"assets/models/nature/statue_head.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_head.glb"
+	},
+	"assets/models/nature/statue_ring.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_ring.glb"
+	},
+	"assets/models/nature/statue_block.glb": {
+		"paket": "kenney_nature",
+		"datei": "statue_block.glb"
+	},
+	"assets/models/nature/lily_large.glb": {
+		"paket": "kenney_nature",
+		"datei": "lily_large.glb"
+	},
+	"assets/models/nature/campfire_pit.glb": {
+		"paket": "kenney_survival",
+		"datei": "campfire-pit.glb"
+	},
+	"assets/models/city/building_skyscraper_a.glb": {
+		"paket": "kenney_city",
+		"datei": "building-skyscraper-a.glb"
+	},
+	"assets/models/city/building_skyscraper_b.glb": {
+		"paket": "kenney_city",
+		"datei": "building-skyscraper-b.glb"
+	},
+	"assets/models/city/building_skyscraper_c.glb": {
+		"paket": "kenney_city",
+		"datei": "building-skyscraper-c.glb"
+	},
+	"assets/models/city/building_skyscraper_d.glb": {
+		"paket": "kenney_city",
+		"datei": "building-skyscraper-d.glb"
+	},
+	"assets/models/city/1story.glb": {
+		"paket": "quaternius_city",
+		"datei": "1Story_Mat.fbx"
+	},
+	"assets/models/city/1story_gableroof.glb": {
+		"paket": "quaternius_city",
+		"datei": "1Story_GableRoof_Mat.fbx"
+	},
+	"assets/models/city/1story_roundroof.glb": {
+		"paket": "quaternius_city",
+		"datei": "1Story_RoundRoof_Mat.fbx"
+	},
+	"assets/models/city/1story_sign.glb": {
+		"paket": "quaternius_city",
+		"datei": "1Story_Sign_Mat.fbx"
+	},
+	"assets/models/city/2story.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Mat.fbx"
+	},
+	"assets/models/city/2story_2.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_2_Mat.fbx"
+	},
+	"assets/models/city/2story_columns.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Columns_Mat.fbx"
+	},
+	"assets/models/city/2story_sign.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Sign_Mat.fbx"
+	},
+	"assets/models/city/2story_gableroof.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_GableRoof_Mat.fbx"
+	},
+	"assets/models/city/2story_double.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Double_Mat.fbx"
+	},
+	"assets/models/city/2story_center.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Center_Mat.fbx"
+	},
+	"assets/models/city/2story_balcony.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Balcony_Mat.fbx"
+	},
+	"assets/models/city/2story_stairs.glb": {
+		"paket": "quaternius_city",
+		"datei": "2Story_Stairs_Mat.fbx"
+	},
+	"assets/models/city/3story_small.glb": {
+		"paket": "quaternius_city",
+		"datei": "3Story_Small_Mat.fbx"
+	},
+	"assets/models/city/3story_balcony.glb": {
+		"paket": "quaternius_city",
+		"datei": "3Story_Balcony_Mat.fbx"
+	},
+	"assets/models/city/3story_slim.glb": {
+		"paket": "quaternius_city",
+		"datei": "3Story_Slim_Mat.fbx"
+	},
+	"assets/models/city/4story.glb": {
+		"paket": "quaternius_city",
+		"datei": "4Story_Mat.fbx"
+	},
+	"assets/models/city/4story_center.glb": {
+		"paket": "quaternius_city",
+		"datei": "4Story_Center_Mat.fbx"
+	},
+	"assets/models/city/6story_stack.glb": {
+		"paket": "quaternius_city",
+		"datei": "6Story_Stack_Mat.fbx"
+	}
+}

@@ -4,7 +4,7 @@
 	"name_original": "Ornate Obelisk",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/nature/statue_column.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,6 @@
 				}
 			]
 		}
-	]
+	],
+	"hit_fx": "kb_magic_ring"
 }

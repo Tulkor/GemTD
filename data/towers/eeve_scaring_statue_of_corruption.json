@@ -4,7 +4,7 @@
 	"name_original": "Scaring Statue of Corruption",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/statue_head.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {

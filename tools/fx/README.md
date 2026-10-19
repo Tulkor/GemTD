@@ -16,3 +16,11 @@ Heruntergeladene Pakete und Videos immer in einen eigenen, leeren Ordner entpack
 
 Im Spiel: `scripts/game/fx_data.gd` wählt die Effekte pro Tower (Felder `hit_fx`/`shot_fx` in der Tower-Datei,
 sonst automatisch nach Farbe; Regeln in `data/fx/shots.json` → `auto`), `scripts/game/fx_player.gd` spielt sie ab.
+
+## Brackeys und Kronbits (CC0)
+
+`python3 tools/fx/zusatz_effekte.py --brackeys=<entpackt> --kronbits=<entpackt>` holt die verwendeten Bilder
+nach `assets/fx/brackeys/` und `assets/fx/kronbits/` und trägt die Treffer `bk_*`/`kb_*` in `data/fx/hits.json` ein
+(ohne Pfade nur die Einträge). Die Treffer wählt nicht die Farbautomatik, sondern `hit_fx` in den Tower-Daten oder
+`auto.hit_ability` in `data/fx/shots.json` (Splash = Explosion). Die Flamme (`flame_01`) spielt `FlameFx` als
+Endlos-Billboard ab: in den Tower-Daten `"flame": <Größe>` und optional `"flame_height"` (Anteil der Modellhöhe).

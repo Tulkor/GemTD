@@ -614,6 +614,7 @@ func _build_visual() -> void:
 			if _gem:
 				_gem.position.y = 0.08
 				_visual.add_child(_gem)
+				_add_flame(_gem)
 		_finish_visual()
 		return
 	# Sockel: eckige Glasplatte mit runden Ecken über die ganzen 2×2 Felder, von innen beleuchtet
@@ -650,7 +651,8 @@ func _build_visual() -> void:
 		else:
 			_gem = ModelLoader.instantiate_fit(model_path, width, GEM_MAX_HEIGHT, tint)
 		if _gem:
-			if tint == null:
+			# "model_solid": true lässt Modelle mit eigenen Farben (Bäume, Steine) undurchsichtig
+			if tint == null and not bool(def.get("model_solid", false)):
 				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
 			_gem.position.y = base_h
 			_visual.add_child(_gem)
@@ -666,7 +668,19 @@ func _build_visual() -> void:
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
 	ModelLoader.add_outline(_gem)
+	_add_flame(_gem)
 	_finish_visual()
+
+
+## "flame": Größe der Flamme in Towerbreiten, sitzt oben auf dem Modell (Lagerfeuer, Kohlenbecken).
+func _add_flame(model: Node3D) -> void:
+	var size := float(def.get("flame", 0.0))
+	if size <= 0.0 or model == null:
+		return
+	var box := ModelLoader.aabb(model, Transform3D())
+	var flame := FlameFx.make(size)
+	flame.position = Vector3(box.get_center().x, box.position.y + box.size.y * float(def.get("flame_height", 0.6)), box.get_center().z)
+	_visual.add_child(flame)
 
 
 ## Mehrere Kristalle auf dem Sockel, Anzahl und Größe nach Qualität (GEM_CLUSTERS).

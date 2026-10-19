@@ -4,7 +4,7 @@
 	"name_original": "Lesser Rock Launcher",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/rock_medium_2.glb",
 	"damage_type": "physical",
 	"targets": "both",
 	"eeve": {
@@ -35,5 +35,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

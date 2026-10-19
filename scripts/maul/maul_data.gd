@@ -28,6 +28,11 @@ static func levels() -> Array:
 	return _load("waves").get("levels", [])
 
 
+## Gebäude-Modelle der Tower (data/maul/models.json).
+static func models() -> Dictionary:
+	return _load("models")
+
+
 static func pro() -> Dictionary:
 	return _load("pro")
 

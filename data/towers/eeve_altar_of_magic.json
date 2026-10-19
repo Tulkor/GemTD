@@ -4,7 +4,7 @@
 	"name_original": "Altar of Magic",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/nature/statue_block.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {
@@ -35,5 +35,6 @@
 				}
 			]
 		}
-	]
+	],
+	"hit_fx": "kb_magic_ring"
 }

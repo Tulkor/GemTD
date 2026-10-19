@@ -1,0 +1,37 @@
+{
+	"_info": "Gebäude für die Maul-Tower (von Hand). Stufe nach Wert des Towers (levels: bis zu diesem Wert), Modell innerhalb der Stufe fest nach Tower-ID. Bei den Quaternius-Häusern wird das Material \"Main\" (Wände) in der Filialfarbe eingefärbt. air = Tower, die nur Luft angreifen. shops = eigene Listen für einzelne Filialen (tint: false = Originalfarben).",
+	"levels": [40, 200, 700, 2000],
+	"tint_material": "Main",
+	"default": [
+		["1story", "1story_gableroof", "1story_roundroof", "1story_sign"],
+		["2story", "2story_2", "2story_columns", "2story_sign", "2story_gableroof", "2story_double"],
+		["2story_center", "2story_balcony", "2story_stairs", "3story_small", "3story_balcony"],
+		["3story_slim", "4story", "4story_center"],
+		["6story_stack", "4story_center"]
+	],
+	"air": ["building_skyscraper_a", "building_skyscraper_b", "building_skyscraper_c", "building_skyscraper_d"],
+	"shops": {
+		"gaertnerei": {
+			"tint": false,
+			"dir": "nature",
+			"models": [
+				["fern_1", "plant_7_big"],
+				["flower_3_group", "flower_4_group"],
+				["plant_1_big", "bush_common_flowers"],
+				["common_tree_5"],
+				["common_tree_3", "common_tree_4"]
+			]
+		},
+		"bestatter": {
+			"tint": false,
+			"dir": "nature",
+			"models": [
+				["statue_head"],
+				["statue_ring", "statue_block"],
+				["statue_column"],
+				["statue_column_damaged"],
+				["statue_obelisk"]
+			]
+		}
+	}
+}
