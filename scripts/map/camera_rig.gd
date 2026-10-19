@@ -200,6 +200,9 @@ static func add_environment(parent: Node) -> void:
 	sun.light_energy = 0.55
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.5
+	# Schatten nur so weit wie das Spielfeld reicht: feinere Schattenkanten ohne Treppen
+	sun.directional_shadow_max_distance = 60.0
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	# eeveTD und Shopping Maul: eigener Himmel und eigenes Licht (FieldStyle)
 	var look: Dictionary = FieldStyle.current().get("env", {})
 	if not look.is_empty():

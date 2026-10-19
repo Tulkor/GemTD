@@ -22,7 +22,10 @@ const STYLES := {
 	},
 	DRUID: {
 		"ground_alpha": 1.0,
-		"ground": {"brightness": 0.5, "saturation": 0.55, "tint": Vector3(0.9, 0.97, 0.8)},
+		"ground": {
+			"brightness": 0.5, "saturation": 0.55, "tint": Vector3(0.9, 0.97, 0.8),
+			"grass_tile": 2.6, "detail_blur": 2.2, "grass_contrast": 0.4, "normal_strength": 0.35,
+		},
 		"floor": {
 			"floor_alpha": 0.0,
 			"line_color": Color("1c2416"), "edge_color": Color("3a2a1a"),
