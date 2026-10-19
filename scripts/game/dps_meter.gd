@@ -51,9 +51,7 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	v.add_child(head)
 	var title := UiUtil.label("DPS", head, 16)
-	title.uppercase = true
-	title.add_theme_font_override("font", UiTheme.font(true))
-	title.add_theme_color_override("font_color", UiTheme.CYAN)
+	UiTheme.heading(title, UiTheme.CYAN)
 	select = OptionButton.new()
 	select.focus_mode = Control.FOCUS_NONE
 	select.size_flags_horizontal = Control.SIZE_EXPAND_FILL

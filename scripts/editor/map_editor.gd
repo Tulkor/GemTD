@@ -59,7 +59,7 @@ func _layout() -> void:
 
 # --- Oberfläche --------------------------------------------------------------
 
-const TOOL_COLORS := {
+var TOOL_COLORS := {  ## var, weil die UiTheme-Farben static var sind
 	Tool.BLOCKED: Color("3b3f48"),
 	Tool.WALK_ONLY: Color("a07a4a"),
 	Tool.FLOOR: Color("2d4a30"),

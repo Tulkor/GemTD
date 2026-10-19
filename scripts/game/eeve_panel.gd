@@ -31,8 +31,7 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	v.add_child(head)
 	var t := UiUtil.label("Elemente", head, 15)
-	t.uppercase = true
-	t.add_theme_font_override("font", UiTheme.font(true))
+	UiTheme.heading(t)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_points = UiUtil.label("", head, 13)
 	_points.add_theme_color_override("font_color", UiTheme.COIN)
@@ -71,8 +70,7 @@ func _ready() -> void:
 		_rows[id] = {"pips": pips, "plus": plus, "color": Color(str(e.color))}
 
 	var th := UiUtil.label("Fallen", v, 15)
-	th.uppercase = true
-	th.add_theme_font_override("font", UiTheme.font(true))
+	UiTheme.heading(th)
 	th.tooltip_text = tr("Fallen liegen auf dem Weg, Gegner laufen darüber. Sie treffen nur Bodengegner.")
 	th.mouse_filter = Control.MOUSE_FILTER_PASS
 	_traps = VBoxContainer.new()

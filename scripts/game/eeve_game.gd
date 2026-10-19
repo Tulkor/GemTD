@@ -58,6 +58,8 @@ var eeve_panel: EevePanel
 
 
 func _ready() -> void:
+	# Stil „Druidenhain“ für die ganze Oberfläche von eeveTD, vor dem Bau des HUD in game.gd
+	UiTheme.use_skin(UiTheme.DRUID)
 	rules = Database.eeve
 	var fresh: bool = Session.load_state.is_empty()
 	difficulty = int(Session.eeve_choice.get("difficulty", difficulty))
@@ -72,6 +74,11 @@ func _ready() -> void:
 		level_pause = float(rules.get("first_pause", 45))
 	_style_hud()
 	_refresh_hud()
+
+
+func _exit_tree() -> void:
+	super._exit_tree()
+	UiTheme.use_skin(UiTheme.ARCADE)
 
 
 func _style_hud() -> void:

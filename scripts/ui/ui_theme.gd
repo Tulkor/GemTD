@@ -2,32 +2,80 @@ class_name UiTheme
 extends RefCounted
 ## Gemeinsame Farben und das Godot-Theme für alle Oberflächen.
 ## Stil „Arcade“: Monospace-Schrift, eckige Kanten, dicke rosa Rahmen mit türkisem Versatz-Schatten.
+## eeveTD schaltet mit use_skin(DRUID) auf den Stil „Druidenhain“ um (druid_theme.gd): dieselben Namen,
+## andere Farben, Schriften und Panels. Die Farben sind deshalb static var statt const.
 
-const BG := Color("07040e")
-const BAR := Color("0d0618")
-const PANEL := Color("0d0618")
-const PANEL_2 := Color("160b28")
-const BORDER := Color("3b2560")
-const BORDER_2 := Color("5b3a8a")
-const TEXT := Color("f2eaff")
-const MUTED := Color("a99cc8")
-const DIM := Color("d7cdea")
+const ARCADE := ""
+const DRUID := "druid"
+
+const ARCADE_COLORS := {
+	"BG": Color("07040e"), "BAR": Color("0d0618"), "PANEL": Color("0d0618"), "PANEL_2": Color("160b28"),
+	"BORDER": Color("3b2560"), "BORDER_2": Color("5b3a8a"), "TEXT": Color("f2eaff"), "MUTED": Color("a99cc8"),
+	"DIM": Color("d7cdea"), "GOLD": Color("ff4fd8"), "GOLD_DARK": Color("0d0618"), "CYAN": Color("22c4ee"),
+	"COIN": Color("ffd166"), "PURPLE": Color("8a4dff"), "PURPLE_LIGHT": Color("b38cff"), "HAVE": Color("5fe08a"),
+	"MISSING": Color("ff5d7a"), "SHADOW": Color("22c4ee"),
+}
+
+## Aktiver Stil: ARCADE oder DRUID.
+static var skin := ARCADE
+
+static var BG: Color = ARCADE_COLORS.BG
+static var BAR: Color = ARCADE_COLORS.BAR
+static var PANEL: Color = ARCADE_COLORS.PANEL
+static var PANEL_2: Color = ARCADE_COLORS.PANEL_2
+static var BORDER: Color = ARCADE_COLORS.BORDER
+static var BORDER_2: Color = ARCADE_COLORS.BORDER_2
+static var TEXT: Color = ARCADE_COLORS.TEXT
+static var MUTED: Color = ARCADE_COLORS.MUTED
+static var DIM: Color = ARCADE_COLORS.DIM
 ## Akzentfarbe (Hauptaktion, Auswahl, Titel). Heißt aus historischen Gründen GOLD.
-const GOLD := Color("ff4fd8")
+static var GOLD: Color = ARCADE_COLORS.GOLD
 ## Text auf der Akzentfarbe.
-const GOLD_DARK := Color("0d0618")
-const CYAN := Color("22c4ee")
+static var GOLD_DARK: Color = ARCADE_COLORS.GOLD_DARK
+static var CYAN: Color = ARCADE_COLORS.CYAN
 ## Farbe für Goldbeträge.
-const COIN := Color("ffd166")
-const PURPLE := Color("8a4dff")
-const PURPLE_LIGHT := Color("b38cff")
-const HAVE := Color("5fe08a")
-const MISSING := Color("ff5d7a")
+static var COIN: Color = ARCADE_COLORS.COIN
+static var PURPLE: Color = ARCADE_COLORS.PURPLE
+static var PURPLE_LIGHT: Color = ARCADE_COLORS.PURPLE_LIGHT
+static var HAVE: Color = ARCADE_COLORS.HAVE
+static var MISSING: Color = ARCADE_COLORS.MISSING
+## Harter Versatz-Schatten unter Panels und Leisten.
+static var SHADOW: Color = ARCADE_COLORS.SHADOW
 
 const FONT := "res://assets/fonts/DejaVuSansMono.ttf"
 const FONT_BOLD := "res://assets/fonts/DejaVuSansMono-Bold.ttf"
 
-static var _theme: Theme
+
+## Stil umschalten (ARCADE oder DRUID). Vor dem Bau der Oberfläche aufrufen; beim Verlassen zurück auf ARCADE.
+static func use_skin(name: String) -> void:
+	if name == skin:
+		return
+	skin = name
+	var c: Dictionary = DruidTheme.COLORS if name == DRUID else ARCADE_COLORS
+	BG = c.BG
+	BAR = c.BAR
+	PANEL = c.PANEL
+	PANEL_2 = c.PANEL_2
+	BORDER = c.BORDER
+	BORDER_2 = c.BORDER_2
+	TEXT = c.TEXT
+	MUTED = c.MUTED
+	DIM = c.DIM
+	GOLD = c.GOLD
+	GOLD_DARK = c.GOLD_DARK
+	CYAN = c.CYAN
+	COIN = c.COIN
+	PURPLE = c.PURPLE
+	PURPLE_LIGHT = c.PURPLE_LIGHT
+	HAVE = c.HAVE
+	MISSING = c.MISSING
+	SHADOW = c.SHADOW
+
+
+static func druid() -> bool:
+	return skin == DRUID
+
+static var _themes: Dictionary = {}
 
 
 ## Fläche mit optionalem Rahmen. Im Arcade-Stil immer eckig (radius bleibt für alte Aufrufe erhalten).
@@ -38,7 +86,8 @@ static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_wid
 	s.anti_aliasing = false
 	if border.a > 0.0:
 		s.border_color = border
-		s.set_border_width_all(maxi(border_width, 2) if border_width > 0 else 0)
+		# Druidenhain: feine 1-px-Rahmen wie im Entwurf, Arcade mindestens 2 px
+		s.set_border_width_all(0 if border_width <= 0 else (border_width if druid() else maxi(border_width, 2)))
 	s.content_margin_left = pad
 	s.content_margin_right = pad
 	s.content_margin_top = pad * 0.6
@@ -47,7 +96,9 @@ static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_wid
 
 
 ## Kasten mit schräg abgeschnittenen Ecken oben links und unten rechts (Tooltips).
-static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBoxFlat:
+static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBox:
+	if druid():
+		return DruidTheme.frame(bg, border, pad)
 	var s := box(bg, border, 0, 2, pad)
 	s.corner_radius_top_left = cut
 	s.corner_radius_bottom_right = cut
@@ -58,35 +109,42 @@ static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBo
 
 
 ## Hauptpanel: dicker rosa Rahmen, harter türkiser Schatten nach rechts unten.
-static func panel(pad := 14.0, alpha := 0.95, border := GOLD) -> StyleBoxFlat:
+static func panel(pad := 14.0, alpha := 0.95, border := Color.TRANSPARENT) -> StyleBox:
+	if border.a == 0.0:
+		border = GOLD
+	if druid():
+		return DruidTheme.panel(pad, alpha, border)
 	var s := box(Color(PANEL, alpha), border, 0, 3, pad)
-	s.shadow_color = CYAN
+	s.shadow_color = SHADOW
 	s.shadow_size = 1
 	s.shadow_offset = Vector2(5, 5)
 	return s
 
 
 static func font(bold := false) -> Font:
+	if druid():
+		return DruidTheme.font(bold)
 	return load(FONT_BOLD if bold else FONT)
 
 
 static func get_theme() -> Theme:
-	if _theme != null:
-		return _theme
+	if _themes.has(skin):
+		return _themes[skin]
 	var t := Theme.new()
 	t.default_font = font()
-	t.default_font_size = 14
+	t.default_font_size = 15 if druid() else 14
 	t.set_color("font_color", "Label", TEXT)
 	t.set_stylebox("normal", "Button", box(PANEL_2, BORDER))
 	t.set_stylebox("hover", "Button", box(PANEL_2, GOLD))
 	t.set_stylebox("pressed", "Button", box(CYAN, CYAN))
-	t.set_stylebox("disabled", "Button", box(Color("0b0614"), Color("24183a")))
+	var off_bg := BAR if druid() else Color("0b0614")
+	t.set_stylebox("disabled", "Button", box(off_bg, BORDER.darkened(0.3) if druid() else Color("24183a")))
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", TEXT)
 	t.set_color("font_hover_color", "Button", TEXT)
 	t.set_color("font_pressed_color", "Button", BAR)
 	t.set_color("font_hover_pressed_color", "Button", BAR)
-	t.set_color("font_disabled_color", "Button", Color("5a4d74"))
+	t.set_color("font_disabled_color", "Button", BORDER if druid() else Color("5a4d74"))
 	t.set_stylebox("normal", "LineEdit", box(PANEL_2, BORDER))
 	t.set_stylebox("focus", "LineEdit", box(PANEL_2, CYAN))
 	t.set_color("font_color", "LineEdit", TEXT)
@@ -103,7 +161,7 @@ static func get_theme() -> Theme:
 	t.set_constant("separation", "HSeparator", 2)
 	t.set_stylebox("panel", "TabContainer", box(PANEL, BORDER, 0, 2, 12))
 	t.set_stylebox("panel", "ItemList", box(PANEL, BORDER, 0, 2, 8))
-	t.set_stylebox("scroll", "VScrollBar", box(Color("0b0614"), Color.TRANSPARENT, 0, 0, 0))
+	t.set_stylebox("scroll", "VScrollBar", box(off_bg, Color.TRANSPARENT, 0, 0, 0))
 	t.set_stylebox("grabber", "VScrollBar", box(BORDER_2, Color.TRANSPARENT, 0, 0, 3))
 	t.set_stylebox("grabber_highlight", "VScrollBar", box(GOLD, Color.TRANSPARENT, 0, 0, 3))
 	t.set_stylebox("grabber_pressed", "VScrollBar", box(CYAN, Color.TRANSPARENT, 0, 0, 3))
@@ -120,7 +178,9 @@ static func get_theme() -> Theme:
 	t.set_icon("grabber", "HSlider", _square_icon(CYAN, 18))
 	t.set_icon("grabber_highlight", "HSlider", _square_icon(TEXT, 18))
 	t.set_icon("grabber_disabled", "HSlider", _square_icon(BORDER_2, 18))
-	_theme = t
+	if druid():
+		DruidTheme.extend_theme(t)
+	_themes[skin] = t
 	return t
 
 
@@ -136,7 +196,7 @@ static func _square_icon(c: Color, px: int) -> Texture2D:
 
 ## Kleine Symbole für Aktionsknöpfe: "up" (grüner Pfeil), "down" (roter Pfeil), "combine" (Kombinieren).
 static func icon(kind: String, px := 22) -> Texture2D:
-	var key := "%s_%d" % [kind, px]
+	var key := "%s_%d_%s" % [kind, px, skin]
 	if _icons.has(key):
 		return _icons[key]
 	var svg := ""
@@ -157,6 +217,9 @@ static func icon(kind: String, px := 22) -> Texture2D:
 
 ## Button in einer Akzentfarbe (Rosa für die Hauptaktion, Lila für One-Shots), mit hartem Versatz-Schatten.
 static func accent_button(b: Button, bg: Color, fg: Color, _glow: Color = Color.TRANSPARENT) -> void:
+	if druid():
+		DruidTheme.accent_button(b, bg, fg)
+		return
 	var normal := box(bg, Color.TRANSPARENT, 0, 0, 14)
 	normal.shadow_color = CYAN if bg != CYAN else GOLD
 	normal.shadow_size = 1
@@ -178,11 +241,27 @@ static func accent_button(b: Button, bg: Color, fg: Color, _glow: Color = Color.
 static func caption(text: String, parent: Node) -> Label:
 	var l := UiUtil.label(str(TranslationServer.translate(text)).to_upper(), parent, 12)
 	l.add_theme_color_override("font_color", MUTED)
+	if druid():
+		l.add_theme_font_override("font", DruidTheme.font(true, 2))
+	return l
+
+
+## Panel-Überschrift (DPS, Gegner, Tower, Elemente …): Arcade in Großbuchstaben und fett, optional farbig;
+## Druidenhain in Uncial Antiqua, etwas größer, in hellem Messing mit schwarzem Schatten.
+static func heading(l: Label, color := Color.TRANSPARENT) -> Label:
+	if druid():
+		return DruidTheme.heading(l)
+	l.uppercase = true
+	l.add_theme_font_override("font", font(true))
+	if color.a > 0.0:
+		l.add_theme_color_override("font_color", color)
 	return l
 
 
 ## Überschrift im Arcade-Stil: Großbuchstaben, fett, rosa mit türkisem Schatten.
 static func title(l: Label, size := 0) -> Label:
+	if druid():
+		return DruidTheme.title(l, size)
 	l.uppercase = true
 	l.add_theme_font_override("font", font(true))
 	if size > 0:

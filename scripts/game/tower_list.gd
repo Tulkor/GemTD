@@ -37,9 +37,7 @@ func _ready() -> void:
 	head.add_theme_constant_override("separation", 8)
 	v.add_child(head)
 	var title := UiUtil.label("Tower", head, 16)
-	title.uppercase = true
-	title.add_theme_font_override("font", UiTheme.font(true))
-	title.add_theme_color_override("font_color", UiTheme.CYAN)
+	UiTheme.heading(title, UiTheme.CYAN)
 	summary = UiUtil.label("", head, 12)
 	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

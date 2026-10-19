@@ -258,10 +258,10 @@ func _vsep(parent: Node) -> void:
 
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
-	var bar_style := UiTheme.box(UiTheme.BAR, Color.TRANSPARENT, 0, 0, 14)
+	var bar_style := UiTheme.box(UiTheme.PANEL, Color.TRANSPARENT, 0, 0, 14)
 	bar_style.border_color = UiTheme.GOLD
 	bar_style.border_width_bottom = 3
-	bar_style.shadow_color = UiTheme.CYAN
+	bar_style.shadow_color = UiTheme.SHADOW
 	bar_style.shadow_size = 1
 	bar_style.shadow_offset = Vector2(0, 4)
 	bar.add_theme_stylebox_override("panel", bar_style)
@@ -311,9 +311,7 @@ func _build_top_bar() -> void:
 
 ## Panel-Überschrift: Großbuchstaben, fett.
 func _panel_title(l: Label) -> Label:
-	l.uppercase = true
-	l.add_theme_font_override("font", UiTheme.font(true))
-	return l
+	return UiTheme.heading(l)
 
 
 func _spacer(w: float) -> Control:
@@ -336,9 +334,7 @@ func _build_banner() -> void:
 	h.add_theme_constant_override("separation", 12)
 	banner.add_child(h)
 	phase_title = UiUtil.label("", h, 15)
-	phase_title.uppercase = true
-	phase_title.add_theme_font_override("font", UiTheme.font(true))
-	phase_title.add_theme_color_override("font_color", UiTheme.CYAN)
+	UiTheme.heading(phase_title, UiTheme.CYAN)
 	phase_label = UiUtil.label("", h, 15)
 	oneshot_pill = PanelContainer.new()
 	oneshot_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -409,8 +405,7 @@ func _build_bottom() -> void:
 	info_swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(info_swatch)
 	info_title = UiUtil.label("", head, 18)
-	info_title.uppercase = true
-	info_title.add_theme_font_override("font", UiTheme.font(true))
+	UiTheme.heading(info_title)
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
 	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
@@ -685,7 +680,9 @@ func set_phase(title: String, text: String, oneshot := "") -> void:
 	oneshot_pill.visible = oneshot != ""
 	oneshot_label.text = oneshot
 	var border := UiTheme.PURPLE_LIGHT if oneshot != "" else UiTheme.BORDER_2
-	(banner.get_theme_stylebox("panel") as StyleBoxFlat).border_color = border
+	var banner_style := banner.get_theme_stylebox("panel")
+	if banner_style is StyleBoxFlat:
+		banner_style.border_color = border
 	_recenter.call_deferred()
 
 

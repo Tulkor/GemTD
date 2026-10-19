@@ -27,6 +27,7 @@ var history_page: Control
 
 
 func _ready() -> void:
+	UiTheme.use_skin(UiTheme.ARCADE)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = DecoTheme.get_theme()
 	_build_hub()
