@@ -7,5 +7,7 @@ Alle Modelle stehen unter CC0 (Public Domain).
 - `rocks/*.glb`: "Rock" und "Rock Large" von Quaternius (poly.pizza)
 
 Die Kristalle werden im Spiel in der Farbe des Towers eingefärbt (Feld "color" in data/towers/*.json).
-- `special/*.glb`: von Lukas hochgeladen (Herkunft und Lizenz noch nachtragen). Werden mit eigenen Farben
-  verwendet ("model_tint": false in den Tower-Daten).
+
+Die sechs Spezialtower (Blutstein, Gold, Roter Kristall, Silber, Uran 238, Gelber Saphir) hatten eigene Modelle
+ohne bekannte Lizenz (`special/`); die sind entfernt, die Tower nutzen wieder Kristalle aus dem Crystal Pack.
+Neue Modelle nur mit Lizenz, die Weitergabe im öffentlichen Repo und Verkauf erlaubt, und Quelle hier eintragen.

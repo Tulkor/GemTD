@@ -32,7 +32,7 @@ Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`)
 - Balance: `python3 tools/balance_bericht.py [--vergleich=main] [--tower=ruby:5,…]` → Tabelle Boss/Normal/Masse/Luft als .md und .html in `/mnt/project-files/balance/`.
 - Maps: `python3 tools/map_check.py` (Größe, Weglänge, Abschnitte, Fehler); Maze-Rechner in `tools/maze/`.
 - Texte: `python3 tools/pruefe_ui.py [--stil]` findet fehlende englische Übersetzungen und Farben außerhalb des Themes. Fehlende eintragen ohne en.json zu lesen: `--vorlage` schreibt `/tmp/gemtd-uebersetzen.json`, englische Werte darin ausfüllen, dann `--eintragen=/tmp/gemtd-uebersetzen.json`.
-- Effekte: `python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> line|projectile|nova` macht aus einem Video mit Alphakanal ein Sprite-Sheet plus Eintrag in `data/fx/shots.json` (danach gleich im Tower-Editor wählbar); `tools/fx/vorschau.sh [--tower=…]` zeigt Effekte als Bild. Unity-Pakete: `tools/fx/treffer_umwandeln.py` (siehe `tools/fx/README.md`).
+- Effekte: `python3 tools/fx/kenney_effekte.py` baut alle Treffer und Schüsse aus dem Kenney Particle Pack (CC0) neu. `python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> line|projectile|nova` macht aus einem Video mit Alphakanal ein Sprite-Sheet plus Eintrag in `data/fx/shots.json` (danach gleich im Tower-Editor wählbar); `tools/fx/vorschau.sh [--tower=…]` zeigt Effekte als Bild. Unity-Pakete: `tools/fx/treffer_umwandeln.py` (siehe `tools/fx/README.md`). Beide nur für Material, das weitergegeben werden darf (siehe Lizenzen).
 - WC3-Karten: `tools/wc3/auslesen.sh karte.w3x ziel/` (siehe `tools/wc3/README.md`).
 - Alte Builds: `tools/builds_aufraeumen.sh` zeigt nur an; `--wirklich` nur auf Lukas' ausdrücklichen Wunsch.
 - Code lesen: Dateien über 300 Zeilen (game.gd, hud.gd, maul_game.gd, net.gd …) nicht ganz lesen. Erst `python3 tools/gliederung.py <datei.gd>` (Funktionen mit Zeilen und Kurzbeschreibung), `--suche=wort` (Funktionen mit Trefferzeilen, auch für ganze Ordner) oder `--funktion=name`, dann nur die gebrauchten Zeilen lesen.
@@ -40,6 +40,9 @@ Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`)
 - Werte ändern: `python3 tools/werte_setzen.py tower:ruby tiers.5.damage=[200,220] 'tiers.*.range*=1.1' [--bericht] [--probe]` statt JSON von Hand zu bearbeiten. Zeigt alt -> neu, erneuert die Tower-Tabelle, `--bericht` gibt die Vorher/Nachher-Tabelle gegen HEAD direkt aus.
 - Grundsatz: Wiederkehrendes läuft über diese Skripte, Claude startet sie und wertet die Ausgabe aus. Fehlt ein Skript für etwas, das öfter vorkommt, eines dazuschreiben statt den Ablauf jedes Mal von Hand zu machen.
 - Main nachziehen: `tools/main_nachziehen.sh [--tests]` merged origin/main, zeigt neue Commits und Konfliktstellen (Datei und Zeilen) statt der vollen Git-Ausgabe.
+
+## Lizenzen von Assets (Regel von Lukas)
+Ins Repo kommt nur, was rechtlich in einem öffentlichen Repo liegen darf und mit dem das Spiel verkauft werden darf: CC0 bevorzugt, sonst z. B. CC-BY oder SIL OFL mit Nennung bzw. Lizenzdatei. Nicht erlaubt: NC-Lizenzen, Asset-Store- oder Stock-Lizenzen ohne Weitergaberecht, alles mit unklarer Herkunft. Quelle und Lizenz jedes Assets steht in der CREDITS.md/QUELLEN.md seines Ordners.
 
 ## Code-Landkarte
 - `scripts/autoload/`: `database.gd` lädt alle JSON-Daten (`Database.towers`, `.enemies`, `.wave_sets`, `.balance`, `.modes`, `list_maps()`); `session.gd` trägt Werte zwischen Szenen (Map, Schwierigkeit, Wertung, Koop, Debug); `loc.gd` Sprache; `display.gd` Fenster; `net.gd` ENet, Lobby und Sitzungen.

@@ -3,8 +3,7 @@
 	"name": "Gold",
 	"category": "special",
 	"color": "#e6b422",
-	"model": "res://assets/models/special/gold_ore.glb",
-	"model_tint": false,
+	"model": "res://assets/models/crystals/crystal_06.glb",
 	"damage_type": "pierce",
 	"targets": "both",
 	"tiers": [

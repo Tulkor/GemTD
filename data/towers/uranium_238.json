@@ -3,8 +3,7 @@
 	"name": "Uran 238",
 	"category": "special",
 	"color": "#9be22d",
-	"model": "res://assets/models/special/crystal_tree_3.glb",
-	"model_tint": false,
+	"model": "res://assets/models/crystals/crystal_11.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"tiers": [

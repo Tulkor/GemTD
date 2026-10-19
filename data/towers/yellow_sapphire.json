@@ -3,8 +3,7 @@
 	"name": "Gelber Saphir",
 	"category": "special",
 	"color": "#ffd84a",
-	"model": "res://assets/models/special/crystal_tree_1.glb",
-	"model_tint": false,
+	"model": "res://assets/models/crystals/crystal_08.glb",
 	"damage_type": "spells",
 	"targets": "both",
 	"tiers": [
