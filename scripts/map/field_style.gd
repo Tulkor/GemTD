@@ -38,8 +38,9 @@ const STYLES := {
 		"base": "stone",
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),
-			"ambient": Color("c8d8b0"), "ambient_energy": 0.45,
-			"sun": Color("fff0d0"), "sun_energy": 0.95, "sun_pitch": -48.0,
+			"ambient": Color("b8c6d0"), "ambient_energy": 0.2,
+			"sun": Color("ffecc8"), "sun_energy": 1.55, "sun_pitch": -36.0,
+			"fog": Color("8a9a80"), "fog_density": 0.0015,
 			"glow_threshold": 1.4, "glow_intensity": 0.5, "exposure": 0.95,
 		},
 	},

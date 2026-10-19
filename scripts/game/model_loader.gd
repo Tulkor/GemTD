@@ -11,7 +11,7 @@ static var _smooth_cache := {}  ## Mesh -> Mesh mit geglätteten Normalen (für 
 static var _outline_mats: Dictionary = {}  ## je Feld-Stil (FieldStyle) ein Kontur-Material
 ## Konturfarbe und Leuchtkraft je Feld-Stil: Neon hellviolett leuchtend, Druidenhain dunkel wie Tusche, Art déco Messing.
 const OUTLINE_LOOK := {
-	"druid": [Color("1a2018"), 1.0, 0.014],
+	"druid": [Color("1a2018"), 1.0, 0.0],
 	"deco": [Color("c9a36a"), 1.0, 0.012],
 }
 
@@ -193,6 +193,12 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 
 ## Leuchtende Kontur um alle Meshes unter n (gleiche wie bei den Felsbrocken): je Mesh eine
 ## aufgeblähte Hülle als Kind. Das Material darunter muss Tiefe schreiben (opak oder DEPTH_DRAW_ALWAYS).
+## false, wenn der aktuelle Feld-Stil keine Konturen zeichnet (Druidenhain).
+static func has_outline() -> bool:
+	var look: Array = OUTLINE_LOOK.get(FieldStyle.current_name(), [])
+	return look.is_empty() or float(look[2]) > 0.0
+
+
 ## Kontur-Material im aktuellen Feld-Stil (für eigene Hüllen, z. B. die Felsbrocken).
 static func outline_material() -> ShaderMaterial:
 	var key := FieldStyle.current_name()
@@ -210,6 +216,9 @@ static func outline_material() -> ShaderMaterial:
 
 static func add_outline(n: Node) -> void:
 	var outline := outline_material()
+	# Druidenhain: keine Kontur, die Modelle sollen natürlich schattiert wirken
+	if not has_outline():
+		return
 	var targets: Array[MeshInstance3D] = []
 	_collect_meshes(n, targets)
 	for mi in targets:

@@ -221,6 +221,12 @@ static func add_environment(parent: Node) -> void:
 		sun.light_color = look.sun
 		sun.light_energy = look.sun_energy
 		sun.rotation.x = deg_to_rad(look.sun_pitch)
+		if look.has("fog"):
+			# leichter Dunst in der Ferne, damit Boden und Tower räumlicher wirken
+			env.fog_enabled = true
+			env.fog_light_color = look.fog
+			env.fog_density = look.fog_density
+			env.fog_sky_affect = 0.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	parent.add_child(we)

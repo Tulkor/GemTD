@@ -161,7 +161,10 @@ func _ready() -> void:
 		mmi.material_override = _rock_material()
 		_rocks.append(mmi)
 		_rock_fits.append(m[1])
-		# Kontur: eigene Hülle mit geglätteten Normalen (die Modelle sind flach schattiert)
+		# Kontur: eigene Hülle mit geglätteten Normalen (die Modelle sind flach schattiert); Druidenhain ohne
+		if not ModelLoader.has_outline():
+			_rock_outlines.append(null)
+			continue
 		var hull := _multimesh(ModelLoader.smooth_normals(m[0]), false)
 		hull.material_override = ModelLoader.outline_material()
 		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -197,6 +200,7 @@ func _rock_material() -> Material:
 			var m := StandardMaterial3D.new()
 			m.albedo_color = Color("4f5346")
 			m.roughness = 0.95
+			m.metallic_specular = 0.12
 			return m
 		"marble":
 			var m := StandardMaterial3D.new()

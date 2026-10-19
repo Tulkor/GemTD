@@ -590,6 +590,11 @@ func _build_visual() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = GEM_SHADER
 	mat.set_shader_parameter("color", color)
+	if not FieldStyle.is_neon():
+		# bei Tageslicht kaum Eigenleuchten, sonst wirken die Kristalle flach wie Plastik
+		mat.set_shader_parameter("glow", 0.04)
+		mat.set_shader_parameter("under_light", 0.1)
+		mat.set_shader_parameter("daylight", 1.0)
 	# "model_tint": false behält die Farben/Texturen des Modells (nur leicht durchsichtig gemacht)
 	var tint: Material = mat if bool(def.get("model_tint", true)) else null
 
@@ -827,8 +832,9 @@ func _texture_look(n: Node) -> void:
 	elif FieldStyle.current_name() == FieldStyle.DRUID and bool(def.get("eeve", {}).get("barricade", false)):
 		# Barrikaden: dunkler, bemooster Feldstein statt des hellen Fels-Texturfotos
 		var stone := StandardMaterial3D.new()
-		stone.albedo_color = Color("6a6e5c")
+		stone.albedo_color = Color("5c584c")
 		stone.roughness = 0.95
+		stone.metallic_specular = 0.12
 		ModelLoader._apply_material(n, stone)
 
 
@@ -836,8 +842,9 @@ func _glass_material() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	if FieldStyle.current_name() == FieldStyle.DRUID:
 		# Sockel aus bemoostem Stein
-		m.albedo_color = Color("3f4436")
+		m.albedo_color = Color("4a4c42")
 		m.roughness = 0.92
+		m.metallic_specular = 0.12  # sonst spiegelt der helle Himmel und der Stein wirkt ausgebleicht
 		return m
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)

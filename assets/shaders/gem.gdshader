@@ -11,6 +11,9 @@ uniform float glow = 0.25;
 uniform float base_top = 0.14;
 uniform float under_light = 0.85;
 uniform float under_height = 0.45;
+/// 0 = Neon-Look (Blick ins Innere dunkel, Ränder hell); 1 = bei Tageslicht normal vom Licht schattiert
+/// wie polierter Stein (eeveTD, Druidenhain), sonst wirkt der Kristall flach.
+uniform float daylight = 0.0;
 
 varying float world_y;
 
@@ -23,11 +26,11 @@ void fragment() {
 	float fresnel = pow(1.0 - facing, 2.5);
 	// Flächen, die zur Kamera zeigen, wirken wie Blick ins Innere (dunkler, satter)
 	vec3 deep = color.rgb * color.rgb;
-	ALBEDO = mix(deep, color.rgb, 0.4 + 0.6 * fresnel);
-	ALPHA = clamp(opacity + fresnel * 0.45, 0.0, 1.0);
+	ALBEDO = mix(mix(deep, color.rgb, 0.4 + 0.6 * fresnel), color.rgb * 0.85, daylight);
+	ALPHA = mix(clamp(opacity + fresnel * 0.45, 0.0, 1.0), 1.0, daylight);
 	METALLIC = 0.0;
-	ROUGHNESS = 0.08;
-	SPECULAR = 0.9;
+	ROUGHNESS = mix(0.08, 0.35, daylight);
+	SPECULAR = mix(0.9, 0.35, daylight);
 	// Licht von unten: stark am Fuß, nach oben abnehmend; nach unten zeigende Flächen extra hell
 	float under = 1.0 - smoothstep(base_top, base_top + under_height, world_y);
 	float down = max(0.0, -(INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y);
