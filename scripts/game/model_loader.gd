@@ -196,6 +196,9 @@ static func add_outline(n: Node) -> void:
 	var targets: Array[MeshInstance3D] = []
 	_collect_meshes(n, targets)
 	for mi in targets:
+		# Blätter mit Alpha-Schnitt hätten sonst eine Kontur um jedes ganze Blatt-Rechteck
+		if _has_cutout(mi):
+			continue
 		if not _smooth_cache.has(mi.mesh):
 			_smooth_cache[mi.mesh] = smooth_normals(mi.mesh)
 		var hull := MeshInstance3D.new()
@@ -203,6 +206,14 @@ static func add_outline(n: Node) -> void:
 		hull.material_override = _outline_mat
 		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.add_child(hull)
+
+
+static func _has_cutout(mi: MeshInstance3D) -> bool:
+	for i in mi.mesh.get_surface_count():
+		var m: Material = mi.get_active_material(i)
+		if m is BaseMaterial3D and m.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+			return true
+	return false
 
 
 static func _collect_meshes(n: Node, out: Array[MeshInstance3D]) -> void:

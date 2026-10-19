@@ -4,7 +4,7 @@
 	"name_original": "Volcano",
 	"category": "eeve",
 	"color": "#df723a",
-	"model": "res://assets/models/crystals/crystal_23.glb",
+	"model": "res://assets/models/nature/rock_tall_e.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -46,5 +46,10 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.5,
+	"flame_height": 0.95,
+	"hit_fx": "bk_explosion"
 }

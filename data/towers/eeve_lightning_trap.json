@@ -35,6 +35,7 @@
 			]
 		}
 	],
+	"hit_fx": "kb_shock_ring",
 	"kind": "trap",
 	"model_scale": 0.3
 }

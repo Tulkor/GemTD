@@ -4,7 +4,7 @@
 	"name_original": "Searing Totem",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/nature/statue_head.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -41,5 +41,8 @@
 				}
 			]
 		}
-	]
+	],
+	"flame": 0.45,
+	"flame_height": 0.95,
+	"hit_fx": "bk_fire"
 }

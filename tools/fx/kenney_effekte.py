@@ -372,6 +372,9 @@ def main():
 	with open(path, "w", encoding="utf-8") as f:
 		json.dump(shots, f, ensure_ascii=False, indent="\t")
 		f.write("\n")
+	# Treffer aus Brackeys/Kronbits wieder eintragen (hits.json wurde oben neu geschrieben)
+	import zusatz_effekte
+	zusatz_effekte.main([])
 
 
 if __name__ == "__main__":

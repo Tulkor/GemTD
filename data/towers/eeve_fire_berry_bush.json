@@ -4,7 +4,7 @@
 	"name_original": "Fire Berry Bush",
 	"category": "eeve",
 	"color": "#a29545",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/bush_common.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,8 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"hit_fx": "bk_fire"
 }

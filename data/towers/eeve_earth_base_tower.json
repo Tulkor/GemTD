@@ -4,7 +4,7 @@
 	"name_original": "Earth Base Tower",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_08.glb",
+	"model": "res://assets/models/nature/rock_medium_1.glb",
 	"damage_type": "physical",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

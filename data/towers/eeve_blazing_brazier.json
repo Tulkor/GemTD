@@ -4,7 +4,7 @@
 	"name_original": "Blazing Brazier",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/pot_large.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,10 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.65,
+	"flame_height": 0.7,
+	"hit_fx": "bk_fire"
 }

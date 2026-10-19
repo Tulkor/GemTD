@@ -4,7 +4,7 @@
 	"name_original": "Sacred Orb of Power",
 	"category": "eeve",
 	"color": "#46d160",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/nature/common_tree_5.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,8 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"hit_fx": "kb_nature_rays"
 }

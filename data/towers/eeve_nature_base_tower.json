@@ -4,7 +4,7 @@
 	"name_original": "Nature Base Tower",
 	"category": "eeve",
 	"color": "#46d160",
-	"model": "res://assets/models/crystals/crystal_08.glb",
+	"model": "res://assets/models/nature/bush_common_flowers.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

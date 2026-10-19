@@ -4,7 +4,7 @@
 	"name_original": "Ultra Toxic Shroom Field",
 	"category": "eeve",
 	"color": "#46d160",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/nature/mushroom_laetiporus.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

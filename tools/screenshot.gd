@@ -22,6 +22,7 @@ extends Node
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
+##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
@@ -234,6 +235,32 @@ func _prepare_maul(game: Node) -> void:
 		t += get_process_delta_time()
 
 
+## --vitrine: statt des festen Plans viele verschiedene Tower (Modelle aus den CC0-Paketen) auf den Mauern.
+func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
+	for el in game.elements:
+		game.element_caps[el] = 6
+		game.elements[el] = 6
+	game.gold = 200000
+	var targets := ["eeve_camp_fire", "eeve_orb_of_life", "eeve_brazier", "eeve_minor_bird_launcher", "eeve_shroom_field",
+			"eeve_lesser_rock_launcher", "eeve_enchanted_obelisk", "eeve_thorns_tower", "eeve_heat_stakes",
+			"eeve_bird_launcher", "eeve_hazardous_shroom_field", "eeve_rock_launcher", "eeve_arcane_shrine", "eeve_blazing_brazier",
+			"eeve_greater_bird_launcher", "eeve_gold_mine", "eeve_altar_of_magic", "eeve_itching_thorns_tower", "eeve_searing_totem",
+			"eeve_sacred_orb_of_power", "eeve_ornate_obelisk", "eeve_nonhazardous_shroom_field", "eeve_hell_brazier",
+			"eeve_greater_rock_launcher", "eeve_ruinous_obelisk", "eeve_xtreme_bird_launcher"]
+	var plan := {}
+	var i := 0
+	for id in targets:
+		var chain := []
+		var cur: String = id
+		while cur != "" and cur != "eeve_barricade" and chain.size() < 8:
+			chain.push_front(cur)
+			cur = str(Database.towers.get(cur, {}).get("eeve", {}).get("from", ""))
+		if i < walls.size():
+			plan[walls[i]] = chain
+		i += 1
+	return plan
+
+
 ## eeveTD: kleines Labyrinth aus Barrikaden vor dem Eingang, einige davon zu Towern aufgewertet.
 ## --phase=welle startet Level 1, --auswahl wählt einen Tower aus.
 ## --fallen: dazu Feuer 4 mit einem Flammenrost auf dem Weg und ein Dual-Tower (Feuerbeerenstrauch, Feld 32,68),
@@ -260,6 +287,8 @@ func _prepare_eeve(game: Node) -> void:
 	var plan := {Vector2i(36, 76): ["eeve_nature_base_tower", "eeve_thorns_tower"], Vector2i(44, 76): ["eeve_fire_base_tower", "eeve_camp_fire", "eeve_brazier"],
 			Vector2i(50, 76): ["eeve_storm_base_tower", "eeve_storm_lantern"], Vector2i(40, 68): ["eeve_nature_base_tower", "eeve_orb_of_life"],
 			Vector2i(48, 68): ["eeve_fire_base_tower", "eeve_heat_stakes", "eeve_searing_totem"], Vector2i(54, 68): ["eeve_nature_base_tower", "eeve_minor_bird_launcher"]}
+	if opts.has("vitrine"):
+		plan = _eeve_vitrine(game, walls)
 	for c in plan:
 		var t: Tower = game.towers.get(c)
 		if t == null:

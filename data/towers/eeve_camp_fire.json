@@ -4,7 +4,7 @@
 	"name_original": "Camp Fire",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/campfire_pit.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,10 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.55,
+	"flame_height": 0.3,
+	"hit_fx": "bk_fire"
 }

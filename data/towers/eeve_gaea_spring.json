@@ -4,7 +4,7 @@
 	"name_original": "Gaea Spring",
 	"category": "eeve",
 	"color": "#77a999",
-	"model": "res://assets/models/crystals/crystal_20.glb",
+	"model": "res://assets/models/nature/lily_large.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -38,5 +38,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }
