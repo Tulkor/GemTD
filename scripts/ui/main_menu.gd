@@ -25,6 +25,7 @@ var history_page: Control
 
 
 func _ready() -> void:
+	UiTheme.use_skin(UiTheme.ARCADE)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.get_theme()
 	_build_hub()
@@ -120,7 +121,7 @@ func _tile(parent: Node, text: String, desc: String, gems: Array, border: Color,
 	b.pressed.connect(on_pressed)
 	parent.add_child(b)
 	for k in ["normal", "hover", "pressed"]:
-		var s := UiTheme.panel(28.0, 0.95, border)
+		var s := UiTheme.panel(28.0, 0.95, border) as StyleBoxFlat
 		s.shadow_color = shadow
 		if k == "hover":
 			s.bg_color = UiTheme.PANEL_2
