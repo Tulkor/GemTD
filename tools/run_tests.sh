@@ -96,7 +96,7 @@ run_check() {  # name command...
 
 check_tools() {  # Python- und Shell-Werkzeuge unter tools/ auf Syntaxfehler prüfen (ohne __pycache__ zu schreiben)
   local py sh bad=0
-  py=$(git ls-files 'tools/*.py'); sh=$(git ls-files 'tools/*.sh'; git ls-files tools/git-hooks/ | grep -v '\.py$')
+  py=$(git ls-files 'tools/*.py' '.claude/hooks/*.py'); sh=$(git ls-files 'tools/*.sh' '.claude/hooks/*.sh'; git ls-files tools/git-hooks/ | grep -v '\.py$')
   python3 -c 'import ast, sys
 for f in sys.argv[1:]: ast.parse(open(f, encoding="utf-8").read(), f)' $py || bad=1
   for f in $sh; do bash -n "$f" || bad=1; done
