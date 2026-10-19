@@ -5,10 +5,13 @@ config_version=5
 
 [application]
 
-config/name="GemTD Nachbau"
-config/description="Nachbau der Warcraft-3-Map GemTD"
+config/name="TD Hub"
+config/description="Drei Tower-Defense-Spiele in einem: GemTD, eeveTD und Shopping Maul"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
+; Alter Speicherort (wie vor der Umbenennung zu TD Hub), damit Spielstände, XP und Einstellungen erhalten bleiben.
+config/use_custom_user_dir=true
+config/custom_user_dir_name="godot/app_userdata/GemTD Nachbau"
 
 [autoload]
 

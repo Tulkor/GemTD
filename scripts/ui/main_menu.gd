@@ -80,10 +80,10 @@ func _build_hub() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	margin.add_child(v)
-	var title := UiTheme.title(UiUtil.label("GemTD", v, 60))
+	var title := UiTheme.title(UiUtil.label("TD Hub", v, 60))
 	title.add_theme_constant_override("shadow_offset_x", 4)
 	title.add_theme_constant_override("shadow_offset_y", 4)
-	var sub := UiUtil.label("Gems setzen, kombinieren, Labyrinth bauen", v, 15)
+	var sub := UiUtil.label("Drei Tower Defense in einem: GemTD, eeveTD, Shopping Maul", v, 15)
 	sub.add_theme_color_override("font_color", UiTheme.MUTED)
 	var center := CenterContainer.new()
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL

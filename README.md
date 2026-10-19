@@ -1,6 +1,8 @@
-# GemTD Nachbau (Godot 4, GDScript, 3D)
+# TD Hub (Godot 4, GDScript, 3D)
 
-Nachbau der Warcraft-3-Map **Gem TD**. Alle Tower, Fallen, Rezepte und Werte stammen aus
+Drei Tower-Defense-Spiele in einem: **GemTD**, **eeveTD** und **Shopping Maul**, als Einzelspieler, Koop oder im Mehrspieler über die Lobby.
+
+GemTD ist der Nachbau der Warcraft-3-Map **Gem TD**. Alle Tower, Fallen, Rezepte und Werte stammen aus
 **[BK's] Gem Tower Defense v3.1** (letzte offizielle Version von Bryvx), die Gegner und
 Level aus **Gem TD+ 1.6.14**. Die Recherche mit Quellen liegt in `docs/wc3_referenz.md`.
 Getestet mit Godot 4.3, sollte in jeder neueren 4.x-Version laufen.
@@ -10,7 +12,7 @@ Getestet mit Godot 4.3, sollte in jeder neueren 4.x-Version laufen.
 ## Starten
 
 Godot öffnen → *Importieren* → `project.godot` wählen → F5.
-Im Hauptmenü das Spiel (GemTD; eeveTD und Shopping Maul folgen) und die Map wählen, dann *Spielen*.
+Im Hauptmenü den Modus (GemTD, eeveTD oder Shopping Maul) und die Map wählen, dann *Spielen*.
 Ist die Map geladen, fragt vor Runde 1 ein Fenster nach Schwierigkeit und Wertung (im Koop wählt der Host).
 
 **Steuerung:** Linksklick setzt Gems bzw. wählt Tower/Steine, links ziehen spannt einen Auswahlrahmen für bis zu 5 Steine auf (Strg+Klick wählt einzelne dazu oder ab),
