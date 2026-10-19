@@ -17,7 +17,7 @@ var _mode_text: Label
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	theme = UiTheme.get_theme()
+	theme = DecoTheme.get_theme()
 	# Nur das Fenster fängt Klicks, die Leiste oben (Menü) bleibt bedienbar; das Feld sperrt game.gd
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	difficulty = Session.difficulty
@@ -27,7 +27,7 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.panel(24.0))
+	panel.add_theme_stylebox_override("panel", DecoTheme.panel(24.0))
 	panel.custom_minimum_size.x = 520
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	center.add_child(panel)
@@ -35,12 +35,12 @@ func _ready() -> void:
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
 
-	UiTheme.title(UiUtil.label("Einstellungen", v, 26))
+	DecoTheme.title(UiUtil.label("Einstellungen", v, 38))
 	var info := UiUtil.label(tr(game.map.name) + " · " + tr("%d Wellen") % game.waves.size(), v, 15)
-	info.add_theme_color_override("font_color", UiTheme.MUTED)
+	info.add_theme_color_override("font_color", DecoTheme.MUTED)
 	var host: bool = game.local_player == 0
 
-	UiTheme.caption("Schwierigkeit", v)
+	DecoTheme.caption("Schwierigkeit", v)
 	var h := _row(v)
 	var group := ButtonGroup.new()
 	for i in Session.DIFFICULTIES.size():
@@ -50,7 +50,7 @@ func _ready() -> void:
 		b.tooltip_text = tr("Gegner: Leben und Rüstung ×%s") % str(d.factor)
 		b.disabled = not host
 
-	UiTheme.caption("Wertung", v)
+	DecoTheme.caption("Wertung", v)
 	h = _row(v)
 	group = ButtonGroup.new()
 	for m in MODES:
@@ -61,17 +61,17 @@ func _ready() -> void:
 		b.tooltip_text = str(m[2])
 		b.disabled = not host
 	_mode_text = UiUtil.wrap_label("", v, 470)
-	_mode_text.add_theme_color_override("font_color", UiTheme.DIM)
+	_mode_text.add_theme_color_override("font_color", DecoTheme.DIM)
 	_update_text()
 
 	if host:
 		var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "difficulty": difficulty, "score_mode": score_mode}))
-		go.custom_minimum_size.y = 50
-		go.add_theme_font_size_override("font_size", 20)
-		UiTheme.accent_button(go, UiTheme.GOLD, UiTheme.GOLD_DARK)
+		go.custom_minimum_size.y = 60
+		go.add_theme_font_size_override("font_size", 28)
+		DecoTheme.accent_button(go, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
 	else:
 		var wait := UiUtil.wrap_label("Der Host wählt die Einstellungen, gleich geht es los …", v, 470)
-		wait.add_theme_color_override("font_color", UiTheme.CYAN)
+		wait.add_theme_color_override("font_color", DecoTheme.CYAN)
 
 
 func _process(_delta: float) -> void:
@@ -96,7 +96,7 @@ func _toggle(text: String, parent: Node, group: ButtonGroup, on: bool, pressed: 
 	b.button_group = group
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.custom_minimum_size.y = 38
-	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
-	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	b.add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", DecoTheme.GOLD_DARK)
 	b.set_pressed_no_signal(on)
 	return b

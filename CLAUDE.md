@@ -12,6 +12,12 @@ Alles kommt aus `scripts/ui/ui_theme.gd`, keine eigenen Farben oder Schriften er
 - Lange Texte mit Autowrap, damit mit der breiten Monospace-Schrift nichts abgeschnitten wird.
 - Alle sichtbaren Texte auf Deutsch schreiben und in `data/i18n/en.json` übersetzen.
 
+## Menüs vor dem Spiel: Art déco (Entscheidung von Lukas, 2026-10-19)
+Hub, Einzelspieler, Lobby, Spiel laden, Run-History und die Einstellungsfenster vor Runde 1 (GemTD, eeveTD, Maul-Filialwahl) nutzen `scripts/ui/deco_theme.gd` statt `UiTheme` (gleiche Namen: `DecoTheme.GOLD` = Messing, `CYAN` = Auswahl in hellem Messing, `GOLD_DARK` = Schrift darauf).
+- Petrol und Messing, doppelte Messingrahmen (`DecoTheme.panel`, `DecoBackdrop`), keine runden Ecken, Hauptknopf mit spitzen Enden (`DecoTheme.accent_button`).
+- Schrift: ab 28 px Limelight kräftig (`DecoTheme.title`, `DecoTheme.display`), kleiner Federo (Theme-Standard). Beide OFL in `assets/fonts/`.
+- Die Oberfläche im Spiel bleibt Arcade (oben).
+
 ## Threads: ein Feature, ein Thread (feste Regel von Lukas)
 Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten deshalb viele Tokens.
 - Jedes größere neue Feature bekommt einen eigenen, frischen Thread (z. B. „eeveTD-Modus“, „Maul-Koop“), nicht die alten Kategorie-Threads.

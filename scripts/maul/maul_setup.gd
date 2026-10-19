@@ -25,7 +25,8 @@ var _open: Button
 
 
 func _ready() -> void:
-	color = Color(UiTheme.BG, 0.82)
+	color = Color(DecoTheme.BAR, 0.85)
+	theme = DecoTheme.get_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_difficulty = int(MaulData.rules().get("default_difficulty", 1))
@@ -40,7 +41,7 @@ func _ready() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.panel(20))
+	panel.add_theme_stylebox_override("panel", DecoTheme.panel(20))
 	center.add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
@@ -48,11 +49,11 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 20)
 	box.add_child(head)
-	var title := UiTheme.title(UiUtil.label("Filiale eröffnen", head), 28)
+	var title := DecoTheme.title(UiUtil.label("Filiale eröffnen", head), 28)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_xp = UiUtil.label("", head, 15)
-	_xp.add_theme_font_override("font", UiTheme.font(true))
-	_xp.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	_xp.add_theme_font_override("font", DecoTheme.font(true))
+	_xp.add_theme_color_override("font_color", DecoTheme.PURPLE_LIGHT)
 	_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	if not game.mirror:
@@ -61,7 +62,7 @@ func _ready() -> void:
 		box.add_child(opts)
 		var diff_box := VBoxContainer.new()
 		opts.add_child(diff_box)
-		UiTheme.caption("Schwierigkeit", diff_box)
+		DecoTheme.caption("Schwierigkeit", diff_box)
 		var diff_row := HBoxContainer.new()
 		diff_box.add_child(diff_row)
 		var diffs: Array = MaulData.rules().get("difficulties", [])
@@ -72,7 +73,7 @@ func _ready() -> void:
 			_diff_buttons.append(b)
 		var mode_box := VBoxContainer.new()
 		opts.add_child(mode_box)
-		UiTheme.caption("Modus", mode_box)
+		DecoTheme.caption("Modus", mode_box)
 		var mode_row := HBoxContainer.new()
 		mode_box.add_child(mode_row)
 		for m in [["group", "Gruppe", "Alle Gegner eines Levels kommen auf einmal."], ["line", "Linie", "Die Gegner kommen nacheinander, alle 0,8 s einer pro Spawn."]]:
@@ -82,14 +83,14 @@ func _ready() -> void:
 			_mode_buttons.append([b, id])
 		var sb_box := VBoxContainer.new()
 		opts.add_child(sb_box)
-		UiTheme.caption("Übungsrunde", sb_box)
+		DecoTheme.caption("Übungsrunde", sb_box)
 		_sandbox_button = _toggle("Sandbox", sb_box, func():
 			_sandbox = not _sandbox
 			_refresh())
 		_sandbox_button.tooltip_text = "Zum Ausprobieren: 800 XP (alles freigeschaltet), Durchbrüche kosten keine Leben, es gibt keine neuen XP."
 	else:
 		var info := UiUtil.wrap_label("Koop: der Host wählt Schwierigkeit und Modus, jeder eröffnet seine eigene Filiale in seinem Gebiet. Die Leben sind gemeinsam.", box, CARD_WIDTH * 4 + 30)
-		info.add_theme_color_override("font_color", UiTheme.CYAN)
+		info.add_theme_color_override("font_color", DecoTheme.CYAN)
 		info.add_theme_font_size_override("font_size", 14)
 
 	var kinds := HBoxContainer.new()
@@ -117,9 +118,12 @@ func _ready() -> void:
 	_detail = UiUtil.label("", bottom, 14)
 	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiUtil.button("Zurück", bottom, func(): Session.goto(Session.MAIN_MENU))
+	UiUtil.button("Zurück", bottom, func(): Session.goto(Session.MAIN_MENU)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_open = UiUtil.button("Filiale eröffnen", bottom, _start)
-	UiTheme.accent_button(_open, UiTheme.GOLD, UiTheme.BAR)
+	_open.custom_minimum_size = Vector2(340, 58)
+	_open.add_theme_font_size_override("font_size", 28)
+	_open.clip_text = true
+	DecoTheme.accent_button(_open)
 	_build_cards()
 
 
@@ -127,8 +131,8 @@ func _toggle(text: String, parent: Node, on_pressed: Callable) -> Button:
 	var b := UiUtil.button(text, parent, on_pressed)
 	b.toggle_mode = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
-	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	b.add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", DecoTheme.GOLD_DARK)
 	return b
 
 
@@ -139,11 +143,11 @@ func _build_cards() -> void:
 	_cards.clear()
 	for s in MaulData.shops():
 		if str(s.kind) == _kind:
-			_add_card(str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), UiTheme.GOLD), str(s.bonus))
+			_add_card(str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), DecoTheme.GOLD), str(s.bonus))
 	if _kind == "pro":
-		_add_card("random_pro", tr("Profi-Zufall"), tr("Eine der 9 Profi-Filialen"), UiTheme.PURPLE_LIGHT, "")
+		_add_card("random_pro", tr("Profi-Zufall"), tr("Eine der 9 Profi-Filialen"), DecoTheme.PURPLE_LIGHT, "")
 	else:
-		_add_card("random", tr("Zufall"), tr("Eine der 11 Standard-Filialen"), UiTheme.PURPLE_LIGHT, "")
+		_add_card("random", tr("Zufall"), tr("Eine der 11 Standard-Filialen"), DecoTheme.PURPLE_LIGHT, "")
 	_refresh()
 
 
@@ -164,7 +168,7 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 	v.add_theme_constant_override("separation", 2)
 	m.add_child(v)
 	var title := UiUtil.label(name.to_upper(), v, 14)
-	title.add_theme_font_override("font", UiTheme.font(true))
+	title.add_theme_font_override("font", DecoTheme.font(true))
 	title.add_theme_color_override("font_color", col)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var short := _short(text)
@@ -174,13 +178,13 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 	info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	info.custom_minimum_size.x = CARD_WIDTH - 20
 	info.max_lines_visible = 5
-	info.add_theme_color_override("font_color", UiTheme.DIM)
+	info.add_theme_color_override("font_color", DecoTheme.DIM)
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.tooltip_text = text.replace("  ", "\n")
 	var tag: Label = null
 	if bonus != "" or _kind == "pro":
 		tag = UiUtil.label("", v, 11)
-		tag.add_theme_color_override("font_color", UiTheme.CYAN)
+		tag.add_theme_color_override("font_color", DecoTheme.CYAN)
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cards[id] = [b, title, info, tag, bonus, col]
 
@@ -246,8 +250,8 @@ func _refresh() -> void:
 		c[0].set_pressed_no_signal(on)
 		c[0].disabled = locked
 		# Ausgewählt: Cyan-Fläche, darauf dunkle Schrift
-		c[1].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MUTED if locked else c[5]))
-		c[2].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MUTED if locked else UiTheme.DIM))
+		c[1].add_theme_color_override("font_color", DecoTheme.BAR if on else (DecoTheme.MUTED if locked else c[5]))
+		c[2].add_theme_color_override("font_color", DecoTheme.BAR if on else (DecoTheme.MUTED if locked else DecoTheme.DIM))
 		if c[3] != null:
 			var bonus: String = c[4]
 			if locked:
@@ -256,7 +260,7 @@ func _refresh() -> void:
 				c[3].text = tr("ohne Bonus-Upgrade") if _kind == "pro" and id != "random_pro" else ""
 			else:
 				c[3].text = tr("Rabatt statt Bonus") if bonus == "rebate" else tr("Bonus-Upgrade")
-			c[3].add_theme_color_override("font_color", UiTheme.BAR if on else (UiTheme.MISSING if locked else UiTheme.CYAN))
+			c[3].add_theme_color_override("font_color", DecoTheme.BAR if on else (DecoTheme.MISSING if locked else DecoTheme.CYAN))
 	_open.disabled = _shop == "" or _waiting
 	_open.text = tr("Warte auf den Host …") if _waiting else tr("Filiale eröffnen")
 	if _kind == "pro" and not pro_open:
@@ -278,8 +282,8 @@ func _refresh() -> void:
 
 func _card_color(id: String) -> Color:
 	if id.begins_with("random"):
-		return UiTheme.PURPLE_LIGHT
-	return Color.from_string(str(MaulData.shop(id).get("color", "#ff4fd8")), UiTheme.GOLD)
+		return DecoTheme.PURPLE_LIGHT
+	return Color.from_string(str(MaulData.shop(id).get("color", "#ff4fd8")), DecoTheme.GOLD)
 
 
 func _start() -> void:

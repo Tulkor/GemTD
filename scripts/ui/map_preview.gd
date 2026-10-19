@@ -17,10 +17,12 @@ var map: MapData:
 				_paths.append(pf.compute_path(i))
 		queue_redraw()
 var _paths: Array = []
+## Hintergrund neben der Map (Art-déco-Menü: Petrol).
+var bg := UiTheme.BG
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), UiTheme.BG)
+	draw_rect(Rect2(Vector2.ZERO, size), bg)
 	if map == null:
 		return
 	var cell := minf(size.x / map.width, size.y / map.height)

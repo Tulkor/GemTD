@@ -1089,5 +1089,8 @@
 	"Feld %d": "Field %d",
 	"Gleiche Feldnummer = zusammen auf einem Feld (Koop). Klick = nächstes Feld.": "Same field number = together on one field (co-op). Click = next field.",
 	"Der Host teilt die Felder ein.": "The host assigns the fields.",
-	"Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop oder eigene Felder bis 4 Spieler": "Build barricades, upgrade them to element towers, 57 levels, co-op or own fields for up to 4 players"
+	"Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop oder eigene Felder bis 4 Spieler": "Build barricades, upgrade them to element towers, 57 levels, co-op or own fields for up to 4 players",
+	"I · Modus": "I · Mode",
+	"II · Map": "II · Map",
+	"III · Start": "III · Start"
 }
