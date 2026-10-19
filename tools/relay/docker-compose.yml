@@ -1,0 +1,17 @@
+# TD-Hub-Relay für Synology Container Manager (Projekt) oder docker compose.
+# Braucht kein eigenes Image: das offizielle Python-Image startet relay.py aus diesem Ordner.
+services:
+  tdhub-relay:
+    image: python:3.12-alpine
+    container_name: tdhub-relay
+    restart: unless-stopped
+    command: ["python", "-u", "-I", "/relay/relay.py", "--port=24565"]
+    volumes:
+      - ./relay.py:/relay/relay.py:ro
+    ports:
+      - "24565:24565/tcp"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    user: "65534:65534"
+    mem_limit: 128m

@@ -24,6 +24,9 @@ signal coop_state(data: Dictionary)
 signal coop_enemies(data: Dictionary)
 
 const DEFAULT_PORT := 24565
+## Relay-Server, den das Spiel ohne eigene Einstellung nimmt ("" = keiner, dann nur direkt per IP).
+## Format "host" oder "host:port" (TCP, Standard 24565), Server: tools/relay/.
+const DEFAULT_RELAY := ""
 const MAX_PLAYERS := 8
 const SETTINGS := "user://settings.cfg"
 const SAVE_TIMEOUT := 2.5   ## Sekunden, die der Host beim Speichern auf die Felder der Mitspieler wartet
@@ -57,6 +60,10 @@ var _upnp_port := 0
 var _upnp_thread: Thread
 var _ip_request: HTTPRequest
 var last_ip := ""
+## Relay-Server aus den Einstellungen (leer = DEFAULT_RELAY); läuft die Verbindung darüber, ist room_code()
+## der Code, mit dem Mitspieler beitreten.
+var relay_server := ""
+var _relay_error := ""
 ## Stand des eigenen Spiels: in_game, wave, waves, lives, phase, difficulty
 var my_status: Dictionary = {}
 ## Wer gerade meinem Feld zuschaut (peer_ids).
@@ -70,6 +77,7 @@ func _ready() -> void:
 		my_name = str(cfg.get_value("net", "name", ""))
 		last_ip = str(cfg.get_value("net", "ip", ""))
 		uid = str(cfg.get_value("net", "uid", ""))
+		relay_server = str(cfg.get_value("net", "relay", ""))
 	if my_name == "":
 		my_name = tr("Spieler") + " %d" % (randi() % 900 + 100)
 	if uid == "":
@@ -88,6 +96,7 @@ func save_settings() -> void:
 	cfg.set_value("net", "name", my_name)
 	cfg.set_value("net", "ip", last_ip)
 	cfg.set_value("net", "uid", uid)
+	cfg.set_value("net", "relay", relay_server)
 	cfg.save(SETTINGS)
 
 
@@ -141,6 +150,98 @@ func join(ip: String, port := DEFAULT_PORT) -> Error:
 	_set_status(tr("Verbinde mit %s …") % ip)
 	connection_changed.emit()
 	return OK
+
+
+# --- Über den Relay-Server (ohne Portfreigabe) --------------------------------------
+
+## Relay-Server, über den gehostet und per Code beigetreten wird ("" = keiner eingestellt).
+func relay_address() -> String:
+	return relay_server.strip_edges() if relay_server.strip_edges() != "" else DEFAULT_RELAY
+
+
+func set_relay_server(address: String) -> void:
+	relay_server = address.strip_edges()
+	save_settings()
+
+
+func via_relay() -> bool:
+	return multiplayer.multiplayer_peer is RelayPeer
+
+
+## Adresse des Relay-Servers der laufenden Verbindung ("" = direkt verbunden).
+func relay_connection() -> String:
+	var p := multiplayer.multiplayer_peer as RelayPeer
+	return p.server_address if p != null else ""
+
+
+## Code des Raums auf dem Relay-Server ("" = direkt verbunden oder noch nicht verbunden).
+func room_code() -> String:
+	var p := multiplayer.multiplayer_peer as RelayPeer
+	return p.room_code if p != null else ""
+
+
+## Ist der Text ein Raumcode (sonst eine IP-Adresse oder ein Rechnername)?
+static func looks_like_code(t: String) -> bool:
+	var s := t.strip_edges().to_upper()
+	return not s.is_valid_int() and RegEx.create_from_string("^[A-Z0-9]{5}$").search(s) != null
+
+
+## Hosten wie im Menü: über den Relay-Server, wenn einer eingestellt ist, sonst direkt.
+func host_default() -> Error:
+	return host_relay() if relay_address() != "" else host()
+
+
+## Beitreten wie im Menü: ein Code geht über den Relay-Server, sonst ist der Text die Adresse des Hosts.
+func join_any(text: String) -> Error:
+	var t := text.strip_edges()
+	if relay_address() != "" and looks_like_code(t):
+		return join_relay(t)
+	return join(t)
+
+
+func host_relay(address := "") -> Error:
+	leave()
+	var peer := RelayPeer.new()
+	var err := peer.host(address if address != "" else relay_address(), MAX_PLAYERS)
+	if err != OK:
+		_set_status(tr("Server-Adresse ungültig"))
+		return err
+	peer.relay_error.connect(_on_relay_error)
+	peer.welcomed.connect(func(code): _set_status(tr("Raum %s auf dem Server offen") % code))
+	_relay_error = ""
+	multiplayer.multiplayer_peer = peer
+	session = {"id": SaveGame.new_id(), "map": {}, "map_name": "", "started": false, "loaded": false, "players": {}}
+	_set_status(tr("Verbinde mit dem Server %s …") % peer.server_address)
+	connection_changed.emit()
+	return OK
+
+
+func join_relay(code: String, address := "") -> Error:
+	leave()
+	var peer := RelayPeer.new()
+	var err := peer.join(address if address != "" else relay_address(), code)
+	if err != OK:
+		_set_status(tr("Server-Adresse ungültig"))
+		return err
+	peer.relay_error.connect(_on_relay_error)
+	_relay_error = ""
+	last_ip = code.strip_edges().to_upper()
+	save_settings()
+	multiplayer.multiplayer_peer = peer
+	_set_status(tr("Trete Raum %s bei …") % last_ip)
+	connection_changed.emit()
+	return OK
+
+
+func _on_relay_error(code: String) -> void:
+	match code:
+		"unknown_code": _relay_error = tr("Diesen Code gibt es nicht (oder der Host ist nicht mehr da).")
+		"room_full": _relay_error = tr("Die Sitzung ist voll.")
+		"full_server": _relay_error = tr("Der Server ist gerade voll, versuch es später noch einmal.")
+		"version": _relay_error = tr("Der Server passt nicht zu dieser Spielversion.")
+		"resolve": _relay_error = tr("Server-Adresse nicht gefunden.")
+		"unreachable", "timeout": _relay_error = tr("Server nicht erreichbar.")
+		_: _relay_error = tr("Der Server hat die Verbindung abgelehnt (%s).") % code
 
 
 func leave() -> void:
@@ -315,7 +416,7 @@ func send_enemies(peer: int, data: Dictionary) -> void:
 
 ## Host: Sitzung aus einem Mehrspieler-Spielstand übernehmen (vorher host()).
 func load_session(data: Dictionary) -> void:
-	if not is_host():
+	if not is_host() and not (via_relay() and multiplayer.is_server()):   # Relay: Raum wird noch eröffnet
 		return
 	if str(data.get("kind", "")) == "coop":
 		_load_coop(data)
@@ -1010,13 +1111,15 @@ func _on_connected() -> void:
 
 
 func _on_failed() -> void:
+	var why := _relay_error
 	leave()
-	_set_status(tr("Verbindung fehlgeschlagen"))
+	_set_status(why if why != "" else tr("Verbindung fehlgeschlagen"))
 
 
 func _on_server_lost() -> void:
+	var own_room := via_relay() and multiplayer.is_server()
 	leave()
-	_set_status(tr("Verbindung zum Host verloren"))
+	_set_status(tr("Verbindung zum Server verloren") if own_room else tr("Verbindung zum Host verloren"))
 
 
 func _set_status(t: String) -> void:
