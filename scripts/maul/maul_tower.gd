@@ -293,6 +293,30 @@ func _build_visual() -> void:
 	_gem = null
 	_visual = Node3D.new()
 	add_child(_visual)
+	if FieldStyle.current_name() == FieldStyle.DECO:
+		_build_deco_base()
+	else:
+		_build_neon_base()
+	# Höhe wächst mit dem Wert: 9 Gold ≈ 0,35, 6.000 Gold ≈ 1,5 Towerbreiten
+	var cost := maxf(float(def.get("value", def.get("cost", 10))), 5.0)
+	var h := clampf(0.15 + log(cost) / log(10.0) * 0.36, 0.3, 1.6)
+	var look := _look(cost)
+	if not look.is_empty():
+		_gem = ModelLoader.instantiate_fit(look.path, 0.84, h + 0.5)
+		if _gem:
+			if look.tint != "":
+				_tint_material(_gem, look.tint, color)
+			_gem.position.y = 0.12
+			_visual.add_child(_gem)
+			if look.tint != "" and FieldStyle.current_name() == FieldStyle.DECO:
+				_deco_trim(ModelLoader.aabb(_gem, Transform3D()))
+			_finish_visual()
+			return
+	_build_pillar(h)
+
+
+## Sockel im Neon-Stil: dunkle Platte mit leuchtendem Rand in der Filialfarbe.
+func _build_neon_base() -> void:
 	var base := MeshInstance3D.new()
 	var slab := BoxMesh.new()
 	slab.size = Vector3(0.92, 0.12, 0.92)
@@ -313,20 +337,74 @@ func _build_visual() -> void:
 	rim_mat.emission_energy_multiplier = 1.2
 	rim.material_override = rim_mat
 	_visual.add_child(rim)
-	# Höhe wächst mit dem Wert: 9 Gold ≈ 0,35, 6.000 Gold ≈ 1,5 Towerbreiten
-	var cost := maxf(float(def.get("value", def.get("cost", 10))), 5.0)
-	var h := clampf(0.15 + log(cost) / log(10.0) * 0.36, 0.3, 1.6)
-	var look := _look(cost)
-	if not look.is_empty():
-		_gem = ModelLoader.instantiate_fit(look.path, 0.84, h + 0.5)
-		if _gem:
-			if look.tint != "":
-				_tint_material(_gem, look.tint, color)
-			_gem.position.y = 0.12
-			_visual.add_child(_gem)
-			_finish_visual()
-			return
-	_build_pillar(h)
+
+
+## Sockel in Art déco: zweistufiger Sockel aus Messing und Petrol-Marmor, schmales Band in der Filialfarbe.
+func _build_deco_base() -> void:
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = DecoTheme.GOLD
+	brass.metallic = 0.9
+	brass.roughness = 0.3
+	var stone := StandardMaterial3D.new()
+	stone.albedo_color = Color("16393b")
+	stone.roughness = 0.2
+	stone.metallic_specular = 0.8
+	var band := StandardMaterial3D.new()
+	band.albedo_color = color
+	band.emission_enabled = true
+	band.emission = color
+	band.emission_energy_multiplier = 0.35
+	for step in [[0.96, 0.035, 0.0175, brass], [0.9, 0.07, 0.07, stone], [0.91, 0.018, 0.096, band], [0.82, 0.02, 0.115, brass]]:
+		var mi := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(step[0], step[1], step[0])
+		mi.mesh = box
+		mi.position.y = step[2]
+		mi.material_override = step[3]
+		_visual.add_child(mi)
+
+
+## Art-déco-Zierteile an einem Haus (box = Umriss im Tower): Messing-Lisenen an den Ecken,
+## Messing-Gesims oben und eine gestufte Krone mit Spitze, höher bei teuren Towern.
+func _deco_trim(box: AABB) -> void:
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = DecoTheme.BRASS_LIGHT
+	brass.metallic = 0.9
+	brass.roughness = 0.28
+	brass.emission_enabled = true
+	brass.emission = DecoTheme.GOLD
+	brass.emission_energy_multiplier = 0.12
+	var top := box.end.y
+	var cx := box.get_center().x
+	var cz := box.get_center().z
+	var w := minf(box.size.x, box.size.z)
+	var parts: Array = []  # [Größe, Mitte]
+	# Lisenen an den vier Ecken bis knapp unter das Dach
+	var pil := clampf(w * 0.06, 0.018, 0.035)
+	var ph := (top - box.position.y) * 0.82
+	for sx in [-1, 1]:
+		for sz in [-1, 1]:
+			var p := Vector3(cx + sx * (box.size.x / 2.0 - pil * 0.3), box.position.y + ph / 2.0, cz + sz * (box.size.z / 2.0 - pil * 0.3))
+			parts.append([Vector3(pil, ph, pil), p])
+	# Krone: drei Stufen, je schmaler, dann eine Spitze
+	var steps := 3
+	var sw := w * 0.55
+	var y := top
+	for i in steps:
+		var sh := 0.035 + 0.01 * (steps - i)
+		parts.append([Vector3(sw, sh, sw), Vector3(cx, y + sh / 2.0, cz)])
+		y += sh
+		sw *= 0.66
+	var spire := clampf((top - box.position.y) * 0.35, 0.08, 0.3)
+	parts.append([Vector3(0.022, spire, 0.022), Vector3(cx, y + spire / 2.0, cz)])
+	for part in parts:
+		var mi := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = part[0]
+		mi.mesh = b
+		mi.position = part[1]
+		mi.material_override = brass
+		_visual.add_child(mi)
 
 
 ## Modell nach data/maul/models.json: {"path", "tint" (Materialname zum Einfärben oder "")} oder leer.

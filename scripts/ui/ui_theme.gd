@@ -7,6 +7,8 @@ extends RefCounted
 
 const ARCADE := ""
 const DRUID := "druid"
+## Shopping Maul: Art déco wie die Menüs vor dem Spiel (deco_theme.gd), Petrol und Messing.
+const DECO := "deco"
 
 const ARCADE_COLORS := {
 	"BG": Color("07040e"), "BAR": Color("0d0618"), "PANEL": Color("0d0618"), "PANEL_2": Color("160b28"),
@@ -16,7 +18,7 @@ const ARCADE_COLORS := {
 	"MISSING": Color("ff5d7a"), "SHADOW": Color("22c4ee"),
 }
 
-## Aktiver Stil: ARCADE oder DRUID.
+## Aktiver Stil: ARCADE, DRUID oder DECO.
 static var skin := ARCADE
 
 static var BG: Color = ARCADE_COLORS.BG
@@ -51,7 +53,7 @@ static func use_skin(name: String) -> void:
 	if name == skin:
 		return
 	skin = name
-	var c: Dictionary = DruidTheme.COLORS if name == DRUID else ARCADE_COLORS
+	var c: Dictionary = DruidTheme.COLORS if name == DRUID else (_deco_colors() if name == DECO else ARCADE_COLORS)
 	BG = c.BG
 	BAR = c.BAR
 	PANEL = c.PANEL
@@ -74,6 +76,21 @@ static func use_skin(name: String) -> void:
 
 static func druid() -> bool:
 	return skin == DRUID
+
+
+static func deco() -> bool:
+	return skin == DECO
+
+
+## Farben von DecoTheme unter den Namen von UiTheme (kein Versatz-Schatten: SHADOW = Leistenfarbe).
+static func _deco_colors() -> Dictionary:
+	return {
+		"BG": DecoTheme.BG, "BAR": DecoTheme.BAR, "PANEL": DecoTheme.PANEL, "PANEL_2": DecoTheme.PANEL_2,
+		"BORDER": DecoTheme.BORDER, "BORDER_2": DecoTheme.BORDER_2, "TEXT": DecoTheme.TEXT, "MUTED": DecoTheme.MUTED,
+		"DIM": DecoTheme.DIM, "GOLD": DecoTheme.GOLD, "GOLD_DARK": DecoTheme.GOLD_DARK, "CYAN": DecoTheme.CYAN,
+		"COIN": DecoTheme.COIN, "PURPLE": DecoTheme.PURPLE, "PURPLE_LIGHT": DecoTheme.PURPLE_LIGHT,
+		"HAVE": DecoTheme.HAVE, "MISSING": DecoTheme.MISSING, "SHADOW": DecoTheme.BAR,
+	}
 
 static var _themes: Dictionary = {}
 
@@ -99,6 +116,8 @@ static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_wid
 static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBox:
 	if druid():
 		return DruidTheme.frame(bg, border, pad)
+	if deco():
+		return DecoTheme.chamfer(bg, border, cut, pad)
 	var s := box(bg, border, 0, 2, pad)
 	s.corner_radius_top_left = cut
 	s.corner_radius_bottom_right = cut
@@ -114,6 +133,9 @@ static func panel(pad := 14.0, alpha := 0.95, border := Color.TRANSPARENT) -> St
 		border = GOLD
 	if druid():
 		return DruidTheme.panel(pad, alpha, border)
+	if deco():
+		# doppelter Messingrahmen wie in den Menüs, aber knapper, damit das HUD nicht wächst
+		return DecoTheme.frame(Color(BG, alpha), border, border.darkened(0.25), 0, false, pad + 4.0)
 	var s := box(Color(PANEL, alpha), border, 0, 3, pad)
 	s.shadow_color = SHADOW
 	s.shadow_size = 1
@@ -124,11 +146,16 @@ static func panel(pad := 14.0, alpha := 0.95, border := Color.TRANSPARENT) -> St
 static func font(bold := false) -> Font:
 	if druid():
 		return DruidTheme.font(bold)
+	if deco():
+		return DecoTheme.font(bold)
 	return load(FONT_BOLD if bold else FONT)
 
 
 static func get_theme() -> Theme:
 	if _themes.has(skin):
+		return _themes[skin]
+	if deco():
+		_themes[skin] = DecoTheme.get_theme()
 		return _themes[skin]
 	var t := Theme.new()
 	t.default_font = font()
@@ -220,6 +247,9 @@ static func accent_button(b: Button, bg: Color, fg: Color, _glow: Color = Color.
 	if druid():
 		DruidTheme.accent_button(b, bg, fg)
 		return
+	if deco():
+		DecoTheme.accent_button(b, bg, fg, Color.TRANSPARENT, false)
+		return
 	var normal := box(bg, Color.TRANSPARENT, 0, 0, 14)
 	normal.shadow_color = CYAN if bg != CYAN else GOLD
 	normal.shadow_size = 1
@@ -243,6 +273,8 @@ static func caption(text: String, parent: Node) -> Label:
 	l.add_theme_color_override("font_color", MUTED)
 	if druid():
 		l.add_theme_font_override("font", DruidTheme.font(true, 2))
+	elif deco():
+		l.add_theme_color_override("font_color", GOLD)
 	return l
 
 
@@ -251,6 +283,12 @@ static func caption(text: String, parent: Node) -> Label:
 static func heading(l: Label, color := Color.TRANSPARENT) -> Label:
 	if druid():
 		return DruidTheme.heading(l)
+	if deco():
+		# Messing, Großbuchstaben, gesperrt (Federo; Limelight erst ab DecoTheme.DISPLAY_SIZE)
+		l.uppercase = true
+		l.add_theme_font_override("font", DecoTheme.font(true))
+		l.add_theme_color_override("font_color", color if color.a > 0.0 else GOLD)
+		return l
 	l.uppercase = true
 	l.add_theme_font_override("font", font(true))
 	if color.a > 0.0:
@@ -262,6 +300,8 @@ static func heading(l: Label, color := Color.TRANSPARENT) -> Label:
 static func title(l: Label, size := 0) -> Label:
 	if druid():
 		return DruidTheme.title(l, size)
+	if deco():
+		return DecoTheme.title(l, size)
 	l.uppercase = true
 	l.add_theme_font_override("font", font(true))
 	if size > 0:

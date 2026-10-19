@@ -113,6 +113,8 @@ var _hud_timer := 0.0
 
 
 func _ready() -> void:
+	# Art déco für Oberfläche und Spielfeld (Petrol, Messing), vor dem Bau von HUD und Board
+	UiTheme.use_skin(UiTheme.DECO)
 	rules = MaulData.rules()
 	levels = MaulData.levels()
 	map = MaulMap.create()
@@ -1666,6 +1668,7 @@ func _refresh_hud() -> void:
 
 
 func _exit_tree() -> void:
+	UiTheme.use_skin(UiTheme.ARCADE)
 	Engine.time_scale = 1.0
 	if Net.game == self:
 		Net.game = null
