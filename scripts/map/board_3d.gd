@@ -2,6 +2,7 @@ class_name Board3D
 extends Node3D
 ## 3D-Darstellung einer Map: Neon-Gitter als Boden, Steine, Wegpunkte, Weg und Hover-Markierung.
 ## Blockierte Felder (Mauern) werden nicht gezeichnet, nur ihr Rand als Neonlinie.
+## Andere Modi (eeveTD, Shopping Maul) bekommen über FieldStyle ihren eigenen Look (Gras, Marmor …).
 ## Wird vom Spiel und vom Map-Editor benutzt. Tower und Gegner hängen als Kinder darunter.
 ##
 ## Koordinaten: 1 Einheit = 1 Towerbreite (128 WC3-Einheiten). Das Raster ist halb so fein:
@@ -22,7 +23,6 @@ const ROCK_MODELS := [
 const ROCK_SIZE := 0.94
 const ROCK_MAX_HEIGHT := 0.75
 const ROCK_SHADER := preload("res://assets/shaders/rock.gdshader")
-const ROCK_OUTLINE_SHADER := preload("res://assets/shaders/outline.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
@@ -89,6 +89,8 @@ var _path: MultiMeshInstance3D
 var _markers: Node3D
 var _hover: MeshInstance3D
 var _hover_mat: StandardMaterial3D
+## Aussehen nach dem Oberflächen-Stil beim Anlegen (FieldStyle.current()).
+var style: Dictionary = FieldStyle.STYLES[FieldStyle.NEON]
 
 
 static func cell_center(c: Vector2i) -> Vector2:
@@ -124,6 +126,9 @@ static func make_material(col: Color, unshaded := false, transparent := false) -
 
 
 func _ready() -> void:
+	style = FieldStyle.current()
+	if path_color == COL_PATH:
+		path_color = style.path
 	_ground = MeshInstance3D.new()
 	_ground_mat = ShaderMaterial.new()
 	_ground_mat.shader = load(GROUND_SHADER)
@@ -131,6 +136,8 @@ func _ready() -> void:
 		_ground_mat.set_shader_parameter(key, load(GROUND_TEXTURES[key]))
 	_ground_mat.set_shader_parameter("cell", CELL)
 	_ground_mat.set_shader_parameter("ground_alpha", ground_alpha)
+	for key in style.get("ground", {}):
+		_ground_mat.set_shader_parameter(key, style.ground[key])
 	_ground.material_override = _ground_mat
 	_ground.visible = ground_alpha > 0.0
 	add_child(_ground)
@@ -140,25 +147,23 @@ func _ready() -> void:
 	_floor_mat.set_shader_parameter("cell", CELL)
 	_floor_mat.set_shader_parameter("grid_cells", float(TOWER_CELLS))
 	_floor_mat.set_shader_parameter("fine_strength", grid_strength)
+	for key in style.floor:
+		_floor_mat.set_shader_parameter(key, style.floor[key])
 	_floor.material_override = _floor_mat
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
+	ground_alpha = maxf(ground_alpha, style.ground_alpha)
 	for path in ROCK_MODELS:
 		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE, true, ROCK_MAX_HEIGHT)
 		if m.is_empty():
 			continue
 		var mmi := _multimesh(m[0], false)
-		var rock_mat := ShaderMaterial.new()
-		rock_mat.shader = ROCK_SHADER
-		mmi.material_override = rock_mat
+		mmi.material_override = _rock_material()
 		_rocks.append(mmi)
 		_rock_fits.append(m[1])
 		# Kontur: eigene Hülle mit geglätteten Normalen (die Modelle sind flach schattiert)
 		var hull := _multimesh(ModelLoader.smooth_normals(m[0]), false)
-		var outline := ShaderMaterial.new()
-		outline.shader = ROCK_OUTLINE_SHADER
-		outline.render_priority = 1
-		hull.material_override = outline
+		hull.material_override = ModelLoader.outline_material()
 		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_rock_outlines.append(hull)
 	if _rocks.is_empty():
@@ -171,7 +176,7 @@ func _ready() -> void:
 	dot.radial_segments = 12
 	dot.rings = 6
 	_path = _multimesh(dot, false)
-	_path.material_override = neon_material(path_color, 2.2)
+	_path.material_override = FieldStyle.line_material(path_color, style.path_energy)
 	_path.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_markers = Node3D.new()
 	add_child(_markers)
@@ -183,6 +188,25 @@ func _ready() -> void:
 	add_child(_hover)
 	if map != null:
 		rebuild()
+
+
+## Felsbrocken: rauchiges Glas (Neon), bemooster Stein (Druidenhain) oder dunkler Marmor (Art déco).
+func _rock_material() -> Material:
+	match style.rock:
+		"stone":
+			var m := StandardMaterial3D.new()
+			m.albedo_color = Color("4f5346")
+			m.roughness = 0.95
+			return m
+		"marble":
+			var m := StandardMaterial3D.new()
+			m.albedo_color = Color("16393b")
+			m.roughness = 0.25
+			m.metallic_specular = 0.8
+			return m
+	var glass := ShaderMaterial.new()
+	glass.shader = ROCK_SHADER
+	return glass
 
 
 ## Material für Neonröhren: innen weiß, außen col, energy > 1 leuchtet im Glow.
@@ -346,7 +370,12 @@ func refresh_selection() -> void:
 func refresh_path() -> void:
 	if _path == null:
 		return
-	(_path.material_override as ShaderMaterial).set_shader_parameter("color", path_color)
+	var pm := _path.material_override
+	if pm is ShaderMaterial:
+		pm.set_shader_parameter("color", path_color)
+	elif pm is StandardMaterial3D:
+		pm.albedo_color = path_color
+		pm.emission = path_color
 	var mm := _path.multimesh
 	mm.instance_count = path_points.size()
 	for i in path_points.size():
@@ -380,17 +409,17 @@ func _rebuild_markers() -> void:
 				order.append(pts[i])
 			labels[pts[i]].append(text)
 	for c in order:
-		_add_marker(c, " / ".join(labels[c]), COL_WAYPOINT)
-	_add_marker(map.goal, "Z", COL_WAYPOINT)
+		_add_marker(c, " / ".join(labels[c]), style.marker)
+	_add_marker(map.goal, "Z", style.marker)
 	for z in map.zones:
-		_add_zone(z.rect, PLAYER_COLORS[z.player % PLAYER_COLORS.size()] if z.player >= 0 else COL_WAYPOINT)
+		_add_zone(z.rect, PLAYER_COLORS[z.player % PLAYER_COLORS.size()] if z.player >= 0 else style.marker)
 
 
 ## Rand einer Zone (Maul-Maps) als dünne Neonlinie in der Farbe ihres Spielers.
 func _add_zone(r: Rect2i, col: Color) -> void:
 	var a := Vector2(r.position) * CELL
 	var b := Vector2(r.end) * CELL
-	var mat := neon_material(col, 2.4)
+	var mat := FieldStyle.line_material(col, 2.4)
 	for side in [[a, Vector2(b.x, a.y)], [Vector2(b.x, a.y), b], [b, Vector2(a.x, b.y)], [Vector2(a.x, b.y), a]]:
 		var from: Vector2 = side[0]
 		var to: Vector2 = side[1]
@@ -413,7 +442,7 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	torus.rings = 48
 	torus.ring_segments = 8
 	ring.mesh = torus
-	ring.material_override = neon_material(col, 2.2)
+	ring.material_override = FieldStyle.line_material(col, style.marker_energy)
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.position = to_3d(cell_center(c), 0.04)
 	_markers.add_child(ring)

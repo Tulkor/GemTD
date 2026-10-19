@@ -629,6 +629,12 @@ func _build_visual() -> void:
 	var light := MeshInstance3D.new()
 	light.mesh = rounded_slab(foot * 0.5, 0.012, 0.07)
 	var light_mat := Board3D.make_material(color.lerp(Color.WHITE, 0.4) * BASE_LIGHT_ENERGY, true)
+	if not FieldStyle.is_neon():
+		# Druidenhain: farbige Rune im Stein statt Licht von unten
+		light_mat = Board3D.make_material(color.darkened(0.15), false)
+		light_mat.emission_enabled = true
+		light_mat.emission = color
+		light_mat.emission_energy_multiplier = 0.25
 	light_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	light.material_override = light_mat
 	light.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -643,7 +649,7 @@ func _build_visual() -> void:
 		width = float(GEM_CLUSTERS[clampi(tier, 0, GEM_CLUSTERS.size() - 1)][1]) * foot
 		if _gem:
 			if tint == null:
-				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
+				_texture_look(_gem)
 			_visual.add_child(_gem)
 	elif model_path != "":
 		if stats.has("model_scale") or def.has("model_scale"):
@@ -653,7 +659,7 @@ func _build_visual() -> void:
 		if _gem:
 			# "model_solid": true lässt Modelle mit eigenen Farben (Bäume, Steine) undurchsichtig
 			if tint == null and not bool(def.get("model_solid", false)):
-				ModelLoader.make_translucent(_gem, GEM_OPACITY_TEXTURED, color)
+				_texture_look(_gem)
 			_gem.position.y = base_h
 			_visual.add_child(_gem)
 	var size := width
@@ -813,8 +819,26 @@ static func rounded_slab(size: float, height: float, radius: float, segments := 
 	return mesh
 
 
+## Modell mit eigenen Farben: im Neon-Stil leicht durchsichtig mit Licht von unten, sonst
+## (Natur-Modelle in eeveTD) deckend wie geliefert.
+func _texture_look(n: Node) -> void:
+	if FieldStyle.is_neon():
+		ModelLoader.make_translucent(n, GEM_OPACITY_TEXTURED, color)
+	elif FieldStyle.current_name() == FieldStyle.DRUID and bool(def.get("eeve", {}).get("barricade", false)):
+		# Barrikaden: dunkler, bemooster Feldstein statt des hellen Fels-Texturfotos
+		var stone := StandardMaterial3D.new()
+		stone.albedo_color = Color("6a6e5c")
+		stone.roughness = 0.95
+		ModelLoader._apply_material(n, stone)
+
+
 func _glass_material() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
+	if FieldStyle.current_name() == FieldStyle.DRUID:
+		# Sockel aus bemoostem Stein
+		m.albedo_color = Color("3f4436")
+		m.roughness = 0.92
+		return m
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.albedo_color = Color(0.75, 0.8, 1.0, 0.16)
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED

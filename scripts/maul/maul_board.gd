@@ -18,7 +18,7 @@ func _rebuild_markers() -> void:
 	var spawn_cells := {}
 	for s in mm.maul.get("spawns", []):
 		var c := MaulMap.cell(s.cell)
-		_add_marker(c, "S", COL_WAYPOINT)
+		_add_marker(c, "S", style.marker)
 		spawn_cells[c] = true
 	# Teleport-Ziele: erster Wegpunkt jedes weiteren Abschnitts
 	var done := {}
@@ -32,13 +32,13 @@ func _rebuild_markers() -> void:
 			var c := MaulMap.cell(leg[0])
 			if not done.has(c):
 				done[c] = true
-				_add_marker(c, "", COL_TELEPORT)
+				_add_marker(c, "", style.get("zone_other", COL_TELEPORT))
 	var mall: Array = mm.maul.get("mall", [])
 	if mall.size() == 2:
-		_add_marker(MaulMap.cell(mall), "MALL", COL_LEAK)
+		_add_marker(MaulMap.cell(mall), "MALL", style.get("zone_leak", COL_LEAK))
 	var leak: Array = mm.maul.get("leak", [])
 	if leak.size() == 4:
-		_add_zone(Rect2i(int(leak[0]), int(leak[1]), int(leak[2]), int(leak[3])), COL_LEAK)
+		_add_zone(Rect2i(int(leak[0]), int(leak[1]), int(leak[2]), int(leak[3])), style.get("zone_leak", COL_LEAK))
 	for i in map.zones.size():
-		var col: Color = PLAYER_COLORS[0] if i == own_zone else Color(0.45, 0.4, 0.6)
+		var col: Color = style.get("zone_own", PLAYER_COLORS[0]) if i == own_zone else style.get("zone_other", Color(0.45, 0.4, 0.6))
 		_add_zone(map.zones[i].rect, col)

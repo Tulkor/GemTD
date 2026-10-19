@@ -8,7 +8,12 @@ extends RefCounted
 
 static var _cache := {}
 static var _smooth_cache := {}  ## Mesh -> Mesh mit geglätteten Normalen (für Konturen)
-static var _outline_mat: ShaderMaterial
+static var _outline_mats: Dictionary = {}  ## je Feld-Stil (FieldStyle) ein Kontur-Material
+## Konturfarbe und Leuchtkraft je Feld-Stil: Neon hellviolett leuchtend, Druidenhain dunkel wie Tusche, Art déco Messing.
+const OUTLINE_LOOK := {
+	"druid": [Color("1a2018"), 1.0, 0.014],
+	"deco": [Color("c9a36a"), 1.0, 0.012],
+}
 
 
 static func _load(path: String) -> PackedScene:
@@ -188,11 +193,23 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 
 ## Leuchtende Kontur um alle Meshes unter n (gleiche wie bei den Felsbrocken): je Mesh eine
 ## aufgeblähte Hülle als Kind. Das Material darunter muss Tiefe schreiben (opak oder DEPTH_DRAW_ALWAYS).
+## Kontur-Material im aktuellen Feld-Stil (für eigene Hüllen, z. B. die Felsbrocken).
+static func outline_material() -> ShaderMaterial:
+	var key := FieldStyle.current_name()
+	if not _outline_mats.has(key):
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://assets/shaders/outline.gdshader")
+		m.render_priority = 1
+		if OUTLINE_LOOK.has(key):
+			m.set_shader_parameter("color", OUTLINE_LOOK[key][0])
+			m.set_shader_parameter("energy", OUTLINE_LOOK[key][1])
+			m.set_shader_parameter("width", OUTLINE_LOOK[key][2])
+		_outline_mats[key] = m
+	return _outline_mats[key]
+
+
 static func add_outline(n: Node) -> void:
-	if _outline_mat == null:
-		_outline_mat = ShaderMaterial.new()
-		_outline_mat.shader = preload("res://assets/shaders/outline.gdshader")
-		_outline_mat.render_priority = 1
+	var outline := outline_material()
 	var targets: Array[MeshInstance3D] = []
 	_collect_meshes(n, targets)
 	for mi in targets:
@@ -203,7 +220,7 @@ static func add_outline(n: Node) -> void:
 			_smooth_cache[mi.mesh] = smooth_normals(mi.mesh)
 		var hull := MeshInstance3D.new()
 		hull.mesh = _smooth_cache[mi.mesh]
-		hull.material_override = _outline_mat
+		hull.material_override = outline
 		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.add_child(hull)
 

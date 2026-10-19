@@ -22,6 +22,8 @@ uniform float dirt_tile = 2.2;
 /// Fotos sind sehr satt und hell; etwas abdunkeln und entsättigen, damit Tower und Gegner auffallen.
 uniform float brightness = 0.72;
 uniform float saturation = 0.75;
+/// Farbstich über alles (Druidenhain: etwas moosiger)
+uniform vec3 tint = vec3(1.0);
 /// Deckkraft des Bodens; 0 = unsichtbar (nur Rasterlinien bleiben sichtbar).
 uniform float ground_alpha = 1.0;
 /// Rasterlinien (für den Map-Editor), 0 = aus.
@@ -105,7 +107,7 @@ void fragment() {
 	col *= mix(0.7, 1.0, cavity);
 
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
-	col = mix(vec3(lum), col, saturation) * brightness;
+	col = mix(vec3(lum), col, saturation) * brightness * tint;
 	// leichte großflächige Helligkeitsschwankung
 	col *= 0.94 + 0.12 * fbm(p * 0.12 + vec2(-8.0, 2.0));
 
