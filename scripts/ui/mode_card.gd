@@ -21,10 +21,11 @@ func _init(m: Dictionary, card_size := Vector2(330, 190)) -> void:
 	toggle_mode = true
 	focus_mode = Control.FOCUS_NONE
 	custom_minimum_size = card_size
-	add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2))
-	add_theme_stylebox_override("hover", UiTheme.box(UiTheme.PANEL_2, UiTheme.GOLD, 0, 2))
-	add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
-	add_theme_stylebox_override("hover_pressed", UiTheme.box(UiTheme.CYAN, UiTheme.GOLD, 0, 2))
+	add_theme_stylebox_override("normal", DecoTheme.box(Color.TRANSPARENT, DecoTheme.GOLD, 0, 1))
+	add_theme_stylebox_override("hover", DecoTheme.box(DecoTheme.PANEL, DecoTheme.BRASS_LIGHT, 0, 1))
+	add_theme_stylebox_override("disabled", DecoTheme.box(Color.TRANSPARENT, DecoTheme.BORDER, 0, 1))
+	add_theme_stylebox_override("pressed", DecoTheme.frame(DecoTheme.BRASS_LIGHT, Color.TRANSPARENT, Color.TRANSPARENT, 16))
+	add_theme_stylebox_override("hover_pressed", DecoTheme.frame(DecoTheme.BRASS_LIGHT.lightened(0.1), Color.TRANSPARENT, Color.TRANSPARENT, 16))
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -32,10 +33,12 @@ func _init(m: Dictionary, card_size := Vector2(330, 190)) -> void:
 	v.offset_top = 14
 	v.offset_right = -16
 	v.offset_bottom = -14
-	v.add_theme_constant_override("separation", 8)
+	v.add_theme_constant_override("separation", 6)
 	add_child(v)
-	_name = _label(str(m.get("name", mode_id)).to_upper(), v, 21)
-	_name.add_theme_font_override("font", UiTheme.font(true))
+	_name = _label(str(m.get("name", mode_id)), v, 28)
+	DecoTheme.display(_name, 28, 2)
+	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_name.custom_minimum_size.x = card_size.x - 32
 	# Hinweis („Kommt noch“, erlaubte Spielerzahl) unter dem Namen, damit lange Namen Platz haben
 	_tag = _label("", v, 11)
 	_tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -49,12 +52,12 @@ func _init(m: Dictionary, card_size := Vector2(330, 190)) -> void:
 	v.add_child(_votes_box)
 	var bar := ColorRect.new()
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.color = UiTheme.BORDER
+	bar.color = DecoTheme.BORDER
 	bar.custom_minimum_size.y = 10
 	_votes_box.add_child(bar)
 	_bar_fill = ColorRect.new()
 	_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bar_fill.color = UiTheme.GOLD
+	_bar_fill.color = DecoTheme.GOLD
 	_bar_fill.anchor_bottom = 1.0
 	bar.add_child(_bar_fill)
 	_count = _label("", _votes_box, 15)
@@ -84,14 +87,15 @@ func set_state(on: bool, enabled: bool, tag := "") -> void:
 	_tag.text = tag.to_upper()
 	_tag.visible = tag != ""
 	var dark := on and enabled
-	var main := UiTheme.GOLD_DARK if dark else (UiTheme.TEXT if enabled else UiTheme.BORDER_2)
-	var soft := UiTheme.GOLD_DARK if dark else (UiTheme.MUTED if enabled else UiTheme.BORDER_2)
+	var main := DecoTheme.GOLD_DARK if dark else (DecoTheme.TEXT if enabled else DecoTheme.BORDER_2)
+	var soft := DecoTheme.GOLD_DARK if dark else (DecoTheme.BRASS_LIGHT if enabled else DecoTheme.BORDER_2)
 	_name.add_theme_color_override("font_color", main)
 	_count.add_theme_color_override("font_color", main)
 	_hint.add_theme_color_override("font_color", soft)
 	_who.add_theme_color_override("font_color", soft)
-	_players.add_theme_color_override("font_color", UiTheme.GOLD_DARK if dark else (UiTheme.CYAN if enabled else UiTheme.BORDER_2))
-	var tag_box := UiTheme.box(Color.TRANSPARENT, soft, 0, 2, 5)
+	_players.add_theme_color_override("font_color", DecoTheme.GOLD_DARK if dark else (DecoTheme.TEXT if enabled else DecoTheme.BORDER_2))
+	_hint.add_theme_font_override("font", DecoTheme.font(dark))
+	var tag_box := DecoTheme.box(Color.TRANSPARENT, soft, 0, 2, 5)
 	_tag.add_theme_stylebox_override("normal", tag_box)
 	_tag.add_theme_color_override("font_color", soft)
 

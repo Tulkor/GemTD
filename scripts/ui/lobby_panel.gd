@@ -46,16 +46,13 @@ var _leave_button: Button
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var bg := ColorRect.new()
-	bg.color = UiTheme.BG
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	add_child(DecoBackdrop.new())
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 64)
+		margin.add_theme_constant_override("margin_" + side, 72)
 	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 40)
+		margin.add_theme_constant_override("margin_" + side, 52)
 	add_child(margin)
 	var page := VBoxContainer.new()
 	page.add_theme_constant_override("separation", 18)
@@ -63,16 +60,19 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 18)
 	page.add_child(head)
-	var back := UiUtil.button("‹ " + tr("Zurück"), head, hide)
+	var back := UiUtil.button("◂ " + tr("Zurück").to_upper(), head, hide)
 	back.custom_minimum_size.y = 40
+	back.add_theme_font_override("font", DecoTheme.font(true))
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back.tooltip_text = "Zurück zum Hauptmenü, die Verbindung bleibt bestehen"
-	UiTheme.title(UiUtil.label("Lobby", head, 28)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_status = UiUtil.label("", head, 14)
-	_status.add_theme_color_override("font_color", UiTheme.CYAN)
+	DecoTheme.title(UiUtil.label("Lobby", head, 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_status = UiUtil.label("", head, 15)
+	_status.add_theme_color_override("font_color", DecoTheme.BRASS_LIGHT)
+	_status.add_theme_font_override("font", DecoTheme.font(true))
 	_status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status.custom_minimum_size.x = 380
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	DecoTheme.head_line(head)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -81,7 +81,7 @@ func _ready() -> void:
 
 	# Links: Verbindung, Spieler, Host-Einstellungen
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiTheme.panel(18.0))
+	panel.add_theme_stylebox_override("panel", DecoTheme.box(DecoTheme.PANEL, DecoTheme.GOLD, 0, 1, 22))
 	panel.custom_minimum_size.x = 420
 	body.add_child(panel)
 	var scroll := ScrollContainer.new()
@@ -139,7 +139,7 @@ func _ready() -> void:
 	_addresses = _muted(UiUtil.label("", _online, 12))
 	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_addresses.custom_minimum_size.x = 370
-	_players_caption = UiTheme.caption("Spieler", _online)
+	_players_caption = DecoTheme.caption("Spieler", _online)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 6)
 	_online.add_child(_list)
@@ -148,7 +148,7 @@ func _ready() -> void:
 	_host_box.add_theme_constant_override("separation", 6)
 	_online.add_child(_host_box)
 	_host_box.add_child(_gap(6))
-	UiTheme.caption("Host-Einstellungen", _host_box)
+	DecoTheme.caption("Host-Einstellungen", _host_box)
 	_muted(UiUtil.label("Map", _host_box, 13))
 	_map_option = OptionButton.new()
 	_map_option.focus_mode = Control.FOCUS_NONE
@@ -173,8 +173,8 @@ func _ready() -> void:
 		b.custom_minimum_size.y = 36
 		b.tooltip_text = tr("Alle bauen zusammen ein Labyrinth: jeder setzt und wählt seine eigenen Gems, hat eigenes Gold und kombiniert nur eigene Tower. Die Leben sind gemeinsam.") if coop \
 			else tr("Jeder spielt sein eigenes Feld, über „Zuschauen“ sieht man die anderen.")
-		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
-		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+		b.add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2))
+		b.add_theme_color_override("font_pressed_color", DecoTheme.GOLD_DARK)
 		b.set_pressed_no_signal(coop == coop_mode)
 		_mode_buttons.append(b)
 
@@ -183,7 +183,7 @@ func _ready() -> void:
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_theme_constant_override("separation", 16)
 	body.add_child(right)
-	_vote_caption = UiTheme.caption("Modus abstimmen · Klick = deine Stimme", right)
+	_vote_caption = DecoTheme.caption("Modus abstimmen · Klick = deine Stimme", right)
 	_vote_row = HBoxContainer.new()
 	_vote_row.add_theme_constant_override("separation", 14)
 	right.add_child(_vote_row)
@@ -194,7 +194,7 @@ func _ready() -> void:
 		_vote_row.add_child(card)
 		_vote_cards.append(card)
 	_summary_panel = PanelContainer.new()
-	_summary_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL, UiTheme.BORDER, 0, 2, 14))
+	_summary_panel.add_theme_stylebox_override("panel", DecoTheme.box(Color.TRANSPARENT, DecoTheme.GOLD, 0, 1, 16))
 	right.add_child(_summary_panel)
 	_summary = UiUtil.label("", _summary_panel, 15)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -202,7 +202,7 @@ func _ready() -> void:
 	_session_text = UiUtil.label("", right, 14)
 	_session_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_session_text.custom_minimum_size.x = 400
-	_session_text.add_theme_color_override("font_color", UiTheme.DIM)
+	_session_text.add_theme_color_override("font_color", DecoTheme.DIM)
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(fill)
@@ -215,14 +215,14 @@ func _ready() -> void:
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(gap)
 	_start_button = UiUtil.button("Starten", buttons, func(): start_requested.emit())
-	_start_button.custom_minimum_size = Vector2(380, 54)
-	_start_button.add_theme_font_size_override("font_size", 20)
+	_start_button.custom_minimum_size = Vector2(560, 62)
+	_start_button.add_theme_font_size_override("font_size", 28)
 	_start_button.clip_text = true
-	UiTheme.accent_button(_start_button, UiTheme.GOLD, UiTheme.GOLD_DARK)
+	DecoTheme.accent_button(_start_button, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
 	_play_button = UiUtil.button("Mitspielen", buttons, func(): Net.join_session())
-	_play_button.custom_minimum_size = Vector2(240, 54)
-	_play_button.add_theme_font_size_override("font_size", 20)
-	UiTheme.accent_button(_play_button, UiTheme.GOLD, UiTheme.GOLD_DARK)
+	_play_button.custom_minimum_size = Vector2(300, 62)
+	_play_button.add_theme_font_size_override("font_size", 28)
+	DecoTheme.accent_button(_play_button, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
 
 	Net.players_changed.connect(_refresh)
 	Net.connection_changed.connect(_refresh)
@@ -294,7 +294,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _muted(l: Label) -> Label:
-	l.add_theme_color_override("font_color", UiTheme.MUTED)
+	l.add_theme_color_override("font_color", DecoTheme.MUTED)
 	return l
 
 
@@ -486,7 +486,7 @@ func _show_addresses() -> void:
 		_internet.text = tr("Internet: %s") % Net.public_ip
 	else:
 		_internet.text = tr("Internet: Adresse nicht ermittelbar") if Net.public_ip_failed else tr("Internet: Adresse wird ermittelt …")
-	_internet.add_theme_color_override("font_color", UiTheme.TEXT)
+	_internet.add_theme_color_override("font_color", DecoTheme.TEXT)
 	_copy_button.visible = Net.public_ip != ""
 	var port := Net.host_port
 	var lines := []
@@ -515,7 +515,7 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 	var dot := ColorRect.new()
 	dot.custom_minimum_size = Vector2(10, 10)
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.color = UiTheme.HAVE if slot.get("online", false) else UiTheme.BORDER_2
+	dot.color = DecoTheme.HAVE if slot.get("online", false) else DecoTheme.BORDER_2
 	row.add_child(dot)
 	var peer := int(slot.get("peer", -1))
 	var me := peer == Net.my_id()
@@ -532,7 +532,7 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 	var info := UiUtil.label(" · ".join(parts), row, 13)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.add_theme_color_override("font_color", UiTheme.MUTED)
+	info.add_theme_color_override("font_color", DecoTheme.MUTED)
 	var field := int(slot.get("field", -1))
 	if field >= 0 and slot.get("online", false):
 		var u := str(slot.get("uid", ""))
@@ -544,10 +544,10 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 			else tr("Der Host teilt die Felder ein.")
 		var same: int = Net.session_slots().filter(func(sl): return int(sl.get("field", -1)) == field and sl.get("online", false)).size()
 		if same > 1:
-			fb.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2, 4))
-			fb.add_theme_stylebox_override("disabled", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2, 4))
-			fb.add_theme_color_override("font_color", UiTheme.GOLD_DARK)
-			fb.add_theme_color_override("font_disabled_color", UiTheme.GOLD_DARK)
+			fb.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2, 4))
+			fb.add_theme_stylebox_override("disabled", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2, 4))
+			fb.add_theme_color_override("font_color", DecoTheme.GOLD_DARK)
+			fb.add_theme_color_override("font_disabled_color", DecoTheme.GOLD_DARK)
 	if vote != "":
 		var vl := UiUtil.label(_mode_name(vote), row, 13)
-		vl.add_theme_color_override("font_color", UiTheme.GOLD)
+		vl.add_theme_color_override("font_color", DecoTheme.GOLD)
