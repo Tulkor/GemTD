@@ -595,6 +595,11 @@ func _build_visual() -> void:
 		mat.set_shader_parameter("glow", 0.04)
 		mat.set_shader_parameter("under_light", 0.1)
 		mat.set_shader_parameter("daylight", 1.0)
+		# Statuen und Steine aus der Natur-Sammlung: Stein mit farbigen Adern; Kristalle wachsen aus Fels
+		if str(stats.get("model", def.get("model", ""))).contains("/nature/"):
+			mat.set_shader_parameter("stone_height", 100.0)
+			mat.set_shader_parameter("vein_amount", 0.55)
+			mat.set_shader_parameter("stone_tint", 0.35)
 	# "model_tint": false behält die Farben/Texturen des Modells (nur leicht durchsichtig gemacht)
 	var tint: Material = mat if bool(def.get("model_tint", true)) else null
 
@@ -689,9 +694,62 @@ func _add_flame(model: Node3D) -> void:
 	if size <= 0.0 or model == null:
 		return
 	var box := ModelLoader.aabb(model, Transform3D())
-	var flame := FlameFx.make(size)
+	var flame := FlameFx.make(size, Color(1.0, 0.75, 0.5) if not FieldStyle.is_neon() else Color.WHITE)
+	if FieldStyle.current_name() == FieldStyle.DRUID:
+		_add_embers(model, box)
 	flame.position = Vector3(box.get_center().x, box.position.y + box.size.y * float(def.get("flame_height", 0.6)), box.get_center().z)
 	_visual.add_child(flame)
+
+
+## Druidenhain: glühende Kohlen oben im Becken bzw. in der Feuerstelle, damit man Feuer und kein Wasser sieht;
+## Becken (pot) werden dunkle Bronze statt hellem Ton.
+func _add_embers(model: Node3D, box: AABB) -> void:
+	if str(stats.get("model", def.get("model", ""))).contains("pot_"):
+		var bronze := StandardMaterial3D.new()
+		bronze.albedo_color = Color("5a4030")
+		bronze.metallic = 0.6
+		bronze.roughness = 0.45
+		ModelLoader._apply_material(model, bronze)
+	var coal := MeshInstance3D.new()
+	var disk := CylinderMesh.new()
+	disk.top_radius = minf(box.size.x, box.size.z) * 0.32
+	disk.bottom_radius = disk.top_radius
+	disk.height = 0.02
+	coal.mesh = disk
+	var hot := StandardMaterial3D.new()
+	hot.albedo_color = Color("16100c")
+	hot.roughness = 0.95
+	hot.emission_enabled = true
+	hot.emission = Color("7a1a04")
+	hot.emission_energy_multiplier = 0.5
+	coal.material_override = hot
+	coal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	coal.position = Vector3(box.get_center().x, box.position.y + box.size.y * float(def.get("flame_height", 0.6)) + 0.01, box.get_center().z)
+	_visual.add_child(coal)
+	# Kohlestücke auf der Asche, teils schwarz, teils glühend
+	var lump_mat := StandardMaterial3D.new()
+	lump_mat.albedo_color = Color("1a1410")
+	lump_mat.roughness = 0.9
+	var glow_mat := StandardMaterial3D.new()
+	glow_mat.albedo_color = Color("3a1408")
+	glow_mat.emission_enabled = true
+	glow_mat.emission = Color("ff6a18")
+	glow_mat.emission_energy_multiplier = 1.6
+	var r := disk.top_radius
+	for i in 11:
+		var lump := MeshInstance3D.new()
+		var b := SphereMesh.new()
+		var s := r * (0.2 + 0.06 * (i % 3))
+		b.radius = s * 0.5
+		b.height = s * 0.6
+		b.radial_segments = 5
+		b.rings = 2
+		lump.mesh = b
+		lump.material_override = glow_mat if i % 3 != 0 else lump_mat
+		var a := TAU * i / 11.0 * 3.0 + 0.4
+		lump.position = coal.position + Vector3(cos(a), 0.0, sin(a)) * r * (0.15 + 0.6 * fmod(i * 0.37, 1.0)) + Vector3(0, s * 0.1, 0)
+		lump.rotation.y = a * 1.7
+		_visual.add_child(lump)
 
 
 ## Mehrere Kristalle auf dem Sockel, Anzahl und Größe nach Qualität (GEM_CLUSTERS).
