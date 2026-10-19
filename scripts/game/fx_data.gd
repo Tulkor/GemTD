@@ -1,8 +1,8 @@
 class_name FxData
 ## Treffer- und Schuss-Effekte: Daten aus data/fx/ und welcher Tower welchen Effekt bekommt.
 ##
-## hits.json  – Treffer-Effekte (aus der Unity-Sammlung FX_Hit_Collection, tools/fx/treffer_umwandeln.py)
-## shots.json – Schuss-Effekte als Sprite-Sheets (aus Videos, tools/fx/video_zu_sheet.py) und die Regeln
+## hits.json  – Treffer-Effekte (aus dem Kenney Particle Pack, CC0, tools/fx/kenney_effekte.py)
+## shots.json – Schuss-Effekte als Sprite-Sheets (ebenfalls tools/fx/kenney_effekte.py) und die Regeln
 ##              für die automatische Wahl ("auto")
 ## Ein Tower kann in seiner Datei "hit_fx" und "shot_fx" setzen (Effekt-ID, "auto" oder "none").
 ## Ohne Angabe wird nach seiner Farbe gewählt und der Effekt auf seinen Farbton gedreht.

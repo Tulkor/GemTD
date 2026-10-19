@@ -1,9 +1,14 @@
 # Effekte umwandeln
 
+Alle Effekte im Spiel kommen aus dem Kenney Particle Pack (CC0, `assets/fx/kenney/`). Nur Material mit einer
+Lizenz verwenden, die Weitergabe im öffentlichen Repo und Verkauf des Spiels erlaubt (keine Asset-Store- oder
+Stock-Video-Dateien, nichts mit NC oder unklarer Herkunft).
+
 | Datei | Zweck |
 |---|---|
-| `treffer_umwandeln.py <ordner>` | entpacktes Unity-`.unitypackage` (`tar xzf paket -C ordner`) → `data/fx/hits.json` + Texturen in `assets/fx/hit/`. Jedes Prefab wird ein Effekt, jedes Partikelsystem eine Ebene (Bursts, Rate, Lebenszeit, Größe/Farbe über die Lebenszeit, Sprite-Sheets, Formen Kugel/Kegel). |
-| `video_zu_sheet.py <id> <video> line\|nova` | Video mit Alphakanal → Sprite-Sheet `assets/fx/shot/<id>.png` + Eintrag in `data/fx/shots.json` (Wiedergabe-Werte wie `length`, `width`, `brightness`, `kind` bleiben erhalten). |
+| `kenney_effekte.py` | baut `data/fx/hits.json`, `data/fx/shots.json` und die Sheets in `assets/fx/shot/` aus den Kenney-Bildern (Vorlagen und Farbtabelle im Skript). |
+| `treffer_umwandeln.py <ordner>` | entpacktes Unity-`.unitypackage` (`tar xzf paket -C ordner`) → `data/fx/hits.json` + Texturen in `assets/fx/hit/` (nur für Pakete, deren Lizenz die Weitergabe erlaubt). Jedes Prefab wird ein Effekt, jedes Partikelsystem eine Ebene (Bursts, Rate, Lebenszeit, Größe/Farbe über die Lebenszeit, Sprite-Sheets, Formen Kugel/Kegel). |
+| `video_zu_sheet.py <id> <video> line\|nova` | Video mit Alphakanal → Sprite-Sheet `assets/fx/shot/<id>.png` + Eintrag in `data/fx/shots.json` (nur für Videos, deren Lizenz die Weitergabe erlaubt; Wiedergabe-Werte wie `length`, `width`, `brightness`, `kind` bleiben erhalten). |
 | `vorschau.sh [--tower=ruby,topaz] [--zeiten=0.1,0.2]` | Bild aller Effekte bzw. der Effekte einzelner Tower nach `/mnt/project-files/screens/fx/`. |
 | `unity_lesen.py` | Hilfsmodul: Unity-YAML lesen. |
 

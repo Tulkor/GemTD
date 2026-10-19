@@ -1,6 +1,6 @@
 # Bodentexturen
 
-Aus Fotos von Unsplash (Unsplash-Lizenz), mit `tools/boden_texturen.py` zugeschnitten,
+Aus Fotos von Unsplash (Unsplash-Lizenz: kostenlose, auch kommerzielle Nutzung und Bearbeitung erlaubt, Nennung freiwillig), mit `tools/boden_texturen.py` zugeschnitten,
 Helligkeit ausgeglichen und nahtlos kachelbar gemacht.
 
 | Datei | Foto |
