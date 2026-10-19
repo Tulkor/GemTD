@@ -159,6 +159,7 @@ data/
   enemies/*.json      ein Gegnertyp pro Datei
   waves/*.json        Wellen-Sets (eine Map verweist per "waves" auf ein Set)
 assets/models/        3D-Modelle (CC0, siehe CREDITS.md)
+assets/fx/            Effekt-Bilder (Quellen und Lizenzen in QUELLEN.md)
 scenes/               Hauptmenü, Spiel, Map-Editor, Tower-Editor (UI wird im Code gebaut)
 scripts/
   autoload/           Database (lädt alle JSON-Daten), Session (Übergaben zwischen Szenen)
