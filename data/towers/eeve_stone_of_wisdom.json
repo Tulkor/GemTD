@@ -4,7 +4,7 @@
 	"name_original": "Stone of Wisdom",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/nature/stone_tall_g.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {

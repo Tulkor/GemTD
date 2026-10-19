@@ -4,7 +4,7 @@
 	"name_original": "Hazardous Shroom Field",
 	"category": "eeve",
 	"color": "#46d160",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/nature/mushroom_red_group.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

@@ -1,8 +1,8 @@
 class_name FxData
 ## Treffer- und Schuss-Effekte: Daten aus data/fx/ und welcher Tower welchen Effekt bekommt.
 ##
-## hits.json  – Treffer-Effekte (aus der Unity-Sammlung FX_Hit_Collection, tools/fx/treffer_umwandeln.py)
-## shots.json – Schuss-Effekte als Sprite-Sheets (aus Videos, tools/fx/video_zu_sheet.py) und die Regeln
+## hits.json  – Treffer-Effekte (aus dem Kenney Particle Pack, CC0, tools/fx/kenney_effekte.py)
+## shots.json – Schuss-Effekte als Sprite-Sheets (ebenfalls tools/fx/kenney_effekte.py) und die Regeln
 ##              für die automatische Wahl ("auto")
 ## Ein Tower kann in seiner Datei "hit_fx" und "shot_fx" setzen (Effekt-ID, "auto" oder "none").
 ## Ohne Angabe wird nach seiner Farbe gewählt und der Effekt auf seinen Farbton gedreht.
@@ -81,10 +81,12 @@ static func for_tower(tower_id: String, tier: int = 0) -> Dictionary:
 		return _cache[key]
 	_load()
 	var def: Dictionary = Database.towers.get(tower_id, {})
+	if def.is_empty():
+		def = MaulData.tower(tower_id)  # Shopping-Maul-Tower stehen nicht in Database.towers
 	var col := Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
 	var types := _ability_types(def, tier)
 	var out := {}
-	var hit_id := _pick(str(def.get("hit_fx", AUTO)), _hits, func(): return _auto_hit(col))
+	var hit_id := _pick(str(def.get("hit_fx", AUTO)), _hits, func(): return _auto_hit_for(types, col))
 	if hit_id != "":
 		out["hit"] = _tint(_hits[hit_id], hit_id, col)
 	var shot_id := _pick(str(def.get("shot_fx", AUTO)), _shots, func(): return _auto_shot(types, col))
@@ -118,6 +120,15 @@ static func _ability_types(def: Dictionary, tier: int) -> Array:
 	if not tiers.is_empty():
 		list.append_array(tiers[clampi(tier, 0, tiers.size() - 1)].get("abilities", []))
 	return list.map(func(ab): return str(ab.get("type", "")) if ab is Dictionary else "")
+
+
+## Treffer: erst nach Fähigkeit (shots.json → auto.hit_ability, z. B. Splash = Explosion), sonst nach Farbe.
+static func _auto_hit_for(types: Array, col: Color) -> String:
+	var by_ability: Dictionary = _rules.get("hit_ability", {})
+	for t in types:
+		if by_ability.has(t) and _hits.has(str(by_ability[t])):
+			return str(by_ability[t])
+	return _auto_hit(col)
 
 
 ## Treffer: der Effekt mit dem nächsten Farbton; blasse Tower bekommen den blassesten Effekt.

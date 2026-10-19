@@ -4,7 +4,7 @@
 	"name_original": "Heat Stakes",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/nature/campfire_stones.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -41,5 +41,10 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.5,
+	"flame_height": 0.2,
+	"hit_fx": "bk_fire"
 }

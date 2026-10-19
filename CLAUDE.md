@@ -13,6 +13,12 @@ Alles kommt aus `scripts/ui/ui_theme.gd`, keine eigenen Farben oder Schriften er
 - Alle sichtbaren Texte auf Deutsch schreiben und in `data/i18n/en.json` übersetzen.
 - Ausnahme eeveTD: Stil „Druidenhain“ (Lukas, 2026-10-19). `eeve_game.gd` ruft `UiTheme.use_skin(UiTheme.DRUID)`, danach liefern dieselben `UiTheme`-Namen Moosgrau, Messing, Triquetren, Uncial Antiqua (Titel) und Alegreya (Text) aus `scripts/ui/druid_theme.gd`/`druid_box.gd`; beim Verlassen zurück auf Arcade. Fenster ohne Farbverlauf. Panel-Überschriften über `UiTheme.heading(label)`, nicht von Hand Großbuchstaben setzen. Die UiTheme-Farben sind deshalb `static var`, nicht in `const`-Ausdrücken verwenden.
 
+## Menüs vor dem Spiel: Art déco (Entscheidung von Lukas, 2026-10-19)
+Hub, Einzelspieler, Lobby, Spiel laden, Run-History und die Einstellungsfenster vor Runde 1 (GemTD, eeveTD, Maul-Filialwahl) nutzen `scripts/ui/deco_theme.gd` statt `UiTheme` (gleiche Namen: `DecoTheme.GOLD` = Messing, `CYAN` = Auswahl in hellem Messing, `GOLD_DARK` = Schrift darauf).
+- Petrol und Messing, doppelte Messingrahmen (`DecoTheme.panel`, `DecoBackdrop`), keine runden Ecken, Hauptknopf mit spitzen Enden (`DecoTheme.accent_button`).
+- Schrift: ab 28 px Limelight kräftig (`DecoTheme.title`, `DecoTheme.display`), kleiner Federo (Theme-Standard). Beide OFL in `assets/fonts/`.
+- Die Oberfläche im Spiel bleibt Arcade (oben).
+
 ## Threads: ein Feature, ein Thread (feste Regel von Lukas)
 Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten deshalb viele Tokens.
 - Jedes größere neue Feature bekommt einen eigenen, frischen Thread (z. B. „eeveTD-Modus“, „Maul-Koop“), nicht die alten Kategorie-Threads.
@@ -33,7 +39,8 @@ Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`)
 - Balance: `python3 tools/balance_bericht.py [--vergleich=main] [--tower=ruby:5,…]` → Tabelle Boss/Normal/Masse/Luft als .md und .html in `/mnt/project-files/balance/`.
 - Maps: `python3 tools/map_check.py` (Größe, Weglänge, Abschnitte, Fehler); Maze-Rechner in `tools/maze/`.
 - Texte: `python3 tools/pruefe_ui.py [--stil]` findet fehlende englische Übersetzungen und Farben außerhalb des Themes. Fehlende eintragen ohne en.json zu lesen: `--vorlage` schreibt `/tmp/gemtd-uebersetzen.json`, englische Werte darin ausfüllen, dann `--eintragen=/tmp/gemtd-uebersetzen.json`.
-- Effekte: `python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> line|projectile|nova` macht aus einem Video mit Alphakanal ein Sprite-Sheet plus Eintrag in `data/fx/shots.json` (danach gleich im Tower-Editor wählbar); `tools/fx/vorschau.sh [--tower=…]` zeigt Effekte als Bild. Unity-Pakete: `tools/fx/treffer_umwandeln.py` (siehe `tools/fx/README.md`).
+- Effekte: `python3 tools/fx/kenney_effekte.py` baut alle Treffer und Schüsse aus dem Kenney Particle Pack (CC0) neu. `python3 -I tools/fx/video_zu_sheet.py <id> <video.mov> line|projectile|nova` macht aus einem Video mit Alphakanal ein Sprite-Sheet plus Eintrag in `data/fx/shots.json` (danach gleich im Tower-Editor wählbar); `tools/fx/vorschau.sh [--tower=…]` zeigt Effekte als Bild. Unity-Pakete: `tools/fx/treffer_umwandeln.py` (siehe `tools/fx/README.md`). Beide nur für Material, das weitergegeben werden darf (siehe Lizenzen).
+- Modelle aus CC0-Paketen: `python3 -I tools/modelle/umwandeln.py --paket=<name>=<ordner>` holt die in `tools/modelle/auswahl.json` eingetragenen Modelle als .glb nach `assets/models/`; `tools/modelle/vorschau.sh <bogen.png> <a.glb> …` zeigt Modelle als Kontaktbogen (siehe `tools/modelle/README.md`). Brackeys-/Kronbits-Effekte: `tools/fx/zusatz_effekte.py`.
 - WC3-Karten: `tools/wc3/auslesen.sh karte.w3x ziel/` (siehe `tools/wc3/README.md`).
 - Alte Builds: `tools/builds_aufraeumen.sh` zeigt nur an; `--wirklich` nur auf Lukas' ausdrücklichen Wunsch.
 - Code lesen: Dateien über 300 Zeilen (game.gd, hud.gd, maul_game.gd, net.gd …) nicht ganz lesen. Erst `python3 tools/gliederung.py <datei.gd>` (Funktionen mit Zeilen und Kurzbeschreibung), `--suche=wort` (Funktionen mit Trefferzeilen, auch für ganze Ordner) oder `--funktion=name`, dann nur die gebrauchten Zeilen lesen.
@@ -41,6 +48,9 @@ Godot installiert der Session-Start-Hook (`tools/setup_godot.sh --ohne-vorlage`)
 - Werte ändern: `python3 tools/werte_setzen.py tower:ruby tiers.5.damage=[200,220] 'tiers.*.range*=1.1' [--bericht] [--probe]` statt JSON von Hand zu bearbeiten. Zeigt alt -> neu, erneuert die Tower-Tabelle, `--bericht` gibt die Vorher/Nachher-Tabelle gegen HEAD direkt aus.
 - Grundsatz: Wiederkehrendes läuft über diese Skripte, Claude startet sie und wertet die Ausgabe aus. Fehlt ein Skript für etwas, das öfter vorkommt, eines dazuschreiben statt den Ablauf jedes Mal von Hand zu machen.
 - Main nachziehen: `tools/main_nachziehen.sh [--tests]` merged origin/main, zeigt neue Commits und Konfliktstellen (Datei und Zeilen) statt der vollen Git-Ausgabe.
+
+## Lizenzen von Assets (Regel von Lukas)
+Ins Repo kommt nur, was rechtlich in einem öffentlichen Repo liegen darf und mit dem das Spiel verkauft werden darf: CC0 bevorzugt, sonst z. B. CC-BY oder SIL OFL mit Nennung bzw. Lizenzdatei. Nicht erlaubt: NC-Lizenzen, Asset-Store- oder Stock-Lizenzen ohne Weitergaberecht, alles mit unklarer Herkunft. Quelle und Lizenz jedes Assets steht in der CREDITS.md/QUELLEN.md seines Ordners.
 
 ## Code-Landkarte
 - `scripts/autoload/`: `database.gd` lädt alle JSON-Daten (`Database.towers`, `.enemies`, `.wave_sets`, `.balance`, `.modes`, `list_maps()`); `session.gd` trägt Werte zwischen Szenen (Map, Schwierigkeit, Wertung, Koop, Debug); `loc.gd` Sprache; `display.gd` Fenster; `net.gd` ENet, Lobby und Sitzungen.

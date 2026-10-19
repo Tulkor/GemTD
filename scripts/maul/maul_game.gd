@@ -828,11 +828,11 @@ func enemies_in_radius(p: Vector2, radius: float) -> Array:
 	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
 
 
-## fx (Schuss-/Treffer-Effekt der GemTD-Tower) gibt es im Maul noch nicht, nur die Linie
-func add_beam(from: Vector3, to: Vector3, col: Color, _fx: String = "") -> void:
-	effects.add_beam(from, to, col)
+## fx wie bei game.gd ("t:<tower>:<stufe>"); FxData wählt den Effekt nach Filialfarbe und Fähigkeit.
+func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
+	effects.add_beam(from, to, col, fx)
 	if sync != null and not mirror:
-		sync.add_beam(from, to, col)
+		sync.add_beam(from, to, col, fx)
 
 
 ## Ring aus kurzen Strahlen (Donnerschlag).

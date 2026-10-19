@@ -4,7 +4,7 @@
 	"name_original": "Ultra FFS Mega Power Totem",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/nature/statue_head.glb",
 	"damage_type": "physical",
 	"targets": "both",
 	"eeve": {

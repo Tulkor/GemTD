@@ -4,7 +4,7 @@
 	"name_original": "Magic Mushrooms",
 	"category": "eeve",
 	"color": "#859eaf",
-	"model": "res://assets/models/crystals/crystal_08.glb",
+	"model": "res://assets/models/nature/mushroom_red_tall.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -41,5 +41,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

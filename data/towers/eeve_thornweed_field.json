@@ -4,7 +4,7 @@
 	"name_original": "Thornweed Field",
 	"category": "eeve",
 	"color": "#83ad55",
-	"model": "res://assets/models/crystals/crystal_20.glb",
+	"model": "res://assets/models/nature/fern_1.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -36,5 +36,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

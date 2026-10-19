@@ -3,7 +3,8 @@ extends Tower
 ## Tower einer Filiale in Shopping Maul. Werte aus data/maul/shops.json (eine Stufe pro Tower,
 ## Upgrades sind eigene Tower mit "upgrade_from"). Schießt wie ein GemTD-Tower und wirkt dazu
 ## Zauber mit eigener Abklingzeit: Donnerschlag (nova_spell), Kettenblitz (chain_spell),
-## Schockwelle (wave_spell). Vorerst als Neon-Säule in der Filialfarbe, höher je teurer.
+## Schockwelle (wave_spell). Aussehen: Gebäude aus data/maul/models.json (Wände in der Filialfarbe),
+## höher je teurer; ohne Modell eine Neon-Säule.
 ##
 ## Profi-Filialen (Etappe 2, Daten in pro.json):
 ##   Post/IKEA: items = eingelegte Waffen (Slots je Tower), jede feuert mit eigener Abklingzeit.
@@ -299,9 +300,81 @@ func _build_visual() -> void:
 	base.position.y = 0.06
 	base.material_override = Board3D.make_material(Color("160b28"))
 	_visual.add_child(base)
+	# Neonrand in der Filialfarbe um den Sockel
+	var rim := MeshInstance3D.new()
+	var rim_box := BoxMesh.new()
+	rim_box.size = Vector3(0.97, 0.04, 0.97)
+	rim.mesh = rim_box
+	rim.position.y = 0.07  # Oberkante unter der Sockelplatte, sichtbar bleibt nur der Rand
+	var rim_mat := StandardMaterial3D.new()
+	rim_mat.albedo_color = color
+	rim_mat.emission_enabled = true
+	rim_mat.emission = color
+	rim_mat.emission_energy_multiplier = 1.2
+	rim.material_override = rim_mat
+	_visual.add_child(rim)
 	# Höhe wächst mit dem Wert: 9 Gold ≈ 0,35, 6.000 Gold ≈ 1,5 Towerbreiten
 	var cost := maxf(float(def.get("value", def.get("cost", 10))), 5.0)
 	var h := clampf(0.15 + log(cost) / log(10.0) * 0.36, 0.3, 1.6)
+	var look := _look(cost)
+	if not look.is_empty():
+		_gem = ModelLoader.instantiate_fit(look.path, 0.84, h + 0.5)
+		if _gem:
+			if look.tint != "":
+				_tint_material(_gem, look.tint, color)
+			_gem.position.y = 0.12
+			_visual.add_child(_gem)
+			_finish_visual()
+			return
+	_build_pillar(h)
+
+
+## Modell nach data/maul/models.json: {"path", "tint" (Materialname zum Einfärben oder "")} oder leer.
+func _look(cost: float) -> Dictionary:
+	var cfg := MaulData.models()
+	if cfg.is_empty():
+		return {}
+	var level := 0
+	for limit in cfg.get("levels", []):
+		if cost >= float(limit):
+			level += 1
+	var shop_cfg: Dictionary = cfg.get("shops", {}).get(str(def.get("shop", "")), {})
+	var dir := "city"
+	var tint := str(cfg.get("tint_material", ""))
+	var list: Array = []
+	if not shop_cfg.is_empty():
+		var levels: Array = shop_cfg.get("models", [])
+		list = levels[mini(level, levels.size() - 1)] if not levels.is_empty() else []
+		dir = str(shop_cfg.get("dir", dir))
+		if not bool(shop_cfg.get("tint", true)):
+			tint = ""
+	elif str(def.get("targets", "both")) == "air":
+		list = cfg.get("air", [])
+		tint = ""
+	else:
+		var levels: Array = cfg.get("default", [])
+		list = levels[mini(level, levels.size() - 1)] if not levels.is_empty() else []
+	if list.is_empty():
+		return {}
+	var name := str(list[absi(tower_id.hash()) % list.size()])
+	return {"path": "res://assets/models/%s/%s.glb" % [dir, name], "tint": tint}
+
+
+## Färbt alle Flächen mit dem Material mat_name (z. B. die Wände der Quaternius-Häuser) in col.
+static func _tint_material(n: Node, mat_name: String, col: Color) -> void:
+	if n is MeshInstance3D and n.mesh:
+		for i in n.mesh.get_surface_count():
+			var m: Material = n.mesh.surface_get_material(i)
+			if m is BaseMaterial3D and m.resource_name == mat_name:
+				var c: BaseMaterial3D = m.duplicate()
+				c.albedo_color = col.lerp(Color(0.85, 0.85, 0.85), 0.25)
+				n.set_surface_override_material(i, c)
+	for c in n.get_children():
+		_tint_material(c, mat_name, col)
+
+
+## Ersatz ohne Modell: Neon-Säule in der Filialfarbe.
+func _build_pillar(h: float) -> void:
 	var body := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	var w := 0.5 if str(def.get("targets", "both")) != "air" else 0.36

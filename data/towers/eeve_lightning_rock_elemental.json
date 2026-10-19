@@ -4,7 +4,7 @@
 	"name_original": "Lightning Rock Elemental",
 	"category": "eeve",
 	"color": "#9f9ea4",
-	"model": "res://assets/models/crystals/crystal_24.glb",
+	"model": "res://assets/models/nature/stone_tall_a.glb",
 	"damage_type": "electric",
 	"targets": "air",
 	"eeve": {
@@ -45,5 +45,6 @@
 				}
 			]
 		}
-	]
+	],
+	"hit_fx": "kb_shock_ring"
 }

@@ -90,9 +90,9 @@ func receive(p: int, cmd: Dictionary) -> bool:
 	return game.execute(cmd)
 
 
-func add_beam(from: Vector3, to: Vector3, col: Color) -> void:
+func add_beam(from: Vector3, to: Vector3, col: Color, fx := "") -> void:
 	if _beams.size() < MAX_BEAMS:
-		_beams.append([from, to, col])
+		_beams.append([from, to, col, fx] if fx != "" else [from, to, col])
 
 
 func snapshot() -> Dictionary:
@@ -341,7 +341,7 @@ func apply_enemies(packet: Dictionary) -> void:
 	var q := int(packet.get("q", 0))
 	g.spawn_queue = [[0, q]] if q > 0 else []
 	for b in packet.get("b", []):
-		g.effects.add_beam(b[0], b[1], b[2])
+		g.effects.add_beam(b[0], b[1], b[2], str(b[3]) if b.size() > 3 else "")
 
 
 func _clear_enemies() -> void:

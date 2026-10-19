@@ -4,7 +4,7 @@
 	"name_original": "Greater Rock Launcher",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/nature/rock_tall_a.glb",
 	"damage_type": "physical",
 	"targets": "both",
 	"eeve": {
@@ -33,5 +33,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

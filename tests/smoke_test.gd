@@ -1248,7 +1248,7 @@ func _idle_speed_test() -> void:
 
 ## Treffer- und Schuss-Effekte: Daten vollständig, jeder Tower bekommt Effekte, Abspielen läuft durch.
 func _fx_test() -> void:
-	check(FxData.hit_ids().size() >= 20, "Treffer-Effekte geladen: %d" % FxData.hit_ids().size())
+	check(FxData.hit_ids().size() >= 15, "Treffer-Effekte geladen: %d" % FxData.hit_ids().size())
 	check(FxData.shot_ids(["line", "projectile", "nova"]).size() >= 4, "Schuss-Effekte geladen")
 	var missing := []
 	for id in FxData.hit_ids():
