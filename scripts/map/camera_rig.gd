@@ -194,13 +194,43 @@ static func add_environment(parent: Node) -> void:
 	env.ambient_light_energy = 0.1
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.0
-	var we := WorldEnvironment.new()
-	we.environment = env
-	parent.add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(-38), deg_to_rad(-35), 0)
 	sun.light_color = Color(1.0, 0.96, 0.88)
 	sun.light_energy = 0.55
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.5
+	# Schatten nur so weit wie das Spielfeld reicht: feinere Schattenkanten ohne Treppen
+	sun.directional_shadow_max_distance = 60.0
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	# eeveTD und Shopping Maul: eigener Himmel und eigenes Licht (FieldStyle)
+	var look: Dictionary = FieldStyle.current().get("env", {})
+	if not look.is_empty():
+		var sky_mat := ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = look.sky_top
+		sky_mat.sky_horizon_color = look.sky_horizon
+		sky_mat.ground_horizon_color = look.sky_horizon
+		sky_mat.ground_bottom_color = look.ground_bottom
+		sky_mat.sun_angle_max = 0.0
+		var plain_sky := Sky.new()
+		plain_sky.sky_material = sky_mat
+		env.background_mode = Environment.BG_SKY
+		env.sky = plain_sky
+		env.ambient_light_color = look.ambient
+		env.ambient_light_energy = look.ambient_energy
+		env.glow_hdr_threshold = look.glow_threshold
+		env.glow_intensity = look.glow_intensity
+		env.tonemap_exposure = look.exposure
+		sun.light_color = look.sun
+		sun.light_energy = look.sun_energy
+		sun.rotation.x = deg_to_rad(look.sun_pitch)
+		if look.has("fog"):
+			# leichter Dunst in der Ferne, damit Boden und Tower räumlicher wirken
+			env.fog_enabled = true
+			env.fog_light_color = look.fog
+			env.fog_density = look.fog_density
+			env.fog_sky_affect = 0.0
+	var we := WorldEnvironment.new()
+	we.environment = env
+	parent.add_child(we)
 	parent.add_child(sun)
