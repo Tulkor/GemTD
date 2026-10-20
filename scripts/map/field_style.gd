@@ -93,7 +93,7 @@ const STYLES := {
 			# beleuchteter Marmor (floor_lit): etwas dunkler, weil die Sonne ihn aufhellt; glänzend
 			"lit_albedo": 1.0, "line_glow": 0.4, "floor_roughness": 0.55, "floor_specular": 0.25,
 			# warme Bodenleuchten in den Messingrauten
-			"floor_lamp": 5.0, "lamp_color": Color("ffd08a"), "lamp_size": 0.085, "lamp_radius": 1.1, "lamp_pool": 0.25,
+			"floor_lamp": 5.0, "lamp_color": Color("ffbf70"), "lamp_size": 0.085, "lamp_radius": 1.1, "lamp_pool": 0.25,
 			"blocked_color": Color("071618"), "blocked_alpha": 1.0,
 			"zone_color": Color("b4553f"), "zone_alpha": 0.3, "zone_edge_energy": 1.0,
 			"zone_edge_color": Color("d8b97f"),
