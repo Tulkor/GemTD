@@ -130,7 +130,7 @@ const STYLES := {
 		# wärmerer Marmor, die dicken Messinglinien glimmen golden
 		"floor_night": {
 			"floor_color": Color("1d2e29"), "floor_lamp": 6.0, "lamp_pool": 0.4, "lamp_radius": 1.2, "line_glow": 0.3,
-			"major_glow": 0.55, "major_glow_color": Color("ffc35a"),
+			"major_glow": 0.35, "major_glow_color": Color("ffc35a"),
 		},
 	},
 }
