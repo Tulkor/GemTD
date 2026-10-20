@@ -345,7 +345,7 @@ func _ready() -> void:
 	check("noch 7" in tip_text.call(tips[0]), "Kill-Tooltip: noch 7 Kills bis Rang 3: " + tip_text.call(tips[0]))
 	for x in tips:
 		x.free()
-	check(hud.abil_panel.visible == not topaz.abilities().is_empty(), "Fähigkeiten-Fenster nur mit Fähigkeiten")
+	check(hud.abil_panel.visible, "Fähigkeiten-Fenster immer da (feste Größe)")
 	hud.preview_range_requested.emit(float(up_views[0].preview_range))
 	check(topaz._preview_ring != null, "Hover auf Upgrade zeigt die neue Reichweite")
 	hud.preview_range_requested.emit(0.0)

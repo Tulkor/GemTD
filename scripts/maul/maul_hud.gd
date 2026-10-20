@@ -7,6 +7,7 @@ extends CanvasLayer
 
 const SHOP_WIDTH := 300.0
 const MAP_SIZE := 200.0
+const ABIL_H := 84.0  ## feste Höhe der Fähigkeiten im Auswahlfenster (mehr scrollt), damit es nicht springt
 
 var game: MaulGame
 var root: Control
@@ -435,8 +436,7 @@ func refresh_selection() -> void:
 		UiTheme.caption(pair[0], box)
 		var v := UiUtil.label(pair[1], box, 15)
 		v.add_theme_font_override("font", UiTheme.font(true))
-	for line in ability_lines(d):
-		UiUtil.wrap_label(line, _sel_box, 316).add_theme_font_size_override("font_size", 13)
+	_ability_box(ability_lines(d))
 	var done := UiUtil.label(tr("%s Schaden · %d Kills") % [MaulHud.big(roundi(t.total_damage)), t.kills], _sel_box, 13)
 	done.add_theme_color_override("font_color", UiTheme.MUTED)
 	var mine := t.owner_player == game.local_player
@@ -461,6 +461,29 @@ func refresh_selection() -> void:
 		b.tooltip_text = tower_text(ud) + ("\n" + why if why != "" else "")
 		b.disabled = int(ud.cost) > gold or why != ""
 	_pro_actions(t, gold)
+
+
+## Fähigkeiten in einem Kasten mit fester Höhe, auch ohne Fähigkeit (sonst springt das Fenster beim Wechseln).
+func _ability_box(lines: Array) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BG, UiTheme.CYAN, 0, 1, 8))
+	panel.custom_minimum_size.y = ABIL_H
+	_sel_box.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+	UiTheme.caption("Fähigkeiten", box)
+	if lines.is_empty():
+		lines = [tr("Keine besonderen Fähigkeiten")]
+	for line in lines:
+		var l := UiUtil.wrap_label(line, box, 0)
+		l.add_theme_font_size_override("font_size", 13)
+		if lines.size() == 1 and line == tr("Keine besonderen Fähigkeiten"):
+			l.add_theme_color_override("font_color", UiTheme.MUTED)
 
 
 ## Anzeige der Profi-Werte eines Towers (für alle sichtbar).

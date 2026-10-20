@@ -24,6 +24,9 @@ signal debug_wave_requested(number: int)
 const BANNER_TOP := 64.0
 const LEFT_TOP := 120.0
 const SPEEDS := [1.0, 2.0, 4.0]
+const INFO_W := 306.0  ## feste Breite der Werte (zwei Kacheln)
+const ABIL_W := 300.0  ## feste Breite des Fähigkeiten-Fensters
+const ABIL_UNDER_H := 72.0  ## feste Höhe des Fähigkeiten-Fensters unter den Werten
 
 var root: Control
 var _drag_box: Panel   ## Auswahlrahmen beim Ziehen mit der linken Maustaste
@@ -93,6 +96,7 @@ var abil_box: VBoxContainer
 var _tiles: Array = []  ## je Kachel {host, caption, value, normal, hover}
 var _stats: Dictionary = {}  ## TowerStats.view des gewählten Towers
 var _abil_key: Variant = null
+var _title_size := 18  ## Grundgröße des Namens im Infofenster (je nach Skin)
 var used_col: VBoxContainer
 var used_row: HBoxContainer
 var used_prev: Button
@@ -228,7 +232,8 @@ func _chip(caption: String, parent: Node, color := UiTheme.TEXT) -> Label:
 ## Kachel im Infofenster (Reichweite, Tempo, Schaden, Schadensart) mit Tooltip, woher der Wert kommt.
 func _stat_tile() -> Dictionary:
 	var host := TooltipHost.new()
-	host.custom_minimum_size.x = 128
+	host.custom_minimum_size.x = 150
+	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var normal := UiTheme.box(UiTheme.PANEL_2, UiTheme.BORDER, 0, 2, 8)
 	var hover := UiTheme.box(UiTheme.PANEL_2, UiTheme.CYAN, 0, 2, 8)
 	host.add_theme_stylebox_override("panel", normal)
@@ -243,6 +248,8 @@ func _stat_tile() -> Dictionary:
 	caption.uppercase = true
 	caption.add_theme_color_override("font_color", UiTheme.MUTED)
 	var value := UiUtil.label("", v, 18)
+	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	value.custom_minimum_size.x = 1
 	var tile := {"host": host, "caption": caption, "value": value}
 	host.make = func(): return _stat_tooltip(_tiles.find(tile))
 	return tile
@@ -393,19 +400,31 @@ func _build_bottom() -> void:
 	strip_hint.add_theme_color_override("font_color", UiTheme.CYAN)
 	_vsep(h)
 
+	# Werte links, Fähigkeiten rechts über die ganze Höhe; beide fest breit, damit die Karte beim
+	# Wechseln der Auswahl nicht springt (lange Fähigkeiten scrollen statt das Fenster zu vergrößern)
 	info_col = VBoxContainer.new()
-	info_col.custom_minimum_size.x = 250
-	info_col.add_theme_constant_override("separation", 6)
 	h.add_child(info_col)
+	info_main = HBoxContainer.new()
+	info_main.add_theme_constant_override("separation", 12)
+	info_main.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	info_col.add_child(info_main)
+	info_left = VBoxContainer.new()
+	info_left.custom_minimum_size.x = INFO_W
+	info_left.add_theme_constant_override("separation", 6)
+	info_main.add_child(info_left)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
-	info_col.add_child(head)
+	info_left.add_child(head)
 	info_swatch = ColorRect.new()
 	info_swatch.custom_minimum_size = Vector2(22, 22)
 	info_swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(info_swatch)
 	info_title = UiUtil.label("", head, 18)
 	UiTheme.heading(info_title)
+	_title_size = info_title.get_theme_font_size("font_size")
+	info_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	info_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
 	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
@@ -414,14 +433,9 @@ func _build_bottom() -> void:
 	head.add_child(info_kills)
 	info_kills_label = UiUtil.label("", info_kills, 12)
 	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
-	info_sub = UiUtil.label("", info_col, 12)
+	info_sub = UiUtil.wrap_label("", info_left, 0)
+	info_sub.add_theme_font_size_override("font_size", 12)
 	info_sub.add_theme_color_override("font_color", UiTheme.MUTED)
-	info_main = HBoxContainer.new()
-	info_main.add_theme_constant_override("separation", 12)
-	info_col.add_child(info_main)
-	info_left = VBoxContainer.new()
-	info_left.add_theme_constant_override("separation", 6)
-	info_main.add_child(info_left)
 	info_tiles = GridContainer.new()
 	info_tiles.columns = 2
 	info_tiles.add_theme_constant_override("h_separation", 6)
@@ -429,17 +443,21 @@ func _build_bottom() -> void:
 	info_left.add_child(info_tiles)
 	for i in 4:
 		_tiles.append(_stat_tile())
-	info_body = UiUtil.wrap_label("", info_left, 262)
+	info_body = UiUtil.wrap_label("", info_left, 0)
 	info_body.add_theme_font_size_override("font_size", 13)
 	info_body.add_theme_color_override("font_color", UiTheme.DIM)
-	# Fähigkeiten in einem eigenen kleinen Fenster rechts neben den Werten
+	# Fähigkeiten in einem eigenen Fenster rechts neben den Werten (mit den neuen Gems daneben darunter)
 	abil_panel = PanelContainer.new()
 	abil_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BG, UiTheme.CYAN, 0, 2, 10))
-	abil_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	abil_panel.custom_minimum_size.x = ABIL_W
 	info_main.add_child(abil_panel)
+	var abil_scroll := ScrollContainer.new()
+	abil_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	abil_panel.add_child(abil_scroll)
 	abil_box = VBoxContainer.new()
 	abil_box.add_theme_constant_override("separation", 4)
-	abil_panel.add_child(abil_box)
+	abil_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	abil_scroll.add_child(abil_box)
 	_vsep(h)
 
 	used_col = VBoxContainer.new()
@@ -749,8 +767,20 @@ func set_selection(info: Dictionary) -> void:
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
+	_fit_title()
 	_refresh_used_in()
 	_update_layout()
+
+
+## Langer Name: Schrift verkleinern, bis er in die feste Breite passt (erst dann „…“).
+func _fit_title() -> void:
+	var font := info_title.get_theme_font("font")
+	var text := info_title.text.to_upper() if info_title.uppercase else info_title.text
+	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0)
+	var size := _title_size
+	while size > _title_size - 5 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
+		size -= 1
+	info_title.add_theme_font_size_override("font_size", size)
 
 
 ## options: [{label, style}] mit style "oneshot" (lila), "primary" (gold) oder "normal".
@@ -879,10 +909,11 @@ func _show_stats(st: Dictionary) -> void:
 	info_sub.visible = has
 	info_tiles.visible = has
 	info_kills.visible = has and not (st.kills as Dictionary).is_empty()
-	abil_panel.visible = has and not ((st.abilities as Array).is_empty() and str(st.description) == "")
+	abil_panel.visible = has
 	if not has:
 		return
 	info_sub.text = st.subtitle
+	info_title.tooltip_text = info_title.text
 	var tiles: Array = st.tiles
 	for i in _tiles.size():
 		var w: Dictionary = _tiles[i]
@@ -907,25 +938,32 @@ func _show_stats(st: Dictionary) -> void:
 	for c in abil_box.get_children():
 		abil_box.remove_child(c)
 		c.queue_free()
-	var head := UiUtil.label("◆ " + (tr("Fähigkeiten") if not (st.abilities as Array).is_empty() else tr("Beschreibung")), abil_box, 12)
+	var abils: Array = st.abilities
+	var head := UiUtil.label("◆ " + (tr("Beschreibung") if abils.is_empty() and str(st.description) != "" else tr("Fähigkeiten")), abil_box, 12)
 	head.uppercase = true
 	head.add_theme_font_override("font", UiTheme.font(true))
 	head.add_theme_color_override("font_color", UiTheme.CYAN)
-	for text in st.abilities:
+	for text in abils:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
 		abil_box.add_child(row)
 		var dot := UiUtil.label("✦", row, 12)
 		dot.add_theme_color_override("font_color", UiTheme.GOLD)
 		dot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		UiUtil.wrap_label(text, row, 250).add_theme_font_size_override("font_size", 12)
+		var l := UiUtil.wrap_label(text, row, 0)
+		l.add_theme_font_size_override("font_size", 12)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if str(st.description) != "":
-		var d := UiUtil.wrap_label(st.description, abil_box, 266)
+		var d := UiUtil.wrap_label(st.description, abil_box, 0)
 		d.add_theme_font_size_override("font_size", 12)
 		d.add_theme_color_override("font_color", UiTheme.MUTED)
+	if abils.is_empty() and str(st.description) == "":
+		var none := UiUtil.wrap_label(tr("Keine besonderen Fähigkeiten"), abil_box, 0)
+		none.add_theme_font_size_override("font_size", 12)
+		none.add_theme_color_override("font_color", UiTheme.MUTED)
+	(abil_box.get_parent() as ScrollContainer).scroll_vertical = 0
 
 
-## Tooltip-Grundgerüst: Titel im Arcade-Stil, darunter Zeilen.
 func _tip_box(title: String, width := 300.0) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
@@ -1406,6 +1444,9 @@ func _update_layout() -> void:
 	var abil_parent: Node = info_left if strip_col.visible else info_main
 	if abil_panel.get_parent() != abil_parent:
 		abil_panel.reparent(abil_parent)
+	# Unter den Werten mit fester Höhe, daneben so hoch wie die Karte
+	abil_panel.custom_minimum_size.y = ABIL_UNDER_H if strip_col.visible else 0.0
+	abil_panel.size_flags_vertical = Control.SIZE_FILL
 	_recenter.call_deferred()
 
 
