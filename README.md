@@ -160,7 +160,7 @@ data/
   towers/*.json       ein Tower bzw. eine Falle pro Datei
   enemies/*.json      ein Gegnertyp pro Datei
   waves/*.json        Wellen-Sets (eine Map verweist per "waves" auf ein Set)
-assets/models/        3D-Modelle (CC0, siehe CREDITS.md)
+assets/models/        3D-Modelle (CC0, Boss-Modell CC-BY; siehe CREDITS.md)
 assets/fx/            Effekt-Bilder (Quellen und Lizenzen in QUELLEN.md)
 scenes/               Hauptmenü, Spiel, Map-Editor, Tower-Editor (UI wird im Code gebaut)
 scripts/
@@ -257,3 +257,8 @@ Der Sitzungs-Test: beide spielen eine Runde, der Host speichert, beendet und lä
 der Client tritt wieder bei und steigt an seinem gespeicherten Stand ein.
 Der Balance-Test stellt jeden Gem einzeln an den Laufweg (Ecke und Gerade, ohne Labyrinth) und zählt,
 wie viele Gegner der Welle durchkommen. Splitter schaffen Welle 1 ohne Durchbruch (außer Amethyst, der nur Luft trifft).
+
+## Credits
+
+- Boss-Modell: Little Man by Don Carson [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/8KU4S7I0sL8)
+- Alle weiteren Modelle, Effekte und Schriften mit Quelle und Lizenz: `assets/models/CREDITS.md`, `assets/fx/QUELLEN.md`, `assets/fonts/`.

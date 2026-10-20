@@ -23,6 +23,7 @@ extends Node
 ##   --grundtower=water      eeveTD: statt des festen Plans überall den Grundturm dieses Elements
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
+##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
@@ -396,6 +397,10 @@ func _camera(game: Node, w: String) -> void:
 			if opts.has("punkt"):
 				var p := String(opts.punkt).split(",")
 				focus = Vector2(int(p[0]), int(p[1])) * Board3D.CELL
+			elif opts.has("gegner") and not game.enemies.is_empty():
+				Engine.time_scale = 0.0  # Bild anhalten, sonst läuft der Gegner bis zur Aufnahme aus dem Bild
+				focus = game.enemies[0].pos
+				rig.distance = 9.0
 			elif not game.towers.is_empty():
 				focus = Board3D.footprint_center(game.towers.values()[0].cell)
 			rig.target = Board3D.to_3d(focus)

@@ -11,3 +11,7 @@
 
 Verwendung im Spiel: eeveTD über `LOOK` in `tools/wc3/eeve/eeve_daten.py` (Modell, `model_solid`, `flame`, `hit_fx`),
 Shopping Maul über `data/maul/models.json`.
+
+Boss-Modell: `tools/modelle/boss_rig.py` gibt dem starren "Little Man" (CC-BY) Skelett und Animationen
+(`walk`, `idle`, `hit`, `death`). Braucht Blender als Python-Modul: `uv venv -p python3.13 env && uv pip install -p env/bin/python bpy`.
+Animationen ansehen: `tools/modelle/vorschau.sh bogen.png --animationen assets/models/enemies/little_man.glb`.

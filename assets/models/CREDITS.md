@@ -1,6 +1,6 @@
 # Modelle
 
-Alle Modelle stehen unter CC0 (Public Domain).
+Alle Modelle stehen unter CC0 (Public Domain), außer dem Boss-Modell (CC-BY 3.0, siehe unten).
 
 - `crystals/crystal_*.glb`: "Crystal Pack" von iPoly3D, https://poly.pizza/bundle/Crystal-Pack-AywAG7aywi
 - `crystals/quaternius_*.glb`: "Crystal" und "Big Crystal" von Quaternius (poly.pizza)
@@ -33,3 +33,10 @@ mit `tools/modelle/umwandeln.py` (Auswahl in `tools/modelle/auswahl.json`, Textu
 
 Ebenfalls hochgeladen, aber noch nicht verwendet (bei Bedarf über `auswahl.json` holen): Kenney City Kit Suburban,
 Kenney Modular Buildings (beide CC0).
+
+## Boss-Modell (CC-BY 3.0, Nennung Pflicht)
+
+- `enemies/little_man.glb`: Little Man by Don Carson [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/8KU4S7I0sL8)
+  - Von Lukas hochgeladen (2026-10-20). Geändert: Skelett und Animationen `walk`, `idle`, `hit`, `death` ergänzt, Arme aus der T-Pose nach unten gelegt,
+    Füße auf den Ursprung gesetzt (`tools/modelle/boss_rig.py`, Blender). Wird für alle Gegner mit `"boss": true`
+    ohne eigenes Modell verwendet (`scripts/game/enemy.gd`, `BOSS_MODEL`).

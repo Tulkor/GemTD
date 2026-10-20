@@ -5,6 +5,9 @@ extends Node3D
 ## Logische Position `pos` in Einheiten (1 = eine Towerbreite) als Vector2, die 3D-Position folgt daraus.
 
 const FLY_HEIGHT := 1.4
+## Boss-Modell mit Skelett und Animationen walk/idle/hit/death (tools/modelle/boss_rig.py), Höhe in Towerbreiten
+const BOSS_MODEL := "res://assets/models/enemies/little_man.glb"
+const BOSS_MODEL_HEIGHT := 1.1
 
 var game  # game.gd
 var enemy_id := ""
@@ -66,6 +69,12 @@ var def_model_scale := 1.0
 var _body_mat: StandardMaterial3D
 var _bar_fg: MeshInstance3D
 var _body: MeshInstance3D
+var _anim: AnimationPlayer      ## nur bei animierten Modellen (Boss)
+var _model: Node3D
+var _overlay: StandardMaterial3D  ## Treffer-Blitz und Zustandsfarben auf dem Modell
+var _flash := 0.0
+var _hit_hp := 0.0               ## Leben beim letzten Treffer-Zucken
+var _hit_cool := 0.0
 
 
 func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
@@ -348,6 +357,7 @@ func take_raw_damage(amount: float) -> float:
 	hp -= amount
 	if hp <= 0.0:
 		dead = true
+		_leave_corpse()
 		game.on_enemy_killed(self)
 	return dealt
 
@@ -400,9 +410,13 @@ func _build_visual() -> void:
 	# schmal genug für Lücken von einer halben Towerbreite
 	var r := 0.2 * size
 	var model := ModelLoader.instantiate(str(def_model), def_model_scale * size)
+	if model == null and def_model == "" and shape() == "boss":
+		model = ModelLoader.instantiate(BOSS_MODEL, BOSS_MODEL_HEIGHT * size)
 	if model != null:
 		add_child(model)
 		_body.visible = false
+		_model = model
+		_setup_animation(model)
 	# Platzhalterformen: Würfel = Boden, Pyramide = Massenwelle, großer Quader = Boss, Kugel = Flieger.
 	# In der Gegner-Datei mit "shape" wählbar, sonst aus flying/boss abgeleitet.
 	var height := 0.0
@@ -443,6 +457,8 @@ func _build_visual() -> void:
 	add_child(_body)
 
 	var bar_y := _body.position.y + height / 2.0 + 0.25
+	if _model != null:
+		bar_y = maxf(bar_y, ModelLoader.aabb(_model, Transform3D()).end.y + 0.2)
 	var bg := _bar(Color(0, 0, 0, 0.8), 0)
 	bg.position.y = bar_y
 	_bar_fg = _bar(Color("e74c3c"), 1)
@@ -475,3 +491,80 @@ func _update_visual() -> void:
 	if stun_time > 0.0:
 		tint = tint.lerp(Color.WHITE, 0.5)
 	_body_mat.albedo_color = tint
+	if _anim != null:
+		_animate()
+
+
+# --- Animiertes Modell (Boss) ------------------------------------------------
+
+func _setup_animation(model: Node3D) -> void:
+	var players := model.find_children("*", "AnimationPlayer", true, false)
+	if players.is_empty():
+		return
+	_anim = players[0]
+	for n in ["walk", "idle"]:
+		if _anim.has_animation(n):
+			_anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+	_overlay = StandardMaterial3D.new()
+	_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_overlay.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	_overlay.albedo_color = Color(0, 0, 0, 0)
+	for m in model.find_children("*", "MeshInstance3D", true, false):
+		m.material_overlay = _overlay
+	_hit_hp = hp
+	_anim.play("walk")
+	_anim.seek(randf() * _anim.current_animation_length)
+
+
+## Laufen im Tempo des Gegners, Stehen bei Betäubung, Zucken bei größeren Treffern, Farbe für Zustände.
+func _animate() -> void:
+	var delta := get_process_delta_time()
+	_hit_cool -= delta
+	if hp < _hit_hp:
+		_flash = maxf(_flash, 0.5)
+		if _hit_cool <= 0.0 and _hit_hp - hp >= max_hp * 0.03 and _anim.has_animation("hit"):
+			_anim.play("hit", 0.05)
+			_anim.queue("walk")
+			_hit_cool = 1.0
+		_hit_hp = hp
+	elif hp > _hit_hp:
+		_hit_hp = hp
+	_flash = maxf(_flash - delta * 5.0, 0.0)
+	var want := "idle" if stun_time > 0.0 else "walk"
+	var cur := _anim.current_animation
+	if cur != "hit" and cur != want and _anim.has_animation(want):
+		_anim.play(want, 0.2)
+	if cur == "walk" or want == "walk":
+		_anim.speed_scale = clampf(current_speed() * boost / (BOSS_MODEL_HEIGHT * size * 2.0), 0.6, 2.5)
+	else:
+		_anim.speed_scale = 1.0
+	var state := Color(0, 0, 0, 0)
+	if poison_time > 0.0:
+		state = Color("2ecc71")
+	if slow_time > 0.0:
+		state = Color("5dade2")
+	if stun_time > 0.0:
+		state = Color.WHITE
+	state.a = 0.25 if state.a > 0.0 else 0.0
+	_overlay.albedo_color = state.lerp(Color(1, 1, 1, 0.3), _flash)
+
+
+## Getötet: an der Stelle bleibt das Modell kurz liegen (Animation death) und sinkt in den Boden.
+func _leave_corpse() -> void:
+	if _anim == null or not _anim.has_animation("death") or not is_inside_tree() or get_parent() == null:
+		return
+	var corpse := Node3D.new()
+	var model := ModelLoader.instantiate(BOSS_MODEL, BOSS_MODEL_HEIGHT * size)
+	if model == null:
+		return
+	corpse.add_child(model)
+	get_parent().add_child(corpse)
+	corpse.global_transform = _model.global_transform
+	var players := model.find_children("*", "AnimationPlayer", true, false)
+	if not players.is_empty():
+		players[0].play("death")
+	var tw := corpse.create_tween()
+	tw.tween_interval(1.4)
+	tw.tween_property(corpse, "position:y", corpse.position.y - 0.6 * size, 1.2)
+	tw.tween_callback(corpse.queue_free)

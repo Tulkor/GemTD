@@ -1,6 +1,7 @@
 extends SceneTree
 ## Kontaktbogen von .glb-Dateien: jedes Modell einzeln schräg von oben, als PNG pro Modell.
 ## Aufruf über tools/modelle/vorschau.sh <ausgabeordner> <a.glb> <b.glb> …
+## Mit --animationen: bei Modellen mit Animationen je Animation vier Bilder (Name_Animation_Bild).
 
 var _cam: Camera3D
 var _holder: Node3D
@@ -26,6 +27,8 @@ func _init() -> void:
 
 
 func _run(out: String, files: Array) -> void:
+	var anims := files.has("--animationen")
+	files.erase("--animationen")
 	for f in files:
 		if _holder:
 			_holder.queue_free()
@@ -44,10 +47,24 @@ func _run(out: String, files: Array) -> void:
 		_cam.position = c + Vector3(1.0, 0.8, 1.2).normalized() * r * 2.6
 		_cam.look_at(c)
 		_cam.fov = 40
+		var name: String = str(f).get_file().get_basename()
+		var players := model.find_children("*", "AnimationPlayer", true, false)
+		if anims and not players.is_empty():
+			var ap: AnimationPlayer = players[0]
+			for a in ap.get_animation_list():
+				var length := ap.get_animation(a).length
+				for k in 4:
+					ap.play(a)
+					ap.seek(length * k / 3.0, true)
+					ap.pause()
+					for i in 3:
+						await process_frame
+					root.get_texture().get_image().save_png(out.path_join("%s_%s_%d.png" % [name, a, k]))
+			print("BILD ", name, " Animationen: ", ", ".join(ap.get_animation_list()))
+			continue
 		for i in 4:
 			await process_frame
 		var img := root.get_texture().get_image()
-		var name: String = str(f).get_file().get_basename()
 		img.save_png(out.path_join(name + ".png"))
 		print("BILD ", name, "  %.2f x %.2f x %.2f" % [box.size.x, box.size.y, box.size.z])
 	quit()
