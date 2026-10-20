@@ -1,8 +1,7 @@
 class_name MaulBoard
 extends Board3D
 ## Spielfeld von Shopping Maul: wie Board3D, aber mit eigenen Markierungen (Spawns, Teleports,
-## Mall, Leak-Fläche), den 11 Spielergebieten, der Blockstadt (MaulCity) rundherum und Glasdächern
-## über den Gängen (MaulGlassRoof).
+## Mall, Leak-Fläche), den 11 Spielergebieten und der Blockstadt (MaulCity) rundherum.
 ## Das eigene Gebiet leuchtet, die anderen sind blass.
 
 const COL_LEAK := Color("ff5d7a")
@@ -10,7 +9,6 @@ const COL_TELEPORT := Color("b38cff")
 
 var own_zone := 0
 var city: MaulCity
-var glass_roof: MaulGlassRoof
 
 
 func _rebuild_markers() -> void:
@@ -58,10 +56,6 @@ func rebuild() -> void:
 			city = MaulCity.new()
 			add_child(city)
 		city.build(mm)
-		if glass_roof == null:
-			glass_roof = MaulGlassRoof.new()
-			add_child(glass_roof)
-		glass_roof.build(mm, city.corridor)
 	super()
 	if mm != null and _floor_mat != null:
 		_floor_mat.set_shader_parameter("grid_origin", _grid_center(mm))
