@@ -33,11 +33,14 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
 			RenderingServer.canvas_item_add_polygon(to_canvas_item, PackedVector2Array(tri), [line])
 
 
+## Linien bis 1 px zeichnet Godot als Haarlinie (Breite -1): immer genau ein Bildschirmpixel. Als Fläche
+## (Breite 1) wären sie bei UI-Größe unter 100 % schmaler als ein Pixel und fielen je nach Lage ganz weg.
 func _outline(item: RID, pts: PackedVector2Array, c: Color, w: float) -> void:
 	var closed := pts.duplicate()
 	closed.append(pts[0])
-	closed.append(pts[1])
-	RenderingServer.canvas_item_add_polyline(item, closed, [c], w, false)
+	if w > 1.0:
+		closed.append(pts[1])
+	RenderingServer.canvas_item_add_polyline(item, closed, [c], w if w > 1.0 else -1.0, false)
 
 
 func _shape(r: Rect2, k: int) -> PackedVector2Array:

@@ -30,7 +30,7 @@ func _ready() -> void:
 	DecoTheme.title(UiUtil.label("Spiel laden", v, 38)).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var hint := UiUtil.wrap_label("Spielstände sind verschlüsselt und lassen sich nach einer Änderung nicht mehr laden.", v, 620)
 	hint.add_theme_color_override("font_color", DecoTheme.MUTED)
-	hint.add_theme_font_size_override("font_size", 13)
+	hint.add_theme_font_size_override("font_size", 15)
 
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 420)
@@ -92,7 +92,7 @@ func _row(s: Dictionary) -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 10)
 	texts.add_child(top)
-	var kind := UiUtil.label(tr("Koop") if s.kind == "coop" else tr("Mehrspieler") if multi else tr("Einzelspiel"), top, 12)
+	var kind := UiUtil.label(tr("Koop") if s.kind == "coop" else tr("Mehrspieler") if multi else tr("Einzelspiel"), top, 14)
 	kind.add_theme_color_override("font_color", DecoTheme.CYAN if multi else DecoTheme.PURPLE_LIGHT)
 	kind.uppercase = true
 	UiUtil.label(tr(str(m.get("map", "?"))), top, 17)
@@ -100,10 +100,10 @@ func _row(s: Dictionary) -> void:
 	var diff: Dictionary = Session.DIFFICULTIES[clampi(int(m.get("difficulty", 1)), 0, Session.DIFFICULTIES.size() - 1)]
 	var line := [tr("Welle %d/%d") % [int(m.get("wave", 1)), int(m.get("waves", 0))], tr("Punkte %d") % int(m.get("score", 0)) if m.get("score_mode", false) else tr("Leben %d") % int(m.get("lives", 0)),
 		tr(str(diff.name)), _date(int(m.get("time", 0)))]
-	var info := UiUtil.label(" · ".join(line), texts, 13)
+	var info := UiUtil.label(" · ".join(line), texts, 15)
 	info.add_theme_color_override("font_color", DecoTheme.MUTED)
 	if multi:
-		var who := UiUtil.label(tr("Spieler: %s") % ", ".join(m.get("players", [])), texts, 13)
+		var who := UiUtil.label(tr("Spieler: %s") % ", ".join(m.get("players", [])), texts, 15)
 		who.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		who.custom_minimum_size.x = 380
 		who.add_theme_color_override("font_color", DecoTheme.DIM)

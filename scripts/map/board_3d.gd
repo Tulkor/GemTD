@@ -26,6 +26,8 @@ const ROCK_SHADER := preload("res://assets/shaders/rock.gdshader")
 ## Neon: Shader für Röhren (innen weiß, außen farbig) und das Gitter-Feld.
 const NEON_SHADER := preload("res://assets/shaders/neon.gdshader")
 const NEON_FLOOR_SHADER := preload("res://assets/shaders/neon_floor.gdshader")
+## Dasselbe Feld beleuchtet und deckend (FieldStyle "floor_lit", z. B. Marmor in Art déco).
+const LIT_FLOOR_SHADER := preload("res://assets/shaders/neon_floor_lit.gdshader")
 const COL_WAYPOINT := Color("ff36d8")
 const COL_PATH := Color("2ef2e0")
 ## Boden-Shader und seine Texturen (zwei Grasarten, Erde). Erde liegt auf dem Laufweg der leeren Map,
@@ -86,6 +88,7 @@ var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
 var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
 var _rock_outlines: Array = []  ## je Variante die Kontur-Hülle (oder null)
 var _path: MultiMeshInstance3D
+var _rock_shadows: MultiMeshInstance3D  ## Kontaktschatten unter den Steinen (oder null)
 var _markers: Node3D
 var _hover: MeshInstance3D
 var _hover_mat: StandardMaterial3D
@@ -143,12 +146,13 @@ func _ready() -> void:
 	add_child(_ground)
 	_floor = MeshInstance3D.new()
 	_floor_mat = ShaderMaterial.new()
-	_floor_mat.shader = NEON_FLOOR_SHADER
+	_floor_mat.shader = LIT_FLOOR_SHADER if style.get("floor_lit", false) else NEON_FLOOR_SHADER
 	_floor_mat.set_shader_parameter("cell", CELL)
 	_floor_mat.set_shader_parameter("grid_cells", float(TOWER_CELLS))
 	_floor_mat.set_shader_parameter("fine_strength", grid_strength)
-	for key in style.floor:
-		_floor_mat.set_shader_parameter(key, style.floor[key])
+	var floor_params := FieldStyle.floor_params()
+	for key in floor_params:
+		_floor_mat.set_shader_parameter(key, floor_params[key])
 	_floor.material_override = _floor_mat
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
@@ -173,6 +177,10 @@ func _ready() -> void:
 		_rocks.append(_multimesh(_box(Vector3(0.82, ROCK_HEIGHT, 0.82)), false, COL_ROCK))
 		_rock_outlines.append(null)
 		_rock_fits.append(Transform3D(Basis(), Vector3(0, ROCK_HEIGHT / 2.0, 0)))
+	if ContactShadow.strength() > 0.0:
+		_rock_shadows = _multimesh(ContactShadow.mesh(TOWER_CELLS * CELL), false)
+		_rock_shadows.material_override = ContactShadow.material()
+		_rock_shadows.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var dot := SphereMesh.new()
 	dot.radius = 0.055
 	dot.height = 0.11
@@ -311,8 +319,8 @@ func _rebuild_ground() -> void:
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
 
-## Neon-Feld: Fläche über die ganze Map, blockierte Felder (R) und Sperrzonen um die
-## Wegpunkte (G) als Maske, ein Pixel pro Feld.
+## Neon-Feld: Fläche über die ganze Map, blockierte Felder (R), Sperrzonen um die
+## Wegpunkte (G) und schlichte Felder ohne Gitter (B) als Maske, ein Pixel pro Feld.
 func _rebuild_floor() -> void:
 	var size := Vector2(map.width, map.height) * CELL
 	var plane := PlaneMesh.new()
@@ -331,9 +339,16 @@ func _rebuild_floor() -> void:
 				# G = Sperrzone um Spawn, Ziel und Checkpoints (nicht bebaubar)
 				if map.is_marker_zone(c):
 					img.set_pixel(x, y, Color(0, 1, 0))
+				elif _floor_plain(c):
+					img.set_pixel(x, y, Color(0, 0, 1))
 	_floor_mat.set_shader_parameter("grid_origin", Vector2(origin))
 	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
 	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
+
+
+## Feld ohne Gitterlinien zeichnen (Maul: unter der Stadt).
+func _floor_plain(_c: Vector2i) -> bool:
+	return false
 
 
 func refresh_rocks() -> void:
@@ -344,6 +359,13 @@ func refresh_rocks() -> void:
 		buckets.append([])
 	for c in rocks.keys():
 		buckets[absi(c.x * 7 + c.y * 13) % _rocks.size()].append(c)
+	if _rock_shadows != null:
+		var sm := _rock_shadows.multimesh
+		sm.instance_count = rocks.size()
+		var k := 0
+		for c in rocks.keys():
+			sm.set_instance_transform(k, Transform3D(Basis(), to_3d(footprint_center(c), ContactShadow.LIFT)))
+			k += 1
 	for i in _rocks.size():
 		var mm: MultiMesh = _rocks[i].multimesh
 		mm.instance_count = buckets[i].size()

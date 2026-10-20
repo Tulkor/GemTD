@@ -1,12 +1,14 @@
 class_name MaulBoard
 extends Board3D
 ## Spielfeld von Shopping Maul: wie Board3D, aber mit eigenen Markierungen (Spawns, Teleports,
-## Mall, Leak-Fläche) und den 11 Spielergebieten. Das eigene Gebiet leuchtet, die anderen sind blass.
+## Mall, Leak-Fläche), den 11 Spielergebieten und der Blockstadt (MaulCity) rundherum.
+## Das eigene Gebiet leuchtet, die anderen sind blass.
 
 const COL_LEAK := Color("ff5d7a")
 const COL_TELEPORT := Color("b38cff")
 
 var own_zone := 0
+var city: MaulCity
 
 
 func _rebuild_markers() -> void:
@@ -42,3 +44,32 @@ func _rebuild_markers() -> void:
 	for i in map.zones.size():
 		var col: Color = style.get("zone_own", PLAYER_COLORS[0]) if i == own_zone else style.get("zone_other", Color(0.45, 0.4, 0.6))
 		_add_zone(map.zones[i].rect, col)
+
+
+
+## Wie Board3D, dazu die Blockstadt auf allem, was Gegner nie erreichen (vor dem Boden, der
+## unter der Stadt ohne Gitter gezeichnet wird).
+func rebuild() -> void:
+	var mm: MaulMap = map as MaulMap
+	if mm != null and _ground != null:
+		if city == null:
+			city = MaulCity.new()
+			add_child(city)
+		city.build(mm)
+	super()
+	if mm != null and _floor_mat != null:
+		_floor_mat.set_shader_parameter("grid_origin", _grid_center(mm))
+
+
+
+func _floor_plain(c: Vector2i) -> bool:
+	return city != null and city.is_city(c)
+
+
+## Die dicken Bodenlinien laufen durch die Mitte der Karte (Mittel der äußeren Spielergebiete), damit
+## das Raster links/rechts und oben/unten gleich an den Gebieten endet.
+func _grid_center(mm: MaulMap) -> Vector2:
+	var sum := Vector2.ZERO
+	for i in range(1, mm.zones.size()):
+		sum += Vector2(mm.zones[i].rect.position) + Vector2(mm.zones[i].rect.size) / 2.0
+	return (sum / maxf(mm.zones.size() - 1, 1)).round()

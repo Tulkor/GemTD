@@ -64,14 +64,13 @@ static func _variant(path: String, embolden: float, spacing: int) -> Font:
 
 
 ## Fläche mit dünnem Rahmen, immer eckig (radius bleibt für Aufrufe wie bei UiTheme.box erhalten).
-static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_width := 1, pad := 8.0) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = bg
-	s.set_corner_radius_all(0)
-	s.anti_aliasing = false
+## Ein DecoBox statt StyleBoxFlat: dessen 1-px-Rahmen verschwinden bei UI-Größe unter 100 % stellenweise.
+static func box(bg: Color, border := Color.TRANSPARENT, _radius := 0, border_width := 1, pad := 8.0) -> StyleBox:
+	var s := DecoBox.new()
+	s.bg = bg
 	if border.a > 0.0 and border_width > 0:
-		s.border_color = border
-		s.set_border_width_all(clampi(border_width, 1, 2))
+		s.line = border
+		s.width = clampi(border_width, 1, 2)
 	s.content_margin_left = pad
 	s.content_margin_right = pad
 	s.content_margin_top = pad * 0.6
@@ -117,7 +116,7 @@ static func get_theme() -> Theme:
 		return _theme
 	var t := Theme.new()
 	t.default_font = font()
-	t.default_font_size = 15
+	t.default_font_size = 16
 	t.set_color("font_color", "Label", TEXT)
 	t.set_stylebox("normal", "Button", box(Color.TRANSPARENT, GOLD, 0, 1, 10))
 	t.set_stylebox("hover", "Button", box(PANEL, BRASS_LIGHT, 0, 1, 10))
@@ -241,7 +240,7 @@ static func display(c: Control, size := DISPLAY_SIZE, spacing := 3) -> Control:
 
 ## Abschnittstitel: Messing, Großbuchstaben, gesperrt.
 static func caption(text: String, parent: Node) -> Label:
-	var l := UiUtil.label(str(TranslationServer.translate(text)).to_upper(), parent, 13)
+	var l := UiUtil.label(str(TranslationServer.translate(text)).to_upper(), parent, 14)
 	l.add_theme_color_override("font_color", GOLD)
 	l.add_theme_font_override("font", _variant(FONT, 0.3, 3))
 	return l

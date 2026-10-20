@@ -920,6 +920,7 @@ func _glass_material() -> StandardMaterial3D:
 
 
 func _finish_visual() -> void:
+	ContactShadow.add(_visual, footprint_size() * Board3D.CELL)
 	_new_ring = _ring(0.48, 0.05, Color(1, 1, 1, 0.9))
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)

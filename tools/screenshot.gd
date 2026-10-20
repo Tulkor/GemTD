@@ -8,7 +8,8 @@ extends Node
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
 ##                           hosten (vorher tools/relay/relay.py starten), Code steht dann oben links
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
-##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum;
+##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum
+##                           (oder --punkt=x,y), Abstand --abstand=34;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
 ##                           --profi (Filialwahl: Reiter Profi-Filialen), --bauen=h01P,h02O (diese Tower zuerst)
 ##   --map=<id>              Map aus data/maps (Standard classic)
@@ -28,6 +29,8 @@ extends Node
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
+##                           eeveTD mit Laternen und Glühwürmchen)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
@@ -47,6 +50,7 @@ func _ready() -> void:
 	rng.seed = int(opts.get("seed", "1"))
 	RunHistory.path = "user://screenshot_run_history.json"
 	Session.skip_setup = not opts.has("einstellungen")
+	FieldStyle.night = opts.has("nacht")
 	if opts.has("koop"):
 		var guest := opts.has("gast")
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
@@ -70,9 +74,12 @@ func _ready() -> void:
 			var kind: String = str(md.get("game", "gemtd")) if md is Dictionary else "gemtd"
 			Session.game_kind = kind
 			node = load(Session.game_scene()).instantiate()
+	# Fenster so groß wie der Xvfb-Bildschirm (--groesse), nicht die gespeicherte Auflösung
+	Display.resolution = DisplayServer.screen_get_size()
+	Display.fullscreen = false
 	if opts.has("ui"):
 		Display.ui_scale = clampf(float(opts.ui) / 100.0, Display.UI_SCALE_MIN, Display.UI_SCALE_MAX)
-		Display._apply()
+	Display._apply()
 	add_child(node)
 	await _frames(5)
 	if scene == "menu" and opts.get("seite", "") == "einstellungen":
@@ -247,7 +254,11 @@ func _prepare_maul(game: Node) -> void:
 		game.select_unit(game.units[0])
 	if opts.has("reiter"):
 		game.hud._set_tab(str(opts.reiter))
-	game.camera_rig.look_at_point(game.map.zone_center(0), float(opts.get("abstand", "34")))
+	var look: Vector2 = game.map.zone_center(0)
+	if opts.has("punkt"):
+		var pk := String(opts.punkt).split(",")
+		look = (Vector2(float(pk[0]), float(pk[1])) + Vector2(0.5, 0.5)) * Board3D.CELL
+	game.camera_rig.look_at_point(look, float(opts.get("abstand", "34")))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:

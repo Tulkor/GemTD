@@ -38,11 +38,11 @@ func _ready() -> void:
 		b.toggle_mode = true
 		b.button_group = group
 		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", 15)
 		b.add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2))
 		b.add_theme_color_override("font_pressed_color", DecoTheme.GOLD_DARK)
 		b.set_pressed_no_signal(key == filter)
-	stats_label = UiUtil.label("", self, 13)
+	stats_label = UiUtil.label("", self, 15)
 	stats_label.add_theme_color_override("font_color", DecoTheme.MUTED)
 	empty = UiUtil.wrap_label("Noch keine Läufe. Spiel eine Runde, dann steht sie hier.", self, 500)
 	empty.add_theme_color_override("font_color", DecoTheme.MUTED)
@@ -133,7 +133,7 @@ func _run_button(i: int) -> Button:
 	b.add_child(v)
 	var l1 := HBoxContainer.new()
 	v.add_child(l1)
-	var name_l := UiUtil.label("%s · %s" % [tr(str(r.get("map", "?"))), _difficulty(r)], l1, 13)
+	var name_l := UiUtil.label("%s · %s" % [tr(str(r.get("map", "?"))), _difficulty(r)], l1, 15)
 	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_l.clip_text = true
 	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -141,13 +141,13 @@ func _run_button(i: int) -> Button:
 	l1.add_child(_badge(r))
 	var l2 := HBoxContainer.new()
 	v.add_child(l2)
-	var when := UiUtil.label("%s · %s" % [_date(r), tr("Punkte") if r.get("score_mode", false) else tr("Leben")], l2, 11)
+	var when := UiUtil.label("%s · %s" % [_date(r), tr("Punkte") if r.get("score_mode", false) else tr("Leben")], l2, 13)
 	when.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	when.add_theme_color_override("font_color", DecoTheme.MUTED)
 	var res := tr("Welle %d") % int(r.get("wave", 0))
 	if not r.get("score_mode", false):
 		res += " · " + tr("%d Leben") % int(r.get("lives", 0))
-	UiUtil.label(res, l2, 11).add_theme_color_override("font_color", DecoTheme.MUTED)
+	UiUtil.label(res, l2, 13).add_theme_color_override("font_color", DecoTheme.MUTED)
 	for c in [l1, l2, name_l, when]:
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return b
@@ -163,7 +163,7 @@ func _badge(r: Dictionary) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_theme_stylebox_override("panel", DecoTheme.box(Color.TRANSPARENT, col, 0, 2, 3))
-	var l := UiUtil.label(text, p, 11)
+	var l := UiUtil.label(text, p, 13)
 	l.uppercase = true
 	l.add_theme_font_override("font", DecoTheme.font(true))
 	l.add_theme_color_override("font_color", col)
@@ -181,9 +181,9 @@ func _show_detail(r: Dictionary) -> void:
 	head.add_child(badge)
 	var m := UiUtil.label(tr(str(r.get("map", "?"))), head, 17)
 	m.add_theme_font_override("font", DecoTheme.font(true))
-	var mode := UiUtil.label("%s · %s" % [_difficulty(r), tr("Punkte") if r.get("score_mode", false) else tr("Leben")], head, 12)
+	var mode := UiUtil.label("%s · %s" % [_difficulty(r), tr("Punkte") if r.get("score_mode", false) else tr("Leben")], head, 14)
 	mode.add_theme_color_override("font_color", DecoTheme.MUTED)
-	var when := UiUtil.label(_date(r, true) + " · " + tr("Spielzeit %s") % _duration(int(r.get("play_time", 0))), detail, 12)
+	var when := UiUtil.label(_date(r, true) + " · " + tr("Spielzeit %s") % _duration(int(r.get("play_time", 0))), detail, 14)
 	when.add_theme_color_override("font_color", DecoTheme.MUTED)
 
 	var summary: Dictionary = r.get("summary", {})
@@ -215,7 +215,7 @@ func _show_detail(r: Dictionary) -> void:
 	detail.add_child(ch)
 	var cap := DecoTheme.caption("Durchgelassen pro Welle" if r.get("score_mode", false) else "Leben verloren pro Welle", ch)
 	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UiUtil.label(tr("%d in %d Wellen") % [lost, lost_waves], ch, 12).add_theme_color_override("font_color", DecoTheme.MUTED)
+	UiUtil.label(tr("%d in %d Wellen") % [lost, lost_waves], ch, 14).add_theme_color_override("font_color", DecoTheme.MUTED)
 	var chart := Control.new()
 	chart.custom_minimum_size.y = 56
 	chart.draw.connect(_draw_chart.bind(chart, leaks))
@@ -229,7 +229,7 @@ func _show_detail(r: Dictionary) -> void:
 		var c2 := DecoTheme.caption("Nach Wellentyp", th)
 		c2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if not fb.is_empty():
-			UiUtil.label(tr("Endboss: %s Schaden") % _num(roundi(float(fb.get("damage", 0.0)))), th, 12).add_theme_color_override("font_color", DecoTheme.MUTED)
+			UiUtil.label(tr("Endboss: %s Schaden") % _num(roundi(float(fb.get("damage", 0.0)))), th, 14).add_theme_color_override("font_color", DecoTheme.MUTED)
 		var tab := GridContainer.new()
 		tab.columns = 3
 		tab.add_theme_constant_override("h_separation", 16)
@@ -243,7 +243,7 @@ func _show_detail(r: Dictionary) -> void:
 			if not types.has(type):
 				continue
 			var st: Dictionary = types[type]
-			UiUtil.label(tr(str(type)), tab, 12)
+			UiUtil.label(tr(str(type)), tab, 14)
 			_cell(tab, str(int(st.get("kills", 0))), DecoTheme.TEXT)
 			if sm:
 				_cell(tab, _num(roundi(float(st.get("points", 0.0)))), DecoTheme.COIN)
@@ -263,10 +263,10 @@ func _show_detail(r: Dictionary) -> void:
 			detail.add_child(box)
 			var h := HBoxContainer.new()
 			box.add_child(h)
-			UiUtil.label("◆", h, 12).add_theme_color_override("font_color", Color.from_string(str(t.get("color", "ffffff")), Color.WHITE))
-			var n := UiUtil.label(str(t.get("label", "?")), h, 12)
+			UiUtil.label("◆", h, 14).add_theme_color_override("font_color", Color.from_string(str(t.get("color", "ffffff")), Color.WHITE))
+			var n := UiUtil.label(str(t.get("label", "?")), h, 14)
 			n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			UiUtil.label(DpsMeter._fmt(float(t.get("damage", 0))), h, 12).add_theme_color_override("font_color", DecoTheme.COIN)
+			UiUtil.label(DpsMeter._fmt(float(t.get("damage", 0))), h, 14).add_theme_color_override("font_color", DecoTheme.COIN)
 			# Balken wie im DPS-Meter: gefüllter Teil und Rest als zwei Streifen
 			var f := clampf(float(t.get("damage", 0)) / best, 0.02, 1.0)
 			var track := HBoxContainer.new()
@@ -284,7 +284,7 @@ func _show_detail(r: Dictionary) -> void:
 	if not specials.is_empty():
 		DecoTheme.caption("Gebaute Spezial-Tower", detail)
 		var sp := UiUtil.wrap_label(" · ".join(specials), detail, 440)
-		sp.add_theme_font_size_override("font_size", 12)
+		sp.add_theme_font_size_override("font_size", 14)
 		sp.add_theme_color_override("font_color", DecoTheme.MUTED)
 
 	var actions := HBoxContainer.new()
@@ -318,13 +318,13 @@ func _tile(parent: Node, caption: String, value: String, col := DecoTheme.TEXT) 
 	v.add_theme_constant_override("separation", 0)
 	p.add_child(v)
 	var c := DecoTheme.caption(caption, v)
-	c.add_theme_font_size_override("font_size", 11)
+	c.add_theme_font_size_override("font_size", 13)
 	var l := UiUtil.label(value, v, 17)
 	l.add_theme_color_override("font_color", col)
 
 
 func _cell(parent: Node, text: String, col: Color) -> void:
-	var l := UiUtil.label(text, parent, 12)
+	var l := UiUtil.label(text, parent, 14)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	l.custom_minimum_size.x = 60
 	l.add_theme_color_override("font_color", col)

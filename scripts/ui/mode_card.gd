@@ -40,9 +40,9 @@ func _init(m: Dictionary, card_size := Vector2(330, 190)) -> void:
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_name.custom_minimum_size.x = card_size.x - 32
 	# Hinweis („Kommt noch“, erlaubte Spielerzahl) unter dem Namen, damit lange Namen Platz haben
-	_tag = _label("", v, 11)
+	_tag = _label("", v, 13)
 	_tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_hint = _label(tr(str(m.get("hint", ""))), v, 13)
+	_hint = _label(tr(str(m.get("hint", ""))), v, 15)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size.x = card_size.x - 32
 	_votes_box = VBoxContainer.new()
@@ -61,14 +61,18 @@ func _init(m: Dictionary, card_size := Vector2(330, 190)) -> void:
 	_bar_fill.anchor_bottom = 1.0
 	bar.add_child(_bar_fill)
 	_count = _label("", _votes_box, 15)
-	_who = _label("", _votes_box, 12)
+	_who = _label("", _votes_box, 14)
 	_who.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_who.custom_minimum_size.x = card_size.x - 32
 	var fill := Control.new()
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(fill)
-	_players = _label(Database.mode_players_text(mode_id), v, 13)
+	_players = _label(Database.mode_players_text(mode_id), v, 15)
+	# Die Karte wächst mit dem Inhalt (größere Schrift, lange Übersetzungen), statt ihn unten herausragen zu lassen
+	var base_h := card_size.y
+	v.minimum_size_changed.connect(func():
+		custom_minimum_size.y = maxf(base_h, v.get_combined_minimum_size().y + 28.0))
 	set_state(false, true)
 
 

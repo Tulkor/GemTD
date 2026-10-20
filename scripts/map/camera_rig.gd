@@ -173,64 +173,85 @@ static func _sky() -> Sky:
 	return sky
 
 
-## Licht und Himmel für eine 3D-Szene anlegen.
-static func add_environment(parent: Node) -> void:
+## Licht und Himmel für eine 3D-Szene anlegen. Werte aus FieldStyle.env(), fehlende Schlüssel
+## nehmen den Arcade-Stand (FieldStyle.ENV_DEFAULT). Gibt die Knoten zurück, damit ein Modus
+## (z. B. eine Nachtversion) sie nachträglich ändern kann: {"env", "sun", "fill"}.
+static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
+	if look.is_empty():
+		look = FieldStyle.env()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("05030c")
-	var sky := _sky()
-	if sky != null:
+	# "tint": Farbstich über alle Lichter und den Himmel (z. B. wärmer)
+	var tint: Color = look.tint
+	if look.has("sky_top"):
+		# eigener, einfacher Himmel (eeveTD, Shopping Maul)
+		var sky_mat := ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = look.sky_top * tint
+		sky_mat.sky_horizon_color = look.sky_horizon * tint
+		sky_mat.ground_horizon_color = look.sky_horizon * tint
+		sky_mat.ground_bottom_color = look.ground_bottom * tint
+		sky_mat.sun_angle_max = 0.0
+		env.sky = Sky.new()
+		env.sky.sky_material = sky_mat
+		env.sky.radiance_size = Sky.RADIANCE_SIZE_32
 		env.background_mode = Environment.BG_SKY
-		env.sky = sky
+	else:
+		var sky := _sky()
+		if sky != null:
+			env.background_mode = Environment.BG_SKY
+			env.sky = sky
 	# Leuchten für helle (HDR) Flächen, z. B. die Neon-Wegpunkte
 	env.glow_enabled = true
-	env.glow_intensity = 1.1
-	env.glow_bloom = 0.0
-	env.glow_hdr_threshold = 1.0
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	# dunkle Szene: schwaches kühles Umgebungslicht und eine schwache, flach stehende Sonne,
-	# damit Neon, Sockel und Gems hervorstechen
-	env.ambient_light_color = Color(0.62, 0.7, 0.85)
-	env.ambient_light_energy = 0.1
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.0
+	env.glow_intensity = look.glow_intensity
+	env.glow_bloom = look.glow_bloom
+	env.glow_hdr_threshold = look.glow_threshold
+	# Umgebungslicht: feste Farbe, oder mit "ambient_sky" > 0 anteilig vom Himmel (oben Himmelsfarbe,
+	# unten Bodenfarbe), dann sind Oberseiten heller als Flanken und Unterseiten
+	if look.ambient_sky > 0.0 and env.sky != null:
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_sky_contribution = look.ambient_sky
+	else:
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = look.ambient * tint
+	env.ambient_light_energy = look.ambient_energy
+	env.tonemap_mode = look.tonemap
+	env.tonemap_exposure = look.exposure
+	env.tonemap_white = look.white
+	if look.contrast != 1.0 or look.saturation != 1.0:
+		env.adjustment_enabled = true
+		env.adjustment_contrast = look.contrast
+		env.adjustment_saturation = look.saturation
+	if look.fog_density > 0.0:
+		# leichter Dunst in der Ferne, damit Boden und Tower räumlicher wirken
+		env.fog_enabled = true
+		env.fog_light_color = look.fog
+		env.fog_density = look.fog_density
+		env.fog_sky_affect = 0.0
 	var sun := DirectionalLight3D.new()
-	sun.rotation = Vector3(deg_to_rad(-38), deg_to_rad(-35), 0)
-	sun.light_color = Color(1.0, 0.96, 0.88)
-	sun.light_energy = 0.55
+	sun.rotation = Vector3(deg_to_rad(look.sun_pitch), deg_to_rad(look.sun_yaw), 0)
+	sun.light_color = look.sun * tint
+	sun.light_energy = look.sun_energy
+	sun.light_specular = look.sun_specular
 	sun.shadow_enabled = true
-	sun.shadow_blur = 1.5
+	sun.shadow_blur = look.shadow_blur
+	sun.shadow_opacity = look.shadow_opacity
 	# Schatten nur so weit wie das Spielfeld reicht: feinere Schattenkanten ohne Treppen
 	sun.directional_shadow_max_distance = 60.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-	# eeveTD und Shopping Maul: eigener Himmel und eigenes Licht (FieldStyle)
-	var look: Dictionary = FieldStyle.current().get("env", {})
-	if not look.is_empty():
-		var sky_mat := ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = look.sky_top
-		sky_mat.sky_horizon_color = look.sky_horizon
-		sky_mat.ground_horizon_color = look.sky_horizon
-		sky_mat.ground_bottom_color = look.ground_bottom
-		sky_mat.sun_angle_max = 0.0
-		var plain_sky := Sky.new()
-		plain_sky.sky_material = sky_mat
-		env.background_mode = Environment.BG_SKY
-		env.sky = plain_sky
-		env.ambient_light_color = look.ambient
-		env.ambient_light_energy = look.ambient_energy
-		env.glow_hdr_threshold = look.glow_threshold
-		env.glow_intensity = look.glow_intensity
-		env.tonemap_exposure = look.exposure
-		sun.light_color = look.sun
-		sun.light_energy = look.sun_energy
-		sun.rotation.x = deg_to_rad(look.sun_pitch)
-		if look.has("fog"):
-			# leichter Dunst in der Ferne, damit Boden und Tower räumlicher wirken
-			env.fog_enabled = true
-			env.fog_light_color = look.fog
-			env.fog_density = look.fog_density
-			env.fog_sky_affect = 0.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	parent.add_child(we)
 	parent.add_child(sun)
+	# Gegenlicht von der anderen Seite ohne Schatten: hellt Schattenseiten in einer kühlen Farbe auf,
+	# damit Tower und Gegner Form bekommen statt einer flachen dunklen Seite
+	var fill: DirectionalLight3D = null
+	if look.fill_energy > 0.0:
+		fill = DirectionalLight3D.new()
+		fill.rotation = Vector3(deg_to_rad(look.fill_pitch), deg_to_rad(look.sun_yaw + 180.0), 0)
+		fill.light_color = look.fill * tint
+		fill.light_energy = look.fill_energy
+		fill.light_specular = 0.25
+		fill.shadow_enabled = false
+		parent.add_child(fill)
+	return {"env": env, "sun": sun, "fill": fill}
