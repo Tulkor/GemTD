@@ -26,7 +26,7 @@ const ENV_DEFAULT := {
 	"fog": Color.BLACK, "fog_density": 0.0,
 	"glow_threshold": 1.0, "glow_intensity": 1.1, "glow_bloom": 0.0,
 	"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 0.9, "white": 1.0,
-	"contrast": 1.0, "saturation": 1.0,
+	"contrast": 1.0, "saturation": 1.0, "tint": Color.WHITE,
 }
 
 ## Werte je Stil. "floor" sind Parameter für neon_floor.gdshader, "env" für CameraRig.add_environment.
@@ -124,9 +124,14 @@ const STYLES := {
 			"sun": Color("a8c0ec"), "sun_energy": 0.75, "sun_pitch": -40.0, "sun_specular": 0.3,
 			"shadow_opacity": 0.75, "shadow_blur": 2.2,
 			"fill": Color("3a5a78"), "fill_energy": 0.25,
-			"glow_threshold": 0.85, "glow_intensity": 0.9, "exposure": 0.95,
+			# etwa 400 K wärmer als neutrales Mondlicht
+			"glow_threshold": 0.85, "glow_intensity": 0.9, "exposure": 1.05, "tint": Color(1.0, 0.95, 0.86),
 		},
-		"floor_night": {"floor_lamp": 6.0, "lamp_pool": 0.4, "lamp_radius": 1.2, "line_glow": 0.3},
+		# wärmerer Marmor, die dicken Messinglinien glimmen golden
+		"floor_night": {
+			"floor_color": Color("1d2e29"), "floor_lamp": 6.0, "lamp_pool": 0.4, "lamp_radius": 1.2, "line_glow": 0.3,
+			"major_glow": 0.55, "major_glow_color": Color("ffc35a"),
+		},
 	},
 }
 

@@ -182,13 +182,15 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("05030c")
+	# "tint": Farbstich über alle Lichter und den Himmel (z. B. wärmer)
+	var tint: Color = look.tint
 	if look.has("sky_top"):
 		# eigener, einfacher Himmel (eeveTD, Shopping Maul)
 		var sky_mat := ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = look.sky_top
-		sky_mat.sky_horizon_color = look.sky_horizon
-		sky_mat.ground_horizon_color = look.sky_horizon
-		sky_mat.ground_bottom_color = look.ground_bottom
+		sky_mat.sky_top_color = look.sky_top * tint
+		sky_mat.sky_horizon_color = look.sky_horizon * tint
+		sky_mat.ground_horizon_color = look.sky_horizon * tint
+		sky_mat.ground_bottom_color = look.ground_bottom * tint
 		sky_mat.sun_angle_max = 0.0
 		env.sky = Sky.new()
 		env.sky.sky_material = sky_mat
@@ -211,7 +213,7 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		env.ambient_light_sky_contribution = look.ambient_sky
 	else:
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = look.ambient
+	env.ambient_light_color = look.ambient * tint
 	env.ambient_light_energy = look.ambient_energy
 	env.tonemap_mode = look.tonemap
 	env.tonemap_exposure = look.exposure
@@ -228,7 +230,7 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		env.fog_sky_affect = 0.0
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(look.sun_pitch), deg_to_rad(look.sun_yaw), 0)
-	sun.light_color = look.sun
+	sun.light_color = look.sun * tint
 	sun.light_energy = look.sun_energy
 	sun.light_specular = look.sun_specular
 	sun.shadow_enabled = true
@@ -247,7 +249,7 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 	if look.fill_energy > 0.0:
 		fill = DirectionalLight3D.new()
 		fill.rotation = Vector3(deg_to_rad(look.fill_pitch), deg_to_rad(look.sun_yaw + 180.0), 0)
-		fill.light_color = look.fill
+		fill.light_color = look.fill * tint
 		fill.light_energy = look.fill_energy
 		fill.light_specular = 0.25
 		fill.shadow_enabled = false

@@ -59,6 +59,9 @@ uniform vec4 zone_edge_color : source_color = vec4(0.0);
 uniform float lit_albedo = 1.0;
 /// Eigenleuchten der Linien (Anteil der Linienfarbe)
 uniform float line_glow = 0.35;
+/// zusätzliches schwaches Leuchten der dicken Hauptlinien und Rauten (0 = aus)
+uniform float major_glow = 0.0;
+uniform vec4 major_glow_color : source_color = vec4(1.0, 0.78, 0.4, 1.0);
 uniform float line_metallic = 0.8;
 uniform float line_roughness = 0.35;
 /// Marmor: glatt, mit sichtbarem Glanzlicht der Sonne
@@ -130,6 +133,8 @@ void fragment() {
 	float lines = 0.0;
 	// Licht der Bodenleuchten (floor_lamp), wird zuletzt als Eigenleuchten dazugegeben
 	vec3 lamp_light = vec3(0.0);
+	// Anteil der dicken Hauptlinien und Rauten (major_glow)
+	float majors = 0.0;
 	if (marble > 0.0) {
 		col = mix(col, marble_color(col, world_xz), marble);
 	}
@@ -166,6 +171,7 @@ void fragment() {
 		col = mix(col, m.rgb, m.a);
 		alpha = max(alpha, m.a);
 		lines = max(lines, m.a);
+		majors = max(majors, m.a);
 		if (diamond_size > 0.0) {
 			// Raute an jeder Kreuzung der Hauptlinien, gefüllt, mit dunklem Innenrand
 			float dd = (dm.x + dm.y) / diamond_size;
@@ -175,6 +181,7 @@ void fragment() {
 			col = mix(col, dcol, fill * major_alpha);
 			alpha = max(alpha, fill * major_alpha);
 			lines = max(lines, fill * major_alpha);
+			majors = max(majors, fill * major_alpha);
 		}
 		if (floor_lamp > 0.0) {
 			// Bodenleuchte in jeder Kreuzung der Hauptlinien: heller Kern und ein Lichtkegel auf dem Boden
@@ -220,7 +227,7 @@ void fragment() {
 	// beleuchtet (Art déco): Marmor glänzt, Messinglinien sind Metall und leuchten leicht nach,
 	// damit sie im Schatten lesbar bleiben; Sonne, Schatten und Treffer-Lichter fallen auf den Boden
 	ALBEDO = col * mix(lit_albedo, 1.0, lines);
-	EMISSION = col * lines * line_glow + lamp_light;
+	EMISSION = col * lines * line_glow + major_glow_color.rgb * majors * major_glow + lamp_light;
 	METALLIC = lines * line_metallic;
 	ROUGHNESS = mix(floor_roughness, line_roughness, lines);
 	SPECULAR = floor_specular;
