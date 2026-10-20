@@ -119,10 +119,11 @@ const STYLES := {
 		# Nacht: schwaches, kühles Mondlicht von oben, die Bodenleuchten tragen das Licht
 		"env_night": {
 			"sky_top": Color("02070a"), "sky_horizon": Color("0a1c22"), "ground_bottom": Color("020507"),
-			"ambient": Color("5d7fa8"), "ambient_energy": 0.14,
-			"sun": Color("a8c0ec"), "sun_energy": 0.32, "sun_pitch": -52.0, "sun_specular": 0.25,
+			# Mond kräftig genug, dass Dächer und Fassaden der Häuser sich voneinander abheben
+			"ambient": Color("5d7fa8"), "ambient_energy": 0.24,
+			"sun": Color("a8c0ec"), "sun_energy": 0.75, "sun_pitch": -40.0, "sun_specular": 0.3,
 			"shadow_opacity": 0.75, "shadow_blur": 2.2,
-			"fill": Color("2a4458"), "fill_energy": 0.1,
+			"fill": Color("3a5a78"), "fill_energy": 0.25,
 			"glow_threshold": 0.85, "glow_intensity": 0.9, "exposure": 0.95,
 		},
 		"floor_night": {"floor_lamp": 6.0, "lamp_pool": 0.4, "lamp_radius": 1.2, "line_glow": 0.3},
