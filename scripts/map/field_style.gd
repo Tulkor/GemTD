@@ -6,6 +6,9 @@ extends RefCounted
 ## - Druidenhain (eeveTD): Gras und Erde bei Tageslicht, dunkles Raster wie in den Boden geritzt, Steinsockel.
 ## - Art déco (Shopping Maul): Petrol-Marmor mit Messingfugen und Messingrauten, Messingsockel, Abendlicht.
 
+## Nachtversion des Stils (env_night/floor_night), vor dem Anlegen der Szene setzen.
+static var night := false
+
 const NEON := "neon"
 const DRUID := "druid"
 const DECO := "deco"
@@ -113,6 +116,16 @@ const STYLES := {
 			"glow_threshold": 1.0, "glow_intensity": 0.6,
 			"exposure": 0.85, "contrast": 1.05,
 		},
+		# Nacht: schwaches, kühles Mondlicht von oben, die Bodenleuchten tragen das Licht
+		"env_night": {
+			"sky_top": Color("02070a"), "sky_horizon": Color("0a1c22"), "ground_bottom": Color("020507"),
+			"ambient": Color("5d7fa8"), "ambient_energy": 0.14,
+			"sun": Color("a8c0ec"), "sun_energy": 0.32, "sun_pitch": -52.0, "sun_specular": 0.25,
+			"shadow_opacity": 0.75, "shadow_blur": 2.2,
+			"fill": Color("2a4458"), "fill_energy": 0.1,
+			"glow_threshold": 0.85, "glow_intensity": 0.9, "exposure": 0.95,
+		},
+		"floor_night": {"floor_lamp": 6.0, "lamp_pool": 0.4, "lamp_radius": 1.2, "line_glow": 0.3},
 	},
 }
 
@@ -132,10 +145,23 @@ static func current() -> Dictionary:
 
 
 ## Licht und Himmel des aktiven Stils, fehlende Werte aus ENV_DEFAULT (für CameraRig.add_environment).
+## Bei night zusätzlich "env_night" des Stils (falls vorhanden).
 static func env(name := "") -> Dictionary:
+	var style: Dictionary = STYLES[name if name != "" else current_name()]
 	var look: Dictionary = ENV_DEFAULT.duplicate()
-	look.merge(STYLES[name if name != "" else current_name()].get("env", {}), true)
+	look.merge(style.get("env", {}), true)
+	if night:
+		look.merge(style.get("env_night", {}), true)
 	return look
+
+
+## Boden-Parameter (neon_floor) des aktiven Stils, bei night mit "floor_night" überschrieben.
+static func floor_params() -> Dictionary:
+	var style := current()
+	var params: Dictionary = style.floor.duplicate()
+	if night:
+		params.merge(style.get("floor_night", {}), true)
+	return params
 
 
 static func is_neon() -> bool:

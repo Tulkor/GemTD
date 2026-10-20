@@ -150,8 +150,9 @@ func _ready() -> void:
 	_floor_mat.set_shader_parameter("cell", CELL)
 	_floor_mat.set_shader_parameter("grid_cells", float(TOWER_CELLS))
 	_floor_mat.set_shader_parameter("fine_strength", grid_strength)
-	for key in style.floor:
-		_floor_mat.set_shader_parameter(key, style.floor[key])
+	var floor_params := FieldStyle.floor_params()
+	for key in floor_params:
+		_floor_mat.set_shader_parameter(key, floor_params[key])
 	_floor.material_override = _floor_mat
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
