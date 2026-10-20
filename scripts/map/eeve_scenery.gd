@@ -29,16 +29,20 @@ const SHADOW_DEPTH := 6.0
 ## Farbe, mit der Bäume und Unterholz multipliziert werden.
 const FOREST_TINT := Color(0.6, 0.66, 0.55)
 
-const LANTERN_LIGHT := Color("ffb45a")
+const LANTERN_LIGHT := Color("ff8a2a")
 const POOL_SHADER := "res://assets/shaders/lantern_pool.gdshader"
 
-## Nachtlicht; der Tag kommt aus FieldStyle (Druidenhain) und wird beim Umschalten wiederhergestellt.
+## Nachtlicht nach dem Vorbild Duskwood (WoW, Wunsch von Lukas): blauvioletter Nebel, der Wald versinkt darin
+## als Silhouette, kühles Mondlicht, Bodennebel, dagegen warme Laternen. Der Tag kommt aus FieldStyle
+## (Druidenhain) und wird beim Umschalten wiederhergestellt.
 const NIGHT := {
-	"sky_top": Color("04070f"), "sky_horizon": Color("101c2a"), "ground_bottom": Color("05080a"),
-	"ambient": Color("7f98c8"), "ambient_energy": 0.4,
-	"sun": Color("9fb6ff"), "sun_energy": 0.42, "sun_pitch": -52.0,
-	"fog": Color("0b1420"), "fog_density": 0.012,
+	"sky_top": Color("0a0c1c"), "sky_horizon": Color("2a2c4a"), "ground_bottom": Color("0c0d18"),
+	"ambient": Color("6c72b0"), "ambient_energy": 0.45,
+	"sun": Color("a4b2ff"), "sun_energy": 0.5, "sun_pitch": -55.0,
+	"fog": Color("1c2038"), "fog_density": 0.014, "fog_height": 0.6, "fog_height_density": 0.05,
 	"glow_threshold": 0.9, "glow_intensity": 0.85, "exposure": 1.05,
+	# Boden und Wald nachts kühler und dunkler (Faktoren auf die Tagwerte)
+	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.8, "forest_tint": Color(0.5, 0.56, 0.78),
 }
 
 var board: Board3D
@@ -46,6 +50,8 @@ var map: MapData
 var _env: Environment
 var _sun: DirectionalLight3D
 var _fills: Array[DirectionalLight3D] = []
+var _ground_day := []   ## [tint, brightness] des Spielfeldbodens am Tag
+var _forest_mats := []  ## [Material, Tagesfarbe] der Bäume und Büsche
 var _day := {}
 var _lights: Array[OmniLight3D] = []
 var _pools: Array[MeshInstance3D] = []
@@ -99,12 +105,17 @@ func set_night(on: bool) -> void:
 
 ## Tageslicht so festhalten, wie CameraRig.add_environment es angelegt hat (zum Zurückschalten).
 func _remember_day() -> void:
+	var gm: ShaderMaterial = board._ground_mat
+	var tint = gm.get_shader_parameter("tint")
+	var bright = gm.get_shader_parameter("brightness")
+	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72]
 	if _env == null:
 		return
 	_day = {"ambient": _env.ambient_light_color, "ambient_energy": _env.ambient_light_energy,
 			"glow_threshold": _env.glow_hdr_threshold, "glow_intensity": _env.glow_intensity,
 			"exposure": _env.tonemap_exposure, "fog_on": _env.fog_enabled,
-			"fog": _env.fog_light_color, "fog_density": _env.fog_density}
+			"fog": _env.fog_light_color, "fog_density": _env.fog_density,
+			"fog_height": _env.fog_height, "fog_height_density": _env.fog_height_density}
 	if _env.sky != null and _env.sky.sky_material is ProceduralSkyMaterial:
 		var sky: ProceduralSkyMaterial = _env.sky.sky_material
 		_day.merge({"sky_top": sky.sky_top_color, "sky_horizon": sky.sky_horizon_color,
@@ -124,6 +135,11 @@ func _apply_light(look: Dictionary) -> void:
 		sky.ground_bottom_color = look.ground_bottom
 	for f in _fills:
 		f.visible = look != NIGHT
+	var gm: ShaderMaterial = board._ground_mat
+	gm.set_shader_parameter("tint", _ground_day[0] * look.get("ground_tint", Vector3.ONE))
+	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
+	for m in _forest_mats:
+		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
 	_env.ambient_light_color = look.get("ambient", _env.ambient_light_color)
 	_env.ambient_light_energy = look.get("ambient_energy", _env.ambient_light_energy)
 	_env.glow_hdr_threshold = look.get("glow_threshold", _env.glow_hdr_threshold)
@@ -133,6 +149,8 @@ func _apply_light(look: Dictionary) -> void:
 	if look.has("fog"):
 		_env.fog_light_color = look.fog
 		_env.fog_density = look.fog_density
+		_env.fog_height = look.get("fog_height", 0.0)
+		_env.fog_height_density = look.get("fog_height_density", 0.0)
 		_env.fog_sky_affect = 0.0
 	if _sun != null and look.has("sun"):
 		_sun.light_color = look.sun
@@ -261,6 +279,7 @@ func _muted(mesh: Mesh) -> Mesh:
 		if mat is BaseMaterial3D:
 			var dark: BaseMaterial3D = mat.duplicate()
 			dark.albedo_color *= FOREST_TINT
+			_forest_mats.append([dark, dark.albedo_color])
 			copy.surface_set_material(i, dark)
 	return copy
 
@@ -268,15 +287,17 @@ func _muted(mesh: Mesh) -> Mesh:
 ## Eine Laterne an jedem Wegpunkt (Spawn, Checkpoints, Ziel): Holzpfosten mit Messinglaterne in der Ecke
 ## des Wegpunkts, die von den Wegen wegzeigt.
 func _add_lanterns() -> void:
+	# schwarzes Eisen wie die Laternenpfähle in Duskwood
 	var wood := StandardMaterial3D.new()
-	wood.albedo_color = Color("3b2b1d")
-	wood.roughness = 0.9
+	wood.albedo_color = Color("1e1c22")
+	wood.metallic = 0.6
+	wood.roughness = 0.55
 	var brass := StandardMaterial3D.new()
-	brass.albedo_color = Color("8a6a3a")
-	brass.metallic = 0.7
-	brass.roughness = 0.45
+	brass.albedo_color = Color("2a2620")
+	brass.metallic = 0.75
+	brass.roughness = 0.4
 	_glass_mat = StandardMaterial3D.new()
-	_glass_mat.albedo_color = Color("ffd9a0")
+	_glass_mat.albedo_color = Color("ffb870")
 	_glass_mat.emission_enabled = true
 	_glass_mat.emission = LANTERN_LIGHT
 	var pool_shader: Shader = load(POOL_SHADER)
@@ -311,7 +332,7 @@ func _add_lanterns() -> void:
 		_lights.append(light)
 		var pool := MeshInstance3D.new()
 		var quad := PlaneMesh.new()
-		quad.size = Vector2.ONE * 6.5
+		quad.size = Vector2.ONE * 5.2
 		pool.mesh = quad
 		var pm := ShaderMaterial.new()
 		pm.shader = pool_shader
@@ -362,6 +383,8 @@ func _part(parent: Node3D, mesh: Mesh, mat: Material, pos: Vector3) -> void:
 	mi.mesh = mesh
 	mi.material_override = mat
 	mi.position = pos
+	# Die Laterne ist selbst die Lichtquelle: ihr Mond-/Sonnenschatten liefe quer durch den eigenen Lichtfleck
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
 
 
