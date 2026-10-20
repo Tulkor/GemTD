@@ -172,7 +172,7 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 	title.add_theme_color_override("font_color", col)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var short := _short(text)
-	var info := UiUtil.label(short, v, 11)
+	var info := UiUtil.label(short, v, 13)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -183,7 +183,7 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 	b.tooltip_text = text.replace("  ", "\n")
 	var tag: Label = null
 	if bonus != "" or _kind == "pro":
-		tag = UiUtil.label("", v, 11)
+		tag = UiUtil.label("", v, 13)
 		tag.add_theme_color_override("font_color", DecoTheme.CYAN)
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cards[id] = [b, title, info, tag, bonus, col]
