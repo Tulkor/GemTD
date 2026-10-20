@@ -4,9 +4,6 @@ extends Node3D
 ## Spawn, Wegpunkten und Ziel und die Nachtvariante (Mondlicht, leuchtende Laternen, Glühwürmchen).
 ## Rein optisch: läuft bei jedem Spieler gleich (fester Zufallsstartwert), nichts davon geht über das Netz.
 
-## Tag oder Nacht; bleibt für die nächsten Spiele dieses Programmstarts erhalten.
-static var night := false
-
 const N := "res://assets/models/nature/%s.glb"
 ## Bäume: [Modell, Höhe von, Höhe bis, Gewicht]
 const TREES := [
@@ -32,27 +29,19 @@ const FOREST_TINT := Color(0.6, 0.66, 0.55)
 const LANTERN_LIGHT := Color("ff8a2a")
 const POOL_SHADER := "res://assets/shaders/lantern_pool.gdshader"
 
-## Nachtlicht nach dem Vorbild Duskwood (WoW, Wunsch von Lukas): blauvioletter Nebel, der Wald versinkt darin
-## als Silhouette, kühles Mondlicht, Bodennebel, dagegen warme Laternen. Der Tag kommt aus FieldStyle
-## (Druidenhain) und wird beim Umschalten wiederhergestellt.
-const NIGHT := {
-	"sky_top": Color("0a0c1c"), "sky_horizon": Color("2a2c4a"), "ground_bottom": Color("0c0d18"),
-	"ambient": Color("6c72b0"), "ambient_energy": 0.45,
-	"sun": Color("a4b2ff"), "sun_energy": 0.5, "sun_pitch": -55.0,
-	"fog": Color("1c2038"), "fog_density": 0.014, "fog_height": 0.6, "fog_height_density": 0.05,
-	"glow_threshold": 0.9, "glow_intensity": 0.85, "exposure": 1.05,
-	# Boden und Wald nachts kühler und dunkler (Faktoren auf die Tagwerte)
+## Nacht (FieldStyle.night): Licht und Nebel stehen in FieldStyle ("env_night" von Druidenhain), dazu hier
+## Bodennebel und kühlerer, dunklerer Boden und Wald (Faktoren auf die Tagwerte).
+const NIGHT_EXTRA := {
+	"fog_height": 0.6, "fog_height_density": 0.05,
 	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.8, "forest_tint": Color(0.5, 0.56, 0.78),
 }
 
 var board: Board3D
 var map: MapData
 var _env: Environment
-var _sun: DirectionalLight3D
-var _fills: Array[DirectionalLight3D] = []
+var _lights_env: Array = []  ## Sonne/Mond und Gegenlicht aus CameraRig.add_environment
 var _ground_day := []   ## [tint, brightness] des Spielfeldbodens am Tag
 var _forest_mats := []  ## [Material, Tagesfarbe] der Bäume und Büsche
-var _day := {}
 var _lights: Array[OmniLight3D] = []
 var _pools: Array[MeshInstance3D] = []
 var _glass_mat: StandardMaterial3D
@@ -69,31 +58,62 @@ static func add_to(game: Node) -> EeveScenery:
 		if c is WorldEnvironment:
 			s._env = c.environment
 		elif c is DirectionalLight3D:
-			# Sonne = das Licht mit Schatten, weitere (Gegenlicht) gehen nachts aus
-			if s._sun == null and c.shadow_enabled:
-				s._sun = c
-			else:
-				s._fills.append(c)
+			s._lights_env.append(c)
 	game.add_child(s)
 	return s
 
 
 func _ready() -> void:
 	_rng.seed = hash(map.id) if map.id != "" else 7
-	_remember_day()
+	var gm: ShaderMaterial = board._ground_mat
+	var tint = gm.get_shader_parameter("tint")
+	var bright = gm.get_shader_parameter("brightness")
+	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72]
 	_add_forest_floor()
 	_add_forest()
 	_add_lanterns()
 	_add_fireflies()
 	# Laternen beleuchten Tower und Gegner, den Boden nur über ihren Lichtfleck (Ebene 2 ausgenommen)
 	board._ground.layers = 2
-	set_night(night)
+	_apply(FieldStyle.night)
 
 
-## Zwischen Tag und Nacht umschalten (Debug-Menü, später z. B. Einstellungen oder Tageszeit-Wechsel).
+## Zwischen Tag und Nacht umschalten (Debug-Menü, später z. B. Einstellungen oder Tageszeit-Wechsel):
+## Licht und Himmel baut CameraRig.add_environment neu aus FieldStyle.env().
 func set_night(on: bool) -> void:
-	night = on
-	_apply_light(NIGHT if on else _day)
+	if on != FieldStyle.night:
+		FieldStyle.night = on
+		var game := get_parent()
+		for c in game.get_children():
+			if c is WorldEnvironment or c is DirectionalLight3D:
+				game.remove_child(c)
+				c.queue_free()
+		var made: Dictionary = CameraRig.add_environment(game)
+		_env = made.env
+		_lights_env = [made.sun]
+		if made.get("fill") != null:
+			_lights_env.append(made.fill)
+	_apply(on)
+
+
+## Sonne bzw. Mond (das Licht mit Schatten) für Tests und Debug.
+func sun() -> DirectionalLight3D:
+	for l in _lights_env:
+		if l.shadow_enabled:
+			return l
+	return null
+
+
+func _apply(on: bool) -> void:
+	var look: Dictionary = NIGHT_EXTRA if on else {}
+	if _env != null:
+		_env.fog_height = look.get("fog_height", 0.0)
+		_env.fog_height_density = look.get("fog_height_density", 0.0)
+	var gm: ShaderMaterial = board._ground_mat
+	gm.set_shader_parameter("tint", _ground_day[0] * look.get("ground_tint", Vector3.ONE))
+	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
+	for m in _forest_mats:
+		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
 	for l in _lights:
 		l.visible = on
 	for p in _pools:
@@ -101,61 +121,6 @@ func set_night(on: bool) -> void:
 	_glass_mat.emission_energy_multiplier = 3.2 if on else 0.35
 	_fireflies.emitting = on
 	_fireflies.visible = on
-
-
-## Tageslicht so festhalten, wie CameraRig.add_environment es angelegt hat (zum Zurückschalten).
-func _remember_day() -> void:
-	var gm: ShaderMaterial = board._ground_mat
-	var tint = gm.get_shader_parameter("tint")
-	var bright = gm.get_shader_parameter("brightness")
-	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72]
-	if _env == null:
-		return
-	_day = {"ambient": _env.ambient_light_color, "ambient_energy": _env.ambient_light_energy,
-			"glow_threshold": _env.glow_hdr_threshold, "glow_intensity": _env.glow_intensity,
-			"exposure": _env.tonemap_exposure, "fog_on": _env.fog_enabled,
-			"fog": _env.fog_light_color, "fog_density": _env.fog_density,
-			"fog_height": _env.fog_height, "fog_height_density": _env.fog_height_density}
-	if _env.sky != null and _env.sky.sky_material is ProceduralSkyMaterial:
-		var sky: ProceduralSkyMaterial = _env.sky.sky_material
-		_day.merge({"sky_top": sky.sky_top_color, "sky_horizon": sky.sky_horizon_color,
-				"ground_bottom": sky.ground_bottom_color})
-	if _sun != null:
-		_day.merge({"sun": _sun.light_color, "sun_energy": _sun.light_energy, "sun_pitch": rad_to_deg(_sun.rotation.x)})
-
-
-func _apply_light(look: Dictionary) -> void:
-	if _env == null:
-		return
-	if _env.sky != null and _env.sky.sky_material is ProceduralSkyMaterial and look.has("sky_top"):
-		var sky: ProceduralSkyMaterial = _env.sky.sky_material
-		sky.sky_top_color = look.sky_top
-		sky.sky_horizon_color = look.sky_horizon
-		sky.ground_horizon_color = look.sky_horizon
-		sky.ground_bottom_color = look.ground_bottom
-	for f in _fills:
-		f.visible = look != NIGHT
-	var gm: ShaderMaterial = board._ground_mat
-	gm.set_shader_parameter("tint", _ground_day[0] * look.get("ground_tint", Vector3.ONE))
-	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
-	for m in _forest_mats:
-		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
-	_env.ambient_light_color = look.get("ambient", _env.ambient_light_color)
-	_env.ambient_light_energy = look.get("ambient_energy", _env.ambient_light_energy)
-	_env.glow_hdr_threshold = look.get("glow_threshold", _env.glow_hdr_threshold)
-	_env.glow_intensity = look.get("glow_intensity", _env.glow_intensity)
-	_env.tonemap_exposure = look.get("exposure", _env.tonemap_exposure)
-	_env.fog_enabled = bool(look.get("fog_on", true))
-	if look.has("fog"):
-		_env.fog_light_color = look.fog
-		_env.fog_density = look.fog_density
-		_env.fog_height = look.get("fog_height", 0.0)
-		_env.fog_height_density = look.get("fog_height_density", 0.0)
-		_env.fog_sky_affect = 0.0
-	if _sun != null and look.has("sun"):
-		_sun.light_color = look.sun
-		_sun.light_energy = look.sun_energy
-		_sun.rotation.x = deg_to_rad(look.sun_pitch)
 
 
 func _size() -> Vector2:
@@ -336,7 +301,7 @@ func _add_lanterns() -> void:
 		pool.mesh = quad
 		var pm := ShaderMaterial.new()
 		pm.shader = pool_shader
-		pm.set_shader_parameter("light_color", LANTERN_LIGHT)
+		pm.set_shader_parameter("light_color", Color(1.0, 0.66, 0.22))
 		pm.set_shader_parameter("phase", float(n) * 2.3)
 		# Der Boden ist durchsichtig (ALPHA) und wird nach Abstand sortiert: Lichtflecken immer danach zeichnen
 		pm.render_priority = 2

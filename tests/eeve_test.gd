@@ -242,12 +242,12 @@ func _debug_tests() -> void:
 		"Debug-Auswahl hat Element-Tower, Fallen und Dual-Tower")
 	var sc: EeveScenery = game.scenery
 	check(sc != null and sc.get_child_count() > 20, "Wald und Laternen um die Karte")
-	var day_sun: float = sc._sun.light_energy
+	var day_sun: float = sc.sun().light_energy
 	sc.set_night(true)
 	check(sc._lights.size() == game.map.all_waypoints().size() and sc._lights[0].visible and sc._fireflies.emitting
-		and sc._sun.light_energy < day_sun, "Nacht: Laterne an jedem Wegpunkt leuchtet, Mondlicht")
+		and sc.sun().light_energy < day_sun, "Nacht: Laterne an jedem Wegpunkt leuchtet, Mondlicht")
 	sc.set_night(false)
-	check(not sc._lights[0].visible and is_equal_approx(sc._sun.light_energy, day_sun), "Tag: Laternen aus, Sonne wie vorher")
+	check(not sc._lights[0].visible and is_equal_approx(sc.sun().light_energy, day_sun), "Tag: Laternen aus, Sonne wie vorher")
 	var lumber: int = game.lumber
 	var food: int = game.food_cap
 	var pts: int = game.points
