@@ -91,6 +91,8 @@ var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
+var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
+var info_tier_label: Label
 var info_kills_label: Label
 var info_sub: Label
 var info_main: HBoxContainer
@@ -430,6 +432,14 @@ func _build_bottom() -> void:
 	info_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	info_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_title.mouse_filter = Control.MOUSE_FILTER_PASS
+	info_tier = PanelContainer.new()
+	info_tier.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.CYAN, 0, 2, 4))
+	info_tier.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_tier.visible = false
+	head.add_child(info_tier)
+	info_tier_label = UiUtil.label("", info_tier, 14)
+	info_tier_label.add_theme_font_override("font", UiTheme.font(true))
+	info_tier_label.add_theme_color_override("font_color", UiTheme.CYAN)
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
 	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
@@ -768,6 +778,18 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		badge.offset_right = 13
 		badge.offset_bottom = 19
 		b.add_child(badge)
+		var num := UiUtil.label(QualityBadge.roman(int(g.get("tier", 0))), b, 11)
+		num.add_theme_font_override("font", UiTheme.font(true))
+		num.add_theme_color_override("font_color", UiTheme.TEXT)
+		num.add_theme_color_override("font_outline_color", Color("030108"))
+		num.add_theme_constant_override("outline_size", 4)
+		num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		num.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+		num.offset_left = -26
+		num.offset_top = -17
+		num.offset_right = -3
+		num.offset_bottom = -1
+		num.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.pressed.connect(func(): round_gem_selected.emit(i))
 		strip_row.add_child(b)
 	strip_col.visible = not gems.is_empty()
@@ -785,6 +807,10 @@ func set_selection(info: Dictionary) -> void:
 	info_title.text = info.title
 	info_title.add_theme_color_override("font_color", (info.color as Color).lerp(Color.WHITE, 0.25))
 	info_swatch.color = info.color
+	info_tier.visible = info.has("tier")
+	if info_tier.visible:
+		info_tier_label.text = QualityBadge.roman(int(info.tier))
+		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
@@ -797,7 +823,8 @@ func set_selection(info: Dictionary) -> void:
 func _fit_title() -> void:
 	var font := info_title.get_theme_font("font")
 	var text := info_title.text.to_upper() if info_title.uppercase else info_title.text
-	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0)
+	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0) \
+			- (info_tier.get_combined_minimum_size().x + 10.0 if info_tier.visible else 0.0)
 	var size := _title_size
 	while size > _title_size - 5 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
 		size -= 1

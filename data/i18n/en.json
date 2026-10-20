@@ -1130,5 +1130,6 @@
 	"Code: %s": "Code: %s",
 	"Code in die Zwischenablage kopieren, um ihn den Mitspielern zu schicken": "Copy the code to the clipboard to send it to the other players",
 	"Über den Server %s. Mitspieler geben den Code ein, niemand muss einen Port freigeben.": "Via server %s. Players enter the code, nobody has to open a port.",
-	"leer = direkt per IP": "empty = direct by IP"
+	"leer = direkt per IP": "empty = direct by IP",
+	"Stufe %d von %d": "Tier %d of %d"
 }

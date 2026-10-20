@@ -18,10 +18,11 @@ const BASE_HEIGHT_SPECIAL := 0.18
 const GEM_MAX_HEIGHT := 1.3
 ## Gems je Qualität (Splitter … Großartig): Anzahl Kristalle auf dem Sockel und die Kiste
 ## (Breite, Höhe in Sockelbreiten), in die jeder Kristall passt. Splitter sind viele kleine,
-## mit jeder Stufe werden es weniger, dafür größere.
+## mit jeder Stufe werden es weniger, dafür größere. Splitter liegen als kleine, matte Scherben
+## umgekippt auf dem Sockel, Fehlerhafte stehen aufrecht und deutlich größer.
 const GEM_CLUSTERS := [
-	[5, 0.26, 0.34],
-	[4, 0.34, 0.46],
+	[5, 0.22, 0.27],
+	[4, 0.37, 0.5],
 	[3, 0.44, 0.6],
 	[2, 0.56, 0.78],
 	[1, 0.78, 1.0],
@@ -37,6 +38,9 @@ const CLUSTER_SPOTS := {
 }
 ## Größenunterschiede innerhalb eines Clusters, damit es natürlicher aussieht
 const CLUSTER_VARY := [1.0, 0.86, 0.94, 0.8, 0.9]
+## Splitter: Neigung der umgekippten Scherben (Grad) und weniger Leuchten als heile Gems
+const SHARD_TILT := [62.0, 74.0, 56.0, 80.0, 68.0]
+const SHARD_GLOW := 0.4
 static var _slab_cache := {}
 
 var game  # game.gd
@@ -763,6 +767,11 @@ func _gem_cluster(model_path: String, tint: Material, foot: float, base_h: float
 		for i in n:
 			var spot: Vector2 = CLUSTER_SPOTS[n][i]
 			layout.append([spot, CLUSTER_VARY[i % CLUSTER_VARY.size()], 0.0 if spot == Vector2.ZERO else 12.0, -1.0])
+	if tier == 0:
+		layout = _shard_layout(layout)
+		if tint is ShaderMaterial:
+			var glow = tint.get_shader_parameter("glow")  # null = Standardwert des Shaders
+			tint.set_shader_parameter("glow", (0.25 if glow == null else float(glow)) * SHARD_GLOW)
 	var cluster := Node3D.new()
 	for i in layout.size():
 		var entry: Array = layout[i]
@@ -796,6 +805,16 @@ func _gem_cluster(model_path: String, tint: Material, foot: float, base_h: float
 ## Je Kristall: [Platz in Sockelbreiten, Größe, Neigung in Grad, Neigungsrichtung in Grad
 ## (0 = +X, 90 = +Z, nach vorne zur Kamera) oder -1 = vom Sockelmittelpunkt weg].
 ## Leer = Standardanordnung aus CLUSTER_SPOTS.
+## Splitter: dieselben Plätze wie die Splitter-Form, aber jeder Kristall umgekippt in eine eigene Richtung.
+static func _shard_layout(layout: Array) -> Array:
+	var out := []
+	for i in layout.size():
+		var e: Array = layout[i]
+		# etwas näher zur Mitte, damit umgekippte Scherben nicht über den Sockelrand ragen
+		out.append([(e[0] as Vector2) * 0.8, float(e[1]), SHARD_TILT[i % SHARD_TILT.size()], fmod(40.0 + 137.0 * i, 360.0)])
+	return out
+
+
 static func _splinter_layout(id: String, n: int) -> Array:
 	var out := []
 	match id:

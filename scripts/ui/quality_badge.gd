@@ -8,6 +8,8 @@ extends Control
 ## Farben, die im Symbol greller sein sollen als die Tower-Farbe.
 const VIVID := {"topaz": Color("ffe600")}
 const INNER := 0.45  ## Größe der inneren Raute
+## Stufe als römische Zahl (Splitter = I … Perfekt = V, Großartig = VI)
+const ROMAN := ["I", "II", "III", "IV", "V", "VI"]
 
 var tier := 0
 var tiers := 5
@@ -21,6 +23,10 @@ func _init(gem_color := Color.WHITE, gem_tier := 0, tier_count := 6, px := 36.0,
 	tier = mini(gem_tier, tiers - 1)
 	custom_minimum_size = Vector2(roundf(px * 0.63), px)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+static func roman(gem_tier: int) -> String:
+	return ROMAN[clampi(gem_tier, 0, ROMAN.size() - 1)]
 
 
 ## Anzahl Qualitäten, die direkt spawnen können (Länge der Chance-Gewichte).
