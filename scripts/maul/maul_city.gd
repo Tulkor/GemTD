@@ -30,6 +30,8 @@ const PIER := Color("2a5a60")
 const WALLS := [Color("0f2b31"), Color("133238"), Color("0c2429"), Color("173a40"), Color("112e33"), Color("15353a")]
 const CORNICE := Color("7d6a48")
 
+## 1 = Gang: Gegner laufen hier, gebaut wird nicht (ein Byte je Feld, Zeile für Zeile)
+var corridor := PackedByteArray()
 var _walls: MultiMeshInstance3D
 var _dist := PackedFloat32Array()
 var _width := 0
@@ -233,18 +235,24 @@ func _distance_to_reachable(map: MaulMap) -> PackedFloat32Array:
 			if map.in_bounds(n) and dist[n.y * w + n.x] > 0.0 and map.get_tile(n) != MapData.BLOCKED:
 				dist[n.y * w + n.x] = 0.0
 				queue.append(n)
+	# Gänge: was Gegner erreichen, außerhalb der Gebiete und der Leak-Fläche (für die Glasdächer)
+	corridor.resize(w * h)
+	for k in w * h:
+		corridor[k] = 1 if dist[k] == 0.0 and map.get_tile(Vector2i(k % w, k / w)) != MapData.BLOCKED else 0
 	# Gebiete und Leak-Fläche erst nach der Flutfüllung, sonst hielten sie sie auf
 	for z in map.zones:
 		for y in range(z.rect.position.y, z.rect.end.y):
 			for x in range(z.rect.position.x, z.rect.end.x):
 				if map.in_bounds(Vector2i(x, y)):
 					dist[y * w + x] = 0.0
+					corridor[y * w + x] = 0
 	var leak: Array = map.maul.get("leak", [])
 	if leak.size() == 4:
 		for y in range(int(leak[1]), int(leak[1]) + int(leak[3])):
 			for x in range(int(leak[0]), int(leak[0]) + int(leak[2])):
 				if map.in_bounds(Vector2i(x, y)):
 					dist[y * w + x] = 0.0
+					corridor[y * w + x] = 0
 	# Abstand zur erreichbaren Fläche (zwei Durchläufe, Schachbrett-Metrik)
 	for y in h:
 		for x in w:
