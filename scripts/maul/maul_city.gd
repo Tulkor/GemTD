@@ -4,21 +4,28 @@ extends Node3D
 ## Marmorboden), gestuft wie Art-déco-Hochhäuser, mit Gesimsen in mattem Messing. Steht nur auf Feldern,
 ## die kein Gegner je erreicht (Flutfüllung von allen Wegpunkten aus) und die in keinem Spielergebiet
 ## liegen, mit Abstand zu allem Begehbaren. Nah am Spielfeld niedrig, nach außen höher, damit die
-## schräge Kamera nichts verdeckt. Alles in zwei MultiMeshes (Wände, Gesimse).
+## schräge Kamera nichts verdeckt. Weiter draußen stehen einzelne Art-déco-Hochhäuser wie in New York
+## oder Chicago (Sockel, Schaft mit Lisenen, Rücksprünge, gestufte Messingkrone, Spitze).
+## Alles in zwei MultiMeshes (Wände, Messing).
 
 const SHADER := preload("res://assets/shaders/city.gdshader")
 ## Straßenraster: alle BLOCK Felder eine Straße von STREET Feldern
-const BLOCK := 10
+const BLOCK := 14
 const STREET := 1
 ## Grundstücke innerhalb eines Blocks: Kantenlänge in Feldern
-const LOT_MIN := 2
-const LOT_MAX := 5
+const LOT_MIN := 3
+const LOT_MAX := 7
 ## Felder Abstand zu allem Begehbaren
 const GAP := 2
 ## Höhe in Einheiten: Grundhöhe + Zuwachs je Feld Abstand zum Spielfeld, gedeckelt
-const H_BASE := 0.3
-const H_STEP := 0.045
-const H_MAX := 3.2
+const H_BASE := 0.5
+const H_STEP := 0.07
+const H_MAX := 4.2
+## Hochhäuser: nehmen einen ganzen Block ein, erst ab SKY_DIST Feldern Abstand, mit dieser Wahrscheinlichkeit
+const SKY_DIST := 12.0
+const SKY_CHANCE := 0.3
+const SKY_HEIGHT := Vector2(8.0, 14.0)
+const PIER := Color("2a5a60")
 ## Wandfarben (gemischt), Gesims
 const WALLS := [Color("0f2b31"), Color("133238"), Color("0c2429"), Color("173a40"), Color("112e33"), Color("15353a")]
 const CORNICE := Color("7d6a48")
@@ -49,8 +56,13 @@ func build(map: MaulMap) -> void:
 		return true
 	for by in range(0, h, BLOCK):
 		for bx in range(0, w, BLOCK):
+			var block := Rect2i(bx + STREET, by + STREET, BLOCK - STREET, BLOCK - STREET)
+			var bd := dist[mini(block.get_center().y, h - 1) * w + mini(block.get_center().x, w - 1)]
+			if bd >= SKY_DIST and rng.randf() < SKY_CHANCE and free.call(block.position.x, block.position.y, block.size.x, block.size.y):
+				_skyscraper(block, bd, rng, walls, cornices)
+				continue
 			var lots: Array[Rect2i] = []
-			_split(Rect2i(bx + STREET, by + STREET, BLOCK - STREET, BLOCK - STREET), rng, lots)
+			_split(block, rng, lots)
 			for r in lots:
 				if not free.call(r.position.x, r.position.y, r.size.x, r.size.y):
 					continue
@@ -133,6 +145,65 @@ func _building(r: Rect2i, d: float, rng: RandomNumberGenerator, walls: Array, co
 		var s := minf(foot.x, foot.y) * 0.18
 		var tip := total * 0.18
 		walls.append([Transform3D(Basis.from_scale(Vector3(s, tip, s)), Vector3(center.x, y + tip / 2.0, center.y)), col])
+
+
+## Art-déco-Hochhaus auf Block r: breiter Sockel, Schaft mit senkrechten Lisenen, mehrere Rücksprünge
+## mit Messingbändern, oben eine gestufte Messingkrone mit Spitze (New York) oder vier Ecktürmchen (Chicago).
+func _skyscraper(r: Rect2i, d: float, rng: RandomNumberGenerator, walls: Array, cornices: Array) -> void:
+	var foot := Vector2(r.size) * Board3D.CELL - Vector2(0.1, 0.1)
+	var c := (Vector2(r.position) + Vector2(r.size) / 2.0) * Board3D.CELL
+	var col: Color = WALLS[rng.randi() % WALLS.size()]
+	var box := func(size: Vector3, y0: float, list: Array, color = null) -> void:
+		var xf := Transform3D(Basis.from_scale(size), Vector3(c.x, y0 + size.y / 2.0, c.y))
+		list.append([xf, color] if color != null else xf)
+	var band := func(wx: float, wz: float, y: float) -> void:
+		cornices.append(Transform3D(Basis.from_scale(Vector3(wx + 0.05, 0.05, wz + 0.05)), Vector3(c.x, y - 0.06, c.y)))
+	var total := rng.randf_range(SKY_HEIGHT.x, SKY_HEIGHT.y) * clampf(d / 40.0, 0.6, 1.0)
+	# Sockel
+	var podium := rng.randf_range(0.7, 1.1)
+	box.call(Vector3(foot.x, podium, foot.y), 0.0, walls, col)
+	band.call(foot.x, foot.y, podium)
+	# Schaft
+	var sx := minf(foot.x, foot.y) * rng.randf_range(0.4, 0.5)
+	var sz := sx * rng.randf_range(0.85, 1.15)
+	var shaft := total * 0.62
+	var y := podium
+	box.call(Vector3(sx, shaft, sz), y, walls, col)
+	# Lisenen: schmale helle Pfeiler über die ganze Schafthöhe, je Seite gleichmäßig verteilt
+	var n := rng.randi_range(5, 7)
+	for i in n:
+		var t := (float(i) + 0.5) / n - 0.5
+		for side in [-1.0, 1.0]:
+			walls.append([Transform3D(Basis.from_scale(Vector3(0.06, shaft, 0.1)), Vector3(c.x + t * sx, y + shaft / 2.0, c.y + side * sz / 2.0)), PIER])
+			walls.append([Transform3D(Basis.from_scale(Vector3(0.1, shaft, 0.06)), Vector3(c.x + side * sx / 2.0, y + shaft / 2.0, c.y + t * sz)), PIER])
+	y += shaft
+	band.call(sx, sz, y)
+	# Rücksprünge
+	var rest := total - shaft - podium
+	for k in 3:
+		sx *= 0.78
+		sz *= 0.78
+		var part: float = rest * [0.4, 0.3, 0.3][k] * 0.7
+		box.call(Vector3(sx, part, sz), y, walls, col)
+		y += part
+		band.call(sx, sz, y)
+	if rng.randf() < 0.6:
+		# New York: gestufte Krone aus Messing und eine hohe Spitze
+		var kx := sx
+		for k in 4:
+			kx *= 0.72
+			box.call(Vector3(kx, 0.22, kx), y, cornices)
+			y += 0.22
+		box.call(Vector3(0.05, total * 0.22, 0.05), y, cornices)
+	else:
+		# Chicago: flaches Dach mit vier Ecktürmchen und einer Laterne in der Mitte
+		for dx in [-1.0, 1.0]:
+			for dz in [-1.0, 1.0]:
+				var tx := Transform3D(Basis.from_scale(Vector3(sx * 0.2, 0.55, sz * 0.2)), Vector3(c.x + dx * sx * 0.38, y + 0.275, c.y + dz * sz * 0.38))
+				walls.append([tx, col])
+				cornices.append(Transform3D(Basis.from_scale(Vector3(sx * 0.12, 0.25, sz * 0.12)), tx.origin + Vector3(0, 0.4, 0)))
+		box.call(Vector3(sx * 0.4, 0.8, sz * 0.4), y, walls, col)
+		box.call(Vector3(sx * 0.25, 0.35, sz * 0.25), y + 0.8, cornices)
 
 
 ## Abstand (Felder, Schachbrett) jedes Felds zum nächsten Feld, das Gegner erreichen oder auf dem
