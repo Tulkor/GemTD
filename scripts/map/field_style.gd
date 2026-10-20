@@ -74,7 +74,7 @@ const STYLES := {
 			"fill_energy": 0.0,
 			"fog": Color("1c2038"), "fog_density": 0.014,
 			"glow_threshold": 0.9, "glow_intensity": 0.85,
-			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.1, "white": 1.0, "contrast": 1.08, "saturation": 0.9,
+			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.21, "white": 1.0, "contrast": 1.08, "saturation": 0.9,
 		},
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),

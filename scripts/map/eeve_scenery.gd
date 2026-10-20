@@ -26,7 +26,11 @@ const SHADOW_DEPTH := 6.0
 ## Farbe, mit der Bäume und Unterholz multipliziert werden.
 const FOREST_TINT := Color(0.6, 0.66, 0.55)
 
-const LANTERN_LIGHT := Color("ff8a2a")
+const LANTERN_LIGHT := Color("ff6e14")
+const POOL_LIGHT := Color(1.0, 0.5, 0.12)
+const POOL_SIZE := 7.0
+## Länge des Auslegers, an dem die Laterne hängt
+const ARM := 0.42
 const POOL_SHADER := "res://assets/shaders/lantern_pool.gdshader"
 
 ## Nacht (FieldStyle.night): Licht und Nebel stehen in FieldStyle ("env_night" von Druidenhain), dazu hier
@@ -254,7 +258,7 @@ func _muted(mesh: Mesh) -> Mesh:
 func _add_lanterns() -> void:
 	# schwarzes Eisen wie die Laternenpfähle in Duskwood
 	var wood := StandardMaterial3D.new()
-	wood.albedo_color = Color("1e1c22")
+	wood.albedo_color = Color("34303a")
 	wood.metallic = 0.6
 	wood.roughness = 0.55
 	var brass := StandardMaterial3D.new()
@@ -262,7 +266,7 @@ func _add_lanterns() -> void:
 	brass.metallic = 0.75
 	brass.roughness = 0.4
 	_glass_mat = StandardMaterial3D.new()
-	_glass_mat.albedo_color = Color("ffb870")
+	_glass_mat.albedo_color = Color("ffa050")
 	_glass_mat.emission_enabled = true
 	_glass_mat.emission = LANTERN_LIGHT
 	var pool_shader: Shader = load(POOL_SHADER)
@@ -278,36 +282,47 @@ func _add_lanterns() -> void:
 		var root := Node3D.new()
 		root.position = Vector3(foot.x, 0, foot.y)
 		add_child(root)
-		_part(root, _cyl(0.05, 0.065, 1.3), wood, Vector3(0, 0.65, 0))
-		_part(root, _box(Vector3(0.2, 0.05, 0.2)), brass, Vector3(0, 1.32, 0))
-		_part(root, _box(Vector3(0.13, 0.2, 0.13)), _glass_mat, Vector3(0, 1.45, 0))
+		# Pfosten mit Ausleger zur Wegmitte, die Laterne hängt daran: so beleuchtet sie den Pfosten von der Seite,
+		# und der Pfosten wirft im Lichtfleck einen Schatten von der Laterne weg (wie in Duskwood)
+		var arm := -corner.normalized() * ARM
+		var lamp := Vector3(arm.x, 1.32, arm.y)
+		_part(root, _cyl(0.045, 0.07, 1.6), wood, Vector3(0, 0.8, 0))
+		_part(root, _cyl(0.09, 0.11, 0.08), wood, Vector3(0, 0.04, 0))
+		var beam := _part(root, _box(Vector3(0.035, 0.035, ARM + 0.06)), wood, Vector3(arm.x / 2.0, 1.56, arm.y / 2.0))
+		beam.rotation.y = atan2(arm.x, arm.y)
+		_part(root, _cyl(0.008, 0.008, 0.1), wood, lamp + Vector3(0, 0.19, 0))
+		_part(root, _box(Vector3(0.16, 0.035, 0.16)), brass, lamp + Vector3(0, -0.12, 0))
+		_part(root, _box(Vector3(0.12, 0.2, 0.12)), _glass_mat, lamp)
 		for sx in [-1, 1]:
 			for sz in [-1, 1]:
-				_part(root, _box(Vector3(0.025, 0.22, 0.025)), brass, Vector3(sx * 0.075, 1.45, sz * 0.075))
-		_part(root, _cyl(0.0, 0.13, 0.12), brass, Vector3(0, 1.61, 0))
+				_part(root, _box(Vector3(0.022, 0.22, 0.022)), brass, lamp + Vector3(sx * 0.068, 0, sz * 0.068))
+		_part(root, _cyl(0.0, 0.11, 0.1), brass, lamp + Vector3(0, 0.15, 0))
+		ContactShadow.add(root, 0.22)
 		var light := OmniLight3D.new()
 		light.light_color = LANTERN_LIGHT
-		light.light_energy = 2.2
-		light.omni_range = 3.6
-		light.omni_attenuation = 1.4
+		light.light_energy = 2.4
+		light.omni_range = 4.0
+		light.omni_attenuation = 1.3
 		light.light_cull_mask = 1
 		light.shadow_enabled = false
-		light.position = Vector3(0, 1.45, 0)
+		light.position = lamp
 		root.add_child(light)
 		_lights.append(light)
 		var pool := MeshInstance3D.new()
 		var quad := PlaneMesh.new()
-		quad.size = Vector2.ONE * 5.2
+		quad.size = Vector2.ONE * POOL_SIZE
 		pool.mesh = quad
 		var pm := ShaderMaterial.new()
 		pm.shader = pool_shader
-		pm.set_shader_parameter("light_color", Color(1.0, 0.66, 0.22))
+		pm.set_shader_parameter("light_color", POOL_LIGHT)
 		pm.set_shader_parameter("phase", float(n) * 2.3)
+		# Pfosten im Fleck (UV), von dort fällt sein Schatten von der Laterne weg
+		pm.set_shader_parameter("post_uv", Vector2(0.5, 0.5) - arm / POOL_SIZE)
 		# Der Boden ist durchsichtig (ALPHA) und wird nach Abstand sortiert: Lichtflecken immer danach zeichnen
 		pm.render_priority = 2
 		pool.material_override = pm
 		pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		pool.position = Vector3(foot.x, 0.03, foot.y)
+		pool.position = Vector3(foot.x + arm.x, 0.03, foot.y + arm.y)
 		add_child(pool)
 		_pools.append(pool)
 		n += 1
@@ -343,7 +358,7 @@ func _free_corner(c: Vector2i, lanes: Array) -> Vector2:
 	return best
 
 
-func _part(parent: Node3D, mesh: Mesh, mat: Material, pos: Vector3) -> void:
+func _part(parent: Node3D, mesh: Mesh, mat: Material, pos: Vector3) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = mat
@@ -351,6 +366,7 @@ func _part(parent: Node3D, mesh: Mesh, mat: Material, pos: Vector3) -> void:
 	# Die Laterne ist selbst die Lichtquelle: ihr Mond-/Sonnenschatten liefe quer durch den eigenen Lichtfleck
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
+	return mi
 
 
 func _cyl(top: float, bottom: float, h: float) -> CylinderMesh:
