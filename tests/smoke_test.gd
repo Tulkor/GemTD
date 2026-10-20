@@ -534,6 +534,20 @@ func _ready() -> void:
 	check(game.hud.leave_confirm.visible and get_tree().paused, "Menü-Knopf zeigt Rückfrage und pausiert")
 	game.hud.close_leave_confirm()
 	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Weiterspielen schließt Rückfrage")
+	# Esc: erst Auswahl aufheben, dann Menü; im Menü Einstellungen, Esc schließt erst diese, dann das Menü
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	game._select(null, Vector2i(1, 1))
+	game._unhandled_input(esc)
+	check(game.selected == null and game.selected_rocks.is_empty() and not game.hud.leave_confirm.visible, "Esc hebt erst die Auswahl auf")
+	game._unhandled_input(esc)
+	check(game.hud.leave_confirm.visible and get_tree().paused, "Esc ohne Auswahl öffnet das Menü")
+	game.hud.settings_panel.open()
+	game.hud._unhandled_input(esc)
+	check(game.hud.leave_confirm.visible and not game.hud.settings_panel.visible, "Esc schließt erst die Einstellungen")
+	game.hud._unhandled_input(esc)
+	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Esc schließt das Menü")
 
 	# Chance-Stufe steigt automatisch mit der Welle, Gold wird um gold_income_factor gekürzt
 	check(game.chance_level_for(1) == 0 and game.chance_level_for(3) == 1 and game.chance_level_for(27) == 8 and game.chance_level_for(50) == 8,

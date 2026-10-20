@@ -32,6 +32,7 @@ extends Node
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD mit Laternen und Glühwürmchen)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
+##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -101,6 +102,13 @@ func _ready() -> void:
 		else:
 			node.hud.debug_panel.show()
 			node.hud.debug_button.set_pressed_no_signal(true)
+	if opts.has("spielmenue") and (scene == "spiel" or scene == "maul"):
+		if scene == "maul":
+			node.hud.toggle_menu()
+		else:
+			node.hud.open_leave_confirm()
+		if str(opts.spielmenue) == "einstellungen":
+			node.hud.settings_panel.open()
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)

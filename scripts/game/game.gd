@@ -428,7 +428,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		match event.keycode:
 			KEY_ESCAPE:
-				_select(null)
+				# Erst abbrechen, was gerade läuft (Auswahl, Falle versetzen), sonst Menü öffnen
+				if selected != null or not selected_rocks.is_empty() or moving != null:
+					_select(null)
+				elif phase < Phase.GAME_OVER:
+					hud.open_leave_confirm()
 			KEY_1:
 				submit({"type": "speed", "factor": 1.0})
 			KEY_2:

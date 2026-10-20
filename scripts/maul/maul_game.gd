@@ -1588,9 +1588,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		match event.keycode:
 			KEY_ESCAPE:
-				build_id = ""
-				select(null)
-				select_unit(null)
+				# Erst Bauwahl und Auswahl aufheben, sonst Menü öffnen oder schließen
+				if build_id != "" or selected != null or selected_unit != null or not pending.is_empty():
+					build_id = ""
+					select(null)
+					select_unit(null)
+				else:
+					hud.toggle_menu()
 			KEY_1:
 				set_speed(1.0)
 			KEY_2:
