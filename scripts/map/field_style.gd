@@ -10,7 +10,26 @@ const NEON := "neon"
 const DRUID := "druid"
 const DECO := "deco"
 
+## Licht und Himmel (CameraRig.add_environment): Arcade-Stand, andere Stile überschreiben einzelne Werte.
+## Ohne "sky_top" bleibt die Weltraum-Skybox. ambient_sky = Anteil des Umgebungslichts vom Himmel
+## (0 = nur Farbe "ambient"). "fill" = Gegenlicht ohne Schatten von der anderen Seite.
+const ENV_DEFAULT := {
+	# dunkle Szene: schwaches kühles Umgebungslicht und eine schwache, flach stehende Sonne,
+	# damit Neon, Sockel und Gems hervorstechen
+	"ambient": Color(0.62, 0.7, 0.85), "ambient_energy": 0.1, "ambient_sky": 0.0,
+	"sun": Color(1.0, 0.96, 0.88), "sun_energy": 0.55, "sun_pitch": -38.0, "sun_yaw": -35.0,
+	"sun_specular": 1.0, "shadow_blur": 1.5, "shadow_opacity": 1.0,
+	"fill": Color(0.55, 0.45, 1.0), "fill_energy": 0.0, "fill_pitch": -25.0,
+	"fog": Color.BLACK, "fog_density": 0.0,
+	"glow_threshold": 1.0, "glow_intensity": 1.1, "glow_bloom": 0.0,
+	"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.0, "white": 1.0,
+	"contrast": 1.0, "saturation": 1.0,
+}
+
 ## Werte je Stil. "floor" sind Parameter für neon_floor.gdshader, "env" für CameraRig.add_environment.
+## "floor_lit": Feld beleuchtet und deckend (neon_floor_lit.gdshader, nimmt Sonne, Schatten, Treffer-Lichter an).
+## "contact_shadow": Stärke des weichen Schattens unter Towern und Steinen (ContactShadow, 0 = aus).
+## "hit_glow": Faktor für den flachen Treffer-Schein auf dem Boden (FxPlayer, Standard 1).
 const STYLES := {
 	NEON: {
 		"ground_alpha": 0.0,
@@ -19,6 +38,8 @@ const STYLES := {
 		"marker": Color("ff36d8"), "marker_energy": 2.2,
 		"rock": "glass",
 		"base": "glass",
+		# violettes Gegenlicht von hinten: Gems und Felsen bekommen eine Lichtkante
+		"env": {"fill": Color("b070ff"), "fill_energy": 0.35, "fill_pitch": -20.0},
 	},
 	DRUID: {
 		"ground_alpha": 1.0,
@@ -39,16 +60,26 @@ const STYLES := {
 		"marker": Color("d8c888"), "marker_energy": 1.0,
 		"rock": "stone",
 		"base": "stone",
+		"contact_shadow": 0.6,
+		"hit_glow": 0.5,
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),
-			"ambient": Color("b8c6d0"), "ambient_energy": 0.2,
-			"sun": Color("ffecc8"), "sun_energy": 1.55, "sun_pitch": -36.0,
+			# Umgebungslicht großteils vom Himmel: Oberseiten hell und bläulich, Flanken dunkler
+			"ambient": Color("b8c6d0"), "ambient_energy": 0.3, "ambient_sky": 0.5,
+			# warme Sonne von links hinten: die Schatten fallen nach rechts vorn und sind aus der
+			# Spielansicht zu sehen (Arcade: nach hinten, hinter die Tower); das Gegenlicht kommt von vorn
+			"sun": Color("ffe4b8"), "sun_energy": 1.7, "sun_pitch": -42.0, "sun_yaw": -110.0,
+			"shadow_blur": 2.0, "shadow_opacity": 0.82,
+			"fill": Color("9fbcd8"), "fill_energy": 0.4, "fill_pitch": -30.0,
 			"fog": Color("8a9a80"), "fog_density": 0.0015,
-			"glow_threshold": 1.4, "glow_intensity": 0.5, "exposure": 0.95,
+			"glow_threshold": 1.4, "glow_intensity": 0.5,
+			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 1.05, "white": 6.0,
+			"contrast": 1.06, "saturation": 0.95,
 		},
 	},
 	DECO: {
 		"ground_alpha": 0.0,
+		"floor_lit": true,
 		"floor": {
 			"floor_color": Color("0f2a2c"), "floor_alpha": 1.0,
 			"line_color": Color("c9a36a"), "edge_color": Color("d8b97f"),
@@ -56,6 +87,8 @@ const STYLES := {
 			"cell_alpha": 0.0, "minor_alpha": 0.22, "major_alpha": 0.9,
 			"edge_energy": 1.1, "core_white": 0.0, "halo_width": 0.004, "line_width": 0.011,
 			"major_double": 1.0, "diamond_size": 0.2, "marble": 1.0,
+			# beleuchteter Marmor (floor_lit): etwas dunkler, weil die Sonne ihn aufhellt; glänzend
+			"lit_albedo": 1.0, "line_glow": 0.4, "floor_roughness": 0.28, "floor_specular": 0.7,
 			"blocked_color": Color("071618"), "blocked_alpha": 1.0,
 			"zone_color": Color("b4553f"), "zone_alpha": 0.3, "zone_edge_energy": 1.0,
 			"zone_edge_color": Color("d8b97f"),
@@ -65,11 +98,18 @@ const STYLES := {
 		"zone_own": Color("e8c87a"), "zone_other": Color("4d7a78"), "zone_leak": Color("b4553f"),
 		"rock": "marble",
 		"base": "brass",
+		"contact_shadow": 0.55,
+		"hit_glow": 0.5,
 		"env": {
 			"sky_top": Color("061517"), "sky_horizon": Color("1d4446"), "ground_bottom": Color("061214"),
-			"ambient": Color("9fc8c0"), "ambient_energy": 0.42,
-			"sun": Color("ffe2b0"), "sun_energy": 0.95, "sun_pitch": -42.0,
-			"glow_threshold": 1.0, "glow_intensity": 0.6, "exposure": 1.0,
+			"ambient": Color("9fc8c0"), "ambient_energy": 0.45,
+			# Abendsonne, warm und schräg: Häuser werfen lange Schatten auf den Marmor,
+			# die Glanzlichter darauf sind messingfarben
+			"sun": Color("ffd9a0"), "sun_energy": 1.05, "sun_pitch": -34.0, "sun_yaw": -115.0,
+			"shadow_blur": 1.6, "shadow_opacity": 0.85,
+			"fill": Color("5fb0b0"), "fill_energy": 0.3, "fill_pitch": -25.0,
+			"glow_threshold": 1.0, "glow_intensity": 0.6,
+			"contrast": 1.05,
 		},
 	},
 }
@@ -87,6 +127,13 @@ static func current_name() -> String:
 
 static func current() -> Dictionary:
 	return STYLES[current_name()]
+
+
+## Licht und Himmel des aktiven Stils, fehlende Werte aus ENV_DEFAULT (für CameraRig.add_environment).
+static func env(name := "") -> Dictionary:
+	var look: Dictionary = ENV_DEFAULT.duplicate()
+	look.merge(STYLES[name if name != "" else current_name()].get("env", {}), true)
+	return look
 
 
 static func is_neon() -> bool:

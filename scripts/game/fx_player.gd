@@ -26,6 +26,7 @@ const LIGHT_ENERGY := 4.0
 const LIGHT_MERGE := 1.0
 const LIGHT_HEIGHT := 0.35
 ## Dazu ein Lichtschein flach auf dem Boden: der Neon-Boden von GemTD ist unbeleuchtet und nimmt kein Licht an.
+## Beleuchtete Böden (Gras, Marmor) bekommen das echte Licht und nur einen schwächeren Schein (FieldStyle "hit_glow").
 const GLOW_SIZE := 3.2
 const GLOW_STRENGTH := 1.2
 const GLOW_KEY := "glow"
@@ -413,11 +414,14 @@ func _add_light(pos: Vector3, col: Color, scale_factor: float) -> void:
 
 
 func _draw_glows() -> void:
+	var strength: float = GLOW_STRENGTH * float(FieldStyle.current().get("hit_glow", 1.0))
+	if strength <= 0.0:
+		return
 	for l in _lights:
 		if l.t >= LIGHT_TIME:
 			continue
 		var k: float = 1.0 - l.t / LIGHT_TIME
-		var col: Color = l.node.light_color * (GLOW_STRENGTH * pow(k, 1.5) * l.energy / LIGHT_ENERGY)
+		var col: Color = l.node.light_color * (strength * pow(k, 1.5) * l.energy / LIGHT_ENERGY)
 		col.a = 1.0
 		var d: float = GLOW_SIZE * l.node.omni_range / LIGHT_RANGE
 		var p: Vector3 = l.node.position
