@@ -63,7 +63,19 @@ func rebuild() -> void:
 			add_child(glass_roof)
 		glass_roof.build(mm, city.corridor)
 	super()
+	if mm != null and _floor_mat != null:
+		_floor_mat.set_shader_parameter("grid_origin", _grid_center(mm))
+
 
 
 func _floor_plain(c: Vector2i) -> bool:
 	return city != null and city.is_city(c)
+
+
+## Die dicken Bodenlinien laufen durch die Mitte der Karte (Mittel der äußeren Spielergebiete), damit
+## das Raster links/rechts und oben/unten gleich an den Gebieten endet.
+func _grid_center(mm: MaulMap) -> Vector2:
+	var sum := Vector2.ZERO
+	for i in range(1, mm.zones.size()):
+		sum += Vector2(mm.zones[i].rect.position) + Vector2(mm.zones[i].rect.size) / 2.0
+	return (sum / maxf(mm.zones.size() - 1, 1)).round()

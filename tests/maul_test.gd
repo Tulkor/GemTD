@@ -37,6 +37,7 @@ func _ready() -> void:
 				check(false, "Stadt steht auf dem Weg bei %s" % c)
 				break
 	check(game.board.city.part_count() > 500, "Blockstadt gebaut: %d Teile" % game.board.city.part_count())
+	check(game.board.city.lamp_count() > 50, "Laternen: %d" % game.board.city.lamp_count())
 	for z in game.map.zones:
 		check(not game.board.city.is_city(z.rect.get_center()), "Keine Stadt im Gebiet %s" % z.rect)
 
