@@ -124,7 +124,7 @@ func _ready() -> void:
 	server_row.add_child(_server_edit)
 	var host := UiUtil.button("Neue Sitzung hosten", _offline, func(): _save_server(); Net.host_default())
 	host.custom_minimum_size.y = 44
-	_muted(UiUtil.wrap_label("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 370)).add_theme_font_size_override("font_size", 13)
+	_muted(UiUtil.wrap_label("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 370)).add_theme_font_size_override("font_size", 15)
 	var join_row := HBoxContainer.new()
 	join_row.add_theme_constant_override("separation", 10)
 	_offline.add_child(join_row)
@@ -136,7 +136,7 @@ func _ready() -> void:
 	join_row.add_child(_ip_edit)
 	UiUtil.button("Beitreten", join_row, _join).custom_minimum_size.x = 120
 	_port_hint = _muted(UiUtil.wrap_label("", _offline, 370))
-	_port_hint.add_theme_font_size_override("font_size", 12)
+	_port_hint.add_theme_font_size_override("font_size", 15)
 	_update_join_hint()
 
 	# Verbunden: Adresse, Spieler, Host-Einstellungen
@@ -146,13 +146,13 @@ func _ready() -> void:
 	var net_row := HBoxContainer.new()
 	net_row.add_theme_constant_override("separation", 10)
 	_online.add_child(net_row)
-	_internet = UiUtil.label("", net_row, 14)
+	_internet = UiUtil.label("", net_row, 15)
 	_internet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_internet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_copy_button = UiUtil.button("Kopieren", net_row, func(): DisplayServer.clipboard_set(Net.room_code() if Net.room_code() != "" else Net.public_ip))
 	_copy_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_copy_button.tooltip_text = "Adresse in die Zwischenablage kopieren, um sie den Mitspielern zu schicken"
-	_addresses = _muted(UiUtil.label("", _online, 12))
+	_addresses = _muted(UiUtil.label("", _online, 15))
 	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_addresses.custom_minimum_size.x = 370
 	_players_caption = DecoTheme.caption("Spieler", _online)
@@ -165,13 +165,13 @@ func _ready() -> void:
 	_online.add_child(_host_box)
 	_host_box.add_child(_gap(6))
 	DecoTheme.caption("Host-Einstellungen", _host_box)
-	_muted(UiUtil.label("Map", _host_box, 13))
+	_muted(UiUtil.label("Map", _host_box, 15))
 	_map_option = OptionButton.new()
 	_map_option.focus_mode = Control.FOCUS_NONE
 	_map_option.custom_minimum_size.y = 38
 	_map_option.item_selected.connect(func(i): _map_path = str(_map_paths[i]) if i < _map_paths.size() else "")
 	_host_box.add_child(_map_option)
-	_muted(UiUtil.label("Spielfeld", _host_box, 13))
+	_muted(UiUtil.label("Spielfeld", _host_box, 15))
 	var modes := HBoxContainer.new()
 	modes.add_theme_constant_override("separation", 6)
 	_host_box.add_child(modes)
@@ -205,6 +205,7 @@ func _ready() -> void:
 	right.add_child(_vote_row)
 	for m in Database.modes:
 		var card := ModeCard.new(m, Vector2(250, 250))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # breite Fenster: Karten teilen sich die Breite
 		var id: String = card.mode_id
 		card.pressed.connect(func(): Net.vote("" if Net.my_vote() == id else id))
 		_vote_row.add_child(card)
@@ -215,7 +216,7 @@ func _ready() -> void:
 	_summary = UiUtil.label("", _summary_panel, 15)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.custom_minimum_size.x = 400
-	_session_text = UiUtil.label("", right, 14)
+	_session_text = UiUtil.label("", right, 15)
 	_session_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_session_text.custom_minimum_size.x = 400
 	_session_text.add_theme_color_override("font_color", DecoTheme.DIM)
@@ -573,7 +574,7 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 		parts.append(NetPanel.status_text(Net.player_status(peer)))
 	if slot.get("has_state", false):
 		parts.append(tr("gespeichert: Welle %d") % int(slot.get("wave", 0)))
-	var info := UiUtil.label(" · ".join(parts), row, 13)
+	var info := UiUtil.label(" · ".join(parts), row, 15)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_color_override("font_color", DecoTheme.MUTED)
@@ -593,5 +594,5 @@ func _slot_row(slot: Dictionary, vote: String) -> void:
 			fb.add_theme_color_override("font_color", DecoTheme.GOLD_DARK)
 			fb.add_theme_color_override("font_disabled_color", DecoTheme.GOLD_DARK)
 	if vote != "":
-		var vl := UiUtil.label(_mode_name(vote), row, 13)
+		var vl := UiUtil.label(_mode_name(vote), row, 15)
 		vl.add_theme_color_override("font_color", DecoTheme.GOLD)

@@ -534,7 +534,7 @@ func _map_card(i: int) -> Button:
 			for z in md.zones:
 				seats[z.player] = true
 			info += "\n" + tr("Koop: %d Zonen, %d Bahnen") % [seats.size(), md.lane_count()]
-	var l := UiUtil.label(short, v, 13)
+	var l := UiUtil.label(short, v, 15)
 	l.clip_text = true
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_color_override("font_color", DecoTheme.MUTED)

@@ -73,9 +73,12 @@ func _ready() -> void:
 			var kind: String = str(md.get("game", "gemtd")) if md is Dictionary else "gemtd"
 			Session.game_kind = kind
 			node = load(Session.game_scene()).instantiate()
+	# Fenster so groß wie der Xvfb-Bildschirm (--groesse), nicht die gespeicherte Auflösung
+	Display.resolution = DisplayServer.screen_get_size()
+	Display.fullscreen = false
 	if opts.has("ui"):
 		Display.ui_scale = clampf(float(opts.ui) / 100.0, Display.UI_SCALE_MIN, Display.UI_SCALE_MAX)
-		Display._apply()
+	Display._apply()
 	add_child(node)
 	await _frames(5)
 	if scene == "menu" and opts.get("seite", "") == "einstellungen":
