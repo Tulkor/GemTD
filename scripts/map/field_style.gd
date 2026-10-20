@@ -65,6 +65,17 @@ const STYLES := {
 		"base": "stone",
 		"contact_shadow": 0.6,
 		"hit_glow": 0.5,
+		# Nacht nach dem Vorbild Duskwood (WoW Forever, Wunsch von Lukas): blauvioletter Nebel, in dem der Wald
+		# als Silhouette versinkt, kühles Mondlicht, kein Gegenlicht; die warmen Laternen setzt EeveScenery
+		"env_night": {
+			"sky_top": Color("0a0c1c"), "sky_horizon": Color("2a2c4a"), "ground_bottom": Color("0c0d18"),
+			"ambient": Color("7078b8"), "ambient_energy": 0.55, "ambient_sky": 0.0,
+			"sun": Color("a8b6ff"), "sun_energy": 0.6, "sun_pitch": -55.0, "shadow_opacity": 0.7,
+			"fill_energy": 0.0,
+			"fog": Color("1c2038"), "fog_density": 0.014,
+			"glow_threshold": 0.9, "glow_intensity": 0.85,
+			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.21, "white": 1.0, "contrast": 1.08, "saturation": 0.9,
+		},
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),
 			# Umgebungslicht großteils vom Himmel: Oberseiten hell und bläulich, Flanken dunkler
