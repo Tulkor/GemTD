@@ -6,30 +6,44 @@ Code aus fünf Zeichen (z. B. `K7QXM`), Mitspieler tippen ihn statt einer IP-Adr
 Server leitet danach die Pakete des Spiels weiter.
 
 - `relay.py`: der Server, nur Python-Standardbibliothek (ab 3.9), TCP-Port 24565
-- `docker-compose.yml`: fertig für Synology Container Manager oder `docker compose`
+- `Dockerfile`, `image_bauen.sh`: Image für x86 und ARM als `.tar` zum Importieren
+- `docker-compose.yml`: dasselbe als Projekt für Container Manager oder `docker compose`
 - Gegenstück im Spiel: `scripts/net/relay_peer.gd`, Einstellung „Server“ in der Lobby
   (oder fest eingebaut über `Net.DEFAULT_RELAY` in `scripts/autoload/net.gd`)
 - Test: `tools/run_tests.sh relay` (Host und zwei Mitspieler über einen lokalen Relay)
 
 ## Auf einer Synology einrichten
 
-Voraussetzung: DSM 7.2 oder neuer und ein Modell mit **Container Manager** (die „+“- und
-Business-Modelle; im Paket-Zentrum suchen, bei den „j“-Modellen fehlt er).
+Voraussetzung: DSM 7.2 oder neuer und ein Modell mit **Container Manager** (im Paket-Zentrum
+suchen; bei manchen günstigen „j“-Modellen fehlt er).
+
+Fertige Images (bauen mit `tools/relay/image_bauen.sh`, liegen unter `/mnt/project-files/relay/`):
+- `tdhub-relay-amd64.tar` für Intel- und AMD-Prozessoren (die meisten „+“-Modelle)
+- `tdhub-relay-arm64.tar` für ARM-Prozessoren (z. B. Realtek RTD1619B im DS223/DS423)
+
+Welcher Prozessor drin ist, steht unter Systemsteuerung → Info-Center → Allgemein → CPU.
 
 1. Im Paket-Zentrum **Container Manager** installieren.
-2. In der File Station einen Ordner anlegen, z. B. `docker/tdhub-relay`, und `relay.py` und
-   `docker-compose.yml` aus diesem Ordner hineinkopieren.
-3. Container Manager → **Projekt** → **Erstellen**: Name `tdhub-relay`, Pfad = der Ordner aus
-   Schritt 2, „vorhandene docker-compose.yml verwenden“ → Weiter → Fertig. Das Projekt lädt das
-   Python-Image und startet. Unter Container → tdhub-relay → Protokoll steht
+2. Die passende `.tar`-Datei per File Station aufs NAS legen.
+3. Container Manager → **Image** → **Hinzufügen** → **Aus Datei hinzufügen** → die `.tar` wählen.
+   Danach steht `tdhub-relay` mit Tag `latest` in der Liste.
+4. Das Image wählen → **Ausführen**: Name `tdhub-relay`, **automatischen Neustart aktivieren**,
+   bei den Port-Einstellungen lokaler Port `24565` → Container-Port `24565`, Typ **TCP**.
+   Sonst nichts ändern → Fertig. Unter Container → tdhub-relay → Protokoll steht
    `TD-Hub-Relay hört auf TCP-Port 24565`.
-4. Im Router **TCP-Port 24565** an die IP-Adresse der Synology weiterleiten
+5. Im Router **TCP-Port 24565** an die IP-Adresse der Synology weiterleiten
    (FritzBox: Internet → Freigaben → Portfreigaben → Gerät hinzufügen → neue Freigabe,
    Protokoll TCP, Port 24565).
-5. Falls die Firewall der Synology an ist (Systemsteuerung → Sicherheit → Firewall): Regel für
+6. Falls die Firewall der Synology an ist (Systemsteuerung → Sicherheit → Firewall): Regel für
    TCP-Port 24565 erlauben.
-6. Ändert sich die öffentliche IP des Anschlusses, DDNS einrichten: Systemsteuerung → Externer
+7. Ändert sich die öffentliche IP des Anschlusses, DDNS einrichten: Systemsteuerung → Externer
    Zugriff → DDNS → Hinzufügen, Anbieter Synology, z. B. `name.synology.me`.
+
+Statt Schritt 2–4 geht auch ein Projekt: `relay.py`, `Dockerfile` und `docker-compose.yml` in
+einen Ordner legen, Container Manager → Projekt → Erstellen mit diesem Ordner.
+
+Neue Version des Relays: neues `.tar` importieren, Container stoppen, löschen und wie in
+Schritt 4 neu ausführen.
 
 Im Spiel dann in der Lobby bei **Server** `name.synology.me` (oder die öffentliche IP) eintragen.
 Ein anderer Port als 24565 geht als `name.synology.me:12345` (dann in Schritt 3 und 4 anpassen).
@@ -49,8 +63,8 @@ Als Dienst unter Linux z. B. mit systemd (`ExecStart=/usr/bin/python3 -I /opt/td
 
 ## Grenzen und Sicherheit
 
-- Der Container läuft ohne Rechte (Nutzer nobody, nur lesbar, 128 MB), sieht vom NAS nur
-  `relay.py` und öffnet nur den einen Port.
+- Der Container läuft als Nutzer nobody ohne Zugriff aufs NAS (keine Ordner eingebunden) und
+  öffnet nur den einen Port; im Projekt zusätzlich nur lesbar und auf 128 MB begrenzt.
 - Höchstens 200 Räume, 16 Verbindungen je IP-Adresse, 16 MB je Paket; stille Verbindungen
   fliegen nach 45 Sekunden raus (das Spiel schickt alle 10 Sekunden ein Lebenszeichen).
 - Der Datenverkehr ist klein (Befehle und Spielstände, grob einige KB/s pro Spieler).
