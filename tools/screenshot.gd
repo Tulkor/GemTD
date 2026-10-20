@@ -5,7 +5,8 @@ extends Node
 ##   --seite=single|history|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
-##                           (Host zuerst), --stimme=eevetd Modus vorwählen
+##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
+##                           hosten (vorher tools/relay/relay.py starten), Code steht dann oben links
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
 ##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
@@ -100,7 +101,14 @@ func _ready() -> void:
 ## Lobby als Host mit erfundenen Mitspielern (nur fürs Bild, ohne echte Verbindungen).
 func _fake_lobby(menu: Node) -> void:
 	Net.my_name = "Lukas"
-	Net.host(24690)
+	if opts.has("relay"):   # --relay=127.0.0.1:24565: über einen laufenden Relay hosten (tools/relay/relay.py)
+		Net.host_relay(str(opts.relay))
+		for i in 300:
+			if not Net.is_connecting():
+				break
+			await get_tree().process_frame
+	else:
+		Net.host(24690)
 	var names := String(opts.lobby).split(",")
 	for i in names.size():
 		Net.players[100 + i] = {"name": names[i], "status": {}, "uid": "fake-%d" % i}

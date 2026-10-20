@@ -19,6 +19,8 @@ var fields: Dictionary = {}
 
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
+var _server_edit: LineEdit
+var _port_hint: Label
 var _status: Label
 var _offline: VBoxContainer
 var _online: VBoxContainer
@@ -107,7 +109,20 @@ func _ready() -> void:
 	_offline = VBoxContainer.new()
 	_offline.add_theme_constant_override("separation", 10)
 	v.add_child(_offline)
-	var host := UiUtil.button("Neue Sitzung hosten", _offline, func(): Net.host())
+	var server_row := HBoxContainer.new()
+	server_row.add_theme_constant_override("separation", 10)
+	_offline.add_child(server_row)
+	UiUtil.label("Server", server_row, 15).custom_minimum_size.x = 70
+	_server_edit = LineEdit.new()
+	_server_edit.text = Net.relay_server
+	_server_edit.placeholder_text = Net.DEFAULT_RELAY if Net.DEFAULT_RELAY != "" else tr("z. B. name.synology.me (leer = direkt per IP)")
+	_server_edit.tooltip_text = "Relay-Server: Host und Mitspieler verbinden sich nur mit ihm, niemand muss einen Port freigeben"
+	_server_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_server_edit.text_changed.connect(func(_t): _update_join_hint())
+	_server_edit.text_submitted.connect(func(_t): _save_server())
+	_server_edit.focus_exited.connect(_save_server)
+	server_row.add_child(_server_edit)
+	var host := UiUtil.button("Neue Sitzung hosten", _offline, func(): _save_server(); Net.host_default())
 	host.custom_minimum_size.y = 44
 	_muted(UiUtil.wrap_label("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 370)).add_theme_font_size_override("font_size", 13)
 	var join_row := HBoxContainer.new()
@@ -115,13 +130,14 @@ func _ready() -> void:
 	_offline.add_child(join_row)
 	_ip_edit = LineEdit.new()
 	_ip_edit.text = Net.last_ip
-	_ip_edit.placeholder_text = "IP-Adresse des Hosts"
+	_ip_edit.placeholder_text = "Code oder IP-Adresse des Hosts"
 	_ip_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_ip_edit.text_submitted.connect(func(_t): _join())
 	join_row.add_child(_ip_edit)
 	UiUtil.button("Beitreten", join_row, _join).custom_minimum_size.x = 120
-	var port_hint := _muted(UiUtil.wrap_label(tr("Im selben Netzwerk reicht die angezeigte Adresse. Übers Internet muss der Host UDP-Port %d am Router freigeben, oder ihr nutzt ein virtuelles LAN wie Tailscale oder ZeroTier.") % Net.DEFAULT_PORT, _offline, 370))
-	port_hint.add_theme_font_size_override("font_size", 12)
+	_port_hint = _muted(UiUtil.wrap_label("", _offline, 370))
+	_port_hint.add_theme_font_size_override("font_size", 12)
+	_update_join_hint()
 
 	# Verbunden: Adresse, Spieler, Host-Einstellungen
 	_online = VBoxContainer.new()
@@ -133,7 +149,7 @@ func _ready() -> void:
 	_internet = UiUtil.label("", net_row, 14)
 	_internet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_internet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_copy_button = UiUtil.button("Kopieren", net_row, func(): DisplayServer.clipboard_set(Net.public_ip))
+	_copy_button = UiUtil.button("Kopieren", net_row, func(): DisplayServer.clipboard_set(Net.room_code() if Net.room_code() != "" else Net.public_ip))
 	_copy_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_copy_button.tooltip_text = "Adresse in die Zwischenablage kopieren, um sie den Mitspielern zu schicken"
 	_addresses = _muted(UiUtil.label("", _online, 12))
@@ -301,7 +317,24 @@ func _muted(l: Label) -> Label:
 func _join() -> void:
 	var ip := _ip_edit.text.strip_edges()
 	if ip != "":
-		Net.join(ip)
+		_save_server()
+		Net.join_any(ip)
+
+
+func _save_server() -> void:
+	if _server_edit != null and _server_edit.text.strip_edges() != Net.relay_server:
+		Net.set_relay_server(_server_edit.text)
+	_update_join_hint()
+
+
+func _update_join_hint() -> void:
+	if _port_hint == null:
+		return
+	var relay := _server_edit.text.strip_edges() != "" or Net.DEFAULT_RELAY != ""
+	if relay:
+		_port_hint.text = tr("Mit Server: Der Host bekommt einen Code, Mitspieler geben ihn oben ein. Niemand muss einen Port freigeben. Eine IP-Adresse statt Code verbindet weiter direkt.")
+	else:
+		_port_hint.text = tr("Im selben Netzwerk reicht die angezeigte Adresse. Übers Internet muss der Host UDP-Port %d am Router freigeben, oder ihr nutzt ein virtuelles LAN wie Tailscale oder ZeroTier.") % Net.DEFAULT_PORT
 
 
 
@@ -482,6 +515,17 @@ func _map_name() -> String:
 ## Host: Adresse fürs Internet (öffentliche IP, Portfreigabe per UPnP) und fürs eigene Netzwerk.
 func _show_addresses() -> void:
 	_internet.get_parent().visible = true
+	if Net.via_relay():
+		_internet.text = tr("Code: %s") % Net.room_code()
+		_internet.add_theme_color_override("font_color", DecoTheme.GOLD)
+		_internet.add_theme_font_size_override("font_size", 20)
+		_copy_button.visible = true
+		_copy_button.tooltip_text = tr("Code in die Zwischenablage kopieren, um ihn den Mitspielern zu schicken")
+		_addresses.text = tr("Über den Server %s. Mitspieler geben den Code ein, niemand muss einen Port freigeben.") % Net.relay_connection()
+		_addresses.visible = true
+		return
+	_copy_button.tooltip_text = tr("Adresse in die Zwischenablage kopieren, um sie den Mitspielern zu schicken")
+	_internet.add_theme_font_size_override("font_size", 14)
 	if Net.public_ip != "":
 		_internet.text = tr("Internet: %s") % Net.public_ip
 	else:
