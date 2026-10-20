@@ -42,6 +42,7 @@ var _sel_box: VBoxContainer
 
 var _banner: Label
 var _minimap: MaulMinimap
+var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
@@ -907,7 +908,22 @@ func _build_minimap() -> void:
 	_minimap = MaulMinimap.new()
 	_minimap.custom_minimum_size = Vector2(MAP_SIZE, MAP_SIZE)
 	_minimap.game = game
-	panel.add_child(_minimap)
+	if game.players.size() <= 1:
+		panel.add_child(_minimap)
+		return
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+	box.add_child(_minimap)
+	# Mehrspieler: anfangs nur die Wege durchs eigene Gebiet, die der anderen auf Knopfdruck
+	var b := UiUtil.button("Alle Wege zeigen", box, func(): pass)
+	paths_button = b
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = "Zeigt auch die Gegnerwege durch die Gebiete der Mitspieler."
+	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	b.toggled.connect(func(on: bool): game.set_show_all_paths(on))
 
 
 # --- Aktualisieren -------------------------------------------------------------------
