@@ -28,6 +28,7 @@ extends Node
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --nacht                 eeveTD: Karte bei Nacht (Laternen, Glühwürmchen)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
@@ -286,6 +287,7 @@ func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
 ## --fallen: dazu Feuer 4 mit einem Flammenrost auf dem Weg und ein Dual-Tower (Feuerbeerenstrauch, Feld 32,68),
 ## --auswahl wählt ihn.
 func _prepare_eeve(game: Node) -> void:
+	game.scenery.set_night(opts.has("nacht"))
 	game.gold = 3000
 	game.lumber = 2
 	game.points = 6

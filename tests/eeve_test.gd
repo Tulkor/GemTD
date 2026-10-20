@@ -240,6 +240,14 @@ func _debug_tests() -> void:
 	check(game.hud.debug_button.visible and not game.hud.debug_gems_row.visible, "Debug-Knopf in eeveTD, ohne Gems pro Runde")
 	check(game.hud.debug_keys.has("eeve_tsunami_cannon") and game.hud.debug_keys.has("eeve_flame_grate") and game.hud.debug_keys.has("eeve_volcano"),
 		"Debug-Auswahl hat Element-Tower, Fallen und Dual-Tower")
+	var sc: EeveScenery = game.scenery
+	check(sc != null and sc.get_child_count() > 20, "Wald und Laternen um die Karte")
+	var day_sun: float = sc._sun.light_energy
+	sc.set_night(true)
+	check(sc._lights.size() == game.map.all_waypoints().size() and sc._lights[0].visible and sc._fireflies.emitting
+		and sc._sun.light_energy < day_sun, "Nacht: Laterne an jedem Wegpunkt leuchtet, Mondlicht")
+	sc.set_night(false)
+	check(not sc._lights[0].visible and is_equal_approx(sc._sun.light_energy, day_sun), "Tag: Laternen aus, Sonne wie vorher")
 	var lumber: int = game.lumber
 	var food: int = game.food_cap
 	var pts: int = game.points

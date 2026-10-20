@@ -55,6 +55,7 @@ var log_lines: Array:      ## letzte Meldungen (Einkommen, Punkte) für die Seit
 var clock := 0.0           ## Spielzeit in Wellen (für zeitlich begrenzte Effekte der Tower)
 var placing_trap := ""     ## Falle, die gerade gesetzt wird (Klick aufs Feld), "" = keine
 var eeve_panel: EevePanel
+var scenery: EeveScenery    ## Wald, Laternen und Tag/Nacht rund um das Spielfeld
 
 
 func _ready() -> void:
@@ -72,6 +73,7 @@ func _ready() -> void:
 		for p in players:
 			p.gold = int(rules.get("start_gold", 200))
 		level_pause = float(rules.get("first_pause", 45))
+	scenery = EeveScenery.add_to(self)
 	_style_hud()
 	_refresh_hud()
 
@@ -109,6 +111,9 @@ func _setup_debug() -> void:
 	row = hud.add_debug_row("Elementpunkte")
 	for n in [1, 5]:
 		hud.debug_button_in(row, "+%d" % n, func(): _debug_add("points", n))
+	row = hud.add_debug_row("Tageszeit")
+	hud.debug_button_in(row, "Tag", func(): scenery.set_night(false))
+	hud.debug_button_in(row, "Nacht", func(): scenery.set_night(true))
 	row = hud.add_debug_row("Elemente")
 	var all := hud.debug_button_in(row, tr("Alle auf %d") % int(rules.get("point_max", 8)), _debug_max_elements)
 	all.tooltip_text = "Alle sechs Elemente auf die höchste Stufe, schaltet alle Tower, Fallen und Dual-Tower frei"
