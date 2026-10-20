@@ -34,10 +34,14 @@ func add_beam(from: Vector3, to: Vector3, col: Color, fx_key: String = "") -> vo
 					fx.play_nova(set.nova, from, float(parts[3]) if parts.size() > 3 else 2.0)
 					return
 			else:
+				var delay := 0.0
 				if set.has("shot"):
 					fx.play_shot(set.shot, from, to)
+					var e := FxData.shot(str(set.shot.id))
+					if str(e.get("kind", "")) == "projectile":
+						delay = float(e.get("length", 0.0))
 				if set.has("hit"):
-					fx.play_hit(set.hit, to)
+					fx.play_hit(set.hit, to, 1.0, delay)
 				if set.has("shot"):
 					return
 	beams.append({"from": from, "to": to, "color": col, "t": BEAM_TIME})

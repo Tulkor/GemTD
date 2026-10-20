@@ -16,6 +16,22 @@ const HIT_TOWARD_CAMERA := 0.35
 ## Obergrenzen, damit späte Wellen mit vielen Towern nicht ruckeln.
 const MAX_EFFECTS := 160
 const MAX_SPRITES := 2500
+## Treffer leuchten kurz als echte Lichtquelle in ihrer Farbe. Wenige Lichter im Pool (jedes Licht kostet im
+## Compatibility-Renderer einen Zeichendurchgang mehr für alles, was es trifft); Treffer nahe an einem
+## leuchtenden Licht frischen dieses auf, statt ein neues zu nehmen.
+const MAX_LIGHTS := 8
+const LIGHT_TIME := 0.3
+const LIGHT_RANGE := 2.4
+const LIGHT_ENERGY := 4.0
+const LIGHT_MERGE := 1.0
+const LIGHT_HEIGHT := 0.35
+## Dazu ein Lichtschein flach auf dem Boden: der Neon-Boden von GemTD ist unbeleuchtet und nimmt kein Licht an.
+const GLOW_SIZE := 3.2
+const GLOW_STRENGTH := 1.2
+const GLOW_KEY := "glow"
+
+## Treffer-Lichter an/aus (z. B. für schwache Rechner).
+static var lights_enabled := true
 
 var _effects: Array = []   ## laufende Effekte
 var _sprites: Array = []   ## lebende Sprites
@@ -25,10 +41,12 @@ var _cam_basis := Basis()
 ## Eigener Zufall: wie viele Sprites entstehen, hängt von der Bildrate ab. Mit dem globalen randf()
 ## verschöben sie die Würfe der Tower (Krit, Betäubung, Nova …), und 4× machte anderen Schaden als 1×.
 var _rng := RandomNumberGenerator.new()
+var _lights: Array = []  ## {node, t, energy}
 
 
-## Treffer-Effekt am Punkt pos. fx = {"id", "shift", "sat"} aus FxData.for_tower.
-func play_hit(fx: Dictionary, pos: Vector3, scale_factor: float = 1.0) -> void:
+## Treffer-Effekt am Punkt pos. fx = {"id", "shift", "sat"} aus FxData.for_tower; optional "light": false.
+## delay: Sekunden bis zum Einschlag (Geschoss im Flug).
+func play_hit(fx: Dictionary, pos: Vector3, scale_factor: float = 1.0, delay: float = 0.0) -> void:
 	var e := FxData.hit(str(fx.get("id", "")))
 	if e.is_empty() or _effects.size() >= MAX_EFFECTS:
 		return
@@ -37,7 +55,11 @@ func play_hit(fx: Dictionary, pos: Vector3, scale_factor: float = 1.0) -> void:
 	for l in layers:
 		state.append({"acc": 0.0, "bursts": [], "alive": 0})
 	var basis := _camera_basis()
-	_effects.append({"kind": "hit", "def": e, "layers": layers, "state": state, "t": 0.0,
+	var light := {}
+	if lights_enabled and is_inside_tree() and bool(fx.get("light", e.get("light", true))):
+		light = {"pos": pos, "color": _light_color(e, float(fx.get("shift", 0.0)), float(fx.get("sat", 1.0))),
+			"scale": scale_factor}
+	_effects.append({"kind": "hit", "def": e, "layers": layers, "state": state, "t": -maxf(delay, 0.0), "light": light,
 		"pos": pos + basis.z * HIT_TOWARD_CAMERA * scale_factor, "basis": basis, "scale": HIT_SCALE * scale_factor, "shift": float(fx.get("shift", 0.0)),
 		"sat": float(fx.get("sat", 1.0)), "length": float(e.get("length", 1.0))})
 
@@ -65,12 +87,20 @@ func play_nova(fx: Dictionary, center: Vector3, radius: float) -> void:
 func clear() -> void:
 	_effects.clear()
 	_sprites.clear()
+	for l in _lights:
+		l.t = LIGHT_TIME
+		l.node.visible = false
 	for b in _batches.values():
 		b.mmi.multimesh.visible_instance_count = 0
 
 
 func busy() -> bool:
 	return not _effects.is_empty() or not _sprites.is_empty()
+
+
+## Wie viele Treffer-Lichter gerade leuchten (Tests).
+func lights_active() -> int:
+	return _lights.filter(func(l): return l.t < LIGHT_TIME).size()
 
 
 func _camera_basis() -> Basis:
@@ -84,7 +114,8 @@ func _camera_basis() -> Basis:
 # --- Ablauf -------------------------------------------------------------------
 
 func _process(delta: float) -> void:
-	if _effects.is_empty() and _sprites.is_empty():
+	_update_lights(delta)
+	if _effects.is_empty() and _sprites.is_empty() and lights_active() == 0:
 		for b in _batches.values():
 			b.items.clear()
 			b.mmi.multimesh.visible_instance_count = 0
@@ -92,6 +123,9 @@ func _process(delta: float) -> void:
 	_cam_basis = _camera_basis()
 	for fx in _effects:
 		_emit(fx, delta)
+		if not fx.get("light", {}).is_empty() and fx.t >= 0.0:
+			_add_light(fx.light.pos, fx.light.color, fx.light.scale)
+			fx.light = {}
 	_effects = _effects.filter(func(fx): return fx.t <= fx.length or _alive(fx))
 	for b in _batches.values():
 		b.items.clear()
@@ -108,6 +142,7 @@ func _process(delta: float) -> void:
 		else:
 			_update_particle(s, delta)
 	_sprites = keep
+	_draw_glows()
 	for b in _batches.values():
 		_flush(b)
 
@@ -333,11 +368,73 @@ func _draw_shot(s: Dictionary) -> void:
 	var length := dist
 	var center := (from + to) * 0.5
 	if kind == "projectile":
-		# Geschoss mit eigener Länge fliegt in den ersten 60 % der Zeit zum Ziel
+		# Geschoss mit eigener Länge fliegt über seine ganze Zeit zum Ziel; der Treffer kommt danach
+		# (Effects.add_beam verzögert ihn um die Flugzeit).
 		length = minf(width * float(e.get("aspect", 2.0)), dist)
-		var travel := clampf(t / 0.6, 0.0, 1.0)
+		var travel := clampf(t, 0.0, 1.0)
 		center = from.lerp(to - dir * length * 0.5, travel) + dir * length * 0.5 * (1.0 - travel)
 	_push(s.key, e, Basis(dir * length, side * width, dir.cross(side)), center, col, frame, s.shift, s.sat)
+
+
+# --- Licht -------------------------------------------------------------------
+
+## Lichtfarbe = Effektfarbe, gedreht und entsättigt wie die Sprites (FxData._tint).
+func _light_color(e: Dictionary, shift: float, sat: float) -> Color:
+	var c := Color.from_string(str(e.get("color", "#ffffff")), Color.WHITE)
+	return Color.from_hsv(wrapf(c.h + shift, 0.0, 1.0), clampf(c.s * sat, 0.0, 1.0), 1.0)
+
+
+func _add_light(pos: Vector3, col: Color, scale_factor: float) -> void:
+	var p := pos + Vector3(0, LIGHT_HEIGHT, 0)
+	var pick: Dictionary = {}
+	for l in _lights:
+		if l.t < LIGHT_TIME and l.node.position.distance_squared_to(p) < LIGHT_MERGE * LIGHT_MERGE:
+			# Treffer daneben: dieses Licht auffrischen und Farben mischen
+			l.node.light_color = l.node.light_color.lerp(col, 0.5)
+			l.t = 0.0
+			return
+	for l in _lights:
+		if pick.is_empty() or l.t > pick.t:
+			pick = l
+	if pick.is_empty() or (pick.t < LIGHT_TIME and _lights.size() < MAX_LIGHTS):
+		var n := OmniLight3D.new()
+		n.shadow_enabled = false
+		n.light_specular = 0.4
+		n.omni_attenuation = 1.4
+		add_child(n)
+		pick = {"node": n, "t": LIGHT_TIME, "energy": 0.0}
+		_lights.append(pick)
+	pick.t = 0.0
+	pick.energy = LIGHT_ENERGY * clampf(scale_factor, 0.5, 2.0)
+	pick.node.omni_range = LIGHT_RANGE * clampf(scale_factor, 0.5, 2.0)
+	pick.node.position = p
+	pick.node.light_color = col
+	pick.node.visible = true
+
+
+func _draw_glows() -> void:
+	for l in _lights:
+		if l.t >= LIGHT_TIME:
+			continue
+		var k: float = 1.0 - l.t / LIGHT_TIME
+		var col: Color = l.node.light_color * (GLOW_STRENGTH * pow(k, 1.5) * l.energy / LIGHT_ENERGY)
+		col.a = 1.0
+		var d: float = GLOW_SIZE * l.node.omni_range / LIGHT_RANGE
+		var p: Vector3 = l.node.position
+		var b := Basis(Vector3.RIGHT * d, Vector3(0, 0, -1) * d, Vector3.UP)
+		_push(GLOW_KEY, {"tex": GLOW_KEY, "flat": true}, b, Vector3(p.x, 0.03, p.z), col, 0.0, 0.0, 1.0)
+
+
+func _update_lights(delta: float) -> void:
+	for l in _lights:
+		if l.t >= LIGHT_TIME:
+			continue
+		l.t += delta
+		if l.t >= LIGHT_TIME:
+			l.node.visible = false
+			continue
+		var k: float = 1.0 - l.t / LIGHT_TIME
+		l.node.light_energy = l.energy * k * k
 
 
 # --- Zeichnen -----------------------------------------------------------------
@@ -358,9 +455,14 @@ func _batch(key: String, d: Dictionary) -> Dictionary:
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER_ADD if bool(d.get("add", true)) else SHADER_MIX
 	var tex_path := str(d.get("tex", d.get("sheet", "")))
+	if tex_path == GLOW_KEY and not _textures.has(tex_path):
+		_textures[tex_path] = _glow_texture()
 	if not _textures.has(tex_path):
 		_textures[tex_path] = load(tex_path) if ResourceLoader.exists(tex_path) else null
 	mat.set_shader_parameter("tex", _textures[tex_path])
+	# Flach am Boden (Nova, Lichtschein): keine weichen Kanten, sonst blendet der Boden sie ganz aus
+	if bool(d.get("flat", false)) or str(d.get("kind", "")) == "nova":
+		mat.set_shader_parameter("soft", 0.0)
 	if d.has("sheet"):
 		mat.set_shader_parameter("tiles", Vector2(float(d.get("cols", 1)), float(d.get("rows", 1))))
 	else:
@@ -370,6 +472,9 @@ func _batch(key: String, d: Dictionary) -> Dictionary:
 		var uo: Array = d.get("uv_offset", [0, 0])
 		mat.set_shader_parameter("uv_scale", Vector2(float(us[0]), float(us[1])))
 		mat.set_shader_parameter("uv_offset", Vector2(float(uo[0]), float(uo[1])))
+	# nach dem durchsichtigen Spielfeld zeichnen (die MultiMeshes haben eine riesige AABB, die Sortierung nach
+	# Abstand hilft da nicht): Lichtschein über dem Boden, Sprites darüber
+	mat.render_priority = 1 if bool(d.get("flat", false)) else 2
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	quad.material = mat
@@ -388,6 +493,21 @@ func _batch(key: String, d: Dictionary) -> Dictionary:
 	add_child(mmi)
 	_batches[key] = {"mmi": mmi, "items": []}
 	return _batches[key]
+
+
+## Runder, weicher Verlauf für den Lichtschein am Boden (ohne eigene Bilddatei).
+func _glow_texture() -> Texture2D:
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.35, 1.0])
+	g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.45), Color(1, 1, 1, 0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(1.0, 0.5)
+	t.width = 64
+	t.height = 64
+	return t
 
 
 func _push(key: String, d: Dictionary, b: Basis, origin: Vector3, col: Color, frame: float, shift: float, sat: float) -> void:

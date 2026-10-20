@@ -19,12 +19,16 @@ extends Node
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
 ##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
+##   --treffer               nach --warten weiter warten, bis ein Treffer-Effekt leuchtet (höchstens 10 s), dann Bild
+##   --grundtower=water      eeveTD: statt des festen Plans überall den Grundturm dieses Elements
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
+##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -84,10 +88,18 @@ func _ready() -> void:
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
+	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
+		if scene == "maul":
+			node.hud.toggle_debug()
+		else:
+			node.hud.debug_panel.show()
+			node.hud.debug_button.set_pressed_no_signal(true)
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)
 		await _frames(4)
+		if opts.has("treffer") and scene == "spiel":
+			await _wait_hit(node)
 		var img := get_viewport().get_texture().get_image()
 		if opts.has("zuschnitt"):
 			var r := String(opts.zuschnitt).split(",")
@@ -297,6 +309,11 @@ func _prepare_eeve(game: Node) -> void:
 			Vector2i(48, 68): ["eeve_fire_base_tower", "eeve_heat_stakes", "eeve_searing_totem"], Vector2i(54, 68): ["eeve_nature_base_tower", "eeve_minor_bird_launcher"]}
 	if opts.has("vitrine"):
 		plan = _eeve_vitrine(game, walls)
+	if opts.has("grundtower"):
+		game.points += 1
+		game.add_element_point(str(opts.grundtower))
+		for c in plan:
+			plan[c] = ["eeve_%s_base_tower" % opts.grundtower]
 	for c in plan:
 		var t: Tower = game.towers.get(c)
 		if t == null:
@@ -331,6 +348,23 @@ func _prepare_eeve(game: Node) -> void:
 		t += get_process_delta_time()
 
 
+## --treffer: warten, bis ein Treffer leuchtet. Die Spielzeit läuft dabei langsam (Xvfb rendert nur wenige
+## Bilder pro Sekunde, sonst wäre der Treffer schon vorbei); --treffer=0.1 = so viele Sekunden danach.
+func _wait_hit(game: Node) -> void:
+	var fx: FxPlayer = game.effects.fx
+	Engine.time_scale = 0.05
+	var t := 0.0
+	while fx.lights_active() == 0 and t < 10.0:
+		await get_tree().process_frame
+		t += get_process_delta_time() / Engine.time_scale
+	var after := float(opts.treffer) if str(opts.treffer) != "1" else 0.08
+	var waited := 0.0
+	while waited < after:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	print("TREFFER Lichter=%d nach %.1f s" % [fx.lights_active(), t])
+
+
 ## Setzt Gems nahe am Weg, bis die Runde voll ist (wanted: "id:stufe" je Gem, Rest zufällig).
 func _place_round(game: Node, wanted: Array) -> void:
 	var tries := 0
@@ -363,6 +397,10 @@ func _camera(game: Node, w: String) -> void:
 			if opts.has("punkt"):
 				var p := String(opts.punkt).split(",")
 				focus = Vector2(int(p[0]), int(p[1])) * Board3D.CELL
+			elif opts.has("gegner") and not game.enemies.is_empty():
+				Engine.time_scale = 0.0  # Bild anhalten, sonst läuft der Gegner bis zur Aufnahme aus dem Bild
+				focus = game.enemies[0].pos
+				rig.distance = 9.0
 			elif not game.towers.is_empty():
 				focus = Board3D.footprint_center(game.towers.values()[0].cell)
 			rig.target = Board3D.to_3d(focus)

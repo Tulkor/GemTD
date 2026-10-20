@@ -7,6 +7,7 @@ extends CanvasLayer
 
 const SHOP_WIDTH := 300.0
 const MAP_SIZE := 200.0
+const ABIL_H := 84.0  ## feste Höhe der Fähigkeiten im Auswahlfenster (mehr scrollt), damit es nicht springt
 
 var game: MaulGame
 var root: Control
@@ -44,6 +45,8 @@ var _minimap: MaulMinimap
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var _debug: MaulDebug
+var _debug_button: Button
 
 
 func _ready() -> void:
@@ -106,8 +109,34 @@ func _build_top_bar() -> void:
 		b.toggle_mode = true
 		b.custom_minimum_size.x = 40
 		_speed_buttons.append(b)
+	# Debug-Menü nur, wo gerechnet wird (allein oder Host)
+	if not game.mirror:
+		_debug_button = UiUtil.button("Debug", row, toggle_debug)
+		_debug_button.toggle_mode = true
+		_debug_button.focus_mode = Control.FOCUS_NONE
+		_debug_button.tooltip_text = "Debug-Menü"
+		_debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+		_debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 	UiUtil.button("Menü", row, func(): _menu.visible = not _menu.visible)
 	_build_menu()
+
+
+func toggle_debug() -> void:
+	if _debug == null:
+		_debug = MaulDebug.new()
+		_debug.game = game
+		# links neben dem Laden, damit beide gleichzeitig offen bleiben können
+		_debug.anchor_left = 1.0
+		_debug.anchor_right = 1.0
+		_debug.offset_right = -SHOP_WIDTH - 32
+		_debug.offset_top = 84
+		_debug.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_debug.visible = false
+		root.add_child(_debug)
+	_debug.visible = not _debug.visible
+	_debug_button.set_pressed_no_signal(_debug.visible)
+	if _debug.visible:
+		_debug.refresh()
 
 
 func _stat(parent: Node, caption: String) -> Label:
@@ -435,8 +464,7 @@ func refresh_selection() -> void:
 		UiTheme.caption(pair[0], box)
 		var v := UiUtil.label(pair[1], box, 15)
 		v.add_theme_font_override("font", UiTheme.font(true))
-	for line in ability_lines(d):
-		UiUtil.wrap_label(line, _sel_box, 316).add_theme_font_size_override("font_size", 13)
+	_ability_box(ability_lines(d))
 	var done := UiUtil.label(tr("%s Schaden · %d Kills") % [MaulHud.big(roundi(t.total_damage)), t.kills], _sel_box, 13)
 	done.add_theme_color_override("font_color", UiTheme.MUTED)
 	var mine := t.owner_player == game.local_player
@@ -461,6 +489,29 @@ func refresh_selection() -> void:
 		b.tooltip_text = tower_text(ud) + ("\n" + why if why != "" else "")
 		b.disabled = int(ud.cost) > gold or why != ""
 	_pro_actions(t, gold)
+
+
+## Fähigkeiten in einem Kasten mit fester Höhe, auch ohne Fähigkeit (sonst springt das Fenster beim Wechseln).
+func _ability_box(lines: Array) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BG, UiTheme.CYAN, 0, 1, 8))
+	panel.custom_minimum_size.y = ABIL_H
+	_sel_box.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 3)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+	UiTheme.caption("Fähigkeiten", box)
+	if lines.is_empty():
+		lines = [tr("Keine besonderen Fähigkeiten")]
+	for line in lines:
+		var l := UiUtil.wrap_label(line, box, 0)
+		l.add_theme_font_size_override("font_size", 13)
+		if lines.size() == 1 and line == tr("Keine besonderen Fähigkeiten"):
+			l.add_theme_color_override("font_color", UiTheme.MUTED)
 
 
 ## Anzeige der Profi-Werte eines Towers (für alle sichtbar).

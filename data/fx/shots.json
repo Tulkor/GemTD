@@ -1,10 +1,13 @@
 {
 	"_quelle": "Kenney Particle Pack 1.1 (kenney.nl, CC0), erzeugt mit tools/fx/kenney_effekte.py",
 	"auto": {
-		"_info": "Automatische Wahl, wenn ein Tower kein shot_fx setzt: erst nach Fähigkeit (ability), dann nach Farbton der Towerfarbe (hue: von, bis, Effekt; blasse Farben zählen nicht), sonst default. nova: Effekt für die Fähigkeit nova. hit_ability: Treffer-Effekt nach Fähigkeit (vor der Farbwahl).",
+		"_info": "Automatische Wahl, wenn ein Tower kein shot_fx setzt: erst nach Fähigkeit (ability), dann nach Farbton der Towerfarbe (hue: von, bis, Effekt; blasse Farben zählen nicht), sonst default. nova: Effekt für die Fähigkeit nova. hit_ability: Treffer-Effekt nach Fähigkeit (vor der Farbwahl). Ein Eintrag in ability/hit_ability kann auch {\"warm\": Effekt, \"sonst\": Effekt} sein: warm = Farbton im Bereich warm (rot bis gelb, nicht blass), sonst z. B. Wasser, Magie, Silber.",
 		"ability": {
 			"bounce": "lightning_arc",
-			"splash": "fire_orb"
+			"splash": {
+				"warm": "fire_orb",
+				"sonst": "energy_orb"
+			}
 		},
 		"hue": [
 			[
@@ -21,8 +24,15 @@
 		"default": "magic_beam",
 		"nova": "ruby_nova",
 		"hit_ability": {
-			"splash": "bk_explosion"
-		}
+			"splash": {
+				"warm": "bk_explosion",
+				"sonst": "kb_splash"
+			}
+		},
+		"warm": [
+			0.93,
+			0.16
+		]
 	},
 	"effects": {
 		"magic_beam": {
@@ -68,10 +78,26 @@
 			"color": "#ff6a1a",
 			"hue": 0.058,
 			"saturation": 0.898,
-			"length": 0.4,
+			"length": 0.24,
 			"width": 0.55,
 			"add": true,
 			"brightness": 1.4
+		},
+		"energy_orb": {
+			"name": "Kenney orb",
+			"kind": "projectile",
+			"sheet": "res://assets/fx/shot/energy_orb.png",
+			"cols": 4,
+			"rows": 2,
+			"frames": 8,
+			"aspect": 2.667,
+			"color": "#3ab8ff",
+			"hue": 0.56,
+			"saturation": 0.773,
+			"length": 0.24,
+			"width": 0.46,
+			"add": true,
+			"brightness": 1.5
 		},
 		"ruby_nova": {
 			"name": "Kenney nova",

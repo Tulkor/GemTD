@@ -84,10 +84,14 @@ func _ready() -> void:
 				fx.play_shot({"id": it.shot}, from, p)
 		else:
 			var f := FxData.for_tower(it.tower, it.tier)
+			var delay := 0.0
 			if f.has("shot"):
 				fx.play_shot(f.shot, from, p)
+				var se := FxData.shot(str(f.shot.id))
+				if str(se.get("kind", "")) == "projectile":
+					delay = float(se.get("length", 0.0))
 			if f.has("hit"):
-				fx.play_hit(f.hit, p)
+				fx.play_hit(f.hit, p, 1.0, delay)
 			if f.has("nova"):
 				fx.play_nova(f.nova, p - Vector3(0, 0.2, 0), 0.6)
 			print("TOWER %s: %s" % [it.tower, f])

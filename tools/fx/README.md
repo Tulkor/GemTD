@@ -16,6 +16,14 @@ Heruntergeladene Pakete und Videos immer in einen eigenen, leeren Ordner entpack
 
 Im Spiel: `scripts/game/fx_data.gd` wählt die Effekte pro Tower (Felder `hit_fx`/`shot_fx` in der Tower-Datei,
 sonst automatisch nach Farbe; Regeln in `data/fx/shots.json` → `auto`), `scripts/game/fx_player.gd` spielt sie ab.
+Splash nimmt Feuer (`fire_orb` + `bk_explosion`) nur für warme Tower (`auto.warm`, rot bis gelb), sonst
+Energiekugel + Spritzer (`energy_orb` + `kb_splash`, auf die Towerfarbe gedreht). Treffer eines Geschosses
+starten erst beim Einschlag. Jeder Treffer leuchtet kurz als Licht in seiner Farbe (`OmniLight3D` aus einem Pool
+von 8, nahe Treffer teilen sich eins) plus Lichtschein flach auf dem Boden; abschalten mit
+`FxPlayer.lights_enabled = false`, einzeln mit `"light": false` am Treffer. Sprites blenden weich aus, wo sie in
+Boden oder Modelle stoßen (`soft` in `assets/shaders/fx_sprite.gdshaderinc`).
+Treffer im echten Spiel ansehen: `tools/screenshot.sh --tower=silver:2 --welle=13 --phase=welle --warten=3 --treffer --winkel=nah`
+(eeveTD: `--map=eeve --grundtower=water --phase=welle --warten=12 --treffer --winkel=nah --punkt=30,72`).
 
 ## Brackeys und Kronbits (CC0)
 

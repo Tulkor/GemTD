@@ -169,7 +169,7 @@ pick_changed() {
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/relay/*) t+="relay " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
-      data/fx/*|assets/fx/*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse eeve maul " ;;
+      data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
