@@ -152,10 +152,11 @@ func _ready() -> void:
 	tower_list = TowerList.new()
 	tower_list.game = get_parent()
 	tower_list.above = enemy_panel
-	tower_list.limit = bottom
+	tower_list.limits.append(bottom)
 	root.add_child(tower_list)
 	_build_debug()
 	dps_meter.avoid = debug_panel
+	root.resized.connect(_recenter)
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -502,7 +503,7 @@ func _build_help() -> void:
 	help_panel.offset_right = -16
 	help_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	root.add_child(help_panel)
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / Kombinieren / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
 	help_panel.hide()
 
 
@@ -1478,6 +1479,13 @@ func _recenter() -> void:
 		c.offset_left = -s.x / 2.0
 		c.offset_right = s.x / 2.0
 		if c == bottom:
+			# Nicht unter die rechte Spalte (DPS, Tower-Liste, Mitspieler) schieben: lieber nach links
+			# rücken, solange links noch Platz ist
+			var w := root.size.x
+			var right_edge := w - 16.0 - tower_list.custom_minimum_size.x - 12.0
+			var left := minf(w / 2.0 - s.x / 2.0, maxf(16.0, right_edge - s.x))
+			c.offset_left = left - w / 2.0
+			c.offset_right = c.offset_left + s.x
 			c.offset_top = -16 - s.y
 			c.offset_bottom = -16
 		else:

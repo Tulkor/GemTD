@@ -8,7 +8,7 @@ const SORTS := [["damage", "Sortieren: Schaden"], ["kills", "Sortieren: Kills"],
 
 var game  # game.gd
 var above: Control  ## sitzt darunter (Gegner-Fenster oder DPS-Meter)
-var limit: Control  ## endet darüber (Auswahlkarte unten), solange die sichtbar ist
+var limits: Array[Control] = []  ## endet darüber (Auswahlkarte unten, Mitspieler-Liste), solange die sichtbar sind
 var sort := "damage"
 var summary: Label
 var fold: Button
@@ -84,9 +84,11 @@ func _process(delta: float) -> void:
 	if body.visible:
 		# Liste so hoch wie Platz ist: bis zur Auswahlkarte unten oder zum Bildschirmrand
 		var bottom_y := get_viewport_rect().size.y - 16.0
-		if limit != null and limit.visible and limit.get_global_rect().end.x > global_position.x:
-			bottom_y = limit.get_global_rect().position.y - 12.0
-		var room := clampf(bottom_y - scroll.global_position.y - 14.0, 60.0, 360.0)
+		for limit in limits:
+			var r := limit.get_global_rect()
+			if limit.is_visible_in_tree() and r.end.x > global_position.x and r.position.x < get_global_rect().end.x:
+				bottom_y = minf(bottom_y, r.position.y - 12.0)
+		var room := clampf(bottom_y - scroll.global_position.y - 14.0, 26.0, 360.0)
 		var h := minf(room, list.get_combined_minimum_size().y)
 		if absf(scroll.custom_minimum_size.y - h) > 1.0:
 			scroll.custom_minimum_size.y = h

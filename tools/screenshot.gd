@@ -26,6 +26,7 @@ extends Node
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
+##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
@@ -56,6 +57,12 @@ func _ready() -> void:
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
 	if opts.has("sprache"):
 		Loc.set_language(opts.sprache)
+	if opts.has("mitspieler"):
+		Net.my_name = "Lukas"
+		Net.host(24691)
+		var names := String(opts.mitspieler).split(",")
+		for i in names.size():
+			Net.players[100 + i] = {"name": names[i], "status": {"in_game": true, "phase": 0, "wave": 3, "waves": 50, "lives": 100}, "uid": "fake-%d" % i}
 	var out_dir: String = opts.get("aus", "/mnt/project-files/screens/auto")
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var scene: String = opts.get("szene", "spiel")

@@ -102,7 +102,10 @@ func _ready() -> void:
 		var t = game.round_towers[0]
 		game._select(t)
 		check(not game.choice_options(t).is_empty(), "Auswahloptionen vorhanden")
-		check(game.hud._options[0].style == "primary" and game.hud._main_button != null, "Behalten ist die große Hauptaktion")
+		# Große Hauptaktion: Behalten, außer ein zweiter gleicher Gem hebt ihn eine Qualität (dann Kombinieren)
+		var up: int = game.hud._options.map(func(o): return o.get("combine_up", false)).find(true)
+		check(game.hud._options[maxi(up, 0)].style == "primary" and game.hud._main_index == maxi(up, 0) \
+				and game.hud._main_button != null, "Behalten bzw. Kombinieren ist die große Hauptaktion")
 		game._on_option_chosen(0)
 		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
 		check(game.towers.size() == round_i + 1, "nur ein Tower behalten, Rest sind Steine (%d Steine)" % game.rocks.size())
