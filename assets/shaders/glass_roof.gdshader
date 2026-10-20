@@ -1,5 +1,5 @@
-// Glasdach über den Gängen von Shopping Maul, Vorbild Grand Palais: hohes Tonnengewölbe aus Glas in
-// kleinen Feldern, Eisenrahmen in Grün (Hauptbögen, Sprossen), Messingband am Rand.
+// Glasdach über den Gängen von Shopping Maul: Art-déco-Passage. Gewölbe aus durchsichtigem Glas mit
+// Messingrippen quer und längs, feinem Rautenmuster und einem Messingband am Rand.
 // Maske (R = Gang, nearest) und Gewölbe (G = Höhe 0..1, linear) liegen in "mask", ein Pixel pro Feld.
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_disabled, specular_schlick_ggx;
@@ -11,11 +11,10 @@ uniform float cell = 0.5;
 uniform float rise = 0.7;
 uniform vec4 glass_color : source_color = vec4(0.55, 0.78, 0.78, 1.0);
 uniform float glass_alpha = 0.07;
-uniform vec4 iron : source_color = vec4(0.3, 0.46, 0.4, 1.0);
 uniform vec4 brass : source_color = vec4(0.85, 0.72, 0.48, 1.0);
-/// Abstand der Hauptbögen und der Sprossen (Glasfelder) in Einheiten
-uniform float rib_step = 1.5;
-uniform float pane_step = 0.22;
+/// Abstand der Hauptrippen und der Rauten in Einheiten
+uniform float rib_step = 2.0;
+uniform float diamond_step = 0.5;
 
 varying vec3 world_pos;
 varying float height01;
@@ -47,15 +46,13 @@ void fragment() {
 	if (c.x < 0 || c.y < 0 || c.x >= int(cells.x) || c.y >= int(cells.y) || texelFetch(mask, c, 0).r < 0.5) {
 		discard;
 	}
-	float rib = max(line(world_pos.x, rib_step, 0.04), line(world_pos.z, rib_step, 0.04));
-	float pane = max(line(world_pos.x, pane_step, 0.007), line(world_pos.z, pane_step, 0.007));
-	// First: Längsträger oben auf dem Gewölbe
-	float ridge = smoothstep(0.985, 0.995, height01);
-	float edge = 1.0 - smoothstep(0.06, 0.12, height01);
-	float frame = max(max(rib, ridge), pane * 0.55);
-	float metal = max(frame, edge);
+	float rib = max(line(world_pos.x, rib_step, 0.035), line(world_pos.z, rib_step, 0.035));
+	float fine = max(line(world_pos.x + world_pos.z, diamond_step * 1.4142, 0.008),
+			line(world_pos.x - world_pos.z, diamond_step * 1.4142, 0.008));
+	float edge = 1.0 - smoothstep(0.08, 0.16, height01);
+	float metal = max(max(rib, edge), fine * 0.25);
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
-	ALBEDO = mix(mix(glass_color.rgb, iron.rgb, frame), brass.rgb, edge);
+	ALBEDO = mix(glass_color.rgb, brass.rgb, metal);
 	ALPHA = clamp(glass_alpha + fres * 0.18 + metal * 0.85, 0.0, 1.0);
 	METALLIC = metal * 0.8;
 	ROUGHNESS = mix(0.05, 0.35, metal);

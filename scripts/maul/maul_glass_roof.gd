@@ -1,19 +1,19 @@
 class_name MaulGlassRoof
 extends Node3D
 ## Glasdächer über den Gängen von Shopping Maul (wo Gegner laufen, aber nicht gebaut wird): ein
-## hohes Tonnengewölbe aus Glas wie im Grand Palais, durchsichtig, mit grünem Eisenrahmen, getragen
-## von schlanken grünen Säulen am Rand. Gänge kommen aus MaulCity.corridor, das Gewölbe aus dem Abstand
+## gewölbtes Glasdach wie in einer Art-déco-Passage, durchsichtig, mit Messingrippen, getragen von
+## schlanken Messingsäulen am Rand. Gänge kommen aus MaulCity.corridor, das Gewölbe aus dem Abstand
 ## jedes Gangfelds zum Rand (assets/shaders/glass_roof.gdshader hebt die Ebene danach an).
 
 const SHADER := preload("res://assets/shaders/glass_roof.gdshader")
 ## Höhe der Dachkante über dem Boden, Gewölbe-Stich obendrauf (Einheiten)
-const HEIGHT := 1.3
-const RISE := 1.5
+const HEIGHT := 1.15
+const RISE := 0.8
 ## Ab so vielen Feldern Abstand zum Rand ist das Gewölbe oben
 const VAULT_CELLS := 6.0
 ## Säulen: an Randfeldern, jedes POST_EVERY-te Feld
-const POST_EVERY := 4
-const POST_COLOR := Color("4c7466")
+const POST_EVERY := 6
+const POST_COLOR := Color("8a7550")
 
 var _mat: ShaderMaterial
 
@@ -93,7 +93,7 @@ func build(map: MapData, corridor: PackedByteArray) -> void:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	var box := BoxMesh.new()
-	box.size = Vector3(0.08, HEIGHT, 0.08)
+	box.size = Vector3(0.06, HEIGHT, 0.06)
 	mm.mesh = box
 	mm.instance_count = posts.size()
 	for i in posts.size():
@@ -103,8 +103,8 @@ func build(map: MapData, corridor: PackedByteArray) -> void:
 	mmi.multimesh = mm
 	var pm := StandardMaterial3D.new()
 	pm.albedo_color = POST_COLOR
-	pm.metallic = 0.4
-	pm.roughness = 0.5
+	pm.metallic = 0.7
+	pm.roughness = 0.4
 	mmi.material_override = pm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mmi)
