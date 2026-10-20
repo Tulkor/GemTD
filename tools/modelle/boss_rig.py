@@ -27,7 +27,7 @@ print('Höhe', H, 'Mitte', cx, cy)
 # Höhen (vom Boden): Hüfte ~0.28, Arme 0.45..0.62, Hals ~0.62
 HIP, SH_Z, NECK = 0.29, 0.53, 0.64
 ELBOW = 0.26  # Abstand des Ellbogens von der Mitte
-ARM_DOWN = 62  # Arme hängen so viele Grad unter der Waagrechten (das Original steht in T-Pose)
+ARM_DOWN = 50  # Arme hängen so viele Grad unter der Waagrechten (das Original steht in T-Pose)
 
 # Die Arme zeigen im Original schräg (links nach vorn, rechts nach hinten): Richtung je Seite aus den Händen
 ARM_DIR = {}
@@ -60,23 +60,49 @@ bpy.ops.object.mode_set(mode='OBJECT')
 def ramp(x, a, b):
     return min(max((x - a) / (b - a), 0.0), 1.0)
 groups = {n: mesh.vertex_groups.new(name=n) for n in ['body', 'head', 'leg.L', 'leg.R', 'arm.L', 'arm.R', 'hand.L', 'hand.R']}
-for v in mesh.data.vertices:
-    p = v.co; r = math.hypot(p.x, p.y)
-    w = {}
-    leg = 1.0 - ramp(p.z, HIP - 0.06, HIP + 0.02)
-    armw = ramp(r, 0.19, 0.25) * (1.0 - ramp(abs(p.z - SH_Z), 0.09, 0.13))
-    headw = ramp(p.z, NECK - 0.04, NECK + 0.03) * (1.0 - armw)
-    rest = 1.0 - leg
-    a = armw * rest; h = headw * rest * (1 - armw)
-    b = max(rest - a - h, 0.0)
-    side = 'L' if p.x >= 0 else 'R'
-    if leg > 0: w['leg.' + side] = leg
-    fore = ramp(r, ELBOW - 0.015, ELBOW + 0.02)
-    if a * (1 - fore) > 0: w['arm.' + side] = a * (1 - fore)
-    if a * fore > 0: w['hand.' + side] = a * fore
-    if h > 0: w['head'] = h
-    if b > 0: w['body'] = b
-    for n, x in w.items(): groups[n].add([v.index], x, 'REPLACE')
+# Das Modell besteht aus getrennten Teilen (Körper mit Kopf und Hut, je Bein, Ärmel, Hand, Knöpfe, Augen).
+# Gewichte je Teil: Beine, Ärmel und Hände gehören ganz zu ihrem Knochen. Würden sie nach Höhe/Seite
+# verteilt, zögen Körperflächen mit den Beinen mit (verzogener Rücken) und Beinflächen nahe der Mitte
+# mit dem falschen Bein (Polygone zwischen den Beinen).
+verts = mesh.data.vertices
+def pkey(i):
+    c = verts[i].co
+    return (round(c.x, 4), round(c.y, 4), round(c.z, 4))
+parent = {}
+def find(a):
+    while parent[a] != a:
+        parent[a] = parent[parent[a]]; a = parent[a]
+    return a
+for v in verts: parent.setdefault(pkey(v.index), pkey(v.index))
+for poly in mesh.data.polygons:
+    ks = [pkey(i) for i in poly.vertices]
+    for k in ks[1:]:
+        a, b = find(ks[0]), find(k)
+        if a != b: parent[a] = b
+islands = {}
+for v in verts: islands.setdefault(find(pkey(v.index)), []).append(v.index)
+for idx in islands.values():
+    pts = [verts[i].co for i in idx]
+    c = sum(pts, Vector()) / len(pts)
+    zmin, zmax = min(p.z for p in pts), max(p.z for p in pts)
+    rmin = min(math.hypot(p.x, p.y) for p in pts)
+    cr = math.hypot(c.x, c.y)
+    side = 'L' if c.x >= 0 else 'R'
+    for i in idx:
+        p = verts[i].co; r = math.hypot(p.x, p.y)
+        if zmin < 0.05 and zmax < HIP + 0.1:          # Bein
+            w = {'leg.' + side: 1.0}
+        elif cr > 0.2 and abs(c.z - SH_Z) < 0.1 and len(idx) > 100:   # Ärmel oder Hand
+            if rmin > ELBOW + 0.02:
+                w = {'hand.' + side: 1.0}
+            else:
+                fore = ramp(r, ELBOW - 0.02, ELBOW + 0.03)
+                w = {'arm.' + side: 1.0 - fore, 'hand.' + side: fore}
+        else:                                          # Körper, Kopf, Hut, Knöpfe, Augen
+            h = ramp(p.z, NECK - 0.04, NECK + 0.03)
+            w = {'head': h, 'body': 1.0 - h}
+        for n, x in w.items():
+            if x > 0: groups[n].add([i], x, 'REPLACE')
 mesh.parent = rig
 mod = mesh.modifiers.new('rig', 'ARMATURE'); mod.object = rig
 
