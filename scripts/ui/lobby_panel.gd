@@ -115,7 +115,7 @@ func _ready() -> void:
 	UiUtil.label("Server", server_row, 15).custom_minimum_size.x = 70
 	_server_edit = LineEdit.new()
 	_server_edit.text = Net.relay_server
-	_server_edit.placeholder_text = Net.DEFAULT_RELAY if Net.DEFAULT_RELAY != "" else tr("z. B. name.synology.me (leer = direkt per IP)")
+	_server_edit.placeholder_text = tr("leer = direkt per IP")
 	_server_edit.tooltip_text = "Relay-Server: Host und Mitspieler verbinden sich nur mit ihm, niemand muss einen Port freigeben"
 	_server_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_server_edit.text_changed.connect(func(_t): _update_join_hint())
@@ -331,7 +331,7 @@ func _save_server() -> void:
 func _update_join_hint() -> void:
 	if _port_hint == null:
 		return
-	var relay := _server_edit.text.strip_edges() != "" or Net.DEFAULT_RELAY != ""
+	var relay := _server_edit.text.strip_edges() != ""
 	if relay:
 		_port_hint.text = tr("Mit Server: Der Host bekommt einen Code, Mitspieler geben ihn oben ein. Niemand muss einen Port freigeben. Eine IP-Adresse statt Code verbindet weiter direkt.")
 	else:
