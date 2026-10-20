@@ -102,9 +102,13 @@ func _ready() -> void:
 		var t = game.round_towers[0]
 		game._select(t)
 		check(not game.choice_options(t).is_empty(), "Auswahloptionen vorhanden")
-		# Große Hauptaktion: Behalten, außer ein zweiter gleicher Gem hebt ihn eine Qualität (dann Kombinieren)
-		var up: int = game.hud._options.map(func(o): return o.get("combine_up", false)).find(true)
-		check(game.hud._options[maxi(up, 0)].style == "primary" and game.hud._main_index == maxi(up, 0) \
+		# Große Hauptaktion: One-Shot-Rezept, sonst Kombinieren (zweiter gleicher Gem hebt ihn eine Qualität),
+		# sonst Behalten
+		var opts: Array = game.hud._options
+		var main: int = opts.map(func(o): return o.style == "oneshot").find(true)
+		if main < 0:
+			main = maxi(opts.map(func(o): return o.get("combine_up", false)).find(true), 0)
+		check(opts[main].style in ["primary", "oneshot"] and game.hud._main_index == main \
 				and game.hud._main_button != null, "Behalten bzw. Kombinieren ist die große Hauptaktion")
 		game._on_option_chosen(0)
 		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
