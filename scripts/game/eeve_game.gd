@@ -86,11 +86,110 @@ func _style_hud() -> void:
 	hud.recipes_button.hide()
 	hud.chance_value.get_parent().get_parent().hide()
 	hud.pinned_panel.hide()
-	hud.debug_button.hide()
 	eeve_panel = EevePanel.new()
 	eeve_panel.game = self
 	hud.left_col.add_child(eeve_panel)
 	hud.left_col.move_child(eeve_panel, 0)
+	_setup_debug()
+
+
+# --- Debug-Menü ------------------------------------------------------------------------
+
+## Debug-Menü von GemTD für eeveTD: statt Gems pro Runde Holz, Food, Elementpunkte und Elementstufen,
+## „Nächster Bau“ setzt jeden Tower und jede Falle direkt (ohne Kosten und Voraussetzungen).
+func _setup_debug() -> void:
+	hud.debug_gems_row.hide()
+	hud.debug_extra.show()
+	var row := hud.add_debug_row("Holz")
+	for n in [1, 5]:
+		hud.debug_button_in(row, "+%d" % n, func(): _debug_add("lumber", n))
+	row = hud.add_debug_row("Food")
+	for n in [10, 50]:
+		hud.debug_button_in(row, "+%d" % n, func(): _debug_add("food_cap", n))
+	row = hud.add_debug_row("Elementpunkte")
+	for n in [1, 5]:
+		hud.debug_button_in(row, "+%d" % n, func(): _debug_add("points", n))
+	row = hud.add_debug_row("Elemente")
+	var all := hud.debug_button_in(row, tr("Alle auf %d") % int(rules.get("point_max", 8)), _debug_max_elements)
+	all.tooltip_text = "Alle sechs Elemente auf die höchste Stufe, schaltet alle Tower, Fallen und Dual-Tower frei"
+	hud.debug_pick_caption.text = tr("Nächster Bau").to_upper()
+	hud.debug_option.tooltip_text = "Was ein Klick aufs freie Feld baut: wie sonst eine Barrikade oder direkt einen Tower oder eine Falle, ohne Kosten und Voraussetzungen"
+	hud.debug_wave_label.text = tr("Level")
+	hud.debug_wave_hint.text = tr("Läuft gerade ein Level, wird es abgebrochen und das gewählte startet sofort. In der Pause kommt es als nächstes.")
+	hud.debug_option.clear()
+	hud.debug_keys = [""]
+	hud.debug_option.add_item(tr("Barrikade (normal)"))
+	var groups := {}
+	for el in ELEMENT_IDS:
+		groups[element_name(el)] = []
+	groups[tr("Dual-Tower")] = []
+	groups[tr("Fallen")] = []
+	for id in Database.towers:
+		var e: Dictionary = Database.towers[id].get("eeve", {})
+		if e.is_empty() or id == BARRICADE:
+			continue
+		var g := tr("Fallen") if e.get("trap", false) else (tr("Dual-Tower") if e.has("elements") or e.get("dual_base", false) \
+				else element_name(str(e.get("element", ""))))
+		if groups.has(g):
+			groups[g].append(id)
+	for g in groups:
+		var ids: Array = groups[g]
+		ids.sort_custom(func(a, b):
+			var la := int(Database.towers[a].eeve.get("level", 0))
+			var lb := int(Database.towers[b].eeve.get("level", 0))
+			return la < lb if la != lb else str(a) < str(b))
+		hud.debug_option.add_separator(g)
+		hud.debug_keys.append("")
+		for id in ids:
+			hud.debug_keys.append(id)
+			hud.debug_option.add_item("%s · %d" % [Database.tower_label(id, 0), int(Database.towers[id].eeve.get("level", 0))])
+	debug_tower = debug_tower if hud.debug_keys.has(debug_tower) else ""
+	hud.debug_option.select(maxi(hud.debug_keys.find(debug_tower), 0))
+
+
+func _debug_add(key: String, n: int) -> void:
+	ep()[key] += n
+	_refresh_hud()
+
+
+func _debug_max_elements() -> void:
+	var top := int(rules.get("point_max", 8))
+	for el in ELEMENT_IDS:
+		element_caps[el] = top
+		elements[el] = top
+	_update_auras()
+	_refresh_hud()
+
+
+func is_trap_id(id: String) -> bool:
+	return Database.towers.get(id, {}).get("eeve", {}).get("trap", false)
+
+
+## Debug: Tower oder Falle id ohne Kosten und Voraussetzungen hier setzen?
+func debug_can_place(id: String, a: Vector2i) -> bool:
+	if not setup_done or phase >= Phase.GAME_OVER or a == NO_CELL or not Database.towers.has(id):
+		return false
+	if is_trap_id(id):
+		return Board3D.footprint(a, Board3D.TRAP_CELLS).all(func(c): return map.is_walkable(c) and not occupied.has(c) and not trap_cells.has(c))
+	return can_place(a) and Board3D.footprint(a).all(func(c): return not trap_cells.has(c))
+
+
+func debug_place(id: String, a: Vector2i) -> bool:
+	if not debug_can_place(id, a):
+		return false
+	var t := EeveTower.new()
+	t.owner_player = acting
+	board.add_child(t)
+	t.setup(self, a, id, 0)
+	t.set_meta("spent", 0)
+	_register(t)
+	if not t.is_trap():
+		_update_paths()
+	_update_auras()
+	board.hover_ok = false
+	board.refresh_hover()
+	_refresh_hud()
+	return true
 
 
 ## Elemente, Food, Holz und Meldungen eines Spielers (-1 = der gerade handelt), bei Bedarf neu angelegt.
@@ -161,6 +260,8 @@ func _execute(cmd: Dictionary) -> bool:
 			return build_trap(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
 		"element":
 			return add_element_point(str(cmd.get("element", "")))
+		"debug_place":
+			return debug_place(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
 		"start_level":
 			if phase != Phase.BUILD or not setup_done:
 				return false
@@ -713,13 +814,14 @@ func _update_hover() -> void:
 			board.hover_ok = can_build_trap(placing_trap, a)
 			board.refresh_hover()
 		return
+	var size := Board3D.TRAP_CELLS if is_trap_id(debug_tower) else Board3D.TOWER_CELLS
 	var c := NO_CELL
 	if setup_done and phase < Phase.GAME_OVER and not occupied.has(board.mouse_cell(camera_rig.camera)):
-		c = board.mouse_anchor(camera_rig.camera)
-	if c != board.hover_cell or board.hover_size != Board3D.TOWER_CELLS:
+		c = board.mouse_anchor(camera_rig.camera, size)
+	if c != board.hover_cell or board.hover_size != size:
 		board.hover_cell = c
-		board.hover_size = Board3D.TOWER_CELLS
-		board.hover_ok = can_build(c)
+		board.hover_size = size
+		board.hover_ok = debug_can_place(debug_tower, c) if debug_tower != "" else can_build(c)
 		board.refresh_hover()
 
 
@@ -737,6 +839,10 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 		_select(null, a)
 	elif trap != null:
 		_select(trap)
+	elif debug_tower != "":
+		var at := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS) if is_trap_id(debug_tower) else anchor
+		if debug_can_place(debug_tower, at):
+			submit({"type": "debug_place", "id": debug_tower, "cell": at})
 	elif can_build(anchor):
 		submit({"type": "build", "cell": anchor})
 	else:

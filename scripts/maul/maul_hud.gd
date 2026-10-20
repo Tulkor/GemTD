@@ -45,6 +45,8 @@ var _minimap: MaulMinimap
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var _debug: MaulDebug
+var _debug_button: Button
 
 
 func _ready() -> void:
@@ -107,8 +109,34 @@ func _build_top_bar() -> void:
 		b.toggle_mode = true
 		b.custom_minimum_size.x = 40
 		_speed_buttons.append(b)
+	# Debug-Menü nur, wo gerechnet wird (allein oder Host)
+	if not game.mirror:
+		_debug_button = UiUtil.button("Debug", row, toggle_debug)
+		_debug_button.toggle_mode = true
+		_debug_button.focus_mode = Control.FOCUS_NONE
+		_debug_button.tooltip_text = "Debug-Menü"
+		_debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+		_debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 	UiUtil.button("Menü", row, func(): _menu.visible = not _menu.visible)
 	_build_menu()
+
+
+func toggle_debug() -> void:
+	if _debug == null:
+		_debug = MaulDebug.new()
+		_debug.game = game
+		# links neben dem Laden, damit beide gleichzeitig offen bleiben können
+		_debug.anchor_left = 1.0
+		_debug.anchor_right = 1.0
+		_debug.offset_right = -SHOP_WIDTH - 32
+		_debug.offset_top = 84
+		_debug.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_debug.visible = false
+		root.add_child(_debug)
+	_debug.visible = not _debug.visible
+	_debug_button.set_pressed_no_signal(_debug.visible)
+	if _debug.visible:
+		_debug.refresh()
 
 
 func _stat(parent: Node, caption: String) -> Label:

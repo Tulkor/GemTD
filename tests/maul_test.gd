@@ -82,6 +82,7 @@ func _ready() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await _pro_tests()
+	await _debug_tests()
 	await _coop_tests()
 	print("FERTIG mit %d Fehlern" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
@@ -168,6 +169,44 @@ func _pro_tests() -> void:
 	check(game.submit({"type": "post", "unit": d.net_id, "x": game.map.zone_center(0).x, "y": game.map.zone_center(0).y}), "Posten gesetzt")
 	game.remove_unit(z)
 	check(game.units.size() == 1, "Zombie entfernt")
+	game.queue_free()
+	await get_tree().process_frame
+
+
+## Debug-Menü: Gold, XP (ohne Speichern), Filiale wechseln, freies Bauen, Items ohne Laden, Level springen.
+func _debug_tests() -> void:
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.start_game("hm", 1, "group")
+	game.hud.toggle_debug()
+	check(game.hud._debug != null and game.hud._debug.visible, "Debug-Menü geht auf")
+	var xp: int = game.players[0].xp
+	game.debug_add_xp(100)
+	check(game.players[0].xp == xp + 100 and game.debug_xp, "Debug: +10 XP, wird nicht gespeichert")
+	game.debug_set_shop("post")
+	check(game.shop_of() == "post", "Debug: Filiale gewechselt")
+	var zone: Rect2i = game.map.zones[0].rect
+	var foreign := str(MaulData.buyable("porsche")[0].id)
+	game.players[0].gold += 100000
+	game.debug_free = true
+	var a: Vector2i = game.NO_CELL
+	for spot in _spots(game, zone):
+		if game.build_problem(foreign, spot, 0, true) == "":
+			a = spot
+			break
+	game.debug_free = false
+	check(a != game.NO_CELL and game.build_problem(foreign, a, 0) != "", "fremder Tower ohne freies Bauen gesperrt")
+	game.hud._debug._set_free(true)
+	check(game.submit({"type": "build", "tower": foreign, "cell": a}) and game.towers.get(a).tower_id == foreign, "Debug: freies Bauen setzt Tower einer anderen Filiale")
+	check(not game.items_for(0, "weapon").is_empty() and game.store_has(0, str(game.items_for(0, "weapon")[0])), "Debug: alle Items ohne Laden")
+	game.debug_jump_to_level(5)
+	check(game.level == 4, "Debug im Countdown: Level 5 kommt als nächstes")
+	game.submit({"type": "start_now"})
+	await get_tree().process_frame
+	check(game.level == 5 and game.phase == MaulGame.Phase.WAVE, "Level 5 läuft (jetzt %d)" % game.level)
+	game.debug_jump_to_level(8)
+	check(game.level == 8 and game.phase == MaulGame.Phase.WAVE, "Debug in der Welle: Level 8 startet sofort")
 	game.queue_free()
 	await get_tree().process_frame
 
