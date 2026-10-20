@@ -24,6 +24,7 @@ extends Node
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -83,6 +84,12 @@ func _ready() -> void:
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
+	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
+		if scene == "maul":
+			node.hud.toggle_debug()
+		else:
+			node.hud.debug_panel.show()
+			node.hud.debug_button.set_pressed_no_signal(true)
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)

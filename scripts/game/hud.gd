@@ -60,6 +60,11 @@ var tower_list: TowerList
 var debug_gems: SpinBox
 var debug_wave: SpinBox
 var immortal_button: Button
+var debug_gems_row: HBoxContainer   ## Gems pro Runde (nur GemTD)
+var debug_extra: VBoxContainer      ## Platz für Zeilen eines Modus (eeveTD: Holz, Food, Elemente …)
+var debug_pick_caption: Label       ## Überschrift der Auswahl „Nächster Gem“ (Modi benennen sie um)
+var debug_wave_label: Label
+var debug_wave_hint: Label
 var debug_keys: Array[String] = []
 
 var banner: PanelContainer
@@ -500,6 +505,7 @@ func _build_debug() -> void:
 	UiTheme.title(UiUtil.label("Debug", v, 18))
 
 	var row := _debug_row("Gems pro Runde", v)
+	debug_gems_row = row
 	debug_gems = SpinBox.new()
 	debug_gems.min_value = 1
 	debug_gems.max_value = 20
@@ -512,8 +518,12 @@ func _build_debug() -> void:
 	row = _debug_row("Leben", v)
 	for n in [10, 50]:
 		_button("+%d" % n, row, func(): debug_lives_requested.emit(n))
+	debug_extra = VBoxContainer.new()
+	debug_extra.add_theme_constant_override("separation", 10)
+	debug_extra.hide()
+	v.add_child(debug_extra)
 
-	UiTheme.caption("Nächster Gem", v)
+	debug_pick_caption = UiTheme.caption("Nächster Gem", v)
 	debug_option = OptionButton.new()
 	debug_option.fit_to_longest_item = false
 	debug_option.clip_text = true
@@ -529,14 +539,25 @@ func _build_debug() -> void:
 	v.add_child(immortal_button)
 
 	row = _debug_row("Welle", v)
+	debug_wave_label = row.get_child(0)
 	debug_wave = SpinBox.new()
 	debug_wave.min_value = 1
 	row.add_child(debug_wave)
 	_button("Starten", row, func(): debug_wave_requested.emit(int(debug_wave.value)))
 	var hint := UiUtil.wrap_label("Läuft gerade eine Welle, wird sie abgebrochen und die gewählte startet sofort. In der Bau- und Wahlphase kommt sie als nächste.", v, 290)
+	debug_wave_hint = hint
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	debug_panel.hide()
+
+
+## Zeile im Debug-Menü für einen Modus (unter Gold und Leben), Knöpfe mit debug_button_in().
+func add_debug_row(text: String) -> HBoxContainer:
+	return _debug_row(text, debug_extra)
+
+
+func debug_button_in(row: Node, text: String, on_pressed: Callable) -> Button:
+	return _button(text, row, on_pressed)
 
 
 func _debug_row(text: String, parent: Node) -> HBoxContainer:

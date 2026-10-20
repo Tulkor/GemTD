@@ -224,10 +224,50 @@ func _ready() -> void:
 		en.free()
 	game.queue_free()
 	await get_tree().process_frame
+	await _debug_tests()
 	await _coop_tests()
 	await _save_tests()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
+
+
+## Debug-Menü: Knopf sichtbar, Ressourcen, Elemente auf Maximum, Tower und Falle direkt setzen.
+func _debug_tests() -> void:
+	Session.skip_setup = true
+	var game: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	check(game.hud.debug_button.visible and not game.hud.debug_gems_row.visible, "Debug-Knopf in eeveTD, ohne Gems pro Runde")
+	check(game.hud.debug_keys.has("eeve_tsunami_cannon") and game.hud.debug_keys.has("eeve_flame_grate") and game.hud.debug_keys.has("eeve_volcano"),
+		"Debug-Auswahl hat Element-Tower, Fallen und Dual-Tower")
+	var lumber: int = game.lumber
+	var food: int = game.food_cap
+	var pts: int = game.points
+	game._debug_add("lumber", 5)
+	game._debug_add("food_cap", 10)
+	game._debug_add("points", 1)
+	check(game.lumber == lumber + 5 and game.food_cap == food + 10 and game.points == pts + 1, "Debug: Holz, Food, Elementpunkte")
+	game._debug_max_elements()
+	check(game.elements.values().all(func(v): return v == 8) and game.dual_pair_ready(["fire", "water"]), "Debug: alle Elemente auf 8")
+	var gold: int = game.gold
+	var cell := Vector2i(30, 60)
+	game.debug_tower = "eeve_tsunami_cannon"
+	check(game.submit({"type": "debug_place", "id": game.debug_tower, "cell": cell}), "Debug: Tower direkt setzen")
+	var t: Tower = game.towers.get(cell)
+	check(t != null and t.tower_id == "eeve_tsunami_cannon" and game.gold == gold, "Debug-Tower steht und kostet nichts")
+	var path: PackedVector2Array = game.pathfinder.compute_path()
+	var spot: Vector2i = game.NO_CELL
+	for i in range(2, path.size()):
+		var a := Vector2i(path[i]) - Vector2i.ONE
+		if game.debug_can_place("eeve_flame_grate", a):
+			spot = a
+			break
+	check(spot != game.NO_CELL and game.submit({"type": "debug_place", "id": "eeve_flame_grate", "cell": spot}) and game.traps.has(spot),
+		"Debug: Falle direkt auf den Weg setzen")
+	game.debug_jump_to_wave(10)
+	check(game.wave_index == 9, "Debug: Level 10 kommt als nächstes")
+	game.queue_free()
+	await get_tree().process_frame
 
 
 ## Koop ohne Netz: Host- und Mitspieler-Spiel, Befehle und Stand laufen direkt (wie über ENet als Bytes).

@@ -1092,5 +1092,21 @@
 	"Barrikaden bauen, zu Element-Towern aufwerten, 57 Level, Koop oder eigene Felder bis 4 Spieler": "Build barricades, upgrade them to element towers, 57 levels, co-op or own fields for up to 4 players",
 	"I · Modus": "I · Mode",
 	"II · Map": "II · Map",
-	"III · Start": "III · Start"
+	"III · Start": "III · Start",
+	"Alle auf %d": "All to %d",
+	"Alle sechs Elemente auf die höchste Stufe, schaltet alle Tower, Fallen und Dual-Tower frei": "Raises all six elements to the highest level, unlocking every tower, trap and dual tower",
+	"Nächster Bau": "Next build",
+	"Was ein Klick aufs freie Feld baut: wie sonst eine Barrikade oder direkt einen Tower oder eine Falle, ohne Kosten und Voraussetzungen": "What a click on an empty field builds: a barricade as usual, or a tower or trap directly, without cost or requirements",
+	"Läuft gerade ein Level, wird es abgebrochen und das gewählte startet sofort. In der Pause kommt es als nächstes.": "If a level is running, it is cancelled and the chosen one starts immediately. During the break it comes next.",
+	"Barrikade (normal)": "Barricade (normal)",
+	"Dual-Tower": "Dual towers",
+	"Wird nicht gespeichert": "Not saved",
+	"XP wie in der Sandbox: alle Profi-Filialen und XP-Tower. Wird nicht gespeichert.": "XP as in sandbox: all pro shops and XP towers. Not saved.",
+	"Profi": "Pro",
+	"Eigene Filiale wechseln, gebaute Tower bleiben stehen": "Switch your own shop, built towers stay",
+	"Tower bauen": "Build tower",
+	"Tower einer beliebigen Filiale (auch Upgrades, XP- und Ultimate-Tower) zum Setzen wählen, schaltet freies Bauen ein": "Pick a tower from any shop (including upgrades, XP and ultimate towers) to place; turns on free building",
+	"– wählen –": "– choose –",
+	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items",
+	"Läuft gerade ein Level, verschwinden seine Gegner und das gewählte startet sofort. Im Countdown kommt es als nächstes.": "If a level is running, its enemies vanish and the chosen one starts immediately. During the countdown it comes next."
 }

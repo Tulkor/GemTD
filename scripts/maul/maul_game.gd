@@ -58,6 +58,10 @@ var acting := 0
 var players: Array = []
 var sandbox := false        ## Option „Sandbox“: feste 800 XP (alles offen), Durchbrüche kosten keine Leben, keine XP
 var levels_done := 0
+## Debug-Menü (maul_debug.gd): freies Bauen = Tower aller Filialen ohne Voraussetzungen und Towerlimit,
+## alle Items ohne Laden. debug_xp: XP verändert, dann wird am Levelende nichts gespeichert.
+var debug_free := false
+var debug_xp := false
 var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 
 var phase := Phase.SETUP
@@ -900,6 +904,8 @@ static func tower_slot(def: Dictionary) -> String:
 ## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOK,
 ## höchstens ein XP- und ein Ultimate-Tower. ignore: Tower, der gerade aufgewertet wird.
 func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> String:
+	if debug_free:
+		return ""
 	for req in def.get("requires", []):
 		var need := MaulXp.needed(str(req))
 		if need > 0 and players[p].xp < need:
@@ -927,7 +933,7 @@ func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> S
 func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> String:
 	var def := MaulData.tower(id)
 	var own := str(def.get("shop", ""))
-	if def.is_empty() or (own != shop_of(p) and own != "xpert") or shop_of(p) == "":
+	if def.is_empty() or (own != shop_of(p) and own != "xpert" and not debug_free) or shop_of(p) == "":
 		return tr("Kein Tower deiner Filiale")
 	if phase == Phase.SETUP or phase >= Phase.GAME_OVER:
 		return tr("Gerade kann nicht gebaut werden")
@@ -945,9 +951,9 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 		return why
 	if int(def.get("cost", 0)) > players[p].gold:
 		return tr("Zu wenig Gold")
-	if tower_count(p) >= food_limit(p):
+	if tower_count(p) >= food_limit(p) and not debug_free:
 		return tr("Kein Platz mehr (höchstens %d Tower)") % food_limit(p)
-	if boss_alive():
+	if boss_alive() and not debug_free:
 		return tr("Solange ein Boss lebt, wird nicht gebaut")
 	var here := {}
 	for c in cells:
@@ -1195,6 +1201,8 @@ func copy_cost(id: String) -> int:
 
 ## Läden, die Spieler p für dieses Item gebaut hat (Item gibt es nur, wenn so ein Laden steht).
 func store_has(p: int, item_id: String) -> bool:
+	if debug_free:
+		return not MaulData.item(item_id).is_empty()
 	var st: Dictionary = MaulData.pro().stores
 	for t in towers.values():
 		if t.owner_player == p and st.get(t.tower_id, []).has(item_id):
@@ -1206,6 +1214,10 @@ func store_has(p: int, item_id: String) -> bool:
 func items_for(p: int, kind: String) -> Array:
 	var st: Dictionary = MaulData.pro().stores
 	var seen := {}
+	if debug_free:
+		for id in MaulData.pro().get("items", {}):
+			if str(MaulData.item(id).get("kind", "weapon")) == kind:
+				seen[str(id)] = true
 	for t in towers.values():
 		if t.owner_player == p:
 			for id in st.get(t.tower_id, []):
@@ -1451,7 +1463,7 @@ func _end_level_pro(n: int) -> void:
 		if p.shop == "aok" and level_lost > 0:
 			p.gold += mini(n * floori(float(aok.gold_factor) * level_lost), n * int(aok.gold_cap))
 	var x := MaulXp.cfg()
-	if sandbox or players.size() < int(x.get("min_players", 1)):
+	if sandbox or debug_xp or players.size() < int(x.get("min_players", 1)):
 		return
 	var ke := float(MaulData.difficulty(difficulty).get("xp", 1.0))
 	for i in players.size():
@@ -1653,6 +1665,47 @@ func set_speed(f: float) -> void:
 		return
 	Engine.time_scale = f
 	hud.refresh_live()
+
+
+# --- Debug-Menü ------------------------------------------------------------------
+
+## Debug: XP des eigenen Spielers erhöhen (Zehntel, -1 = alles frei wie in der Sandbox). Wird nicht gespeichert.
+func debug_add_xp(tenths: int) -> void:
+	var me: Player = players[local_player]
+	var before := me.xp
+	var top := int(MaulXp.cfg().get("sandbox", 8000))
+	me.xp = top if tenths < 0 else mini(me.xp + tenths, int(MaulXp.cfg().get("max", 9999)))
+	debug_xp = true
+	_announce_unlocks(before, me.xp)
+	_refresh_hud()
+
+
+## Debug: eigene Filiale wechseln (alle Standard- und Profi-Filialen); gebaute Tower bleiben stehen.
+func debug_set_shop(shop_id: String) -> void:
+	if MaulData.shop(shop_id).is_empty() or phase == Phase.SETUP or phase >= Phase.GAME_OVER:
+		return
+	players[local_player].shop = shop_id
+	build_id = ""
+	select(null)
+	hud.build_shop()
+	_refresh_hud()
+
+
+## Debug: Level n (ab 1). Läuft ein Level, verschwinden seine Gegner und n startet sofort, im Countdown kommt n als nächstes.
+func debug_jump_to_level(n: int) -> void:
+	if mirror or phase == Phase.SETUP or phase >= Phase.GAME_OVER:
+		return
+	n = clampi(n, 1, levels.size())
+	for e in enemies.duplicate():
+		_remove_enemy(e)
+	spawn_queue.clear()
+	effects.clear()
+	levels_done = maxi(levels_done, n - 1)
+	if phase == Phase.WAVE:
+		_start_level(n)
+	else:
+		level = n - 1
+	_refresh_hud()
 
 
 func show_message(text: String, seconds := 2.5) -> void:
