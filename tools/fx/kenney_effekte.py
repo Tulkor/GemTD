@@ -311,6 +311,24 @@ def fireball_frames():
 	return out, w / h
 
 
+def orb_frames():
+	"""Energiekugel: runder, heller Kopf (light_01 + circle_05) vorne rechts, Schweif aus trace_01 nach hinten,
+	leicht pulsierend. Für Splash-Tower, die nicht nach Feuer aussehen sollen (Wasser, Magie, Silber …)."""
+	w, h = 256, 96
+	head_s = h
+	head = fit(load_grey("light_01"), head_s, head_s) * 0.9 + fit(load_grey("circle_05"), head_s, head_s) * 0.8
+	tail = fit(band(load_grey("Rotated/trace_01_rotated"), 64), w, h // 2)
+	ramp_x = np.linspace(0.0, 1.0, w)[None, :] ** 1.6
+	out = []
+	for i in range(8):
+		f = np.zeros((h, w), np.float32)
+		k = 0.85 + 0.15 * np.sin(i / 8 * 2 * np.pi)
+		f[h // 4:h // 4 + h // 2] += np.roll(tail, i * 9, axis=1) * ramp_x * 1.3
+		f[:, w - head_s:] += head * k
+		out.append(np.clip(f + glow(f, 4) * 0.5, 0, 1))
+	return out, w / h
+
+
 def nova_frames():
 	"""Nova: Ring (circle_02) wächst nach außen, dazu kurzer Lichtblitz (light_03) in der Mitte."""
 	s = 256
@@ -338,7 +356,8 @@ SHOTS = {
 	# id: (Bilder, Art, Spalten, Farbe, Werte für die Wiedergabe)
 	"magic_beam": (beam_frames, "line", 2, "#ff8fc8", {"length": 0.3, "width": 0.35, "add": True, "brightness": 1.2}),
 	"lightning_arc": (lightning_frames, "line", 2, "#ffb04a", {"length": 0.22, "width": 0.6, "add": True, "brightness": 1.3}),
-	"fire_orb": (fireball_frames, "projectile", 4, "#ff6a1a", {"length": 0.4, "width": 0.55, "add": True, "brightness": 1.4}),
+	"fire_orb": (fireball_frames, "projectile", 4, "#ff6a1a", {"length": 0.24, "width": 0.55, "add": True, "brightness": 1.4}),
+	"energy_orb": (orb_frames, "projectile", 4, "#3ab8ff", {"length": 0.24, "width": 0.46, "add": True, "brightness": 1.5}),
 	"ruby_nova": (nova_frames, "nova", 4, "#ff5a4a", {"length": 0.45, "size": 1.0, "add": True, "brightness": 1.3}),
 }
 

@@ -16,6 +16,6 @@ tools/godot_import.sh
 LOG=$(mktemp)
 xvfb-run -a -s "-screen 0 ${SIZE}x24" godot --rendering-driver opengl3 --resolution "$SIZE" --path . \
   res://tools/screenshot.tscn -- "${ARGS[@]}" >"$LOG" 2>&1 || true
-grep '^BILD' "$LOG" || { echo "Kein Bild erzeugt:"; grep -E "ERROR|SCRIPT" "$LOG" | grep -v 'Parameter "m"' | head -15; rm -f "$LOG"; exit 1; }
+grep -E '^BILD|^TREFFER' "$LOG" || { echo "Kein Bild erzeugt:"; grep -E "ERROR|SCRIPT" "$LOG" | grep -v 'Parameter "m"' | head -15; rm -f "$LOG"; exit 1; }
 grep -E "SCRIPT ERROR" "$LOG" | head -5 || true
 rm -f "$LOG"
