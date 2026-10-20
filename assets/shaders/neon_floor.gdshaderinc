@@ -37,6 +37,8 @@ uniform float core_white = 0.7;
 uniform float major_alpha = 1.0;
 /// 1 = Hauptlinien doppelt (zwei dünne parallele Linien, Art déco)
 uniform float major_double = 0.0;
+/// Helligkeit schlichter Felder (B-Kanal der Maske)
+uniform float plain_shade = 1.0;
 /// Rauten an den Kreuzungen der Hauptlinien, halbe Diagonale in Einheiten (0 = keine)
 uniform float diamond_size = 0.0;
 /// Marmor-Adern im Boden (0 = glatt)
@@ -100,6 +102,14 @@ float is_zone(ivec2 c) {
 	return step(0.5, texelFetch(blocked, c, 0).g);
 }
 
+// B = schlichtes Feld ohne Gitterlinien (z. B. unter der Maul-Stadt)
+float is_plain(ivec2 c) {
+	if (c.x < 0 || c.y < 0 || c.x >= int(cells.x) || c.y >= int(cells.y)) {
+		return 0.0;
+	}
+	return step(0.5, texelFetch(blocked, c, 0).b);
+}
+
 float hash(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
 	p += dot(p, p + 45.32);
@@ -145,51 +155,55 @@ void fragment() {
 	}
 
 	if (b < 0.5) {
-		// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
-		vec2 go = g - grid_origin;
-		vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
-		vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, line_color.rgb, line_energy * cell_energy, aa);
-		cl.a *= cell_alpha;
-		col = mix(col, cl.rgb, cl.a);
-		alpha = max(alpha, cl.a);
-		lines = max(lines, cl.a);
-		vec2 gg = go / grid_cells;
-		vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
-		vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
-		l.a *= minor_alpha;
-		col = mix(col, l.rgb, l.a);
-		alpha = max(alpha, l.a);
-		lines = max(lines, l.a);
-		vec2 gm = go / (grid_cells * major_every);
-		vec2 dm = abs(fract(gm + 0.5) - 0.5) * grid_cells * major_every * cell;
-		float dmm = min(dm.x, dm.y);
-		if (major_double > 0.5) {
-			dmm = abs(dmm - line_width * 3.0);
-		}
-		vec4 m = tube(dmm, line_width * 1.2, line_color.rgb, line_energy * major_energy, aa);
-		m.a *= major_alpha;
-		col = mix(col, m.rgb, m.a);
-		alpha = max(alpha, m.a);
-		lines = max(lines, m.a);
-		majors = max(majors, m.a);
-		if (diamond_size > 0.0) {
-			// Raute an jeder Kreuzung der Hauptlinien, gefüllt, mit dunklem Innenrand
-			float dd = (dm.x + dm.y) / diamond_size;
-			float fill = 1.0 - smoothstep(1.0 - aa / diamond_size, 1.0, dd);
-			float inner = smoothstep(0.55, 0.55 + aa / diamond_size, dd) * (1.0 - smoothstep(0.7, 0.7 + aa / diamond_size, dd));
-			vec3 dcol = mix(line_color.rgb * line_energy * major_energy, floor_color.rgb, inner * 0.8);
-			col = mix(col, dcol, fill * major_alpha);
-			alpha = max(alpha, fill * major_alpha);
-			lines = max(lines, fill * major_alpha);
-			majors = max(majors, fill * major_alpha);
-		}
-		if (floor_lamp > 0.0) {
-			// Bodenleuchte in jeder Kreuzung der Hauptlinien: heller Kern und ein Lichtkegel auf dem Boden
-			float r = length(dm);
-			float lamp_core = 1.0 - smoothstep(lamp_size, lamp_size + aa, r);
-			float pool = exp(-r * r / (lamp_radius * lamp_radius)) * lamp_pool;
-			lamp_light = lamp_color.rgb * (lamp_core * floor_lamp + pool * (1.0 - lamp_core));
-			col = mix(col, lamp_color.rgb, lamp_core);
+		if (is_plain(c) < 0.5) {
+			// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
+			vec2 go = g - grid_origin;
+			vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
+			vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, line_color.rgb, line_energy * cell_energy, aa);
+			cl.a *= cell_alpha;
+			col = mix(col, cl.rgb, cl.a);
+			alpha = max(alpha, cl.a);
+			lines = max(lines, cl.a);
+			vec2 gg = go / grid_cells;
+			vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
+			vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
+			l.a *= minor_alpha;
+			col = mix(col, l.rgb, l.a);
+			alpha = max(alpha, l.a);
+			lines = max(lines, l.a);
+			vec2 gm = go / (grid_cells * major_every);
+			vec2 dm = abs(fract(gm + 0.5) - 0.5) * grid_cells * major_every * cell;
+			float dmm = min(dm.x, dm.y);
+			if (major_double > 0.5) {
+				dmm = abs(dmm - line_width * 3.0);
+			}
+			vec4 m = tube(dmm, line_width * 1.2, line_color.rgb, line_energy * major_energy, aa);
+			m.a *= major_alpha;
+			col = mix(col, m.rgb, m.a);
+			alpha = max(alpha, m.a);
+			lines = max(lines, m.a);
+			majors = max(majors, m.a);
+			if (diamond_size > 0.0) {
+				// Raute an jeder Kreuzung der Hauptlinien, gefüllt, mit dunklem Innenrand
+				float dd = (dm.x + dm.y) / diamond_size;
+				float fill = 1.0 - smoothstep(1.0 - aa / diamond_size, 1.0, dd);
+				float inner = smoothstep(0.55, 0.55 + aa / diamond_size, dd) * (1.0 - smoothstep(0.7, 0.7 + aa / diamond_size, dd));
+				vec3 dcol = mix(line_color.rgb * line_energy * major_energy, floor_color.rgb, inner * 0.8);
+				col = mix(col, dcol, fill * major_alpha);
+				alpha = max(alpha, fill * major_alpha);
+				lines = max(lines, fill * major_alpha);
+				majors = max(majors, fill * major_alpha);
+			}
+			if (floor_lamp > 0.0) {
+				// Bodenleuchte in jeder Kreuzung der Hauptlinien: heller Kern und ein Lichtkegel auf dem Boden
+				float r = length(dm);
+				float lamp_core = 1.0 - smoothstep(lamp_size, lamp_size + aa, r);
+				float pool = exp(-r * r / (lamp_radius * lamp_radius)) * lamp_pool;
+				lamp_light = lamp_color.rgb * (lamp_core * floor_lamp + pool * (1.0 - lamp_core));
+				col = mix(col, lamp_color.rgb, lamp_core);
+			}
+		} else {
+			col *= plain_shade;
 		}
 		if (fine_strength > 0.0) {
 			vec2 df = abs(fract(g + 0.5) - 0.5) / fwidth(g);

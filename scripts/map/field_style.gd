@@ -100,7 +100,7 @@ const STYLES := {
 			"line_energy": 1.0, "major_energy": 1.0, "minor_energy": 0.55, "cell_energy": 0.5,
 			"cell_alpha": 0.0, "minor_alpha": 0.22, "major_alpha": 0.9,
 			"edge_energy": 1.1, "core_white": 0.0, "halo_width": 0.004, "line_width": 0.011,
-			"major_double": 1.0, "diamond_size": 0.2, "marble": 1.0,
+			"major_double": 1.0, "diamond_size": 0.2, "marble": 1.0, "plain_shade": 0.8,
 			# beleuchteter Marmor (floor_lit): etwas dunkler, weil die Sonne ihn aufhellt; glänzend
 			"lit_albedo": 1.0, "line_glow": 0.4, "floor_roughness": 0.55, "floor_specular": 0.25,
 			# warme Bodenleuchten in den Messingrauten

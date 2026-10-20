@@ -31,6 +31,15 @@ func _ready() -> void:
 	for leg in game.all_legs():
 		var r := game._compute_route(leg[0], leg[1], "ground", game.pathfinder)
 		check(not r.path.is_empty(), "Weg von %s über %d Punkte" % [leg[0], leg[1].size()])
+		for pt in r.path:
+			var c := Vector2i((pt / Board3D.CELL).floor())
+			if game.board.city.is_city(c):
+				check(false, "Stadt steht auf dem Weg bei %s" % c)
+				break
+	check(game.board.city.part_count() > 500, "Blockstadt gebaut: %d Teile" % game.board.city.part_count())
+	check(game.board.city.lamp_count() > 50, "Laternen: %d" % game.board.city.lamp_count())
+	for z in game.map.zones:
+		check(not game.board.city.is_city(z.rect.get_center()), "Keine Stadt im Gebiet %s" % z.rect)
 
 	game.start_game("hm", 1, "group")
 	check(game.phase == MaulGame.Phase.COUNTDOWN, "Countdown läuft nach der Filialwahl")

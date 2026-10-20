@@ -319,8 +319,8 @@ func _rebuild_ground() -> void:
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
 
-## Neon-Feld: Fläche über die ganze Map, blockierte Felder (R) und Sperrzonen um die
-## Wegpunkte (G) als Maske, ein Pixel pro Feld.
+## Neon-Feld: Fläche über die ganze Map, blockierte Felder (R), Sperrzonen um die
+## Wegpunkte (G) und schlichte Felder ohne Gitter (B) als Maske, ein Pixel pro Feld.
 func _rebuild_floor() -> void:
 	var size := Vector2(map.width, map.height) * CELL
 	var plane := PlaneMesh.new()
@@ -339,9 +339,16 @@ func _rebuild_floor() -> void:
 				# G = Sperrzone um Spawn, Ziel und Checkpoints (nicht bebaubar)
 				if map.is_marker_zone(c):
 					img.set_pixel(x, y, Color(0, 1, 0))
+				elif _floor_plain(c):
+					img.set_pixel(x, y, Color(0, 0, 1))
 	_floor_mat.set_shader_parameter("grid_origin", Vector2(origin))
 	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
 	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
+
+
+## Feld ohne Gitterlinien zeichnen (Maul: unter der Stadt).
+func _floor_plain(_c: Vector2i) -> bool:
+	return false
 
 
 func refresh_rocks() -> void:

@@ -8,7 +8,8 @@ extends Node
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
 ##                           hosten (vorher tools/relay/relay.py starten), Code steht dann oben links
 ##   Shopping Maul (--szene=maul): --filiale=hm (ohne: Filialwahl), --level=N (so viele Level spielen),
-##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum;
+##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum
+##                           (oder --punkt=x,y), Abstand --abstand=34;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
 ##                           --profi (Filialwahl: Reiter Profi-Filialen), --bauen=h01P,h02O (diese Tower zuerst)
 ##   --map=<id>              Map aus data/maps (Standard classic)
@@ -253,7 +254,11 @@ func _prepare_maul(game: Node) -> void:
 		game.select_unit(game.units[0])
 	if opts.has("reiter"):
 		game.hud._set_tab(str(opts.reiter))
-	game.camera_rig.look_at_point(game.map.zone_center(0), float(opts.get("abstand", "34")))
+	var look: Vector2 = game.map.zone_center(0)
+	if opts.has("punkt"):
+		var pk := String(opts.punkt).split(",")
+		look = (Vector2(float(pk[0]), float(pk[1])) + Vector2(0.5, 0.5)) * Board3D.CELL
+	game.camera_rig.look_at_point(look, float(opts.get("abstand", "34")))
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:
