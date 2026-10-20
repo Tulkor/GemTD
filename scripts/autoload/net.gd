@@ -24,9 +24,9 @@ signal coop_state(data: Dictionary)
 signal coop_enemies(data: Dictionary)
 
 const DEFAULT_PORT := 24565
-## Relay-Server, den das Spiel ohne eigene Einstellung nimmt ("" = keiner, dann nur direkt per IP).
-## Format "host" oder "host:port" (TCP, Standard 24565), Server: tools/relay/.
-const DEFAULT_RELAY := ""
+## Relay-Server, der im Feld „Server“ der Lobby steht, solange der Spieler nichts anderes einträgt
+## (Feld leeren = direkt per IP). Format "host" oder "host:port" (TCP, Standard 24565), Server: tools/relay/.
+const DEFAULT_RELAY := "schulak.synology.me:24565"
 const MAX_PLAYERS := 8
 const SETTINGS := "user://settings.cfg"
 const SAVE_TIMEOUT := 2.5   ## Sekunden, die der Host beim Speichern auf die Felder der Mitspieler wartet
@@ -60,7 +60,8 @@ var _upnp_port := 0
 var _upnp_thread: Thread
 var _ip_request: HTTPRequest
 var last_ip := ""
-## Relay-Server aus den Einstellungen (leer = DEFAULT_RELAY); läuft die Verbindung darüber, ist room_code()
+## Relay-Server aus den Einstellungen (nie gesetzt = DEFAULT_RELAY, leer = direkt; eigener Schlüssel
+## relay_server, weil V0_67 unter "relay" schon leere Werte gespeichert hat); läuft die Verbindung darüber, ist room_code()
 ## der Code, mit dem Mitspieler beitreten.
 var relay_server := ""
 var _relay_error := ""
@@ -77,7 +78,9 @@ func _ready() -> void:
 		my_name = str(cfg.get_value("net", "name", ""))
 		last_ip = str(cfg.get_value("net", "ip", ""))
 		uid = str(cfg.get_value("net", "uid", ""))
-		relay_server = str(cfg.get_value("net", "relay", ""))
+		relay_server = str(cfg.get_value("net", "relay_server", DEFAULT_RELAY))
+	else:
+		relay_server = DEFAULT_RELAY
 	if my_name == "":
 		my_name = tr("Spieler") + " %d" % (randi() % 900 + 100)
 	if uid == "":
@@ -96,7 +99,7 @@ func save_settings() -> void:
 	cfg.set_value("net", "name", my_name)
 	cfg.set_value("net", "ip", last_ip)
 	cfg.set_value("net", "uid", uid)
-	cfg.set_value("net", "relay", relay_server)
+	cfg.set_value("net", "relay_server", relay_server)
 	cfg.save(SETTINGS)
 
 
@@ -156,7 +159,7 @@ func join(ip: String, port := DEFAULT_PORT) -> Error:
 
 ## Relay-Server, über den gehostet und per Code beigetreten wird ("" = keiner eingestellt).
 func relay_address() -> String:
-	return relay_server.strip_edges() if relay_server.strip_edges() != "" else DEFAULT_RELAY
+	return relay_server.strip_edges()
 
 
 func set_relay_server(address: String) -> void:

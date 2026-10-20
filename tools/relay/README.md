@@ -45,7 +45,8 @@ einen Ordner legen, Container Manager → Projekt → Erstellen mit diesem Ordne
 Neue Version des Relays: neues `.tar` importieren, Container stoppen, löschen und wie in
 Schritt 4 neu ausführen.
 
-Im Spiel dann in der Lobby bei **Server** `name.synology.me` (oder die öffentliche IP) eintragen.
+Fest eingebaut ist `schulak.synology.me:24565` (`Net.DEFAULT_RELAY`), das steht ohne eigene Eingabe im Feld.
+Im Spiel sonst in der Lobby bei **Server** `name.synology.me` (oder die öffentliche IP) eintragen.
 Ein anderer Port als 24565 geht als `name.synology.me:12345` (dann in Schritt 3 und 4 anpassen).
 
 Prüfen von außen (z. B. vom Handy ohne WLAN): Lobby → Server eintragen → „Neue Sitzung hosten“.
