@@ -85,6 +85,9 @@ def lay(name, tex, col, **kw):
 
 
 FLIP = {"tiles": [8, 8], "frames": ramp(0.0, 1.0, n=2)}
+# explosion_01 heißt im Paket „8x8“, das Bild hat aber 5×5 Bilder. Nur bis zum Rauch (knapp die Hälfte) abspielen:
+# der dunkle Qualm wirkt auf dem dunklen Spielfeld wie ein Loch.
+FLIP_EXPLOSION = {"tiles": [5, 5], "frames": ramp(0.0, 0.45, n=2)}
 
 
 def t_explosion(c):
@@ -92,7 +95,7 @@ def t_explosion(c):
 		lay("blitz", KB_TEX % "flare_24", rgba(c, 1, 0.5), life=[0.14, 0.14], size=[2.2, 2.2],
 			rotation=TURN, size_curve=ramp(0.6, 1.2)),
 		lay("feuerball", BK_TEX % "explosion_01", [1.0, 1.0, 1.0, 1.0], add=False, tint=[1.0, 1.0, 1.0, 1.0],
-			life=[0.7, 0.7], size=[2.6, 2.6], rotation=TURN, color_curve=fade(hold=0.7), **FLIP),
+			life=[0.5, 0.5], size=[2.2, 2.2], rotation=TURN, color_curve=fade(hold=0.45), **FLIP_EXPLOSION),
 		lay("ring", KB_TEX % "impact_2", rgba(c, 0.8, 0.2), life=[0.3, 0.3], size=[2.4, 2.4],
 			size_curve=ramp(0.2, 1.0, ease=0.5), color_curve=fade(hold=0.05)),
 	]
@@ -118,6 +121,21 @@ def t_shock_ring(c):
 	]
 
 
+def t_splash(c):
+	"""Splash ohne Feuer: Druckwelle, heller Kern, Tropfen fliegen weg und fallen (Wasser; gedreht auch Magie usw.)."""
+	return [
+		lay("welle", KB_TEX % "impact_2", rgba(c, 0.9, 0.2), life=[0.34, 0.34], size=[2.2, 2.2],
+			size_curve=ramp(0.2, 1.0, ease=0.5), color_curve=fade(hold=0.05)),
+		lay("kern", KB_TEX % "flare_13", rgba(c, 1, 0.6), life=[0.16, 0.16], size=[1.5, 1.5],
+			rotation=TURN, size_curve=ramp(1.1, 0.5)),
+		layer("tropfen", "circle_05", rgba(c, 1, 0.4), mode="stretch", length_scale=1.6, velocity_scale=0.04,
+			bursts=burst(12), life=[0.3, 0.45], speed=[2.5, 4.5], size=[0.22, 0.32], gravity=0.9,
+			size_curve=ramp(1.0, 0.4), shape={"type": "sphere", "radius": 0.2, "thickness": 1.0}, drag=0.1),
+		layer("gischt", "light_01", rgba(c, 0.6, 0.3), life=[0.3, 0.3], size=[1.6, 1.6],
+			size_curve=ramp(0.6, 1.2, ease=0.5), color_curve=fade(hold=0.1)),
+	]
+
+
 def t_rays(c):
 	return [
 		lay("strahlen", KB_TEX % "lightrays_1", rgba(c, 1, 0.3), life=[0.4, 0.4], size=[2.4, 2.4],
@@ -134,6 +152,7 @@ HITS = [
 	("kb_shock_ring", t_shock_ring, "#7fb2ff"),
 	("kb_nature_rays", t_rays, "#7aff5a"),
 	("kb_magic_ring", t_shock_ring, "#c46bff"),
+	("kb_splash", t_splash, "#3ab8ff"),
 ]
 
 

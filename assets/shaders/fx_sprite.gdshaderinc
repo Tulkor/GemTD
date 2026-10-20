@@ -8,6 +8,9 @@ uniform vec2 tiles = vec2(1.0, 1.0);
 uniform vec2 uv_scale = vec2(1.0, 1.0);
 uniform vec2 uv_offset = vec2(0.0, 0.0);
 uniform float brightness = 1.0;
+// Weiche Kanten: Sprites blenden aus, wo sie in Boden, Gegner oder Tower stoßen (statt harter Schnittkante).
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
+uniform float soft = 0.15;
 
 varying vec4 custom;
 
@@ -36,5 +39,12 @@ void fragment() {
 	float grey = dot(rgb, vec3(0.299, 0.587, 0.114));
 	rgb = mix(vec3(grey), rgb, custom.z) * brightness;
 	ALBEDO = rgb;
-	ALPHA = clamp(t.a, 0.0, 1.0);
+	float fade = 1.0;
+	if (soft > 0.0) {
+		float d = texture(depth_tex, SCREEN_UV).r;
+		vec4 v = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+		float scene = -v.z / v.w;
+		fade = clamp((scene + VERTEX.z) / soft, 0.0, 1.0);
+	}
+	ALPHA = clamp(t.a, 0.0, 1.0) * fade;
 }

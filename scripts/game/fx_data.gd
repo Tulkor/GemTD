@@ -126,8 +126,10 @@ static func _ability_types(def: Dictionary, tier: int) -> Array:
 static func _auto_hit_for(types: Array, col: Color) -> String:
 	var by_ability: Dictionary = _rules.get("hit_ability", {})
 	for t in types:
-		if by_ability.has(t) and _hits.has(str(by_ability[t])):
-			return str(by_ability[t])
+		if by_ability.has(t):
+			var id := _by_warmth(by_ability[t], col)
+			if _hits.has(id):
+				return id
 	return _auto_hit(col)
 
 
@@ -155,7 +157,7 @@ static func _auto_shot(types: Array, col: Color) -> String:
 	var by_ability: Dictionary = _rules.get("ability", {})
 	for t in types:
 		if by_ability.has(t):
-			return str(by_ability[t])
+			return _by_warmth(by_ability[t], col)
 	if col.s >= PALE:
 		for r in _rules.get("hue", []):
 			var lo := float(r[0])
@@ -163,6 +165,18 @@ static func _auto_shot(types: Array, col: Color) -> String:
 			if (col.h >= lo and col.h <= hi) if lo <= hi else (col.h >= lo or col.h <= hi):
 				return str(r[2])
 	return str(_rules.get("default", ""))
+
+
+## Regel-Eintrag: eine Effekt-ID oder {"warm": id, "sonst": id} (Feuer nur für rote bis gelbe Tower,
+## sonst wirkt der auf Blau gedrehte Feuerball falsch).
+static func _by_warmth(rule, col: Color) -> String:
+	if not rule is Dictionary:
+		return str(rule)
+	var warm: Array = _rules.get("warm", [0.93, 0.16])
+	var lo := float(warm[0])
+	var hi := float(warm[1])
+	var is_warm := col.s >= PALE and ((col.h >= lo and col.h <= hi) if lo <= hi else (col.h >= lo or col.h <= hi))
+	return str(rule.get("warm" if is_warm else "sonst", ""))
 
 
 static func _tint(e: Dictionary, id: String, col: Color) -> Dictionary:
