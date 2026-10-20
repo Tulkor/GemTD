@@ -619,7 +619,7 @@ func _start_session() -> void:
 ## Spielstand laden: Einzelspiel geht direkt weiter, eine Mehrspieler-Sitzung wird gehostet.
 func _load_save(data: Dictionary) -> void:
 	if data.get("kind", "") in ["multi", "coop"]:
-		if Net.host() == OK:
+		if Net.host_default() == OK:
 			Net.load_session(data)
 		show_page("lobby")
 		return

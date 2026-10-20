@@ -167,12 +167,13 @@ pick_changed() {
         n=$(basename "$f"); resolve "${n%_test.*}"
         [ -z "$STEM" ] || { test_info "$STEM"; t+="$NAME "; } ;;
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
+      tools/relay/*) t+="relay " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/fx/*|assets/fx/*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse eeve maul " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
-      scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt " ;;
+      scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
