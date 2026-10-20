@@ -41,6 +41,13 @@ uniform float major_double = 0.0;
 uniform float diamond_size = 0.0;
 /// Marmor-Adern im Boden (0 = glatt)
 uniform float marble = 0.0;
+/// Bodenleuchten in den Kreuzungen der Hauptlinien: Helligkeit des Kerns (0 = keine)
+uniform float floor_lamp = 0.0;
+uniform vec4 lamp_color : source_color = vec4(1.0, 0.85, 0.55, 1.0);
+/// Radius des Kerns und des Lichtscheins auf dem Boden in Einheiten, Helligkeit des Scheins
+uniform float lamp_size = 0.06;
+uniform float lamp_radius = 0.9;
+uniform float lamp_pool = 0.25;
 /// Fläche der blockierten Felder (0 = durchsichtig wie bisher)
 uniform vec4 blocked_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float blocked_alpha = 0.0;
@@ -121,6 +128,8 @@ void fragment() {
 	vec3 col = floor_color.rgb;
 	// Anteil der Linien/Rauten/Ränder (für das beleuchtete Feld: Metall statt Marmor)
 	float lines = 0.0;
+	// Licht der Bodenleuchten (floor_lamp), wird zuletzt als Eigenleuchten dazugegeben
+	vec3 lamp_light = vec3(0.0);
 	if (marble > 0.0) {
 		col = mix(col, marble_color(col, world_xz), marble);
 	}
@@ -167,6 +176,14 @@ void fragment() {
 			alpha = max(alpha, fill * major_alpha);
 			lines = max(lines, fill * major_alpha);
 		}
+		if (floor_lamp > 0.0) {
+			// Bodenleuchte in jeder Kreuzung der Hauptlinien: heller Kern und ein Lichtkegel auf dem Boden
+			float r = length(dm);
+			float lamp_core = 1.0 - smoothstep(lamp_size, lamp_size + aa, r);
+			float pool = exp(-r * r / (lamp_radius * lamp_radius)) * lamp_pool;
+			lamp_light = lamp_color.rgb * (lamp_core * floor_lamp + pool * (1.0 - lamp_core));
+			col = mix(col, lamp_color.rgb, lamp_core);
+		}
 		if (fine_strength > 0.0) {
 			vec2 df = abs(fract(g + 0.5) - 0.5) / fwidth(g);
 			float fl = (1.0 - clamp(min(df.x, df.y), 0.0, 1.0)) * fine_strength;
@@ -203,12 +220,12 @@ void fragment() {
 	// beleuchtet (Art déco): Marmor glänzt, Messinglinien sind Metall und leuchten leicht nach,
 	// damit sie im Schatten lesbar bleiben; Sonne, Schatten und Treffer-Lichter fallen auf den Boden
 	ALBEDO = col * mix(lit_albedo, 1.0, lines);
-	EMISSION = col * lines * line_glow;
+	EMISSION = col * lines * line_glow + lamp_light;
 	METALLIC = lines * line_metallic;
 	ROUGHNESS = mix(floor_roughness, line_roughness, lines);
 	SPECULAR = floor_specular;
 #else
-	ALBEDO = col;
+	ALBEDO = col + lamp_light;
 	ALPHA = clamp(alpha, 0.0, 1.0);
 #endif
 }
