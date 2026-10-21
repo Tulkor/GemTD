@@ -24,6 +24,7 @@ extends Node
 ##   --grundtower=water      eeveTD: statt des festen Plans überall den Grundturm dieses Elements
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
+##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
@@ -120,6 +121,8 @@ func _ready() -> void:
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)
+		if opts.has("baufeld"):
+			await _mouse_to_cell(node)
 		await _frames(4)
 		if opts.has("treffer") and scene == "spiel":
 			await _wait_hit(node)
@@ -438,3 +441,13 @@ func _camera(game: Node, w: String) -> void:
 		_:
 			pass
 	rig._apply()
+
+
+## Maus auf das Feld aus --baufeld stellen, das Spiel setzt die Bauvorschau dann selbst.
+func _mouse_to_cell(node: Node) -> void:
+	var xy := String(opts.baufeld).split(",")
+	var p := Board3D.to_3d(Vector2(float(xy[0]) + 0.5, float(xy[1]) + 0.5) * Board3D.CELL)
+	await _frames(2)
+	var vp := get_viewport()
+	Input.warp_mouse(vp.get_screen_transform() * node.camera_rig.camera.unproject_position(p))
+	await _frames(2)
