@@ -468,7 +468,9 @@ func _build_bottom() -> void:
 	head.add_child(info_kills)
 	info_kills_label = UiUtil.label("", info_kills, 12)
 	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
-	info_sub = UiUtil.wrap_label("", info_left, 0)
+	# Breite gleich mitgeben: ohne sie misst Godot umbrechende Labels im ersten Frame ein Zeichen breit
+	# und damit tausende Pixel hoch, die Auswahlkarte sprang dann kurz auf volle Bildschirmhöhe
+	info_sub = UiUtil.wrap_label("", info_left, INFO_W)
 	info_sub.add_theme_font_size_override("font_size", 12)
 	info_sub.add_theme_color_override("font_color", UiTheme.MUTED)
 	info_tiles = GridContainer.new()
@@ -478,7 +480,7 @@ func _build_bottom() -> void:
 	info_left.add_child(info_tiles)
 	for i in 4:
 		_tiles.append(_stat_tile())
-	info_body = UiUtil.wrap_label("", info_left, 0)
+	info_body = UiUtil.wrap_label("", info_left, INFO_W)
 	info_body.add_theme_font_size_override("font_size", 13)
 	info_body.add_theme_color_override("font_color", UiTheme.DIM)
 	# Fähigkeiten in einem eigenen Fenster rechts neben den Werten (mit den neuen Gems daneben darunter)
