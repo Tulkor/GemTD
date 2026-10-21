@@ -17,6 +17,7 @@ var ground_path := PackedVector2Array()   ## Bahn 0 (siehe lane_paths)
 var air_path := PackedVector2Array()
 ## Wege aller Bahnen (Maul-Maps haben mehrere): [{ground, air, length}]
 var lane_paths: Array = []
+var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
 var camera_rig: CameraRig
@@ -187,6 +188,9 @@ func _ready() -> void:
 		lives += n
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
+	if has_other_paths():
+		hud.add_paths_toggle(set_show_all_paths)
+		board.set_marker_lanes(_own_lanes())
 
 	setup_done = not saved.is_empty() or Session.skip_setup
 	if not setup_done:
@@ -350,6 +354,7 @@ func _update_paths() -> void:
 	lane_paths = []
 	path_length = 0
 	var dots := PackedVector2Array()
+	var others := PackedVector2Array()
 	for i in map.lane_count():
 		var ground := PackedVector2Array()
 		var cells := pathfinder.compute_path(i)
@@ -360,11 +365,33 @@ func _update_paths() -> void:
 			air.append(Board3D.cell_center(c))
 		lane_paths.append({"ground": ground, "air": air, "length": cells.size()})
 		path_length += cells.size()
-		dots.append_array(ground)
+		(dots if _own_lane(i) else others).append_array(ground)
 	ground_path = lane_paths[0].ground
 	air_path = lane_paths[0].air
-	board.path_points = dots
+	board.path_points = dots + others if show_all_paths else dots
 	board.refresh_path()
+
+
+## Im Mehrspieler gehören Bahnen mit Spielernummer einem Spieler; anfangs zeigt das Feld nur die
+## eigenen, die übrigen über den Knopf „Alle Wege zeigen“. Allein (oder ohne Nummer) alle.
+func _own_lane(i: int) -> bool:
+	return players.size() <= 1 or map.lane_player(i) == local_player
+
+
+func _own_lanes() -> Array:
+	return range(map.lane_count()).filter(_own_lane)
+
+
+func has_other_paths() -> bool:
+	return range(map.lane_count()).any(func(i): return not _own_lane(i))
+
+
+func set_show_all_paths(on: bool) -> void:
+	show_all_paths = on
+	if hud.paths_button != null:
+		hud.paths_button.set_pressed_no_signal(on)
+	board.set_marker_lanes([] if on else _own_lanes())
+	_update_paths()
 
 
 ## Bahnen, die gerade spawnen: ohne Spieler oder deren Spieler mitspielt.

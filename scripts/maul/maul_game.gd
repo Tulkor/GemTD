@@ -108,6 +108,9 @@ var _next_enemy_id := 1
 var _alternate := {}         ## Route → Zähler für abwechselnde Abzweigungen
 
 var _path_cache := {}        ## Schlüssel → {path, wp}
+var show_all_paths := false  ## Mehrspieler: auch die Wege durch fremde Gebiete zeigen
+var _own_path_pts := PackedVector2Array()
+var _other_path_pts := PackedVector2Array()
 var _zone_towers: Array = [] ## Tower je Zone
 var _frost_level := false
 var _detect_towers: Array = []
@@ -601,19 +604,40 @@ func all_legs() -> Array:
 	return list
 
 
-## Neu berechnen nach Bauen/Verkaufen; zeigt die Wege als Punkte.
+## Neu berechnen nach Bauen/Verkaufen; zeigt die Wege als Punkte. Im Mehrspieler erst nur die
+## Abschnitte durchs eigene Gebiet, die übrigen über show_all_paths (Knopf an der Übersichtskarte).
 func _refresh_paths() -> void:
 	_path_cache.clear()
-	var pts := PackedVector2Array()
-	var seen := {}
+	var zone: int = players[local_player].zone
+	var own := {}
+	var other := {}
 	for leg in all_legs():
 		var r := _route(leg[0], leg[1], "ground")
+		var mine := players.size() <= 1
+		for p in r.path:
+			if mine:
+				break
+			mine = map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL))) == zone
 		for i in range(0, r.path.size(), 2):
-			var p: Vector2 = r.path[i]
-			if not seen.has(p):
-				seen[p] = true
-				pts.append(p)
-	board.path_points = pts
+			(own if mine else other)[r.path[i]] = true
+	_own_path_pts = PackedVector2Array(own.keys())
+	_other_path_pts = PackedVector2Array(other.keys().filter(func(p): return not own.has(p)))
+	_show_paths()
+
+
+func has_other_paths() -> bool:
+	return not _other_path_pts.is_empty()
+
+
+func set_show_all_paths(on: bool) -> void:
+	show_all_paths = on
+	if hud.paths_button != null:
+		hud.paths_button.set_pressed_no_signal(on)
+	_show_paths()
+
+
+func _show_paths() -> void:
+	board.path_points = _own_path_pts + _other_path_pts if show_all_paths else _own_path_pts
 	board.refresh_path()
 
 

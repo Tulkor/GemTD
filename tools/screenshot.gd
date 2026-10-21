@@ -31,6 +31,7 @@ extends Node
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD mit Laternen und Glühwürmchen)
+##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
@@ -150,6 +151,8 @@ func _frames(n: int) -> void:
 ## Spielstand für das Bild herstellen.
 func _prepare(game: Node) -> void:
 	game.camera_rig.set_process(false)   # kein Mitlaufen am Fensterrand (Maus steht in Xvfb in der Ecke)
+	if opts.has("alle_wege") and game.has_method("set_show_all_paths"):
+		game.set_show_all_paths(true)
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
 		return
@@ -194,6 +197,8 @@ func _prepare(game: Node) -> void:
 ## Shopping Maul: Filiale eröffnen, im Zentrum bauen, Level im Zeitraffer spielen.
 func _prepare_maul(game: Node) -> void:
 	game.camera_rig.set_process(false)
+	if opts.has("alle_wege"):
+		game.set_show_all_paths(true)
 	if not opts.has("filiale"):
 		if opts.has("profi"):
 			game.hud._setup._kind = "pro"
