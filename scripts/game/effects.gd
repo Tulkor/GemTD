@@ -10,6 +10,7 @@ const BEAM_TIME := 0.12
 var beams: Array = []
 var _mesh := ImmediateMesh.new()
 var fx: FxPlayer
+var sounds := true  ## Schuss-Sounds abspielen (aus beim Zuschauen fremder Felder)
 
 
 func _ready() -> void:
@@ -29,6 +30,11 @@ func add_beam(from: Vector3, to: Vector3, col: Color, fx_key: String = "") -> vo
 		var parts := fx_key.split(":")
 		if parts.size() >= 3:
 			var set := FxData.for_tower(parts[1], int(parts[2]))
+			if sounds:
+				if parts[0] == "n":
+					Sfx.play_nova(parts[1], int(parts[2]))
+				else:
+					Sfx.play_shot(parts[1], int(parts[2]))
 			if parts[0] == "n":
 				if set.has("nova"):
 					fx.play_nova(set.nova, from, float(parts[3]) if parts.size() > 3 else 2.0)

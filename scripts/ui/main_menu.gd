@@ -375,6 +375,7 @@ func _build_settings() -> void:
 		res.disabled = i == 1
 		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
 	ui_scale_slider = _ui_scale_row(grid)
+	VolumeRows.add(grid, DecoTheme.font(true), DecoTheme.BRASS_LIGHT)
 	var hint := UiUtil.wrap_label("Änderungen gelten sofort und bleiben gespeichert.", v, 400)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 14)

@@ -82,6 +82,10 @@ func _ready() -> void:
 	_apply(FieldStyle.night)
 
 
+func _exit_tree() -> void:
+	Sfx.set_ambience("")
+
+
 ## Zwischen Tag und Nacht umschalten (Debug-Menü, später z. B. Einstellungen oder Tageszeit-Wechsel):
 ## Licht und Himmel baut CameraRig.add_environment neu aus FieldStyle.env().
 func set_night(on: bool) -> void:
@@ -110,6 +114,8 @@ func sun() -> DirectionalLight3D:
 
 func _apply(on: bool) -> void:
 	var look: Dictionary = NIGHT_EXTRA if on else {}
+	# Hintergrund: Vögel am Tag, tiefes Geisterheulen in der Nacht (data/sfx.json)
+	Sfx.set_ambience("amb_night" if on else "amb_forest")
 	if _env != null:
 		_env.fog_height = look.get("fog_height", 0.0)
 		_env.fog_height_density = look.get("fog_height_density", 0.0)

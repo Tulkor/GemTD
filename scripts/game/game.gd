@@ -443,6 +443,8 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
 		if can_move_trap(moving, target):
 			submit({"type": "move_trap", "tower": tower_ref(moving), "to": target})
+		else:
+			Sfx.play("error")
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if add and rocks.has(a):
@@ -462,6 +464,9 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 	elif trap != null:
 		_select(trap)
 	else:
+		# Freies Feld in der Bauphase, aber hier geht kein Gem hin (Weg versperrt, belegt, Rand)
+		if stage() == Phase.BUILD and gems_left() > 0 and map.in_bounds(anchor):
+			Sfx.play("error")
 		_select(null)
 
 
@@ -1030,10 +1035,13 @@ func set_player_away(p: int, away: bool) -> void:
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	var ok := true
 	if mirror:
 		coop.send(cmd)
-		return true
-	return execute(cmd)
+	else:
+		ok = execute(cmd)
+	Sfx.command_sound(cmd, ok)
+	return ok
 
 
 ## Befehl ausführen (nur die Simulation, d. h. solo oder auf dem Host). false = verworfen.
@@ -1255,6 +1263,7 @@ func _start_wave() -> void:
 		for i in int(g.get("count", 1)):
 			spawn_queue.append(g)
 	spawn_timer = 0.5
+	Sfx.play("wave_start")
 	_refresh_hud()
 
 
@@ -1300,6 +1309,8 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 		# Eine Welle ist gleich viele Punkte wert, egal an wie vielen Bahnen sie läuft
 		e.score_value /= lanes.size()
 		enemies.append(e)
+	if def.get("boss", false):
+		Sfx.play("boss")
 
 
 ## Schwierigkeit auf einen neuen Gegner der Gruppe g anwenden.
@@ -1471,6 +1482,7 @@ func on_enemy_leaked(e: Enemy) -> void:
 		_refresh_hud()
 		return
 	lives -= e.damage
+	Sfx.play("leak")
 	_remove_enemy(e)
 	# Debug „Unsterblich“: Leben gehen ins Minus, das Spiel läuft weiter
 	if lives <= 0 and not Session.debug_immortal:
