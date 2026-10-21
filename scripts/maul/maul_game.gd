@@ -347,6 +347,7 @@ func _start_level(n: int) -> void:
 		spawn_queue.append([i, per])
 	spawn_timer = 0.0
 	phase = Phase.WAVE
+	Sfx.play("boss" if level_kind == "boss" else "wave_start")
 	_alternate.clear()
 	show_message(level_title(n), 4.0)
 	_refresh_hud()
@@ -754,6 +755,8 @@ func on_enemy_leaked(e) -> void:
 	var cost := 0 if sandbox else mini(me.leak_cost, lives)
 	lives -= cost
 	level_lost += cost
+	if cost > 0:
+		Sfx.play("leak")
 	_remove_enemy(me)
 	if lives <= 0 and not Session.debug_immortal:
 		lives = 0
@@ -994,10 +997,13 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	var ok := true
 	if mirror:
 		sync.send(cmd)
-		return true
-	return execute(cmd)
+	else:
+		ok = execute(cmd)
+	Sfx.command_sound(cmd, ok)
+	return ok
 
 
 func execute(cmd: Dictionary) -> bool:

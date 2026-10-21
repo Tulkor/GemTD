@@ -20,6 +20,7 @@ Session="*res://scripts/autoload/session.gd"
 Loc="*res://scripts/autoload/loc.gd"
 Display="*res://scripts/autoload/display.gd"
 Net="*res://scripts/autoload/net.gd"
+Sfx="*res://scripts/autoload/sfx.gd"
 
 [display]
 

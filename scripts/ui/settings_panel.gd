@@ -76,6 +76,7 @@ func _ready() -> void:
 		res.disabled = i == 1
 		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
 	ui_scale_slider = _ui_scale_row(grid)
+	VolumeRows.add(grid, DecoTheme.font(true) if deco else UiTheme.font(true), DecoTheme.BRASS_LIGHT if deco else UiTheme.CYAN)
 	var text := "Änderungen gelten sofort und bleiben gespeichert."
 	if in_game:
 		text = "Änderungen gelten sofort und bleiben gespeichert. Nach einem Sprachwechsel folgen manche Texte erst beim nächsten Aufbau oder in der nächsten Partie."
