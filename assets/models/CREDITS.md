@@ -34,6 +34,15 @@ mit `tools/modelle/umwandeln.py` (Auswahl in `tools/modelle/auswahl.json`, Textu
 Ebenfalls hochgeladen, aber noch nicht verwendet (bei Bedarf über `auswahl.json` holen): Kenney City Kit Suburban,
 Kenney Modular Buildings (beide CC0).
 
+## Gegner-Modelle (CC0, 2026-10-21)
+
+- `enemies/skeleton.glb`, `slime.glb`, `dragon.glb`, `bat.glb`: "Animated Monster Pack" von Quaternius, CC0
+  (Lizenztext in `licenses/quaternius_animated_monsters.txt`), von Lukas hochgeladen. Umgewandelt mit
+  `tools/modelle/monster_umwandeln.py` (Blender): Animationen umbenannt in `walk`, `idle`, `hit`, `death`, Materialien
+  deckend gemacht, Augen-Skelett starr an den Kopf gehängt. Im Spiel (`scripts/game/enemy.gd`, `MONSTERS`):
+  Skelett = Bodengegner, Schleim = Massenwelle, Drache = Flieger, Fledermaus = Massenflieger; ein Material wird in
+  Richtung der Gegnerfarbe eingefärbt.
+
 ## Boss-Modell (CC-BY 3.0, Nennung Pflicht)
 
 - `enemies/little_man.glb`: Little Man by Don Carson [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/8KU4S7I0sL8)

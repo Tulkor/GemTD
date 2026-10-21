@@ -15,3 +15,7 @@ Shopping Maul über `data/maul/models.json`.
 Boss-Modell: `tools/modelle/boss_rig.py` gibt dem starren "Little Man" (CC-BY) Skelett und Animationen
 (`walk`, `idle`, `hit`, `death`). Braucht Blender als Python-Modul: `uv venv -p python3.13 env && uv pip install -p env/bin/python bpy`.
 Animationen ansehen: `tools/modelle/vorschau.sh bogen.png --animationen assets/models/enemies/little_man.glb`.
+
+Gegner-Modelle (Skelett, Schleim, Drache, Fledermaus, Quaternius CC0): `tools/modelle/monster_umwandeln.py` wandelt die FBX
+aus dem "Animated Monster Pack" mit denselben Animationsnamen wie beim Boss um:
+`<python mit bpy> -I tools/modelle/monster_umwandeln.py -- "<Paket>/FBX" assets/models/enemies`.

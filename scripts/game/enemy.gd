@@ -8,6 +8,16 @@ const FLY_HEIGHT := 1.4
 ## Boss-Modell mit Skelett und Animationen walk/idle/hit/death (tools/modelle/boss_rig.py), Höhe in Towerbreiten
 const BOSS_MODEL := "res://assets/models/enemies/little_man.glb"
 const BOSS_MODEL_HEIGHT := 1.1
+## Gegner-Modelle je Form (Animated Monster Pack von Quaternius, tools/modelle/monster_umwandeln.py):
+## [Pfad, längste Kante in Towerbreiten bei size 1, Material in Gegnerfarbe, Anteil der Gegnerfarbe].
+const MONSTERS := {
+	"boss": [BOSS_MODEL, BOSS_MODEL_HEIGHT, "", 0.0],
+	"cube": ["res://assets/models/enemies/skeleton.glb", 0.75, "Skeleton", 0.35],
+	"pyramid": ["res://assets/models/enemies/slime.glb", 0.6, "Body", 0.85],
+	"sphere": ["res://assets/models/enemies/dragon.glb", 0.85, "Main", 0.8],
+	"sphere_mass": ["res://assets/models/enemies/bat.glb", 0.7, "Main", 0.8],
+}
+static var _tinted := {}  ## "Material|Farbe" -> eingefärbte Kopie, geteilt von allen Gegnern gleicher Farbe
 
 var game  # game.gd
 var enemy_id := ""
@@ -69,8 +79,10 @@ var def_model_scale := 1.0
 var _body_mat: StandardMaterial3D
 var _bar_fg: MeshInstance3D
 var _body: MeshInstance3D
-var _anim: AnimationPlayer      ## nur bei animierten Modellen (Boss)
+var _anim: AnimationPlayer      ## nur bei animierten Modellen
 var _model: Node3D
+var _model_path := ""
+var _model_size := 0.0
 var _overlay: StandardMaterial3D  ## Treffer-Blitz und Zustandsfarben auf dem Modell
 var _flash := 0.0
 var _hit_hp := 0.0               ## Leben beim letzten Treffer-Zucken
@@ -409,9 +421,17 @@ func _build_visual() -> void:
 	_body = MeshInstance3D.new()
 	# schmal genug für Lücken von einer halben Towerbreite
 	var r := 0.2 * size
-	var model := ModelLoader.instantiate(str(def_model), def_model_scale * size)
-	if model == null and def_model == "" and shape() == "boss":
-		model = ModelLoader.instantiate(BOSS_MODEL, BOSS_MODEL_HEIGHT * size)
+	_model_path = def_model
+	_model_size = def_model_scale * size
+	var model := ModelLoader.instantiate(_model_path, _model_size)
+	if model == null and def_model == "":
+		var look: Array = MONSTERS.get(_monster_kind(), [])
+		if not look.is_empty():
+			_model_path = look[0]
+			_model_size = float(look[1]) * size
+			model = ModelLoader.instantiate(_model_path, _model_size)
+			if model != null and str(look[2]) != "":
+				_tint_part(model, str(look[2]), float(look[3]))
 	if model != null:
 		add_child(model)
 		_body.visible = false
@@ -465,6 +485,30 @@ func _build_visual() -> void:
 	_bar_fg.position.y = bar_y
 
 
+## Welches Gegner-Modell: Boss, Flieger (Massenflieger als Fledermaus), Massenwelle, sonst Bodengegner.
+func _monster_kind() -> String:
+	var s := shape()
+	if flying:
+		return "sphere_mass" if s == "pyramid" else "sphere"
+	return s if MONSTERS.has(s) else "cube"
+
+
+## Ein Material des Modells in Richtung der Gegnerfarbe ziehen, damit Wellen unterscheidbar bleiben.
+func _tint_part(model: Node, mat_name: String, amount: float) -> void:
+	for m in model.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = m.mesh
+		for i in mesh.get_surface_count():
+			var base = mesh.surface_get_material(i)
+			if not base is BaseMaterial3D or base.resource_name != mat_name:
+				continue
+			var key := "%s|%s|%s" % [_model_path, mat_name, color.to_html()]
+			if not _tinted.has(key):
+				var mat: BaseMaterial3D = base.duplicate()
+				mat.albedo_color = base.albedo_color.lerp(color, amount)
+				_tinted[key] = mat
+			m.set_surface_override_material(i, _tinted[key])
+
+
 func _bar(col: Color, priority: int) -> MeshInstance3D:
 	var m := MeshInstance3D.new()
 	var quad := QuadMesh.new()
@@ -495,7 +539,7 @@ func _update_visual() -> void:
 		_animate()
 
 
-# --- Animiertes Modell (Boss) ------------------------------------------------
+# --- Animiertes Modell (Boss und Monster) ------------------------------------------------
 
 func _setup_animation(model: Node3D) -> void:
 	var players := model.find_children("*", "AnimationPlayer", true, false)
@@ -535,8 +579,10 @@ func _animate() -> void:
 	var cur := _anim.current_animation
 	if cur != "hit" and cur != want and _anim.has_animation(want):
 		_anim.play(want, 0.2)
-	if cur == "walk" or want == "walk":
-		_anim.speed_scale = clampf(current_speed() * boost / (BOSS_MODEL_HEIGHT * size * 2.0), 0.6, 2.5)
+	if want == "idle" and not _anim.has_animation("idle"):
+		_anim.speed_scale = 0.0
+	elif cur == "walk" or want == "walk":
+		_anim.speed_scale = clampf(current_speed() * boost / (_model_size * 2.0), 0.6, 2.5)
 	else:
 		_anim.speed_scale = 1.0
 	var state := Color(0, 0, 0, 0)
@@ -555,9 +601,11 @@ func _leave_corpse() -> void:
 	if _anim == null or not _anim.has_animation("death") or not is_inside_tree() or get_parent() == null:
 		return
 	var corpse := Node3D.new()
-	var model := ModelLoader.instantiate(BOSS_MODEL, BOSS_MODEL_HEIGHT * size)
+	var model := ModelLoader.instantiate(_model_path, _model_size)
 	if model == null:
 		return
+	for i in _model.get_child_count():
+		_copy_overrides(_model.get_child(i), model.get_child(i))
 	corpse.add_child(model)
 	get_parent().add_child(corpse)
 	corpse.global_transform = _model.global_transform
@@ -568,3 +616,12 @@ func _leave_corpse() -> void:
 	tw.tween_interval(1.4)
 	tw.tween_property(corpse, "position:y", corpse.position.y - 0.6 * size, 1.2)
 	tw.tween_callback(corpse.queue_free)
+
+
+## Eingefärbte Materialien des lebenden Modells auf das liegende übertragen.
+func _copy_overrides(from: Node, to: Node) -> void:
+	if from is MeshInstance3D and to is MeshInstance3D:
+		for i in from.get_surface_override_material_count():
+			to.set_surface_override_material(i, from.get_surface_override_material(i))
+	for i in mini(from.get_child_count(), to.get_child_count()):
+		_copy_overrides(from.get_child(i), to.get_child(i))
