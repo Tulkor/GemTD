@@ -1,6 +1,6 @@
 class_name EeveScenery
 extends Node3D
-## Umgebung der eeveTD-Karte: Wald rund um das Spielfeld (Bäume, Unterholz, Waldboden), Friedhof mit Kirche, Laternen an
+## Umgebung der eeveTD-Karte: Wald rund um das Spielfeld (Bäume, Unterholz, Waldboden), Friedhof mit Kirche, Bergwerk, Laternen an
 ## Spawn, Wegpunkten und Ziel und die Nachtvariante (Mondlicht, leuchtende Laternen, Glühwürmchen).
 ## Rein optisch: läuft bei jedem Spieler gleich (fester Zufallsstartwert), nichts davon geht über das Netz.
 
@@ -27,6 +27,8 @@ const UNDERGROWTH := [
 const S := "res://assets/models/scenery/%s.glb"
 const GRAVEYARD_Y := 0.74
 const CLEARING := Vector2(6.0, 5.0)  ## halbe Länge am Rand, Tiefe der Gräberreihen
+## Kleines Bergwerk mit Lore rechts unten neben der Karte, unterhalb des Friedhofs ("Free Mine Assets Pack", CC0).
+const MINE_Y := 1.02
 ## Zaun und Laternen im Paket mintgrün: dunkles Eisen wie die Laternen an den Wegpunkten.
 const IRON := Color(0.38, 0.36, 0.42)
 const GRAVES := [
@@ -93,6 +95,7 @@ func _ready() -> void:
 	_add_forest_floor()
 	_add_forest()
 	_add_graveyard()
+	_add_mine()
 	_add_lanterns()
 	_add_fireflies()
 	# Laternen beleuchten Tower und Gegner, den Boden nur über ihren Lichtfleck (Ebene 2 ausgenommen)
@@ -239,9 +242,17 @@ func _gy(u: float, v: float) -> Vector2:
 	return Vector2(_size().x + v, _size().y * GRAVEYARD_Y + u)
 
 
+## Wie _gy, aber für das Bergwerk.
+func _my(u: float, v: float) -> Vector2:
+	return Vector2(_size().x + v, _size().y * MINE_Y + u)
+
+
 func _in_clearing(p: Vector2) -> bool:
 	var c := _gy(0.0, 0.0)
-	return absf(p.y - c.y) < CLEARING.x and p.x > c.x and p.x < c.x + CLEARING.y * 1.9
+	if absf(p.y - c.y) < CLEARING.x and p.x > c.x and p.x < c.x + CLEARING.y * 1.9:
+		return true
+	var m := _my(0.0, 0.0)
+	return absf(p.y - m.y) < 4.5 and p.x > m.x and p.x < m.x + 6.0
 
 
 func _add_graveyard() -> void:
@@ -269,21 +280,49 @@ func _add_graveyard() -> void:
 	for side in [-1.0, 1.0]:
 		var at := _gy(side * 0.9, fv)
 		_prop(S % "lightpost_single", at, 1.6, face, IRON)
-		var light := OmniLight3D.new()
-		light.light_color = LANTERN_LIGHT
-		light.light_energy = 1.6
-		light.omni_range = 3.5
-		light.position = Vector3(at.x, 1.35, at.y)
-		add_child(light)
-		_lights.append(light)
+		_lights.append(_lamp_light(Vector3(at.x, 1.35, at.y)))
+
+
+func _add_mine() -> void:
+	var face := -PI / 2.0  # Vorderseite zur Karte (Richtung -x)
+	# Felsen und Steinspitzen als Hang, aus dem die Schienen kommen
+	_prop(S % "mine_stalags_5", _my(0.0, 6.2), 3.2, 0.0)
+	_prop(S % "mine_stalag_3", _my(-1.7, 5.6), 2.4, 1.0)
+	_prop(S % "mine_stalag_3", _my(1.9, 6.0), 2.8, 2.5)
+	_prop(S % "mine_rocks_1", _my(-2.6, 4.3), 1.7, 0.4)
+	_prop(S % "mine_rocks_5", _my(2.6, 3.9), 1.7, 2.0)
+	# Gleis zum Spielfeld hin, die Lore darauf
+	for i in 4:
+		_prop(S % "mine_rail", _my(0.0, 5.0 - i), 1.02, face)
+	_prop(S % "mine_rail_end", _my(0.0, 1.0), 1.0, face)
+	_prop(S % "mine_cart", _my(0.0, 3.4), 1.15, face)
+	_prop(S % "mine_chest", _my(-2.0, 2.2), 0.7, face + 0.4)
+	_prop(S % "mine_coins", _my(-1.3, 1.6), 0.45, 0.0)
+	# zwei Stützen mit hängenden Laternen neben dem Gleis, nachts warm beleuchtet
+	for side in [-1.0, 1.0]:
+		var at := _my(side * 1.3, 4.4)
+		_prop(S % "mine_frame_1", at, 2.2, face)
+		var lamp := _my(side * 1.3, 4.4 - 0.7)
+		_prop(S % "mine_lamp_hanging", lamp, 0.6, 0.0, Color.WHITE, 1.45)
+		_lights.append(_lamp_light(Vector3(lamp.x, 1.55, lamp.y)))
+
+
+func _lamp_light(at: Vector3) -> OmniLight3D:
+	var light := OmniLight3D.new()
+	light.light_color = LANTERN_LIGHT
+	light.light_energy = 1.6
+	light.omni_range = 3.5
+	light.position = at
+	add_child(light)
+	return light
 
 
 ## Einzelnes Modell mit größter Kante size, wie der Wald abgedunkelt (auch nachts über _forest_mats).
-func _prop(path: String, at: Vector2, size: float, rot: float, tint := Color.WHITE) -> void:
+func _prop(path: String, at: Vector2, size: float, rot: float, tint := Color.WHITE, y := 0.0) -> void:
 	var model := ModelLoader.instantiate(path, size)
 	if model == null:
 		return
-	model.position = Vector3(at.x, 0.0, at.y)
+	model.position = Vector3(at.x, y, at.y)
 	model.rotation.y = rot
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		for i in mi.mesh.get_surface_count():

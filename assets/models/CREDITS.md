@@ -54,7 +54,10 @@ Von Lukas hochgeladen, Lizenztexte in `licenses/`. Verwendet in `scripts/map/eev
 - `nature/hp_*.glb`: "HandPainted Plants 2" von Nobiax / Yughues, CC0 (Pflanzen-Karten mit Alpha, Textur über das Feld
   `textur` in `tools/modelle/auswahl.json`).
 
-Nicht verwendet: "free_mine_assets" (hochgeladen 2026-10-21) enthält keinen Lizenztext und keine Quellenangabe.
+- `scenery/mine_*.glb` (Bergwerk mit Lore unterhalb des Friedhofs): "Free Mine Assets Pack", CC0, OpenGameArt
+  (https://opengameart.org/content/free-mine-assets-pack; das Zip selbst enthält keinen Lizenztext, Lizenz laut Lukas
+  und Seite CC0). Umgewandelt mit `tools/modelle/mine_umwandeln.py`: Materialien neu aufgebaut, Schienen flach gelegt,
+  Texturen auf 256 px.
 
 ## Boss-Modell (CC-BY 3.0, Nennung Pflicht)
 

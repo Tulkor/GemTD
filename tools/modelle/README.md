@@ -19,3 +19,5 @@ Animationen ansehen: `tools/modelle/vorschau.sh bogen.png --animationen assets/m
 Gegner-Modelle (Skelett, Schleim, Drache, Fledermaus, Quaternius CC0): `tools/modelle/monster_umwandeln.py` wandelt die FBX
 aus dem "Animated Monster Pack" mit denselben Animationsnamen wie beim Boss um:
 `<python mit bpy> -I tools/modelle/monster_umwandeln.py -- "<Paket>/FBX" assets/models/enemies`.
+
+Bergwerk (eeveTD): `<python mit bpy> -I tools/modelle/mine_umwandeln.py -- <mine_parts.blend> /tmp/mine`, danach die gebrauchten `mine_*.glb` mit `pack_gltf` verkleinert nach `assets/models/scenery/`. Kirche: `tools/modelle/kirche_umwandeln.py`.
