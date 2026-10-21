@@ -9,13 +9,14 @@ const FLY_HEIGHT := 1.4
 const BOSS_MODEL := "res://assets/models/enemies/little_man.glb"
 const BOSS_MODEL_HEIGHT := 1.1
 ## Gegner-Modelle je Form (Animated Monster Pack von Quaternius, tools/modelle/monster_umwandeln.py):
-## [Pfad, längste Kante in Towerbreiten bei size 1, Material in Gegnerfarbe, Anteil der Gegnerfarbe].
+## [Pfad, längste Kante in Towerbreiten bei size 1, Material in Gegnerfarbe, Anteil der Gegnerfarbe, Drehung].
+## Die Quaternius-Monster schauen im Paket in die Gegenrichtung des Boss-Modells, daher um 180° gedreht.
 const MONSTERS := {
-	"boss": [BOSS_MODEL, BOSS_MODEL_HEIGHT, "", 0.0],
-	"cube": ["res://assets/models/enemies/skeleton.glb", 0.75, "Skeleton", 0.35],
-	"pyramid": ["res://assets/models/enemies/slime.glb", 0.6, "Body", 0.85],
-	"sphere": ["res://assets/models/enemies/dragon.glb", 0.85, "Main", 0.8],
-	"sphere_mass": ["res://assets/models/enemies/bat.glb", 0.7, "Main", 0.8],
+	"boss": [BOSS_MODEL, BOSS_MODEL_HEIGHT, "", 0.0, 0.0],
+	"cube": ["res://assets/models/enemies/skeleton.glb", 0.75, "Skeleton", 0.35, PI],
+	"pyramid": ["res://assets/models/enemies/slime.glb", 0.6, "Body", 0.85, PI],
+	"sphere": ["res://assets/models/enemies/dragon.glb", 0.85, "Main", 0.8, PI],
+	"sphere_mass": ["res://assets/models/enemies/bat.glb", 0.7, "Main", 0.8, PI],
 }
 static var _tinted := {}  ## "Material|Farbe" -> eingefärbte Kopie, geteilt von allen Gegnern gleicher Farbe
 
@@ -430,8 +431,10 @@ func _build_visual() -> void:
 			_model_path = look[0]
 			_model_size = float(look[1]) * size
 			model = ModelLoader.instantiate(_model_path, _model_size)
-			if model != null and str(look[2]) != "":
-				_tint_part(model, str(look[2]), float(look[3]))
+			if model != null:
+				model.rotation.y = float(look[4])
+				if str(look[2]) != "":
+					_tint_part(model, str(look[2]), float(look[3]))
 	if model != null:
 		add_child(model)
 		_body.visible = false
