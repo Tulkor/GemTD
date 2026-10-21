@@ -1298,11 +1298,32 @@ func _start_wave() -> void:
 	wave_live = {"gone_hp": 0.0, "gone_dealt": 0.0, "killed": 0, "leaked": 0}
 	var w: Dictionary = waves[wave_index]
 	for g in w.get("groups", []):
-		for i in int(g.get("count", 1)):
-			spawn_queue.append(g)
+		spawn_queue.append_array(group_queue(g))
 	spawn_timer = 0.5
 	Sfx.play("wave_start")
 	_refresh_hud()
+
+
+## Gegner einer Gruppe in Spawn-Reihenfolge. Massenwellen (Feld "pack", bei Pyramiden-Gegnern Standard 5)
+## kommen in Trupps: innerhalb eines Trupps im Abstand "pack_gap", ein neuer Trupp startet alle pack × interval
+## Sekunden, so bleibt die Dauer der Welle gleich wie einzeln. pack 1 = alle einzeln.
+static func group_queue(g: Dictionary) -> Array:
+	var count := int(g.get("count", 1))
+	var pack := int(g.get("pack", 5 if str(g.get("shape", "")) == "pyramid" else 1))
+	var out := []
+	if pack <= 1 or count <= 1:
+		for i in count:
+			out.append(g)
+		return out
+	var interval := float(g.get("interval", 1.0))
+	var gap := minf(float(g.get("pack_gap", 0.2)), interval)
+	var inside := g.duplicate()
+	inside["interval"] = gap
+	var last := g.duplicate()
+	last["interval"] = maxf(pack * interval - (pack - 1) * gap, gap)
+	for i in count:
+		out.append(last if i % pack == pack - 1 else inside)
+	return out
 
 
 func _process_wave(delta: float) -> void:

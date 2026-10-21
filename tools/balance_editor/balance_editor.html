@@ -250,7 +250,7 @@ const STAT_LABELS = {
   damage: "Schaden (min / max)", cooldown: "Abklingzeit (s)", range: "Reichweite (Towerbreiten)", range_air: "Reichweite Luft",
   cost: "Kosten", value: "Wert", build_time: "Bauzeit (s)", lumber: "Holz",
   hp: "Leben", speed: "Tempo", armor: "Rüstung", bounty: "Kopfgeld", size: "Größe",
-  count: "Anzahl", interval: "Abstand (s)", jv: "HP-Faktor (jv)",
+  count: "Anzahl", interval: "Abstand (s)", pack: "Gruppengröße", pack_gap: "Abstand in der Gruppe (s)", jv: "HP-Faktor (jv)",
 };
 const TOWER_KEYS = ["damage", "cooldown", "range", "range_air", "cost", "value", "build_time"];
 const ENEMY_KEYS = ["hp", "speed", "armor", "bounty", "damage", "size", "jv"];
@@ -527,7 +527,8 @@ function viewGemWave(i) {
     const used = FILES[file].cur.waves.map((w, k) => (w.groups.some((x) => x.enemy === g.enemy) ? k + 1 : 0)).filter(Boolean);
     box.append(el("h2", {}, "Gruppe " + (gi + 1)));
     box.append(el("div", { class: "stats", style: "margin-bottom:10px" },
-      ["count", "interval"].filter((k) => k in g).map((k) => statField(STAT_LABELS[k], { file, path: ["waves", i, "groups", gi, k] }))));
+      ["count", "interval", "pack", "pack_gap"].filter((k) => k in g).map((k) => statField(STAT_LABELS[k], { file, path: ["waves", i, "groups", gi, k] }))));
+    if ("pack" in g) box.append(el("div", { class: "note" }, "Massenwelle in Gruppen: eine Gruppe startet alle Gruppengröße × Abstand Sekunden, Gruppengröße 1 = alle einzeln."));
     box.append(enemyCard(g.enemy, el("div", { class: "note" }, "Gegnerwerte gelten in " + (used.length > 1 ? "den Wellen " + used.join(", ") : "Welle " + used[0]))));
   });
   return box;

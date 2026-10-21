@@ -264,8 +264,7 @@ func apply_state(s: Dictionary) -> void:
 		# Wellenstart: Warteschlange wie beim Host, sie schrumpft mit "q" aus den Gegner-Meldungen
 		g.spawn_queue.clear()
 		for grp in g.waves[g.wave_index].get("groups", []) if g.wave_index < g.waves.size() else []:
-			for i in int(grp.get("count", 1)):
-				g.spawn_queue.append(grp)
+			g.spawn_queue.append_array(g.group_queue(grp))
 		g.wave_live = {"gone_hp": 0.0, "gone_dealt": 0.0, "killed": 0, "leaked": 0}
 	elif phase != g.Phase.WAVE and was_phase == g.Phase.WAVE:
 		g.spawn_queue.clear()
