@@ -777,6 +777,8 @@ func _choose(route: String, choices: Array) -> Dictionary:
 func _teleport(e: MaulEnemy, leg: int) -> void:
 	var from := e.position
 	e.leg = leg
+	e.leg_from = e.traveled
+	e.path_len = -1.0
 	var r := _leg_path(e, leg)
 	if r.path.is_empty():
 		r = _route(e.legs[leg].start, e.legs[leg].points, "ghost")

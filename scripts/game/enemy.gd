@@ -78,6 +78,9 @@ var def_model := ""
 var def_model_scale := 1.0
 var _body_mat: StandardMaterial3D
 var _bar_fg: MeshInstance3D
+var _bar_bg: MeshInstance3D
+var bar_shown := false          ## Lebensbalken einmal eingeblendet, bleibt er an
+var path_len := -1.0             ## Länge des Wegs in Towerbreiten, -1 = beim nächsten Bedarf neu messen
 var _body: MeshInstance3D
 var _anim: AnimationPlayer      ## nur bei animierten Modellen
 var _model: Node3D
@@ -479,10 +482,12 @@ func _build_visual() -> void:
 	var bar_y := _body.position.y + height / 2.0 + 0.25
 	if _model != null:
 		bar_y = maxf(bar_y, ModelLoader.aabb(_model, Transform3D()).end.y + 0.2)
-	var bg := _bar(Color(0, 0, 0, 0.8), 0)
-	bg.position.y = bar_y
+	_bar_bg = _bar(Color(0, 0, 0, 0.8), 0)
+	_bar_bg.position.y = bar_y
 	_bar_fg = _bar(Color("e74c3c"), 1)
 	_bar_fg.position.y = bar_y
+	_bar_bg.visible = false
+	_bar_fg.visible = false
 
 
 ## Welches Gegner-Modell: Boss, Flieger (Massenflieger als Fledermaus), Massenwelle, sonst Bodengegner.
@@ -525,7 +530,33 @@ func _bar(col: Color, priority: int) -> MeshInstance3D:
 	return m
 
 
+## Lebensbalken: Bosse immer, Massenwellen nie, alle anderen erst auf dem letzten Stück des Wegs
+## (balance.json → health_bar_last, Anteil der Strecke).
+func bar_visible() -> bool:
+	if boss:
+		return true
+	if shape() == "pyramid":
+		return false
+	return route_progress() >= 1.0 - float(Database.balance.get("health_bar_last", 0.1))
+
+
+## Anteil des Wegs, den der Gegner schon hinter sich hat (0..1).
+func route_progress() -> float:
+	if path_len < 0.0:
+		path_len = 0.0
+		if remote and remote_field != null:
+			path_len = remote_field.path_length(flying, lane)
+		else:
+			for i in range(1, path.size()):
+				path_len += path[i - 1].distance_to(path[i])
+	return traveled / path_len if path_len > 0.0 else 0.0
+
+
 func _update_visual() -> void:
+	if not bar_shown and bar_visible():
+		bar_shown = true
+		_bar_bg.visible = true
+		_bar_fg.visible = true
 	_bar_fg.scale.x = maxf(clampf(hp / max_hp, 0.0, 1.0), 0.001)
 	var tint := color
 	if poison_time > 0.0:

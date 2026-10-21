@@ -15,6 +15,8 @@ var invisible := false     ## nur angreifbar, wo jemand enttarnt
 var frost := false         ## Frost-Aura: Tower in der Nähe greifen langsamer an
 var leak_cost := 1         ## Teamleben, wenn er durchkommt
 var detected_until := 0.0  ## Spielzeit, bis zu der er sichtbar ist
+var leg_from := 0.0        ## zurückgelegte Strecke beim Betreten des aktuellen Abschnitts
+var net_bar := false       ## Koop-Mitspieler: Lebensbalken laut Host sichtbar
 
 
 func take_damage(amount: float, damage_type := "") -> float:
@@ -35,6 +37,25 @@ func take_spell_damage(amount: float) -> float:
 	if armor_type == "hero":
 		f *= float(MaulData.rules().get("spell_hero_factor", 0.7))
 	return take_raw_damage(amount * f)
+
+
+## Lebensbalken erst im letzten Abschnitt der Route; Koop-Mitspieler übernehmen die Entscheidung des Hosts.
+func bar_visible() -> bool:
+	if game != null and game.mirror:
+		return net_bar
+	return super.bar_visible()
+
+
+func route_progress() -> float:
+	if leg < legs.size() - 1:
+		return 0.0
+	if not chose and game != null and not (game.map.maul.routes[route].get("choices", []) as Array).is_empty():
+		return 0.0
+	if path_len < 0.0:
+		path_len = 0.0
+		for i in range(1, path.size()):
+			path_len += path[i - 1].distance_to(path[i])
+	return (traveled - leg_from) / path_len if path_len > 0.0 else 0.0
 
 
 func _update_visual() -> void:
