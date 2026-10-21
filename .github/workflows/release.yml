@@ -1,0 +1,83 @@
+# Baut die Windows-Version auf GitHub und veröffentlicht sie als Release v0.<N> mit GemTD_V0_<N>.zip.
+# Start: von Hand (Actions > Release > Run workflow, auch von Claude über die API) oder durch einen
+# hochgeladenen Tag v0.<N>. Notizen: Eingabe "notes", sonst docs/releases/V0.<N>.md, sonst ein
+# Entwurf aus tools/release_notes.py.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      nummer:
+        description: "Build-Nummer N (Tag v0.N, GemTD_V0_N.zip)"
+        required: true
+      ref:
+        description: "Branch, Tag oder Commit, der gebaut wird"
+        default: main
+      notes:
+        description: "Release-Notes (Markdown), leer = Datei oder Entwurf"
+        default: ""
+  push:
+    tags: ["v0.*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NUMMER: ${{ inputs.nummer || '' }}
+      REF: ${{ inputs.ref || github.ref }}
+      NOTES: ${{ inputs.notes || '' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Nummer bestimmen
+        run: |
+          if [ -z "$NUMMER" ]; then NUMMER="${GITHUB_REF_NAME#v0.}"; fi
+          case "$NUMMER" in ''|*[!0-9]*) echo "Ungültige Nummer: $NUMMER"; exit 1 ;; esac
+          echo "NUMMER=$NUMMER" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
+          fetch-depth: 0
+
+      - name: Godot zwischenspeichern
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/bin/godot
+            ~/.local/share/godot/export_templates
+          key: godot-4.3-windows
+
+      - name: Godot und Windows-Vorlage
+        run: tools/setup_godot.sh
+
+      - name: Windows-Build
+        run: |
+          mkdir -p dist
+          tools/build_windows.sh --ziel dist --ohne-tests --nummer "$NUMMER" | tee dist/build.log
+          test -s "dist/GemTD_V0_${NUMMER}.zip"
+
+      - name: Release-Notes
+        run: |
+          if [ -n "$NOTES" ]; then
+            printf '%s\n' "$NOTES" > dist/notes.md
+          elif [ -f "docs/releases/V0.${NUMMER}.md" ]; then
+            cp "docs/releases/V0.${NUMMER}.md" dist/notes.md
+          else
+            python3 tools/release_notes.py "$NUMMER" --aus=dist
+            mv "dist/release_V0.${NUMMER}.md" dist/notes.md
+          fi
+
+      - name: Release veröffentlichen
+        run: |
+          gh release create "v0.${NUMMER}" "dist/GemTD_V0_${NUMMER}.zip" \
+            --target "$(git rev-parse HEAD)" \
+            --title "TD Hub V0.${NUMMER}" \
+            --notes-file dist/notes.md
