@@ -75,3 +75,21 @@ static func side_panel(layer: CanvasLayer, width: float) -> VBoxContainer:
 	box.add_theme_constant_override("separation", 8)
 	margin.add_child(box)
 	return box
+
+
+## Dateiauswahl für eine JSON-Datei irgendwo auf dem Rechner (z. B. aus dem HTML-Editor, tools/html_editor/).
+## Ruft on_loaded mit dem gelesenen Dictionary und dem Dateinamen auf; bei ungültigem Inhalt mit {}.
+static func open_json_file(parent: Node, on_loaded: Callable) -> void:
+	var dlg := FileDialog.new()
+	dlg.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dlg.access = FileDialog.ACCESS_FILESYSTEM
+	dlg.use_native_dialog = true
+	dlg.filters = PackedStringArray(["*.json ; JSON"])
+	dlg.title = parent.tr("Datei importieren")
+	parent.add_child(dlg)
+	dlg.file_selected.connect(func(path: String):
+		var d = Database.load_json(path)
+		on_loaded.call(d if typeof(d) == TYPE_DICTIONARY else {}, path.get_file())
+		dlg.queue_free())
+	dlg.canceled.connect(dlg.queue_free)
+	dlg.popup_centered_ratio(0.7)

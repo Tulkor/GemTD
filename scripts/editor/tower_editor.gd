@@ -46,6 +46,7 @@ func _ready() -> void:
 	UiUtil.button("+ Gem", th, func(): _new_tower("gem"))
 	UiUtil.button("+ Spezial-Tower", th, func(): _new_tower("special"))
 	UiUtil.button("Duplizieren", th, _duplicate)
+	UiUtil.button("Datei importieren", th, _import).tooltip_text = "Tower-Datei (.json) laden, z. B. aus dem HTML-Editor"
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	th.add_child(fill)
@@ -168,6 +169,19 @@ func _duplicate() -> void:
 	current["name"] = str(current.get("name", "")) + tr(" (Kopie)")
 	tower_list.deselect_all()
 	_build_form()
+
+
+func _import() -> void:
+	UiUtil.open_json_file(self, func(d: Dictionary, file: String):
+		if not d.get("tiers") is Array:
+			status_label.text = tr("Keine Tower-Datei: ") + file
+			return
+		current = d
+		if not current.has("id"):
+			current["id"] = file.get_basename()
+		tower_list.deselect_all()
+		_build_form()
+		status_label.text = tr("Importiert: %s. Speichern legt den Tower ab.") % file)
 
 
 func _default_tier() -> Dictionary:
