@@ -217,7 +217,9 @@ func _ready() -> void:
 		add_child(net_sync)
 		net_panel = NetPanel.new()
 		net_panel.game = self
+		net_panel.avoid = hud.bottom
 		add_child(net_panel)
+		hud.tower_list.limits.append(net_panel.panel)
 
 
 func _exit_tree() -> void:
@@ -843,12 +845,17 @@ func choice_options(t: Tower) -> Array:
 			if same < n:
 				continue
 			var steps := 1 if n == 2 else 2
+			var o: Dictionary
 			if t.tier + steps <= max_tier:
-				opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps))
+				o = _keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps)
 			else:
 				var overflow := str(Database.balance.get("overflow_tower", ""))
-				if Database.towers.has(overflow):
-					opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(overflow, 0)], overflow, 0))
+				if not Database.towers.has(overflow):
+					break
+				o = _keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(overflow, 0)], overflow, 0)
+			o.same = n
+			opts.append(o)
+			if t.tier + steps > max_tier:
 				break
 	var others := round_towers.filter(func(o): return o != t)
 	for sid in Database.special_ids():
@@ -1714,8 +1721,26 @@ func _refresh_selection() -> void:
 	if Database.towers.get(selected.tower_id, {}).get("category", "gem") == "gem":
 		info["tier"] = selected.tier
 	hud.set_selection(info)
-	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
+	hud.set_options(_promote_combine(tower_options(selected).map(func(o): return _option_view(selected, o))))
 	hud.set_options_enabled(true)
+
+
+## Lässt sich der Gem mit einem zweiten gleichen um eine Qualität verbessern, wird das die große Aktion
+## (Leertaste) und „Behalten“ ein kleiner Knopf. Die Reihenfolge bleibt, sie ist der Index für option_chosen.
+func _promote_combine(views: Array) -> Array:
+	var i := -1
+	for k in views.size():
+		if views[k].get("combine_up", false):
+			i = k
+			break
+	if i < 0:
+		return views
+	for v in views:
+		if v.style == "primary":
+			v.style = "normal"
+	views[i].style = "primary"
+	views[i].hint = tr("2 gleiche Gems kombinieren")
+	return views
 
 
 ## Ob eines der Rezepte mit den fertigen Towern auf dem Feld komplett wäre (für den Hinweis außerhalb der Welle).
@@ -1803,6 +1828,8 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
 		v.style = "primary"
 		v.label = tr("Behalten")
+	elif int(o.get("same", 0)) == 2:
+		v.combine_up = true
 	# Symbol + Zielname statt "Abstufen → …", "2 gleiche → …", "Kombinieren → …"
 	var overflow := str(Database.balance.get("overflow_tower", ""))
 	if o.action == "upgrade" or (o.action == "keep" and ((o.id == t.tower_id and o.tier > t.tier) or (o.id == overflow and o.id != t.tower_id))):
