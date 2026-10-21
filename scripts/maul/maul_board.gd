@@ -66,6 +66,8 @@ func rebuild() -> void:
 	if mm != null and _floor_mat != null:
 		_floor_mat.set_shader_parameter("grid_origin", _grid_center(mm))
 		_floor_mat.set_shader_parameter("tint", _tint_texture(mm))
+		_floor_mat.set_shader_parameter("tint_floor", 1.0)
+		_floor_mat.set_shader_parameter("tint_lines", 0.0)
 
 
 
