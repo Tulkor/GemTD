@@ -59,6 +59,7 @@ const TRAP_CELLS := 3
 var map: MapData
 var rocks: Dictionary = {}
 var path_points := PackedVector2Array()
+var marker_lanes: Array = []  ## Bahnen mit Beschriftung an den Wegpunkten, leer = alle (Mehrspieler: nur die eigene)
 var path_color := COL_PATH
 var hover_cell := Vector2i(-1, -1)  ## Anker (oben links) der Hover-Markierung
 var hover_size := TOWER_CELLS       ## Kantenlänge der Hover-Markierung in Feldern
@@ -418,22 +419,37 @@ func refresh_hover() -> void:
 		_hover_mat.albedo_color = Color(0.2, 1, 0.2, 0.4) if hover_ok else Color(1, 0.2, 0.2, 0.4)
 
 
+## Nur diese Bahnen beschriften (leer = alle); die Ringe aller Wegpunkte bleiben stehen.
+func set_marker_lanes(lanes: Array) -> void:
+	marker_lanes = lanes
+	if map != null and _markers != null:
+		_rebuild_markers()
+
+
+## Texte der Wegpunkt-Beschriftungen (für Tests).
+func marker_texts() -> Array:
+	return _markers.get_children().filter(func(n): return n is Label3D).map(func(n): return n.text)
+
+
 func _rebuild_markers() -> void:
 	for c in _markers.get_children():
+		_markers.remove_child(c)
 		c.queue_free()
 	# Maul-Maps: Spawn und Checkpoints jeder Bahn, Spawns mit Nummer ("S2"), Checkpoints z. B. "2.1"
-	# (teilen sich Bahnen einen Punkt, steht dort ein Ring mit beiden Namen)
+	# (teilen sich Bahnen einen Punkt, steht dort ein Ring mit beiden Namen). Ist nur eine Bahn
+	# beschriftet (Mehrspieler, eigene Bahn), steht dort nur die Nummer wie bei einer Bahn.
 	var labels := {}
 	var order: Array[Vector2i] = []
-	var many := map.lane_count() > 1
+	var shown := marker_lanes.filter(func(l): return l < map.lane_count()) if not marker_lanes.is_empty() else range(map.lane_count())
+	var many := shown.size() > 1
 	for lane in map.lane_count():
 		var pts := map.waypoints(lane)
 		for i in pts.size() - 1:
-			var text := ("S%d" % (lane + 1) if many else "S") if i == 0 else ("%d.%d" % [lane + 1, i] if many else str(i))
 			if not labels.has(pts[i]):
 				labels[pts[i]] = []
 				order.append(pts[i])
-			labels[pts[i]].append(text)
+			if shown.has(lane):
+				labels[pts[i]].append(("S%d" % (lane + 1) if many else "S") if i == 0 else ("%d.%d" % [lane + 1, i] if many else str(i)))
 	for c in order:
 		_add_marker(c, " / ".join(labels[c]), style.marker)
 	_add_marker(map.goal, "Z", style.marker)
@@ -472,6 +488,8 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.position = to_3d(cell_center(c), 0.04)
 	_markers.add_child(ring)
+	if text == "":
+		return
 	var label := Label3D.new()
 	label.text = text
 	label.font_size = 96

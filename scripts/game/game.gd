@@ -190,6 +190,7 @@ func _ready() -> void:
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
 	if has_other_paths():
 		hud.add_paths_toggle(set_show_all_paths)
+		board.set_marker_lanes(_own_lanes())
 
 	setup_done = not saved.is_empty() or Session.skip_setup
 	if not setup_done:
@@ -377,6 +378,10 @@ func _own_lane(i: int) -> bool:
 	return players.size() <= 1 or map.lane_player(i) == local_player
 
 
+func _own_lanes() -> Array:
+	return range(map.lane_count()).filter(_own_lane)
+
+
 func has_other_paths() -> bool:
 	return range(map.lane_count()).any(func(i): return not _own_lane(i))
 
@@ -385,6 +390,7 @@ func set_show_all_paths(on: bool) -> void:
 	show_all_paths = on
 	if hud.paths_button != null:
 		hud.paths_button.set_pressed_no_signal(on)
+	board.set_marker_lanes([] if on else _own_lanes())
 	_update_paths()
 
 
