@@ -44,6 +44,8 @@ var _leave_status: Label
 var _save_leave: Button
 var _leave_plain: Button
 var _leave_stay: Button
+var _leave_title: Label
+var settings_panel: SettingsPanel
 var game_over_title: Label
 var game_over_stats: Label
 var game_over_boss: Label        ## Endboss-Schadenscheck
@@ -192,7 +194,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if game_over != null and game_over.visible:
 		return
 	if leave_confirm != null and leave_confirm.visible:
-		if event.keycode == KEY_ESCAPE and not _leave_stay.disabled:
+		if event.keycode == KEY_ESCAPE and settings_panel.visible:
+			settings_panel.close()
+		elif event.keycode == KEY_ESCAPE and not _leave_stay.disabled:
 			close_leave_confirm()
 		get_viewport().set_input_as_handled()
 		return
@@ -1317,7 +1321,8 @@ func _build_game_over() -> void:
 	game_over.hide()
 
 
-## Rückfrage, bevor der Menü-Knopf die laufende Partie verlässt. Das Spiel ist solange pausiert.
+## Spielmenü (Menü-Knopf oder Esc): weiterspielen, Einstellungen, speichern und verlassen.
+## Beim Schließen des Fensters dieselbe Rückfrage als „Spiel verlassen?“. Das Spiel ist solange pausiert.
 func _build_leave_confirm() -> void:
 	leave_confirm = Control.new()
 	leave_confirm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1337,35 +1342,41 @@ func _build_leave_confirm() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	var title := UiTheme.title(UiUtil.label("Spiel verlassen?", v, 26))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_title = UiTheme.title(UiUtil.label("Menü", v, 26))
+	_leave_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_stay = _button("Weiterspielen", v, close_leave_confirm)
+	_leave_stay.custom_minimum_size.y = 52
+	_leave_stay.add_theme_font_size_override("font_size", 18)
+	UiTheme.accent_button(_leave_stay, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	_button("Einstellungen", v, func(): settings_panel.open()).custom_minimum_size.y = 44
+	v.add_child(_spacer(0))
 	_leave_text = UiUtil.wrap_label("", v, 380)
 	_leave_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_leave_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_spacer(0))
 	_save_leave = _button("Speichern und verlassen", v, func(): save_and_leave_requested.emit(_leave_quit))
-	_save_leave.custom_minimum_size.y = 52
-	_save_leave.add_theme_font_size_override("font_size", 18)
-	UiTheme.accent_button(_save_leave, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	_save_leave.custom_minimum_size.y = 44
+	_save_leave.add_theme_color_override("font_color", UiTheme.GOLD)
 	_leave_plain = _button("Ohne Speichern verlassen", v, func(): leave_requested.emit(_leave_quit))
 	_leave_plain.custom_minimum_size.y = 44
 	_leave_plain.add_theme_color_override("font_color", UiTheme.MISSING)
 	_leave_plain.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
-	_leave_stay = _button("Weiterspielen", v, close_leave_confirm)
-	_leave_stay.custom_minimum_size.y = 44
 	_leave_status = UiUtil.label("", v, 14)
 	_leave_status.add_theme_color_override("font_color", UiTheme.CYAN)
 	_leave_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_leave_status.hide()
-	var hint := UiUtil.label("Esc: weiterspielen", v, 12)
+	var hint := UiUtil.label("Esc: weiterspielen", v, 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	leave_confirm.hide()
+	settings_panel = SettingsPanel.new(false, true)
+	leave_confirm.add_child(settings_panel)
 
 
 ## quit: das Fenster wird geschlossen statt ins Menü zu gehen.
 func open_leave_confirm(quit := false) -> void:
 	_leave_quit = quit
+	_leave_title.text = tr("Spiel verlassen?") if quit else tr("Menü")
+	settings_panel.hide()
 	var mode: String = save_mode.call()
 	_save_leave.visible = mode == "single" or mode == "host"
 	_leave_plain.text = tr("Ohne Speichern verlassen") if _save_leave.visible else (tr("Beenden") if quit else tr("Verlassen"))
@@ -1394,6 +1405,7 @@ func set_leave_busy(text: String, error := false) -> void:
 
 
 func close_leave_confirm() -> void:
+	settings_panel.hide()
 	leave_confirm.hide()
 	get_tree().paused = false
 

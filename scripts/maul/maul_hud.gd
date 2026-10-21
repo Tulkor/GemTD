@@ -46,6 +46,7 @@ var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var settings_panel: SettingsPanel
 var _debug: MaulDebug
 var _debug_button: Button
 
@@ -118,7 +119,7 @@ func _build_top_bar() -> void:
 		_debug_button.tooltip_text = "Debug-Menü"
 		_debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		_debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
-	UiUtil.button("Menü", row, func(): _menu.visible = not _menu.visible)
+	UiUtil.button("Menü", row, toggle_menu)
 	_build_menu()
 
 
@@ -164,10 +165,21 @@ func _build_menu() -> void:
 	UiTheme.title(UiUtil.label("Menü", box), 22)
 	var resume := UiUtil.button("Weiterspielen", box, func(): panel.hide())
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
+	UiUtil.button("Einstellungen", box, func(): settings_panel.open())
 	if game.sync == null:
 		UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
 	UiUtil.button("Hauptmenü", box, func(): Session.goto(Session.MAIN_MENU))
 	_menu = panel
+	settings_panel = SettingsPanel.new(false, true)
+	root.add_child(settings_panel)
+
+
+## Menü-Knopf und Esc: offenes Einstellungsfenster zuerst schließen.
+func toggle_menu() -> void:
+	if settings_panel.visible:
+		settings_panel.close()
+	else:
+		_menu.visible = not _menu.visible
 
 
 # --- Laden rechts -----------------------------------------------------------------
