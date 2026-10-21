@@ -11,7 +11,8 @@ extends Node
 ##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum
 ##                           (oder --punkt=x,y), Abstand --abstand=34;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
-##                           --profi (Filialwahl: Reiter Profi-Filialen), --bauen=h01P,h02O (diese Tower zuerst)
+##                           --profi (Filialwahl: Reiter Profi-Filialen), --profil (Filialwahl: Profil-Fenster offen),
+##                           --bauen=h01P,h02O (diese Tower zuerst)
 ##   --map=<id>              Map aus data/maps (Standard classic)
 ##   --runden=N              N Runden automatisch spielen (Gems am Weg setzen, ersten behalten, Welle 8× laufen)
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
@@ -221,6 +222,8 @@ func _prepare_maul(game: Node) -> void:
 		if opts.has("profi"):
 			game.hud._setup._kind = "pro"
 			game.hud._setup._build_cards()
+		if opts.has("profil"):
+			game.hud._setup._show_profile()
 		return
 	var shop: String = opts.filiale
 	game.start_game(shop, 1, "group", opts.has("sandbox"))

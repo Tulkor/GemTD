@@ -63,6 +63,8 @@ var levels_done := 0
 var debug_free := false
 var debug_xp := false
 var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
+var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
+var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -544,7 +546,16 @@ func _finish(p: Phase) -> void:
 	phase = p
 	Engine.time_scale = 1.0
 	build_id = ""
+	_record_profile(p == Phase.VICTORY)
 	hud.show_game_over(p == Phase.VICTORY)
+
+
+## Partie ins eigene Profil schreiben (auch Koop-Mitspieler, jeder auf seinem Rechner).
+func _record_profile(won: bool) -> void:
+	profile_news = {}
+	if sandbox or debug_used or Session.debug_immortal:
+		return
+	profile_news = MaulProfile.record(shop_of(local_player), difficulty, levels_done, won, enemies_killed, play_time)
 
 
 # --- Wege --------------------------------------------------------------------------
