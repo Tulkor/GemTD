@@ -1705,8 +1705,11 @@ func _refresh_selection() -> void:
 	var body := ""
 	if not selected.is_new and phase <= Phase.CHOOSE and _field_recipe_complete(used):
 		body = tr("Kombinieren geht erst wieder während der Welle.")
-	hud.set_selection({"title": selected.label(), "color": selected.color, "body": body, "used_in": used,
-			"stats": TowerStats.view(selected)})
+	var info := {"title": selected.label(), "color": selected.color, "body": body, "used_in": used,
+			"stats": TowerStats.view(selected)}
+	if Database.towers.get(selected.tower_id, {}).get("category", "gem") == "gem":
+		info["tier"] = selected.tier
+	hud.set_selection(info)
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
 
