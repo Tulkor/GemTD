@@ -30,6 +30,11 @@ var _last := {}  ## Sound-Schlüssel → Zeit (ms) des letzten Abspielens
 var _shot_cache := {}  ## "tower:stufe" → {sound, pitch, db}
 var _amb: AudioStreamPlayer
 var _amb_id := ""
+## Ambiente mit "bursts" (sfx.json): läuft nur ab und zu ein paar Sekunden, dazwischen Pause
+var _amb_bursts := {}
+var _amb_on := false
+var _amb_left := 0.0  ## Sekunden bis zum nächsten Wechsel (Echtzeit, unabhängig vom Spieltempo)
+var _amb_len := 0.0   ## Länge des laufenden Stücks
 
 
 func _ready() -> void:
@@ -196,6 +201,8 @@ func set_ambience(id: String) -> void:
 	if id == _amb_id:
 		return
 	_amb_id = id
+	_amb_bursts = {}
+	_amb_on = false
 	_amb.stop()
 	if id == "":
 		return
@@ -209,8 +216,47 @@ func set_ambience(id: String) -> void:
 		stream.loop_end = int(stream.get_length() * stream.mix_rate)
 	_amb.stream = stream
 	_amb.volume_db = float(_data.sounds[id].get("db", 0.0))
-	if audible:
-		_amb.play()
+	_amb_bursts = _data.sounds[id].get("bursts", {})
+	_amb_on = false
+	if _amb_bursts.is_empty():
+		if audible:
+			_amb.play()
+	else:
+		_amb_left = _rand_range(_amb_bursts.get("first", [2, 6]))
+
+
+## Läuft das Ambiente gerade hörbar (bei "bursts" nur während eines Stücks)?
+func ambience_on() -> bool:
+	return _amb_id != "" and (_amb_bursts.is_empty() or _amb_on)
+
+
+func _process(delta: float) -> void:
+	if _amb_bursts.is_empty() or _amb_id == "":
+		return
+	_amb_left -= delta / maxf(Engine.time_scale, 0.01)
+	var base := float(_data.sounds[_amb_id].get("db", 0.0))
+	if _amb_on:
+		# Ein- und Ausblenden am Anfang und Ende des Stücks
+		var fade := maxf(float(_amb_bursts.get("fade", 1.5)), 0.01)
+		var t := _amb_len - _amb_left
+		var gain := clampf(minf(t, _amb_left) / fade, 0.0, 1.0)
+		_amb.volume_db = base + linear_to_db(maxf(gain, 0.001))
+	if _amb_left > 0.0:
+		return
+	_amb_on = not _amb_on
+	if _amb_on:
+		_amb_len = _rand_range(_amb_bursts.get("play", [5, 9]))
+		_amb_left = _amb_len
+		_amb.volume_db = base - 60.0
+		if audible:
+			_amb.play(randf() * maxf(_amb.stream.get_length() - _amb_len, 0.0))
+	else:
+		_amb_left = _rand_range(_amb_bursts.get("pause", [20, 45]))
+		_amb.stop()
+
+
+func _rand_range(r) -> float:
+	return randf_range(float(r[0]), float(r[1])) if r is Array and r.size() == 2 else float(r)
 
 
 func ambience() -> String:

@@ -23,6 +23,7 @@ PIXA = "freesound_community-"
 SCHNITTE = {
 	# Schüsse (eigene Sounds von Lukas)
 	"shot_pew.wav": ("sound2.wav", 0.0, None, 0.0, 0.08, -3.0, False),
+	"shot_pew_short.wav": ("sound2.wav", 0.0, 0.27, 0.0, 0.08, -3.0, False),  # Magie/Lila: halb so lang
 	"shot_blip.wav": ("sound1.wav", 0.0, None, 0.0, 0.05, -3.0, False),
 	"shot_zap.wav": ("sound3.wav", 0.0, None, 0.0, 0.05, -3.0, False),
 	"shot_blast.wav": ("sound.wav", 0.0, 0.45, 0.0, 0.2, -3.0, False),
