@@ -25,6 +25,20 @@ func _init(gem_color := Color.WHITE, gem_tier := 0, tier_count := 6, px := 36.0,
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
+## Schmale Schrift für die römischen Zahlen: Monospace-Fett gestaucht und enger gesetzt,
+## sonst wird "III" breiter als das Kästchen.
+static var _roman_font: FontVariation
+
+
+static func roman_font() -> Font:
+	if _roman_font == null:
+		_roman_font = FontVariation.new()
+		_roman_font.base_font = UiTheme.font(true)
+		_roman_font.variation_transform = Transform2D(Vector2(0.72, 0.0), Vector2(0.0, 1.0), Vector2.ZERO)
+		_roman_font.spacing_glyph = -3
+	return _roman_font
+
+
 static func roman(gem_tier: int) -> String:
 	return ROMAN[clampi(gem_tier, 0, ROMAN.size() - 1)]
 

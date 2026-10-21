@@ -438,7 +438,7 @@ func _build_bottom() -> void:
 	info_tier.visible = false
 	head.add_child(info_tier)
 	info_tier_label = UiUtil.label("", info_tier, 14)
-	info_tier_label.add_theme_font_override("font", UiTheme.font(true))
+	info_tier_label.add_theme_font_override("font", QualityBadge.roman_font())
 	info_tier_label.add_theme_color_override("font_color", UiTheme.CYAN)
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
@@ -779,7 +779,7 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		badge.offset_bottom = 19
 		b.add_child(badge)
 		var num := UiUtil.label(QualityBadge.roman(int(g.get("tier", 0))), b, 11)
-		num.add_theme_font_override("font", UiTheme.font(true))
+		num.add_theme_font_override("font", QualityBadge.roman_font())
 		num.add_theme_color_override("font_color", UiTheme.TEXT)
 		num.add_theme_color_override("font_outline_color", Color("030108"))
 		num.add_theme_constant_override("outline_size", 4)
