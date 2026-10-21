@@ -142,6 +142,10 @@ func _ready() -> void:
 	_ground_mat.set_shader_parameter("ground_alpha", ground_alpha)
 	for key in style.get("ground", {}):
 		_ground_mat.set_shader_parameter(key, style.ground[key])
+	# Boden und Feld sind durchsichtig (ALPHA im Shader) und werden als große Flächen nach ihrer Mitte
+	# sortiert. Ohne Vorrang malen sie alles Durchsichtige in der hinteren (nördlichen) Hälfte wieder
+	# zu: Bauvorschau, Auswahl, Reichweiten, Schatten der Flieger. Deshalb immer zuerst zeichnen.
+	_ground_mat.render_priority = -2
 	_ground.material_override = _ground_mat
 	_ground.visible = ground_alpha > 0.0
 	add_child(_ground)
@@ -154,6 +158,7 @@ func _ready() -> void:
 	var floor_params := FieldStyle.floor_params()
 	for key in floor_params:
 		_floor_mat.set_shader_parameter(key, floor_params[key])
+	_floor_mat.render_priority = -1
 	_floor.material_override = _floor_mat
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
