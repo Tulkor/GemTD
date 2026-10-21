@@ -36,6 +36,8 @@ extends Node
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
+##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
+##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Boni schon vorher gewählt (z. B. fürs Infofenster)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -200,6 +202,17 @@ func _prepare(game: Node) -> void:
 			for type in String(opts.faehigkeiten).split(","):
 				list.append(Abilities.default_for(type))
 			t.stats["abilities"] = list
+	if opts.has("roguelike") or opts.has("boni"):
+		var r: Rogue = game.enable_rogue()
+		r.on_build()
+		for b in String(opts.get("boni", "")).split(",", false):
+			var p := b.split(":")
+			r.boons[0].append({"id": p[0], "kind": str(Database.towers.get(p[0], {}).get("category", "gem")),
+					"stat": p[1], "value": float(p[2]) if p.size() > 2 else 0.2, "rarity": "common", "wave": 0})
+		game._update_auras()
+		if opts.has("roguelike"):
+			game.wave_index = int(opts.roguelike) if str(opts.roguelike) != "1" else 10
+			r.on_build()
 	if opts.has("auswahl"):
 		if not game.round_towers.is_empty():
 			game._select(game.round_towers[0])

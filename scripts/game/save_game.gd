@@ -68,6 +68,8 @@ static func capture(game) -> Dictionary:
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
 	}
+	if game.rogue != null:
+		st.rogue = game.rogue.to_dict()
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -147,6 +149,10 @@ static func apply(game, s: Dictionary) -> void:
 			ps.stage = game.Phase.BUILD
 		game.players.append(ps)
 	game.acting = clampi(game.local_player, 0, game.players.size() - 1)
+	Session.rogue = s.has("rogue")
+	if s.has("rogue"):
+		game.enable_rogue().from_dict(s.rogue)
+		game._update_auras()
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:

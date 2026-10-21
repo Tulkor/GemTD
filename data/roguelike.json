@@ -1,0 +1,17 @@
+{
+	"_info": "GemTD-Variante Roguelike: nach jeder every-ten Welle wählt jeder Spieler 1 von choices Boni. Ein Bonus gilt für alle Stufen eines Grund-Gems (target gem) oder für einen Spezialtower samt Upgrades (target special), nur für Tower dieses Spielers. stats: Wert = Zuschlag (0.2 = +20 %) bei Seltenheit scale 1; gleiche Boni addieren sich. Fallen sind ausgenommen. owned_weight: so viel wahrscheinlicher sind Spezialtower, die der Spieler schon auf dem Feld hat.",
+	"every": 10,
+	"choices": 3,
+	"target_weights": {"gem": 0.55, "special": 0.45},
+	"owned_weight": 3.0,
+	"stats": {
+		"damage": {"name": "Schaden", "title": "Geschliffene Kanten", "gem": 0.2, "special": 0.25},
+		"speed": {"name": "Angriffstempo", "title": "Schneller Puls", "gem": 0.15, "special": 0.18},
+		"range": {"name": "Reichweite", "title": "Weiter Blick", "gem": 0.1, "special": 0.12}
+	},
+	"rarities": [
+		{"id": "common", "name": "Gewöhnlich", "weight": 60, "scale": 1.0, "color": "TEXT"},
+		{"id": "rare", "name": "Selten", "weight": 30, "scale": 1.6, "color": "CYAN"},
+		{"id": "epic", "name": "Episch", "weight": 10, "scale": 2.5, "color": "PURPLE_LIGHT"}
+	]
+}

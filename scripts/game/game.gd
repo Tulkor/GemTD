@@ -111,6 +111,8 @@ var coop: CoopSync = null
 var mirror := false
 ## Einstellungen vor Runde 1 (setup_panel.gd) bestätigt; bis dahin ist das Feld gesperrt.
 var setup_done := true
+## Variante Roguelike (rogue.gd): Boni alle zehn Wellen, null = klassisch.
+var rogue: Rogue = null
 var net_panel: NetPanel = null
 var _next_enemy_id := 1
 var _cover: Array = []     ## is_covered: [Tower, größte Reichweite] dieses Bilds
@@ -193,6 +195,8 @@ func _ready() -> void:
 		board.set_marker_lanes(_own_lanes())
 
 	setup_done = not saved.is_empty() or Session.skip_setup
+	if Session.skip_setup and saved.is_empty() and Session.rogue:
+		enable_rogue()
 	if not setup_done:
 		hud.add_child(_make_setup_panel())
 	if saved.is_empty():
@@ -648,7 +652,17 @@ func _enter_build() -> void:
 		p.round_towers.clear()
 		p.undo_gems.clear()
 	round_path_start = path_length
+	if rogue != null:
+		rogue.on_build()
 	_refresh_hud()
+
+
+## Variante Roguelike einschalten (Einstellungen vor Runde 1, Spielstand oder Stand vom Host).
+func enable_rogue() -> Rogue:
+	if rogue == null:
+		rogue = Rogue.new(self)
+		add_child(rogue)
+	return rogue
 
 
 func place_gem(c: Vector2i) -> Tower:
@@ -1101,7 +1115,7 @@ func _execute(cmd: Dictionary) -> bool:
 	match str(cmd.get("type", "")):
 		"place":
 			var c: Vector2i = cmd.get("cell", NO_CELL)
-			if stage() != Phase.BUILD or gems_left() <= 0 or not can_place(c):
+			if stage() != Phase.BUILD or gems_left() <= 0 or not can_place(c) or (rogue != null and rogue.pending(acting)):
 				return false
 			return place_gem(c) != null
 		"remove_rocks":
@@ -1121,7 +1135,22 @@ func _execute(cmd: Dictionary) -> bool:
 			Session.difficulty = clampi(int(cmd.get("difficulty", 1)), 0, Session.DIFFICULTIES.size() - 1)
 			Session.score_mode = bool(cmd.get("score_mode", false))
 			score_mode = Session.score_mode
+			Session.rogue = bool(cmd.get("rogue", false)) and Session.game_kind == "gemtd"
+			if Session.rogue:
+				enable_rogue()
 			setup_done = true
+			_refresh_hud()
+			return true
+		"rogue_pick":
+			if rogue == null or not rogue.pending(acting):
+				return false
+			var i := int(cmd.get("index", -1))
+			var offer: Array = rogue.offers[acting]
+			# nur dasselbe Angebot nehmen, das der Spieler gesehen hat
+			if i < 0 or i >= offer.size() or offer[i].id != cmd.get("id") or offer[i].stat != cmd.get("stat"):
+				return false
+			if not rogue.pick(acting, i):
+				return false
 			_refresh_hud()
 			return true
 		"speed":
@@ -1281,6 +1310,8 @@ func _update_auras() -> void:
 				elif type == "damage_aura" and float(ab.bonus) > t.damage_bonus:
 					t.damage_bonus = float(ab.bonus)
 					t.damage_source = src.label()
+	for t in all_towers():
+		t.set_rogue(rogue.bonus_for(t) if rogue != null else {})
 
 
 # --- Welle -------------------------------------------------------------------
@@ -1385,7 +1416,7 @@ func _refresh_cover() -> void:
 	for t in all_towers():
 		var reach := maxf(t.range_cells() if t.can_attack() else 0.0, t._aura_radius())
 		if t.can_attack() and t.stats.has("range_air"):
-			reach = maxf(reach, float(t.stats.range_air))
+			reach = maxf(reach, float(t.stats.range_air) * (1.0 + t.rogue_range))
 		if reach > 0.0:
 			_cover.append([t, reach + 1.5])
 			sig.append([t.pos, reach, t.target_mode(), t.can_attack()])
@@ -1676,6 +1707,11 @@ func _refresh_hud_local() -> void:
 	else:
 		_set_phase_banner(my_stage, shot_text)
 	hud.set_chance(chance_level, next_chance_wave())
+	if rogue != null:
+		var every := int(Rogue.rules().get("every", 10))
+		var next := (floori(wave_index / float(every)) + 1) * every if every > 0 else -1
+		hud.set_boons(rogue.boons[local_player].map(func(b): return Rogue.describe(b)) if local_player < rogue.boons.size() else [],
+				next if next < waves.size() else -1)
 	_refresh_selection()
 
 
