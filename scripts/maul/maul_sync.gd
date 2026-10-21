@@ -143,7 +143,8 @@ func enemy_packet() -> Dictionary:
 	for e in game.enemies:
 		if e.dead:
 			continue
-		var flags := (1 if e.flying else 0) | (2 if e.boss else 0) | (4 if e.invisible else 0) | (8 if e.ghost else 0)
+		var flags := (1 if e.flying else 0) | (2 if e.boss else 0) | (4 if e.invisible else 0) | (8 if e.ghost else 0) \
+				| (16 if e.bar_shown else 0)
 		list.append([e.net_id, snappedf(e.pos.x, 0.01), snappedf(e.pos.y, 0.01), roundf(e.hp), roundf(e.max_hp), flags,
 			e.color.to_html(false), e.size, e.armor_type])
 	var units := []
@@ -312,6 +313,7 @@ func apply_enemies(packet: Dictionary) -> void:
 				enemies[id] = e
 				g.enemies.append(e)
 			e.net_pos = at
+			e.net_bar = int(s[5]) & 16 != 0
 			e.max_hp = float(s[4])
 			e.hp = float(s[3])
 	for id in enemies.keys():
