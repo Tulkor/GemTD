@@ -24,13 +24,13 @@ Regeln, Bedienung und Datenformate ausführlich: [docs/gemtd.md](docs/gemtd.md),
 Barrikaden bauen und zu Element-Towern aufwerten (Natur, Erde, Feuer, Sturm, Magie, Wasser). 57 Level mit
 Herausforderungen, sechs Schwierigkeiten von „Anfänger“ bis „IMPOSSIBLE!“, Fallen, ein Dual-Grundturm und
 15 Dual-Tower. Gespielt wird in einem Wald mit Friedhof und Bergwerk, auf Wunsch bei Nacht.
-Regeln in `data/eeve.json`, Code in `scripts/game/eeve_*.gd`.
+Regeln ausführlich: [docs/eevetd.md](docs/eevetd.md).
 
 ### Shopping Maul
 Jeder Spieler eröffnet eine Filiale (Media Markt, Aldi, Obi, IKEA …), kauft dort Tower und wertet sie auf.
 Gegner laufen durch die Gebiete aller Spieler ins gemeinsame Ziel, nach Level 40 folgen 10 Bonuslevel.
 Erfahrungspunkte bleiben zwischen den Partien erhalten und schalten neun Profi-Filialen frei (Post, Waffenladen,
-Bestattungsinstitut …). Daten in `data/maul/`, Code in `scripts/maul/`.
+Bestattungsinstitut …). Regeln ausführlich: [docs/shopping-maul.md](docs/shopping-maul.md).
 
 ## Spielen
 
@@ -84,7 +84,7 @@ scripts/
   editor/      Map- und Tower-Editor
 tests/         automatische Tests (auch Host + Client als getrennte Prozesse)
 tools/         Werkzeuge für Tests, Builds, Screenshots, Balance, Daten und Assets
-docs/          GemTD-Regeln, Tower-Werte, WC3-Referenz
+docs/          Regeln der drei Modi, Tower-Werte, WC3-Referenz
 ```
 
 ## Entwicklung
