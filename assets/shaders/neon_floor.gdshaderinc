@@ -55,6 +55,10 @@ uniform vec4 blocked_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float blocked_alpha = 0.0;
 /// Rand der Sperrzone; Deckkraft 0 = in zone_color
 uniform vec4 zone_edge_color : source_color = vec4(0.0);
+// Farbstich je Feld (Maul: Gebiet in der Farbe seines Spielers), A = Stärke; nur der Boden, nicht die Linien
+uniform sampler2D tint : source_color, filter_nearest, repeat_disable, hint_default_transparent;
+// Helligkeit der Stichfarbe (unter 1: dunkler, damit der Marmor dunkel bleibt)
+uniform float tint_shade = 0.8;
 
 #ifdef LIT
 /// Nur beleuchtetes Feld: Helligkeit der Fläche vor dem Licht (das Licht hellt sie wieder auf)
@@ -147,6 +151,10 @@ void fragment() {
 	float majors = 0.0;
 	if (marble > 0.0) {
 		col = mix(col, marble_color(col, world_xz), marble);
+	}
+	if (c.x >= 0 && c.y >= 0 && c.x < int(cells.x) && c.y < int(cells.y)) {
+		vec4 t = texelFetch(tint, c, 0);
+		col = mix(col, t.rgb * tint_shade * (0.6 + length(col)), t.a);
 	}
 	float alpha = floor_alpha * (1.0 - b);
 	if (b > 0.5) {

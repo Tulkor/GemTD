@@ -2,12 +2,18 @@ class_name MaulBoard
 extends Board3D
 ## Spielfeld von Shopping Maul: wie Board3D, aber mit eigenen Markierungen (Spawns, Teleports,
 ## Mall, Leak-Fläche), den 11 Spielergebieten und der Blockstadt (MaulCity) rundherum.
-## Das eigene Gebiet leuchtet, die anderen sind blass.
+## Das eigene Gebiet leuchtet, die anderen sind blass. Der Boden jedes Gebiets mit Spieler hat einen
+## leichten Stich in dessen Farbe (PLAYER_COLORS, Spieler i besitzt Gebiet i).
 
 const COL_LEAK := Color("ff5d7a")
 const COL_TELEPORT := Color("b38cff")
+## Stärke des Farbstichs im Gebiet (0..1), im eigenen etwas kräftiger.
+const TINT := 0.22
+const TINT_OWN := 0.28
 
 var own_zone := 0
+## So viele Spieler spielen mit (Gebiete 0 bis players - 1 haben einen Besitzer).
+var players := 1
 var city: MaulCity
 
 
@@ -59,6 +65,7 @@ func rebuild() -> void:
 	super()
 	if mm != null and _floor_mat != null:
 		_floor_mat.set_shader_parameter("grid_origin", _grid_center(mm))
+		_floor_mat.set_shader_parameter("tint", _tint_texture(mm))
 
 
 
@@ -73,3 +80,14 @@ func _grid_center(mm: MaulMap) -> Vector2:
 	for i in range(1, mm.zones.size()):
 		sum += Vector2(mm.zones[i].rect.position) + Vector2(mm.zones[i].rect.size) / 2.0
 	return (sum / maxf(mm.zones.size() - 1, 1)).round()
+
+
+## Farbstich je Feld: Farbe des Spielers, dem das Gebiet gehört, A = Stärke.
+func _tint_texture(mm: MaulMap) -> ImageTexture:
+	var img := Image.create(mm.width, mm.height, false, Image.FORMAT_RGBA8)
+	for i in mini(players, mm.zones.size()):
+		var col: Color = PLAYER_COLORS[i % PLAYER_COLORS.size()]
+		col.a = TINT_OWN if i == own_zone else TINT
+		var r: Rect2i = mm.zones[i].rect.intersection(Rect2i(0, 0, mm.width, mm.height))
+		img.fill_rect(r, col)
+	return ImageTexture.create_from_image(img)

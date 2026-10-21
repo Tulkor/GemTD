@@ -50,7 +50,7 @@ const DIRT_ZONE_EXTRA := 1.5
 ## Kantenlänge eines Rasterfelds in Einheiten.
 const CELL := 0.5
 ## Farben der Spieler (Zonen auf Maul-Maps), Spieler 1 zuerst.
-const PLAYER_COLORS := [Color("22c4ee"), Color("ff4fd8"), Color("5fe08a"), Color("ffd166"), Color("b38cff"), Color("ff8a4f")]
+const PLAYER_COLORS := [Color("22c4ee"), Color("ff4fd8"), Color("5fe08a"), Color("ffd166"), Color("b38cff"), Color("ff8a4f"), Color("4f7dff"), Color("f2f2f2")]
 ## Ein Tower ist so viele Felder breit und tief.
 const TOWER_CELLS := 2
 ## Fallen sind größer (Trefferfläche).
