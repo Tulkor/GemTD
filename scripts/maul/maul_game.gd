@@ -149,6 +149,7 @@ func _ready() -> void:
 	CameraRig.add_environment(self)
 	board = MaulBoard.new()
 	board.own_zone = players[local_player].zone
+	board.players = players.size()
 	board.map = map
 	add_child(board)
 	effects = Effects.new()

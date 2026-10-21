@@ -55,6 +55,13 @@ uniform vec4 blocked_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float blocked_alpha = 0.0;
 /// Rand der Sperrzone; Deckkraft 0 = in zone_color
 uniform vec4 zone_edge_color : source_color = vec4(0.0);
+// Farbstich je Feld (Maul: Gebiet in der Farbe seines Spielers), A = Stärke; nur der Boden, nicht die Linien
+uniform sampler2D tint : source_color, filter_nearest, repeat_disable, hint_default_transparent;
+// Helligkeit der Stichfarbe (unter 1: dunkler, damit der Marmor dunkel bleibt)
+uniform float tint_shade = 0.8;
+// 1: Stich auf den Boden (Shopping Maul); tint_lines 1: Gitterlinien und Ränder ganz in der Stichfarbe (GemTD-Maul-Karten)
+uniform float tint_floor = 1.0;
+uniform float tint_lines = 0.0;
 
 #ifdef LIT
 /// Nur beleuchtetes Feld: Helligkeit der Fläche vor dem Licht (das Licht hellt sie wieder auf)
@@ -148,6 +155,16 @@ void fragment() {
 	if (marble > 0.0) {
 		col = mix(col, marble_color(col, world_xz), marble);
 	}
+	vec3 lc = line_color.rgb;
+	vec3 ec = edge_color.rgb;
+	if (c.x >= 0 && c.y >= 0 && c.x < int(cells.x) && c.y < int(cells.y)) {
+		vec4 t = texelFetch(tint, c, 0);
+		col = mix(col, t.rgb * tint_shade * (0.6 + length(col)), t.a * tint_floor);
+		if (tint_lines > 0.5 && t.a > 0.0) {
+			lc = t.rgb;
+			ec = t.rgb;
+		}
+	}
 	float alpha = floor_alpha * (1.0 - b);
 	if (b > 0.5) {
 		col = blocked_color.rgb;
@@ -159,14 +176,14 @@ void fragment() {
 			// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
 			vec2 go = g - grid_origin;
 			vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
-			vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, line_color.rgb, line_energy * cell_energy, aa);
+			vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, lc, line_energy * cell_energy, aa);
 			cl.a *= cell_alpha;
 			col = mix(col, cl.rgb, cl.a);
 			alpha = max(alpha, cl.a);
 			lines = max(lines, cl.a);
 			vec2 gg = go / grid_cells;
 			vec2 dg = abs(fract(gg + 0.5) - 0.5) * grid_cells * cell;
-			vec4 l = tube(min(dg.x, dg.y), line_width, line_color.rgb, line_energy * minor_energy, aa);
+			vec4 l = tube(min(dg.x, dg.y), line_width, lc, line_energy * minor_energy, aa);
 			l.a *= minor_alpha;
 			col = mix(col, l.rgb, l.a);
 			alpha = max(alpha, l.a);
@@ -177,7 +194,7 @@ void fragment() {
 			if (major_double > 0.5) {
 				dmm = abs(dmm - line_width * 3.0);
 			}
-			vec4 m = tube(dmm, line_width * 1.2, line_color.rgb, line_energy * major_energy, aa);
+			vec4 m = tube(dmm, line_width * 1.2, lc, line_energy * major_energy, aa);
 			m.a *= major_alpha;
 			col = mix(col, m.rgb, m.a);
 			alpha = max(alpha, m.a);
@@ -188,7 +205,7 @@ void fragment() {
 				float dd = (dm.x + dm.y) / diamond_size;
 				float fill = 1.0 - smoothstep(1.0 - aa / diamond_size, 1.0, dd);
 				float inner = smoothstep(0.55, 0.55 + aa / diamond_size, dd) * (1.0 - smoothstep(0.7, 0.7 + aa / diamond_size, dd));
-				vec3 dcol = mix(line_color.rgb * line_energy * major_energy, floor_color.rgb, inner * 0.8);
+				vec3 dcol = mix(lc * line_energy * major_energy, floor_color.rgb, inner * 0.8);
 				col = mix(col, dcol, fill * major_alpha);
 				alpha = max(alpha, fill * major_alpha);
 				lines = max(lines, fill * major_alpha);
@@ -208,7 +225,7 @@ void fragment() {
 		if (fine_strength > 0.0) {
 			vec2 df = abs(fract(g + 0.5) - 0.5) / fwidth(g);
 			float fl = (1.0 - clamp(min(df.x, df.y), 0.0, 1.0)) * fine_strength;
-			col = mix(col, line_color.rgb, fl);
+			col = mix(col, lc, fl);
 			alpha = max(alpha, fl);
 		}
 		// Sperrzone um die Wegpunkte: rote Fläche, Neonrand zu bebaubaren Feldern
@@ -232,7 +249,7 @@ void fragment() {
 		if (is_blocked(c + ivec2(1, 0)) > 0.5) de = min(de, 1.0 - f.x);
 		if (is_blocked(c + ivec2(0, -1)) > 0.5) de = min(de, f.y);
 		if (is_blocked(c + ivec2(0, 1)) > 0.5) de = min(de, 1.0 - f.y);
-		vec4 e = tube(de * cell, line_width * 1.6, edge_color.rgb, edge_energy, aa);
+		vec4 e = tube(de * cell, line_width * 1.6, ec, edge_energy, aa);
 		col = mix(col, e.rgb, e.a);
 		alpha = max(alpha, e.a);
 		lines = max(lines, e.a);

@@ -49,8 +49,8 @@ const DIRT_FADE := 2.2
 const DIRT_ZONE_EXTRA := 1.5
 ## Kantenlänge eines Rasterfelds in Einheiten.
 const CELL := 0.5
-## Farben der Spieler (Zonen auf Maul-Maps), Spieler 1 zuerst.
-const PLAYER_COLORS := [Color("22c4ee"), Color("ff4fd8"), Color("5fe08a"), Color("ffd166"), Color("b38cff"), Color("ff8a4f")]
+## Farben der Spieler (Zonen auf Maul-Maps), Spieler 1 zuerst: Pink, Cyan, Neongrün, Weiß, dann weitere.
+const PLAYER_COLORS := [Color("ff4fd8"), Color("22c4ee"), Color("39ff6a"), Color("f2f2f2"), Color("ffd166"), Color("b38cff"), Color("ff8a4f"), Color("4f7dff")]
 ## Ein Tower ist so viele Felder breit und tief.
 const TOWER_CELLS := 2
 ## Fallen sind größer (Trefferfläche).
@@ -345,6 +345,18 @@ func _rebuild_floor() -> void:
 	_floor_mat.set_shader_parameter("grid_origin", Vector2(origin))
 	_floor_mat.set_shader_parameter("blocked", ImageTexture.create_from_image(img))
 	_floor_mat.set_shader_parameter("cells", Vector2(map.width, map.height))
+	_floor_mat.set_shader_parameter("tint", _zone_line_tint())
+	_floor_mat.set_shader_parameter("tint_floor", 0.0)
+	_floor_mat.set_shader_parameter("tint_lines", 1.0)
+
+
+## Gitterlinien in jeder Spielerzone (Maul-Maps) in der Farbe ihres Spielers, sonst keine Maske.
+func _zone_line_tint() -> Texture2D:
+	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)
+	for z in map.zones:
+		if z.player >= 0:
+			img.fill_rect(z.rect.intersection(Rect2i(0, 0, map.width, map.height)), PLAYER_COLORS[z.player % PLAYER_COLORS.size()])
+	return ImageTexture.create_from_image(img)
 
 
 ## Feld ohne Gitterlinien zeichnen (Maul: unter der Stadt).
