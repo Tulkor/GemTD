@@ -102,7 +102,14 @@ func _ready() -> void:
 		var t = game.round_towers[0]
 		game._select(t)
 		check(not game.choice_options(t).is_empty(), "Auswahloptionen vorhanden")
-		check(game.hud._options[0].style == "primary" and game.hud._main_button != null, "Behalten ist die große Hauptaktion")
+		# Große Hauptaktion: One-Shot-Rezept, sonst Kombinieren (zweiter gleicher Gem hebt ihn eine Qualität),
+		# sonst Behalten
+		var opts: Array = game.hud._options
+		var main: int = opts.map(func(o): return o.style == "oneshot").find(true)
+		if main < 0:
+			main = maxi(opts.map(func(o): return o.get("combine_up", false)).find(true), 0)
+		check(opts[main].style in ["primary", "oneshot"] and game.hud._main_index == main \
+				and game.hud._main_button != null, "Behalten bzw. Kombinieren ist die große Hauptaktion")
 		game._on_option_chosen(0)
 		check(game.phase == game.Phase.WAVE, "Welle %d gestartet" % (round_i + 1))
 		check(game.towers.size() == round_i + 1, "nur ein Tower behalten, Rest sind Steine (%d Steine)" % game.rocks.size())
@@ -534,6 +541,20 @@ func _ready() -> void:
 	check(game.hud.leave_confirm.visible and get_tree().paused, "Menü-Knopf zeigt Rückfrage und pausiert")
 	game.hud.close_leave_confirm()
 	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Weiterspielen schließt Rückfrage")
+	# Esc: erst Auswahl aufheben, dann Menü; im Menü Einstellungen, Esc schließt erst diese, dann das Menü
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	game._select(null, Vector2i(1, 1))
+	game._unhandled_input(esc)
+	check(game.selected == null and game.selected_rocks.is_empty() and not game.hud.leave_confirm.visible, "Esc hebt erst die Auswahl auf")
+	game._unhandled_input(esc)
+	check(game.hud.leave_confirm.visible and get_tree().paused, "Esc ohne Auswahl öffnet das Menü")
+	game.hud.settings_panel.open()
+	game.hud._unhandled_input(esc)
+	check(game.hud.leave_confirm.visible and not game.hud.settings_panel.visible, "Esc schließt erst die Einstellungen")
+	game.hud._unhandled_input(esc)
+	check(not game.hud.leave_confirm.visible and not get_tree().paused, "Esc schließt das Menü")
 
 	# Chance-Stufe steigt automatisch mit der Welle, Gold wird um gold_income_factor gekürzt
 	check(game.chance_level_for(1) == 0 and game.chance_level_for(3) == 1 and game.chance_level_for(27) == 8 and game.chance_level_for(50) == 8,
@@ -1178,6 +1199,14 @@ func _maul_test() -> void:
 	await get_tree().process_frame
 	h.coop.command_sink = func(cmd): g.coop.receive(1, cmd)
 	check(g.active_lanes() == [0, 1], "Maul Koop: beide Bahnen laufen")
+	var own_dots: int = h.board.path_points.size()
+	check(own_dots == h.lane_paths[1].ground.size() and h.hud.paths_button != null, "Maul Koop: Ben sieht anfangs nur seinen Weg")
+	check(not h.board.marker_texts().any(func(t): return "." in t) and h.board.marker_texts().has("S"), "Maul Koop: Wegpunkte nur mit Bens Nummern %s" % [h.board.marker_texts()])
+	h.hud.paths_button.button_pressed = true
+	check(h.board.path_points.size() > own_dots, "Maul Koop: Knopf zeigt auch Annas Weg")
+	check(h.board.marker_texts().has("S1") and h.board.marker_texts().has("S2"), "Maul Koop: Knopf zeigt alle Wegpunkt-Nummern")
+	h.hud.paths_button.button_pressed = false
+	check(h.board.path_points.size() == own_dots, "Maul Koop: Knopf blendet ihn wieder aus")
 	check(g.can_place(Vector2i(20, 20)) and not g.can_place(Vector2i(70, 20)), "Maul: Anna baut nur in ihrer Zone")
 	check(not g.execute({"type": "place", "cell": Vector2i(20, 20), "player": 1}) and g.execute({"type": "place", "cell": Vector2i(70, 20), "player": 1}),
 		"Maul: Ben baut nur in seiner Zone")

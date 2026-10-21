@@ -39,6 +39,7 @@ func apply_map(packet: Dictionary) -> void:
 	add_child(board)
 	effects = Effects.new()
 	board.add_child(effects)
+	effects.sounds = false
 	if not field.is_empty():
 		apply_field(field)
 

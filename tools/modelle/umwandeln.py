@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Holt die verwendeten Modelle aus den entpackten CC0-Paketen nach assets/models/.
 
-Die Auswahl steht in tools/modelle/auswahl.json: Zielpfad -> {"paket", "datei", "tex"}.
+Die Auswahl steht in tools/modelle/auswahl.json: Zielpfad -> {"paket", "datei", "tex"}, bei FBX optional
+"textur" (Bild im Paket, wird Grundfarbe aller Flächen mit Alpha-Ausschnitt, für Pflanzen-Karten).
 Ein Paket ist ein entpackter Zip-Ordner; die Datei wird darin per Name gesucht.
 
 Zum Ausprobieren: --auswahl=andere.json --ziel=/tmp/ordner (schreibt dorthin statt ins Repo).
@@ -230,7 +231,10 @@ def main():
         dst = os.path.join(ziel_root, ziel)
         tex = int(e.get("tex", 256))
         if src.lower().endswith(".fbx"):
-            fbx.append({"src": src, "dst": dst, "tex": tex})
+            item = {"src": src, "dst": dst, "tex": tex}
+            if "textur" in e:  # FBX ohne gefundene Textur (z. B. Yughues): Grundfarbe mit Alpha-Ausschnitt setzen
+                item["textur"] = find(pakete[e["paket"]], e["textur"])
+            fbx.append(item)
         else:
             pack_gltf(src, dst, tex)
             print("OK", ziel, os.path.getsize(dst) // 1024, "KB")

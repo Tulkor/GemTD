@@ -108,6 +108,9 @@ var _next_enemy_id := 1
 var _alternate := {}         ## Route → Zähler für abwechselnde Abzweigungen
 
 var _path_cache := {}        ## Schlüssel → {path, wp}
+var show_all_paths := false  ## Mehrspieler: auch die Wege durch fremde Gebiete zeigen
+var _own_path_pts := PackedVector2Array()
+var _other_path_pts := PackedVector2Array()
 var _zone_towers: Array = [] ## Tower je Zone
 var _frost_level := false
 var _detect_towers: Array = []
@@ -146,6 +149,7 @@ func _ready() -> void:
 	CameraRig.add_environment(self)
 	board = MaulBoard.new()
 	board.own_zone = players[local_player].zone
+	board.players = players.size()
 	board.map = map
 	add_child(board)
 	effects = Effects.new()
@@ -343,6 +347,7 @@ func _start_level(n: int) -> void:
 		spawn_queue.append([i, per])
 	spawn_timer = 0.0
 	phase = Phase.WAVE
+	Sfx.play("boss" if level_kind == "boss" else "wave_start")
 	_alternate.clear()
 	show_message(level_title(n), 4.0)
 	_refresh_hud()
@@ -601,19 +606,40 @@ func all_legs() -> Array:
 	return list
 
 
-## Neu berechnen nach Bauen/Verkaufen; zeigt die Wege als Punkte.
+## Neu berechnen nach Bauen/Verkaufen; zeigt die Wege als Punkte. Im Mehrspieler erst nur die
+## Abschnitte durchs eigene Gebiet, die übrigen über show_all_paths (Knopf an der Übersichtskarte).
 func _refresh_paths() -> void:
 	_path_cache.clear()
-	var pts := PackedVector2Array()
-	var seen := {}
+	var zone: int = players[local_player].zone
+	var own := {}
+	var other := {}
 	for leg in all_legs():
 		var r := _route(leg[0], leg[1], "ground")
+		var mine := players.size() <= 1
+		for p in r.path:
+			if mine:
+				break
+			mine = map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL))) == zone
 		for i in range(0, r.path.size(), 2):
-			var p: Vector2 = r.path[i]
-			if not seen.has(p):
-				seen[p] = true
-				pts.append(p)
-	board.path_points = pts
+			(own if mine else other)[r.path[i]] = true
+	_own_path_pts = PackedVector2Array(own.keys())
+	_other_path_pts = PackedVector2Array(other.keys().filter(func(p): return not own.has(p)))
+	_show_paths()
+
+
+func has_other_paths() -> bool:
+	return not _other_path_pts.is_empty()
+
+
+func set_show_all_paths(on: bool) -> void:
+	show_all_paths = on
+	if hud.paths_button != null:
+		hud.paths_button.set_pressed_no_signal(on)
+	_show_paths()
+
+
+func _show_paths() -> void:
+	board.path_points = _own_path_pts + _other_path_pts if show_all_paths else _own_path_pts
 	board.refresh_path()
 
 
@@ -729,6 +755,8 @@ func on_enemy_leaked(e) -> void:
 	var cost := 0 if sandbox else mini(me.leak_cost, lives)
 	lives -= cost
 	level_lost += cost
+	if cost > 0:
+		Sfx.play("leak")
 	_remove_enemy(me)
 	if lives <= 0 and not Session.debug_immortal:
 		lives = 0
@@ -969,10 +997,13 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	var ok := true
 	if mirror:
 		sync.send(cmd)
-		return true
-	return execute(cmd)
+	else:
+		ok = execute(cmd)
+	Sfx.command_sound(cmd, ok)
+	return ok
 
 
 func execute(cmd: Dictionary) -> bool:
@@ -1588,9 +1619,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		match event.keycode:
 			KEY_ESCAPE:
-				build_id = ""
-				select(null)
-				select_unit(null)
+				# Erst Bauwahl und Auswahl aufheben, sonst Menü öffnen oder schließen
+				if build_id != "" or selected != null or selected_unit != null or not pending.is_empty():
+					build_id = ""
+					select(null)
+					select_unit(null)
+				else:
+					hud.toggle_menu()
 			KEY_1:
 				set_speed(1.0)
 			KEY_2:

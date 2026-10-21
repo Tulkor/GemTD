@@ -244,7 +244,10 @@ func _debug_tests() -> void:
 	check(sc != null and sc.get_child_count() > 20, "Wald und Laternen um die Karte")
 	var day_sun: float = sc.sun().light_energy
 	sc.set_night(true)
-	check(sc._lights.size() == game.map.all_waypoints().size() and sc._lights[0].visible and sc._fireflies.emitting
+	var church := sc.find_children("*", "Node3D", true, false).any(func(n): return str(n.scene_file_path).ends_with("church.glb"))
+	check(church, "Friedhof mit Kirche neben der Karte")
+	# zwei Laternen am Friedhofstor, zwei am Bergwerk
+	check(sc._lights.size() == game.map.all_waypoints().size() + 4 and sc._lights[0].visible and sc._fireflies.emitting
 		and sc.sun().light_energy < day_sun, "Nacht: Laterne an jedem Wegpunkt leuchtet, Mondlicht")
 	sc.set_night(false)
 	check(not sc._lights[0].visible and is_equal_approx(sc.sun().light_energy, day_sun), "Tag: Laternen aus, Sonne wie vorher")

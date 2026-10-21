@@ -17,6 +17,7 @@ var ground_path := PackedVector2Array()   ## Bahn 0 (siehe lane_paths)
 var air_path := PackedVector2Array()
 ## Wege aller Bahnen (Maul-Maps haben mehrere): [{ground, air, length}]
 var lane_paths: Array = []
+var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
 var camera_rig: CameraRig
@@ -187,6 +188,9 @@ func _ready() -> void:
 		lives += n
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
+	if has_other_paths():
+		hud.add_paths_toggle(set_show_all_paths)
+		board.set_marker_lanes(_own_lanes())
 
 	setup_done = not saved.is_empty() or Session.skip_setup
 	if not setup_done:
@@ -213,7 +217,9 @@ func _ready() -> void:
 		add_child(net_sync)
 		net_panel = NetPanel.new()
 		net_panel.game = self
+		net_panel.avoid = hud.bottom
 		add_child(net_panel)
+		hud.tower_list.limits.append(net_panel.panel)
 
 
 func _exit_tree() -> void:
@@ -350,6 +356,7 @@ func _update_paths() -> void:
 	lane_paths = []
 	path_length = 0
 	var dots := PackedVector2Array()
+	var others := PackedVector2Array()
 	for i in map.lane_count():
 		var ground := PackedVector2Array()
 		var cells := pathfinder.compute_path(i)
@@ -360,11 +367,33 @@ func _update_paths() -> void:
 			air.append(Board3D.cell_center(c))
 		lane_paths.append({"ground": ground, "air": air, "length": cells.size()})
 		path_length += cells.size()
-		dots.append_array(ground)
+		(dots if _own_lane(i) else others).append_array(ground)
 	ground_path = lane_paths[0].ground
 	air_path = lane_paths[0].air
-	board.path_points = dots
+	board.path_points = dots + others if show_all_paths else dots
 	board.refresh_path()
+
+
+## Im Mehrspieler gehören Bahnen mit Spielernummer einem Spieler; anfangs zeigt das Feld nur die
+## eigenen, die übrigen über den Knopf „Alle Wege zeigen“. Allein (oder ohne Nummer) alle.
+func _own_lane(i: int) -> bool:
+	return players.size() <= 1 or map.lane_player(i) == local_player
+
+
+func _own_lanes() -> Array:
+	return range(map.lane_count()).filter(_own_lane)
+
+
+func has_other_paths() -> bool:
+	return range(map.lane_count()).any(func(i): return not _own_lane(i))
+
+
+func set_show_all_paths(on: bool) -> void:
+	show_all_paths = on
+	if hud.paths_button != null:
+		hud.paths_button.set_pressed_no_signal(on)
+	board.set_marker_lanes([] if on else _own_lanes())
+	_update_paths()
 
 
 ## Bahnen, die gerade spawnen: ohne Spieler oder deren Spieler mitspielt.
@@ -428,7 +457,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		match event.keycode:
 			KEY_ESCAPE:
-				_select(null)
+				# Erst abbrechen, was gerade läuft (Auswahl, Falle versetzen), sonst Menü öffnen
+				if selected != null or not selected_rocks.is_empty() or moving != null:
+					_select(null)
+				elif phase < Phase.GAME_OVER:
+					hud.open_leave_confirm()
 			KEY_1:
 				submit({"type": "speed", "factor": 1.0})
 			KEY_2:
@@ -443,6 +476,8 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
 		if can_move_trap(moving, target):
 			submit({"type": "move_trap", "tower": tower_ref(moving), "to": target})
+		else:
+			Sfx.play("error")
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if add and rocks.has(a):
@@ -462,6 +497,9 @@ func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
 	elif trap != null:
 		_select(trap)
 	else:
+		# Freies Feld in der Bauphase, aber hier geht kein Gem hin (Weg versperrt, belegt, Rand)
+		if stage() == Phase.BUILD and gems_left() > 0 and map.in_bounds(anchor):
+			Sfx.play("error")
 		_select(null)
 
 
@@ -812,12 +850,17 @@ func choice_options(t: Tower) -> Array:
 			if same < n:
 				continue
 			var steps := 1 if n == 2 else 2
+			var o: Dictionary
 			if t.tier + steps <= max_tier:
-				opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps))
+				o = _keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(t.tower_id, t.tier + steps)], t.tower_id, t.tier + steps)
 			else:
 				var overflow := str(Database.balance.get("overflow_tower", ""))
-				if Database.towers.has(overflow):
-					opts.append(_keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(overflow, 0)], overflow, 0))
+				if not Database.towers.has(overflow):
+					break
+				o = _keep_option(tr("%d gleiche → %s") % [n, Database.tower_label(overflow, 0)], overflow, 0)
+			o.same = n
+			opts.append(o)
+			if t.tier + steps > max_tier:
 				break
 	var others := round_towers.filter(func(o): return o != t)
 	for sid in Database.special_ids():
@@ -1030,10 +1073,13 @@ func set_player_away(p: int, away: bool) -> void:
 func submit(cmd: Dictionary) -> bool:
 	if not cmd.has("player"):
 		cmd.player = local_player
+	var ok := true
 	if mirror:
 		coop.send(cmd)
-		return true
-	return execute(cmd)
+	else:
+		ok = execute(cmd)
+	Sfx.command_sound(cmd, ok)
+	return ok
 
 
 ## Befehl ausführen (nur die Simulation, d. h. solo oder auf dem Host). false = verworfen.
@@ -1255,6 +1301,7 @@ func _start_wave() -> void:
 		for i in int(g.get("count", 1)):
 			spawn_queue.append(g)
 	spawn_timer = 0.5
+	Sfx.play("wave_start")
 	_refresh_hud()
 
 
@@ -1300,6 +1347,8 @@ func _spawn_enemy(g: Dictionary, lane := -1) -> void:
 		# Eine Welle ist gleich viele Punkte wert, egal an wie vielen Bahnen sie läuft
 		e.score_value /= lanes.size()
 		enemies.append(e)
+	if def.get("boss", false):
+		Sfx.play("boss")
 
 
 ## Schwierigkeit auf einen neuen Gegner der Gruppe g anwenden.
@@ -1471,6 +1520,7 @@ func on_enemy_leaked(e: Enemy) -> void:
 		_refresh_hud()
 		return
 	lives -= e.damage
+	Sfx.play("leak")
 	_remove_enemy(e)
 	# Debug „Unsterblich“: Leben gehen ins Minus, das Spiel läuft weiter
 	if lives <= 0 and not Session.debug_immortal:
@@ -1678,10 +1728,31 @@ func _refresh_selection() -> void:
 	var body := ""
 	if not selected.is_new and phase <= Phase.CHOOSE and _field_recipe_complete(used):
 		body = tr("Kombinieren geht erst wieder während der Welle.")
-	hud.set_selection({"title": selected.label(), "color": selected.color, "body": body, "used_in": used,
-			"stats": TowerStats.view(selected)})
-	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
+	var info := {"title": selected.label(), "color": selected.color, "body": body, "used_in": used,
+			"stats": TowerStats.view(selected)}
+	if Database.towers.get(selected.tower_id, {}).get("category", "gem") == "gem":
+		info["tier"] = selected.tier
+	hud.set_selection(info)
+	hud.set_options(_promote_combine(tower_options(selected).map(func(o): return _option_view(selected, o))))
 	hud.set_options_enabled(true)
+
+
+## Lässt sich der Gem mit einem zweiten gleichen um eine Qualität verbessern, wird das die große Aktion
+## (Leertaste) und „Behalten“ ein kleiner Knopf. Die Reihenfolge bleibt, sie ist der Index für option_chosen.
+func _promote_combine(views: Array) -> Array:
+	var i := -1
+	for k in views.size():
+		if views[k].get("combine_up", false):
+			i = k
+			break
+	if i < 0:
+		return views
+	for v in views:
+		if v.style == "primary":
+			v.style = "normal"
+	views[i].style = "primary"
+	views[i].hint = tr("2 gleiche Gems kombinieren")
+	return views
 
 
 ## Ob eines der Rezepte mit den fertigen Towern auf dem Feld komplett wäre (für den Hinweis außerhalb der Welle).
@@ -1769,6 +1840,8 @@ func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	elif o.action == "keep" and o.id == t.tower_id and o.tier == t.tier:
 		v.style = "primary"
 		v.label = tr("Behalten")
+	elif int(o.get("same", 0)) == 2:
+		v.combine_up = true
 	# Symbol + Zielname statt "Abstufen → …", "2 gleiche → …", "Kombinieren → …"
 	var overflow := str(Database.balance.get("overflow_tower", ""))
 	if o.action == "upgrade" or (o.action == "keep" and ((o.id == t.tower_id and o.tier > t.tier) or (o.id == overflow and o.id != t.tower_id))):

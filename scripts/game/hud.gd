@@ -44,6 +44,8 @@ var _leave_status: Label
 var _save_leave: Button
 var _leave_plain: Button
 var _leave_stay: Button
+var _leave_title: Label
+var settings_panel: SettingsPanel
 var game_over_title: Label
 var game_over_stats: Label
 var game_over_boss: Label        ## Endboss-Schadenscheck
@@ -56,6 +58,8 @@ var left_col: VBoxContainer
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_button: Button
+var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus (add_paths_toggle)
+var _speed_row: HBoxContainer
 var debug_panel: PanelContainer
 var dps_meter: DpsMeter
 var enemy_panel: EnemyPanel
@@ -91,6 +95,8 @@ var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
+var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
+var info_tier_label: Label
 var info_kills_label: Label
 var info_sub: Label
 var info_main: HBoxContainer
@@ -152,10 +158,11 @@ func _ready() -> void:
 	tower_list = TowerList.new()
 	tower_list.game = get_parent()
 	tower_list.above = enemy_panel
-	tower_list.limit = bottom
+	tower_list.limits.append(bottom)
 	root.add_child(tower_list)
 	_build_debug()
 	dps_meter.avoid = debug_panel
+	root.resized.connect(_recenter)
 
 	message_label = Label.new()
 	message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -188,7 +195,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if game_over != null and game_over.visible:
 		return
 	if leave_confirm != null and leave_confirm.visible:
-		if event.keycode == KEY_ESCAPE and not _leave_stay.disabled:
+		if event.keycode == KEY_ESCAPE and settings_panel.visible:
+			settings_panel.close()
+		elif event.keycode == KEY_ESCAPE and not _leave_stay.disabled:
 			close_leave_confirm()
 		get_viewport().set_input_as_handled()
 		return
@@ -298,6 +307,7 @@ func _build_top_bar() -> void:
 	var speed_row := HBoxContainer.new()
 	speed_row.add_theme_constant_override("separation", 0)
 	h.add_child(speed_row)
+	_speed_row = speed_row
 	var group := ButtonGroup.new()
 	for f in SPEEDS:
 		var b := _button("%dx" % int(f), speed_row, func(): speed_selected.emit(f))
@@ -319,6 +329,18 @@ func _build_top_bar() -> void:
 	recipes_button.tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
 	_button("Menü", h, open_leave_confirm)
+
+
+## Mehrspieler: Umschalter links neben dem Tempo, zeigt auch die Gegnerwege der Mitspieler.
+func add_paths_toggle(on_toggled: Callable) -> void:
+	paths_button = _button("Alle Wege zeigen", _speed_row.get_parent(), func(): pass)
+	_speed_row.get_parent().move_child(paths_button, _speed_row.get_index())
+	paths_button.toggle_mode = true
+	paths_button.focus_mode = Control.FOCUS_NONE
+	paths_button.tooltip_text = "Zeigt auch die Gegnerwege der Mitspieler."
+	paths_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	paths_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	paths_button.toggled.connect(on_toggled)
 
 
 ## Panel-Überschrift: Großbuchstaben, fett.
@@ -430,6 +452,14 @@ func _build_bottom() -> void:
 	info_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	info_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_title.mouse_filter = Control.MOUSE_FILTER_PASS
+	info_tier = PanelContainer.new()
+	info_tier.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.CYAN, 0, 2, 4))
+	info_tier.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_tier.visible = false
+	head.add_child(info_tier)
+	info_tier_label = UiUtil.label("", info_tier, 14)
+	info_tier_label.add_theme_font_override("font", QualityBadge.roman_font())
+	info_tier_label.add_theme_color_override("font_color", UiTheme.CYAN)
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
 	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
@@ -502,7 +532,7 @@ func _build_help() -> void:
 	help_panel.offset_right = -16
 	help_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	root.add_child(help_panel)
-	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
+	UiUtil.wrap_label("Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / Kombinieren / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo", help_panel, 320)
 	help_panel.hide()
 
 
@@ -768,6 +798,18 @@ func set_round_gems(gems: Array, hint := "") -> void:
 		badge.offset_right = 13
 		badge.offset_bottom = 19
 		b.add_child(badge)
+		var num := UiUtil.label(QualityBadge.roman(int(g.get("tier", 0))), b, 11)
+		num.add_theme_font_override("font", QualityBadge.roman_font())
+		num.add_theme_color_override("font_color", UiTheme.TEXT)
+		num.add_theme_color_override("font_outline_color", Color("030108"))
+		num.add_theme_constant_override("outline_size", 4)
+		num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		num.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+		num.offset_left = -26
+		num.offset_top = -17
+		num.offset_right = -3
+		num.offset_bottom = -1
+		num.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.pressed.connect(func(): round_gem_selected.emit(i))
 		strip_row.add_child(b)
 	strip_col.visible = not gems.is_empty()
@@ -785,6 +827,10 @@ func set_selection(info: Dictionary) -> void:
 	info_title.text = info.title
 	info_title.add_theme_color_override("font_color", (info.color as Color).lerp(Color.WHITE, 0.25))
 	info_swatch.color = info.color
+	info_tier.visible = info.has("tier")
+	if info_tier.visible:
+		info_tier_label.text = QualityBadge.roman(int(info.tier))
+		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
@@ -797,7 +843,8 @@ func set_selection(info: Dictionary) -> void:
 func _fit_title() -> void:
 	var font := info_title.get_theme_font("font")
 	var text := info_title.text.to_upper() if info_title.uppercase else info_title.text
-	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0)
+	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0) \
+			- (info_tier.get_combined_minimum_size().x + 10.0 if info_tier.visible else 0.0)
 	var size := _title_size
 	while size > _title_size - 5 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
 		size -= 1
@@ -1275,7 +1322,8 @@ func _build_game_over() -> void:
 	game_over.hide()
 
 
-## Rückfrage, bevor der Menü-Knopf die laufende Partie verlässt. Das Spiel ist solange pausiert.
+## Spielmenü (Menü-Knopf oder Esc): weiterspielen, Einstellungen, speichern und verlassen.
+## Beim Schließen des Fensters dieselbe Rückfrage als „Spiel verlassen?“. Das Spiel ist solange pausiert.
 func _build_leave_confirm() -> void:
 	leave_confirm = Control.new()
 	leave_confirm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1295,35 +1343,41 @@ func _build_leave_confirm() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	var title := UiTheme.title(UiUtil.label("Spiel verlassen?", v, 26))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_title = UiTheme.title(UiUtil.label("Menü", v, 26))
+	_leave_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_leave_stay = _button("Weiterspielen", v, close_leave_confirm)
+	_leave_stay.custom_minimum_size.y = 52
+	_leave_stay.add_theme_font_size_override("font_size", 18)
+	UiTheme.accent_button(_leave_stay, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	_button("Einstellungen", v, func(): settings_panel.open()).custom_minimum_size.y = 44
+	v.add_child(_spacer(0))
 	_leave_text = UiUtil.wrap_label("", v, 380)
 	_leave_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_leave_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_spacer(0))
 	_save_leave = _button("Speichern und verlassen", v, func(): save_and_leave_requested.emit(_leave_quit))
-	_save_leave.custom_minimum_size.y = 52
-	_save_leave.add_theme_font_size_override("font_size", 18)
-	UiTheme.accent_button(_save_leave, UiTheme.GOLD, UiTheme.GOLD_DARK, Color(UiTheme.GOLD, 0.35))
+	_save_leave.custom_minimum_size.y = 44
+	_save_leave.add_theme_color_override("font_color", UiTheme.GOLD)
 	_leave_plain = _button("Ohne Speichern verlassen", v, func(): leave_requested.emit(_leave_quit))
 	_leave_plain.custom_minimum_size.y = 44
 	_leave_plain.add_theme_color_override("font_color", UiTheme.MISSING)
 	_leave_plain.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
-	_leave_stay = _button("Weiterspielen", v, close_leave_confirm)
-	_leave_stay.custom_minimum_size.y = 44
 	_leave_status = UiUtil.label("", v, 14)
 	_leave_status.add_theme_color_override("font_color", UiTheme.CYAN)
 	_leave_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_leave_status.hide()
-	var hint := UiUtil.label("Esc: weiterspielen", v, 12)
+	var hint := UiUtil.label("Esc: weiterspielen", v, 13)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	leave_confirm.hide()
+	settings_panel = SettingsPanel.new(false, true)
+	leave_confirm.add_child(settings_panel)
 
 
 ## quit: das Fenster wird geschlossen statt ins Menü zu gehen.
 func open_leave_confirm(quit := false) -> void:
 	_leave_quit = quit
+	_leave_title.text = tr("Spiel verlassen?") if quit else tr("Menü")
+	settings_panel.hide()
 	var mode: String = save_mode.call()
 	_save_leave.visible = mode == "single" or mode == "host"
 	_leave_plain.text = tr("Ohne Speichern verlassen") if _save_leave.visible else (tr("Beenden") if quit else tr("Verlassen"))
@@ -1352,6 +1406,7 @@ func set_leave_busy(text: String, error := false) -> void:
 
 
 func close_leave_confirm() -> void:
+	settings_panel.hide()
 	leave_confirm.hide()
 	get_tree().paused = false
 
@@ -1478,6 +1533,13 @@ func _recenter() -> void:
 		c.offset_left = -s.x / 2.0
 		c.offset_right = s.x / 2.0
 		if c == bottom:
+			# Nicht unter die rechte Spalte (DPS, Tower-Liste, Mitspieler) schieben: lieber nach links
+			# rücken, solange links noch Platz ist
+			var w := root.size.x
+			var right_edge := w - 16.0 - tower_list.custom_minimum_size.x - 12.0
+			var left := minf(w / 2.0 - s.x / 2.0, maxf(16.0, right_edge - s.x))
+			c.offset_left = left - w / 2.0
+			c.offset_right = c.offset_left + s.x
 			c.offset_top = -16 - s.y
 			c.offset_bottom = -16
 		else:

@@ -226,7 +226,8 @@ Jede Treffer-Fähigkeit kann `"chance"` haben.
 
 `data/enemies/*.json`: `hp`, `speed` (Towerbreiten/s), `armor`, `armor_type`, `bounty`, `damage` (Leben bei Durchbruch),
 `flying`, `boss`, `color`, `size`, optional `shape` und `model`.
-Platzhalterformen: Würfel = Boden, Kugel = Flieger, großer Quader = Boss, Pyramide = Massenwelle (`"shape": "pyramid"`).
+Modelle ohne eigenes `model` (animiert, Quaternius CC0): Skelett = Boden, Drache = Flieger, Schleim = Massenwelle
+(`"shape": "pyramid"`), Fledermaus = fliegende Massenwelle, Little Man = Boss; die Gegnerfarbe färbt einen Teil des Modells.
 Wellenrhythmus (classic): Boden, Masse, Boden, Flieger; Massenwellen ab Welle 10 (10, 14 … 46), Flieger 4, 8 … 48; Bosse 42 und 50.
 Eine Bosswelle ist ein einzelner Gegner mit zehnfachen Leben, Gold und Schaden (Gruppe mit `"count": 1`).
 Eine Massenwelle hat 25 statt 10 Gegner mit je 40 % Leben, Gold und Leben-Schaden und kürzerem Abstand.

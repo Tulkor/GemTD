@@ -6,4 +6,6 @@ assets/models/**/*_texture_*.png
 assets/models/**/*_Atlas.png
 assets/models/nature/*.png
 assets/models/city/*.png
+assets/models/scenery/*.png
+assets/models/enemies/*.png
 __pycache__/

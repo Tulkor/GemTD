@@ -42,9 +42,11 @@ var _sel_box: VBoxContainer
 
 var _banner: Label
 var _minimap: MaulMinimap
+var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var settings_panel: SettingsPanel
 var _debug: MaulDebug
 var _debug_button: Button
 
@@ -117,7 +119,7 @@ func _build_top_bar() -> void:
 		_debug_button.tooltip_text = "Debug-Menü"
 		_debug_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		_debug_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
-	UiUtil.button("Menü", row, func(): _menu.visible = not _menu.visible)
+	UiUtil.button("Menü", row, toggle_menu)
 	_build_menu()
 
 
@@ -163,10 +165,21 @@ func _build_menu() -> void:
 	UiTheme.title(UiUtil.label("Menü", box), 22)
 	var resume := UiUtil.button("Weiterspielen", box, func(): panel.hide())
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
+	UiUtil.button("Einstellungen", box, func(): settings_panel.open())
 	if game.sync == null:
 		UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
 	UiUtil.button("Hauptmenü", box, func(): Session.goto(Session.MAIN_MENU))
 	_menu = panel
+	settings_panel = SettingsPanel.new(false, true)
+	root.add_child(settings_panel)
+
+
+## Menü-Knopf und Esc: offenes Einstellungsfenster zuerst schließen.
+func toggle_menu() -> void:
+	if settings_panel.visible:
+		settings_panel.close()
+	else:
+		_menu.visible = not _menu.visible
 
 
 # --- Laden rechts -----------------------------------------------------------------
@@ -907,7 +920,22 @@ func _build_minimap() -> void:
 	_minimap = MaulMinimap.new()
 	_minimap.custom_minimum_size = Vector2(MAP_SIZE, MAP_SIZE)
 	_minimap.game = game
-	panel.add_child(_minimap)
+	if game.players.size() <= 1:
+		panel.add_child(_minimap)
+		return
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+	box.add_child(_minimap)
+	# Mehrspieler: anfangs nur die Wege durchs eigene Gebiet, die der anderen auf Knopfdruck
+	var b := UiUtil.button("Alle Wege zeigen", box, func(): pass)
+	paths_button = b
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = "Zeigt auch die Gegnerwege durch die Gebiete der Mitspieler."
+	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	b.toggled.connect(func(on: bool): game.set_show_all_paths(on))
 
 
 # --- Aktualisieren -------------------------------------------------------------------

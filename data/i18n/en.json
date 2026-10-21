@@ -1130,5 +1130,17 @@
 	"Code: %s": "Code: %s",
 	"Code in die Zwischenablage kopieren, um ihn den Mitspielern zu schicken": "Copy the code to the clipboard to send it to the other players",
 	"Über den Server %s. Mitspieler geben den Code ein, niemand muss einen Port freigeben.": "Via server %s. Players enter the code, nobody has to open a port.",
-	"leer = direkt per IP": "empty = direct by IP"
+	"leer = direkt per IP": "empty = direct by IP",
+	"Sounds": "Sounds",
+	"Ambiente": "Ambience",
+	"Schüsse, Bauen, Wellen und Bosse.": "Shots, building, waves and bosses.",
+	"Hintergrundgeräusche wie Wald und Nacht in eeveTD.": "Background sounds such as forest and night in eeveTD.",
+	"2 gleiche Gems kombinieren": "Combine 2 identical gems",
+	"Linksklick: Gem setzen / Tower oder Stein auswählen\nLinks ziehen, Strg+Klick: bis zu 5 Steine auswählen\nStrg+Z: zuletzt gesetzten Gem zurücknehmen\nRechtsklick, Esc: Auswahl aufheben\nLeertaste: große Aktion (Behalten / Kombinieren / One-Shot)\nR: Rezeptbuch\nWASD/Pfeile, Fensterrand, rechte Maustaste ziehen: Kamera bewegen\nQ/E oder mittlere Maustaste: drehen, Mausrad: zoomen\n1, 2, 3: Tempo": "Left click: place gem / select tower or rock\nLeft-drag, Ctrl+click: select up to 5 rocks\nCtrl+Z: take back the last placed gem\nRight click, Esc: clear selection\nSpace: main action (Keep / Combine / One-Shot)\nR: recipe book\nWASD/arrows, screen edge, right-drag: move camera\nQ/E or middle mouse: rotate, mouse wheel: zoom\n1, 2, 3: speed",
+	"Änderungen gelten sofort und bleiben gespeichert. Nach einem Sprachwechsel folgen manche Texte erst beim nächsten Aufbau oder in der nächsten Partie.": "Changes apply immediately and are saved. After switching language, some texts only update when they are rebuilt or in the next game.",
+	"Esc: zurück": "Esc: back",
+	"Stufe %d von %d": "Tier %d of %d",
+	"Alle Wege zeigen": "Show all paths",
+	"Zeigt auch die Gegnerwege durch die Gebiete der Mitspieler.": "Also shows the enemy paths through your teammates' areas.",
+	"Zeigt auch die Gegnerwege der Mitspieler.": "Also shows your teammates' enemy paths."
 }

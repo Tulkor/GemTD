@@ -1,5 +1,5 @@
 {
-	"_info": "Ziel im Repo -> Quelle. Pakete: mega = Quaternius Stylized Nature MegaKit (Standard), kenney_nature = Kenney Nature Kit 2.1, kenney_survival = Kenney Survival Kit 2.0, kenney_city = Kenney City Kit Commercial 2.1, quaternius_city = Quaternius Ultimate Textured Building Pack (Dec 2019). Alle CC0, siehe assets/models/CREDITS.md.",
+	"_info": "Ziel im Repo -> Quelle. Pakete: mega = Quaternius Stylized Nature MegaKit (Standard), kenney_nature = Kenney Nature Kit 2.1, kenney_survival = Kenney Survival Kit 2.0, kenney_city = Kenney City Kit Commercial 2.1, quaternius_city = Quaternius Ultimate Textured Building Pack (Dec 2019), kenney_graveyard = Kenney Graveyard Kit 5.0, yughues = Yughues HandPainted Plants 2 (Nobiax). Alle CC0, siehe assets/models/CREDITS.md.",
 	"assets/models/nature/bush_common_flowers.glb": {
 		"paket": "mega",
 		"datei": "Bush_Common_Flowers.gltf",
@@ -268,5 +268,121 @@
 	"assets/models/city/6story_stack.glb": {
 		"paket": "quaternius_city",
 		"datei": "6Story_Stack_Mat.fbx"
+	},
+	"assets/models/scenery/gravestone_cross.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-cross.glb"
+	},
+	"assets/models/scenery/gravestone_round.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-round.glb"
+	},
+	"assets/models/scenery/gravestone_bevel.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-bevel.glb"
+	},
+	"assets/models/scenery/gravestone_broken.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-broken.glb"
+	},
+	"assets/models/scenery/gravestone_decorative.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-decorative.glb"
+	},
+	"assets/models/scenery/gravestone_wide.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-wide.glb"
+	},
+	"assets/models/scenery/gravestone_cross_large.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "gravestone-cross-large.glb"
+	},
+	"assets/models/scenery/cross_wood.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "cross-wood.glb"
+	},
+	"assets/models/scenery/grave.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "grave.glb"
+	},
+	"assets/models/scenery/crypt.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "crypt.glb"
+	},
+	"assets/models/scenery/iron_fence.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "iron-fence.glb"
+	},
+	"assets/models/scenery/iron_fence_damaged.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "iron-fence-damaged.glb"
+	},
+	"assets/models/scenery/lightpost_single.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "lightpost-single.glb"
+	},
+	"assets/models/scenery/urn_round.glb": {
+		"paket": "kenney_graveyard",
+		"datei": "urn-round.glb"
+	},
+	"assets/models/nature/hp_bush011.glb": {
+		"paket": "yughues",
+		"datei": "HP3_bush011.fbx",
+		"tex": 256,
+		"textur": "HP3_bush01.tga"
+	},
+	"assets/models/nature/hp_bush021.glb": {
+		"paket": "yughues",
+		"datei": "HP3_bush021.fbx",
+		"tex": 256,
+		"textur": "HP3_bush02.tga"
+	},
+	"assets/models/nature/hp_bush031.glb": {
+		"paket": "yughues",
+		"datei": "HP3_bush031.fbx",
+		"tex": 256,
+		"textur": "HP3_bush03.tga"
+	},
+	"assets/models/nature/hp_bush041.glb": {
+		"paket": "yughues",
+		"datei": "HP3_bush041.fbx",
+		"tex": 256,
+		"textur": "HP3_bush04.tga"
+	},
+	"assets/models/nature/hp_weed011.glb": {
+		"paket": "yughues",
+		"datei": "HP3_weed011.fbx",
+		"tex": 256,
+		"textur": "HP3_weed01.tga"
+	},
+	"assets/models/nature/hp_weed031.glb": {
+		"paket": "yughues",
+		"datei": "HP3_weed031.fbx",
+		"tex": 256,
+		"textur": "HP3_weed03.tga"
+	},
+	"assets/models/nature/hp_flower1.glb": {
+		"paket": "yughues",
+		"datei": "HP3_flower1.fbx",
+		"tex": 256,
+		"textur": "HP3_flower.tga"
+	},
+	"assets/models/nature/hp_flower3.glb": {
+		"paket": "yughues",
+		"datei": "HP3_flower3.fbx",
+		"tex": 256,
+		"textur": "HP3_flower.tga"
+	},
+	"assets/models/nature/hp_grass001.glb": {
+		"paket": "yughues",
+		"datei": "HP3_grass001.fbx",
+		"tex": 256,
+		"textur": "HP3_grass00.tga"
+	},
+	"assets/models/nature/hp_clovers.glb": {
+		"paket": "yughues",
+		"datei": "HP3_clovers.fbx",
+		"tex": 256,
+		"textur": "HP3_clovers.tga"
 	}
 }

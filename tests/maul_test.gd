@@ -190,6 +190,20 @@ func _debug_tests() -> void:
 	game.start_game("hm", 1, "group")
 	game.hud.toggle_debug()
 	check(game.hud._debug != null and game.hud._debug.visible, "Debug-Menü geht auf")
+	# Esc: erst Bauwahl aufheben, dann Menü; Einstellungen gehen aus dem Menü auf
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	game.build_id = str(MaulData.buyable(game.shop_of())[0].id)
+	game._unhandled_input(esc)
+	check(game.build_id == "" and not game.hud._menu.visible, "Esc bricht erst die Bauwahl ab")
+	game._unhandled_input(esc)
+	check(game.hud._menu.visible, "Esc ohne Auswahl öffnet das Menü")
+	game.hud.settings_panel.open()
+	game._unhandled_input(esc)
+	check(not game.hud.settings_panel.visible and game.hud._menu.visible, "Esc schließt erst die Einstellungen")
+	game._unhandled_input(esc)
+	check(not game.hud._menu.visible, "Esc schließt das Menü")
 	var xp: int = game.players[0].xp
 	game.debug_add_xp(100)
 	check(game.players[0].xp == xp + 100 and game.debug_xp, "Debug: +10 XP, wird nicht gespeichert")
@@ -230,6 +244,12 @@ func _coop_tests() -> void:
 	add_child(client)
 	await get_tree().process_frame
 	check(host.sync != null and client.mirror and client.local_player == 1, "Koop: Host und Mitspieler angelegt")
+	var own_paths := client.board.path_points.size()
+	check(own_paths > 0 and client.has_other_paths(), "Mitspieler sieht anfangs nur die eigenen Wege (%d Punkte)" % own_paths)
+	client.set_show_all_paths(true)
+	check(client.board.path_points.size() > own_paths, "Knopf zeigt auch die Wege der anderen")
+	client.set_show_all_paths(false)
+	check(client.board.path_points.size() == own_paths, "Knopf blendet sie wieder aus")
 	client.sync.command_sink = func(cmd): host.sync.receive(1, _wire(cmd))
 	var pump := func():
 		client.sync.apply_state(_wire(host.sync.snapshot()))

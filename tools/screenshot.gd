@@ -26,12 +26,15 @@ extends Node
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
+##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD mit Laternen und Glühwürmchen)
+##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
+##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -56,6 +59,12 @@ func _ready() -> void:
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
 	if opts.has("sprache"):
 		Loc.set_language(opts.sprache)
+	if opts.has("mitspieler"):
+		Net.my_name = "Lukas"
+		Net.host(24691)
+		var names := String(opts.mitspieler).split(",")
+		for i in names.size():
+			Net.players[100 + i] = {"name": names[i], "status": {"in_game": true, "phase": 0, "wave": 3, "waves": 50, "lives": 100}, "uid": "fake-%d" % i}
 	var out_dir: String = opts.get("aus", "/mnt/project-files/screens/auto")
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var scene: String = opts.get("szene", "spiel")
@@ -101,6 +110,13 @@ func _ready() -> void:
 		else:
 			node.hud.debug_panel.show()
 			node.hud.debug_button.set_pressed_no_signal(true)
+	if opts.has("spielmenue") and (scene == "spiel" or scene == "maul"):
+		if scene == "maul":
+			node.hud.toggle_menu()
+		else:
+			node.hud.open_leave_confirm()
+		if str(opts.spielmenue) == "einstellungen":
+			node.hud.settings_panel.open()
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)
@@ -150,6 +166,8 @@ func _frames(n: int) -> void:
 ## Spielstand für das Bild herstellen.
 func _prepare(game: Node) -> void:
 	game.camera_rig.set_process(false)   # kein Mitlaufen am Fensterrand (Maus steht in Xvfb in der Ecke)
+	if opts.has("alle_wege") and game.has_method("set_show_all_paths"):
+		game.set_show_all_paths(true)
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
 		return
@@ -194,6 +212,8 @@ func _prepare(game: Node) -> void:
 ## Shopping Maul: Filiale eröffnen, im Zentrum bauen, Level im Zeitraffer spielen.
 func _prepare_maul(game: Node) -> void:
 	game.camera_rig.set_process(false)
+	if opts.has("alle_wege"):
+		game.set_show_all_paths(true)
 	if not opts.has("filiale"):
 		if opts.has("profi"):
 			game.hud._setup._kind = "pro"

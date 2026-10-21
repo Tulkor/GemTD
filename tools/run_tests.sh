@@ -21,8 +21,8 @@ command -v "$GODOT" >/dev/null || { echo "Godot fehlt: tools/setup_godot.sh --oh
 FAILED=0
 # Zeilen, die headless immer kommen und nichts bedeuten.
 NOISE='Parameter "m" is null|^Godot Engine|^\s*at: |^$'
-# Von Tests absichtlich ausgelöst (Smoke: veränderte Spielstand-Datei wird abgelehnt).
-EXPECTED='MD5 sum of the decrypted file'
+# Von Tests absichtlich ausgelöst (Smoke: veränderte Spielstand-Datei wird abgelehnt; Boss: fehlendes Gegner-Modell).
+EXPECTED='MD5 sum of the decrypted file|Modell nicht gefunden: res://gibt/es/nicht.glb'
 
 summary() {  # name log exit start
   local name=$1 log=$2 code=$3 ok fail secs warn
@@ -169,6 +169,7 @@ pick_changed() {
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/relay/*) t+="relay " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
+      data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
       data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;

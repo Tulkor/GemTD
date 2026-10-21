@@ -11,7 +11,6 @@ var play_button: Button
 var cards: Array[Button] = []
 var mode_cards: Array[ModeCard] = []
 var settings: Control
-var ui_scale_slider: HSlider
 var lobby: LobbyPanel
 var loader: LoadPanel
 var net_tile: Button
@@ -318,122 +317,10 @@ func _update_modes() -> void:
 		card.set_state(card.mode_id == Session.game_kind, ok, tag)
 
 
-## Einstellungen: Sprache. Ein Wechsel lädt das Menü neu, damit alle Texte neu gebaut werden.
+## Einstellungen: gleiches Fenster wie im Spiel, hier in Art déco.
 func _build_settings() -> void:
-	settings = Control.new()
-	settings.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	settings.mouse_filter = Control.MOUSE_FILTER_STOP
+	settings = SettingsPanel.new(true)
 	add_child(settings)
-	var dim := ColorRect.new()
-	dim.color = Color(DecoTheme.BAR, 0.75)
-	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	settings.add_child(dim)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	settings.add_child(center)
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", DecoTheme.panel(28.0))
-	panel.custom_minimum_size.x = 520
-	center.add_child(panel)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 14)
-	panel.add_child(v)
-	var deco := UiUtil.label("◆  ◆  ◆", v, 16)
-	deco.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	deco.add_theme_color_override("font_color", DecoTheme.GOLD)
-	DecoTheme.title(UiUtil.label("Einstellungen", v, 38)).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 16)
-	grid.add_theme_constant_override("v_separation", 12)
-	v.add_child(grid)
-
-	# Sprache: Wechsel lädt das Menü neu, damit alle Texte neu gebaut werden
-	var lang := _settings_option(tr("Sprache") + ("" if Loc.language == "en" else " / Language"), grid)
-	for l in Loc.LANGUAGES:
-		lang.add_item(l[1])
-	lang.select(maxi(Loc.LANGUAGES.map(func(l): return l[0]).find(Loc.language), 0))
-	lang.item_selected.connect(func(i):
-		Loc.set_language(Loc.LANGUAGES[i][0])
-		Session.reopen_settings = true
-		get_tree().reload_current_scene())
-
-	var mode := _settings_option(tr("Anzeige"), grid)
-	mode.add_item(tr("Fenster"))
-	mode.add_item(tr("Vollbild"))
-	mode.select(1 if Display.fullscreen else 0)
-
-	var res := _settings_option(tr("Auflösung"), grid)
-	for r in Display.RESOLUTIONS:
-		res.add_item("%d × %d" % [r.x, r.y])
-	res.select(maxi(Display.RESOLUTIONS.find(Display.resolution), 0))
-	res.disabled = Display.fullscreen
-	res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if Display.fullscreen else ""
-	res.item_selected.connect(func(i): Display.set_resolution(Display.RESOLUTIONS[i]))
-	mode.item_selected.connect(func(i):
-		Display.set_fullscreen(i == 1)
-		res.disabled = i == 1
-		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
-	ui_scale_slider = _ui_scale_row(grid)
-	var hint := UiUtil.wrap_label("Änderungen gelten sofort und bleiben gespeichert.", v, 400)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", DecoTheme.MUTED)
-	v.add_child(_gap(4))
-	var done := UiUtil.button("Fertig", v, func(): settings.hide())
-	done.custom_minimum_size.y = 56
-	done.add_theme_font_size_override("font_size", 28)
-	DecoTheme.accent_button(done)
-	settings.hide()
-
-
-## UI-Größe 50–100 %: die Zahl folgt dem Regler sofort, umgestellt wird beim Loslassen,
-## sonst springt der Regler beim Ziehen unter der Maus weg.
-func _ui_scale_row(grid: GridContainer) -> HSlider:
-	var l := UiUtil.label(tr("UI-Größe"), grid, 15)
-	l.custom_minimum_size.x = 150
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 12)
-	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_child(h)
-	var s := HSlider.new()
-	s.min_value = Display.UI_SCALE_MIN * 100.0
-	s.max_value = Display.UI_SCALE_MAX * 100.0
-	s.step = 5
-	s.value = roundf(Display.ui_scale * 100.0)
-	s.focus_mode = Control.FOCUS_NONE
-	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	s.custom_minimum_size.y = 24
-	s.tooltip_text = tr("Verkleinert Menüs und Spieloberfläche, die Spielansicht bleibt gleich.")
-	h.add_child(s)
-	var n := UiUtil.label("%d %%" % roundi(s.value), h, 16)
-	n.custom_minimum_size.x = 64
-	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	n.add_theme_font_override("font", DecoTheme.font(true))
-	n.add_theme_color_override("font_color", DecoTheme.BRASS_LIGHT)
-	var dragging := [false]
-	s.drag_started.connect(func(): dragging[0] = true)
-	s.drag_ended.connect(func(_changed):
-		dragging[0] = false
-		Display.set_ui_scale(s.value / 100.0))
-	s.value_changed.connect(func(v):
-		n.text = "%d %%" % roundi(v)
-		if not dragging[0]:
-			Display.set_ui_scale(v / 100.0))
-	return s
-
-
-func _settings_option(text: String, grid: GridContainer) -> OptionButton:
-	var l := UiUtil.label(text, grid, 15)
-	l.custom_minimum_size.x = 150
-	var o := OptionButton.new()
-	o.focus_mode = Control.FOCUS_NONE
-	o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	o.custom_minimum_size.y = 40
-	o.add_theme_font_size_override("font_size", 16)
-	grid.add_child(o)
-	return o
 
 
 func _gap(h: float) -> Control:

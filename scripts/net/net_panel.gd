@@ -11,7 +11,9 @@ var watching := 0
 var remote: RemoteField = null
 
 var _list: VBoxContainer
-var _panel: PanelContainer
+var panel: PanelContainer  ## Mitspieler-Liste rechts unten
+var avoid: Control  ## Auswahlkarte unten: die Liste rückt darüber, wenn die Karte bis unter sie reicht
+var _fold: Button
 var _bar: PanelContainer
 var _bar_title: Label
 var _bar_info: Label
@@ -28,22 +30,32 @@ func _ready() -> void:
 	root.theme = UiTheme.get_theme()
 	add_child(root)
 
-	_panel = PanelContainer.new()
-	_panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
-	_panel.anchor_left = 1.0
-	_panel.anchor_right = 1.0
-	_panel.anchor_top = 1.0
-	_panel.anchor_bottom = 1.0
-	_panel.offset_right = -16
-	_panel.offset_bottom = -16
-	_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_panel.custom_minimum_size.x = 260
-	root.add_child(_panel)
+	panel = PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiTheme.box(Color(UiTheme.BAR, 0.94), UiTheme.BORDER, 8, 1, 12))
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.offset_right = -16
+	panel.offset_bottom = -16
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	panel.custom_minimum_size.x = 280
+	root.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
-	_panel.add_child(v)
-	UiTheme.caption("Mitspieler", v)
+	panel.add_child(v)
+	var head := HBoxContainer.new()
+	v.add_child(head)
+	UiTheme.caption("Mitspieler", head).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fold = Button.new()
+	_fold.text = "–"
+	_fold.focus_mode = Control.FOCUS_NONE
+	_fold.tooltip_text = "Ein-/ausklappen"
+	_fold.pressed.connect(func():
+		_list.visible = not _list.visible
+		_fold.text = "–" if _list.visible else "+")
+	head.add_child(_fold)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 8)
 	v.add_child(_list)
@@ -96,12 +108,24 @@ func _on_enemies(peer: int, data: Dictionary) -> void:
 		remote.apply_enemies(data)
 
 
+## Über der Auswahlkarte bleiben, sonst verdeckt die Liste deren Aktionsknöpfe (z. B. „Zurücknehmen“).
+func _avoid_card() -> void:
+	var bottom := -16.0
+	if avoid != null and avoid.is_visible_in_tree():
+		var card := avoid.get_global_rect()
+		if card.end.x > panel.global_position.x:
+			bottom = card.position.y - 12.0 - panel.get_parent_area_size().y
+	if absf(panel.offset_bottom - bottom) > 0.5:
+		panel.offset_bottom = bottom
+
+
 func _exit_tree() -> void:
 	if watching != 0:
 		Net.watch(watching, false)
 
 
 func _process(delta: float) -> void:
+	_avoid_card()
 	_refresh_timer -= delta / maxf(Engine.time_scale, 0.01)
 	if _refresh_timer <= 0.0:
 		_refresh_timer = 0.5
