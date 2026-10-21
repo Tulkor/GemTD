@@ -38,7 +38,27 @@ func _ready() -> void:
 	var normal := Enemy.new()
 	add_child(normal)
 	normal.setup(game, {"id": "w", "hp": 100}, {}, path)
-	check(normal._anim == null and normal._body.visible, "normaler Gegner bleibt ein Würfel ohne Animation")
+	check(normal._anim != null and not normal._body.visible and normal._model_path.ends_with("skeleton.glb"),
+			"Bodengegner ist ein animiertes Skelett")
+	for c in [[{"flying": true}, {}, "dragon.glb"], [{"flying": true}, {"shape": "pyramid"}, "bat.glb"],
+			[{}, {"shape": "pyramid"}, "slime.glb"]]:
+		var e := Enemy.new()
+		add_child(e)
+		var def: Dictionary = {"id": "m", "hp": 100, "color": "#ff0000"}
+		def.merge(c[0])
+		e.setup(game, def, c[1], path)
+		check(e._anim != null and e._model_path.ends_with(c[2]) and e._anim.has_animation("death"),
+				"Gegner %s %s ist %s mit Animationen" % [c[0], c[1], c[2]])
+		var tinted := false
+		for m in e._model.find_children("*", "MeshInstance3D", true, false):
+			for i in m.get_surface_override_material_count():
+				var mat = m.get_surface_override_material(i)
+				tinted = tinted or (mat is BaseMaterial3D and mat.albedo_color.r > mat.albedo_color.g + 0.3)
+		check(tinted, "%s trägt die Gegnerfarbe" % c[2])
+	var own := Enemy.new()
+	add_child(own)
+	own.setup(game, {"id": "o", "hp": 100, "model": "res://gibt/es/nicht.glb"}, {}, path)
+	check(own._model == null and own._body.visible, "eigenes, fehlendes Modell bleibt die einfache Form")
 
 	var boss := Enemy.new()
 	add_child(boss)
