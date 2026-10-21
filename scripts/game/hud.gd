@@ -56,6 +56,8 @@ var left_col: VBoxContainer
 var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_button: Button
+var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus (add_paths_toggle)
+var _speed_row: HBoxContainer
 var debug_panel: PanelContainer
 var dps_meter: DpsMeter
 var enemy_panel: EnemyPanel
@@ -298,6 +300,7 @@ func _build_top_bar() -> void:
 	var speed_row := HBoxContainer.new()
 	speed_row.add_theme_constant_override("separation", 0)
 	h.add_child(speed_row)
+	_speed_row = speed_row
 	var group := ButtonGroup.new()
 	for f in SPEEDS:
 		var b := _button("%dx" % int(f), speed_row, func(): speed_selected.emit(f))
@@ -319,6 +322,18 @@ func _build_top_bar() -> void:
 	recipes_button.tooltip_text = "Rezeptbuch (Taste R)"
 	_button("Hilfe", h, func(): help_panel.visible = not help_panel.visible)
 	_button("Menü", h, open_leave_confirm)
+
+
+## Mehrspieler: Umschalter links neben dem Tempo, zeigt auch die Gegnerwege der Mitspieler.
+func add_paths_toggle(on_toggled: Callable) -> void:
+	paths_button = _button("Alle Wege zeigen", _speed_row.get_parent(), func(): pass)
+	_speed_row.get_parent().move_child(paths_button, _speed_row.get_index())
+	paths_button.toggle_mode = true
+	paths_button.focus_mode = Control.FOCUS_NONE
+	paths_button.tooltip_text = "Zeigt auch die Gegnerwege der Mitspieler."
+	paths_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	paths_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	paths_button.toggled.connect(on_toggled)
 
 
 ## Panel-Überschrift: Großbuchstaben, fett.

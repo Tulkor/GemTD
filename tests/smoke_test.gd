@@ -1178,6 +1178,12 @@ func _maul_test() -> void:
 	await get_tree().process_frame
 	h.coop.command_sink = func(cmd): g.coop.receive(1, cmd)
 	check(g.active_lanes() == [0, 1], "Maul Koop: beide Bahnen laufen")
+	var own_dots: int = h.board.path_points.size()
+	check(own_dots == h.lane_paths[1].ground.size() and h.hud.paths_button != null, "Maul Koop: Ben sieht anfangs nur seinen Weg")
+	h.hud.paths_button.button_pressed = true
+	check(h.board.path_points.size() > own_dots, "Maul Koop: Knopf zeigt auch Annas Weg")
+	h.hud.paths_button.button_pressed = false
+	check(h.board.path_points.size() == own_dots, "Maul Koop: Knopf blendet ihn wieder aus")
 	check(g.can_place(Vector2i(20, 20)) and not g.can_place(Vector2i(70, 20)), "Maul: Anna baut nur in ihrer Zone")
 	check(not g.execute({"type": "place", "cell": Vector2i(20, 20), "player": 1}) and g.execute({"type": "place", "cell": Vector2i(70, 20), "player": 1}),
 		"Maul: Ben baut nur in seiner Zone")
