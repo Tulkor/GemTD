@@ -43,6 +43,19 @@ Kenney Modular Buildings (beide CC0).
   Skelett = Bodengegner, Schleim = Massenwelle, Drache = Flieger, Fledermaus = Massenflieger; ein Material wird in
   Richtung der Gegnerfarbe eingefärbt.
 
+## eeveTD-Umgebung: Friedhof, Kirche, handgemalte Pflanzen (CC0, 2026-10-21)
+
+Von Lukas hochgeladen, Lizenztexte in `licenses/`. Verwendet in `scripts/map/eeve_scenery.gd`.
+
+- `scenery/gravestone_*`, `cross_wood`, `grave`, `urn_round`, `crypt`, `iron_fence*`, `lightpost_single`:
+  "Graveyard Kit" 5.0 von Kenney, CC0, https://kenney.nl/assets/graveyard-kit (über `tools/modelle/umwandeln.py`)
+- `scenery/church.glb`: "Medieval Church" von Daniel74, CC0, Blend Swap 75990 (http://www.blendswap.com/blends/view/75990).
+  Umgewandelt mit `tools/modelle/kirche_umwandeln.py`: Statue im Inneren entfernt, Texturen neu zugeordnet und auf 256 px verkleinert.
+- `nature/hp_*.glb`: "HandPainted Plants 2" von Nobiax / Yughues, CC0 (Pflanzen-Karten mit Alpha, Textur über das Feld
+  `textur` in `tools/modelle/auswahl.json`).
+
+Nicht verwendet: "free_mine_assets" (hochgeladen 2026-10-21) enthält keinen Lizenztext und keine Quellenangabe.
+
 ## Boss-Modell (CC-BY 3.0, Nennung Pflicht)
 
 - `enemies/little_man.glb`: Little Man by Don Carson [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/8KU4S7I0sL8)
