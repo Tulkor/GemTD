@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Baut die Windows-Version und legt sie als nächste Nummer GemTD_V0_<N>.zip ab.
 # Nur bauen, wenn Lukas ausdrücklich nach einem Build fragt (Projektregel).
-# Aufruf: tools/build_windows.sh [--ziel <ordner>] [--ohne-tests] [--ohne-tag]
+# Aufruf: tools/build_windows.sh [--ziel <ordner>] [--ohne-tests] [--ohne-tag] [--nummer <N>]
 #   --ziel       Ablageort (Standard /mnt/project-files/builds). Zum Ausprobieren einen Testordner angeben.
 #   --ohne-tests Tests überspringen (Standard: tools/run_tests.sh schnell vorher, Abbruch bei Fehlern)
 #   --ohne-tag   kein Git-Tag v0.<N> setzen (Standard: Tag setzen und pushen, nur bei Ablage in builds/)
+#   --nummer     feste Nummer statt der nächsten freien (GitHub-Release, .github/workflows/release.yml)
 # Letzte Ausgabezeile: BUILD GemTD_V0_<N>.zip <Größe> <Commit>
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,11 +14,13 @@ export PATH="$HOME/.local/bin:$PATH"
 ZIEL=/mnt/project-files/builds
 TESTS=1
 TAG=1
+NUMMER=
 while [ $# -gt 0 ]; do
   case $1 in
     --ziel) ZIEL=$2; shift 2 ;;
     --ohne-tests) TESTS=0; shift ;;
     --ohne-tag) TAG=0; shift ;;
+    --nummer) NUMMER=$2; shift 2 ;;
     *) echo "Unbekannte Option: $1"; exit 2 ;;
   esac
 done
@@ -37,6 +40,7 @@ fi
 mkdir -p "$ZIEL"
 N=$(ls "$ZIEL" 2>/dev/null | sed -nE 's/^GemTD_V0_([0-9]+)\.zip$/\1/p' | sort -n | tail -n1)
 N=$(( ${N:-0} + 1 ))
+[ -n "$NUMMER" ] && N=$NUMMER
 NAME="GemTD_V0_${N}.zip"
 [ -e "$ZIEL/$NAME" ] && { echo "$NAME existiert schon"; exit 1; }
 
@@ -46,6 +50,7 @@ python3 tools/tower_tabelle.py --kopieren >/dev/null
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p export/windows "$TMP/GemTD"
+tools/godot_import.sh
 godot --headless --path . --export-release "Windows" "$TMP/GemTD/GemTD.exe" >"$TMP/export.log" 2>&1 || {
   echo "Export fehlgeschlagen:"; grep -E "ERROR|error" "$TMP/export.log" | grep -v 'Parameter "m"' | head -20; exit 1; }
 [ -s "$TMP/GemTD/GemTD.exe" ] || { echo "Export hat keine GemTD.exe erzeugt"; tail -20 "$TMP/export.log"; exit 1; }
