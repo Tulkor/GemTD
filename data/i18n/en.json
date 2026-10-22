@@ -1142,5 +1142,12 @@
 	"Stufe %d von %d": "Tier %d of %d",
 	"Alle Wege zeigen": "Show all paths",
 	"Zeigt auch die Gegnerwege durch die Gebiete der Mitspieler.": "Also shows the enemy paths through your teammates' areas.",
-	"Zeigt auch die Gegnerwege der Mitspieler.": "Also shows your teammates' enemy paths."
+	"Zeigt auch die Gegnerwege der Mitspieler.": "Also shows your teammates' enemy paths.",
+	"Map-Datei (.json) laden, z. B. aus dem HTML-Editor; Speichern legt sie bei den Maps ab": "Load a map file (.json), e.g. from the HTML editor; Save adds it to your maps",
+	"Datei importieren": "Import file",
+	"Keine Map-Datei: ": "Not a map file: ",
+	"Importiert: %s. Speichern legt die Map ab.": "Imported: %s. Save to add the map.",
+	"Tower-Datei (.json) laden, z. B. aus dem HTML-Editor": "Load a tower file (.json), e.g. from the HTML editor",
+	"Keine Tower-Datei: ": "Not a tower file: ",
+	"Importiert: %s. Speichern legt den Tower ab.": "Imported: %s. Save to add the tower."
 }

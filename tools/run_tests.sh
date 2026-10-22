@@ -141,6 +141,7 @@ do_test() {
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
     werkzeuge) run_check werkzeuge check_tools ;;
     balanceeditor) run_check balanceeditor node tools/balance_editor/pruefen.mjs ;;
+    htmleditor) run_check htmleditor node tools/html_editor/pruefen.mjs ;;
     *)
       resolve "$1"
       [ -n "$STEM" ] || { echo "Unbekannter Test: $1 (vorhanden: $(all_tests | tr '\n' ' '))"; FAILED=1; return; }
@@ -170,6 +171,7 @@ pick_changed() {
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/relay/*) t+="relay " ;;
       tools/balance_editor/*|tools/balance_anwenden.py) t+="balanceeditor " ;;
+      tools/html_editor/*) t+="htmleditor " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
       data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul " ;;
