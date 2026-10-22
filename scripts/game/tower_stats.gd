@@ -133,7 +133,8 @@ static func view(t) -> Dictionary:
 		kills = kill_info(t.kills)
 		kills.total_damage = t.total_damage
 	return {"subtitle": subtitle, "tiles": tiles, "kills": kills,
-			"abilities": t.abilities().map(func(ab): return Abilities.describe(ab)),
+			"abilities": t.abilities().map(func(ab): return Abilities.describe(ab))
+				+ t.rogue_fx.get("flasks", []).map(func(f): return _t(str(f.get("name", ""))) + ": " + Rogue._flask_text(f)),
 			"description": _t(str(t.def.description)) if t.def.has("description") else ""}
 
 

@@ -63,7 +63,7 @@ func _card(o: Dictionary, index: int, parent: Node) -> Button:
 	var rcol: Color = _color(str(rar.get("color", "TEXT")))
 	var def: Dictionary = Database.towers.get(str(o.id), {})
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(CARD_W, 300)
+	b.custom_minimum_size = Vector2(CARD_W, 340)
 	b.focus_mode = Control.FOCUS_NONE
 	_style_card(b, rcol, false)
 	b.pressed.connect(func(): _choose(index))
@@ -93,32 +93,49 @@ func _card(o: Dictionary, index: int, parent: Node) -> Button:
 	v.add_child(head)
 	var gem := Panel.new()
 	gem.custom_minimum_size = Vector2(26, 26)
-	gem.add_theme_stylebox_override("panel", UiTheme.box(Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE), UiTheme.TEXT, 0, 2, 0))
+	var swatch := Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
+	if str(o.effect) == "flask":
+		swatch = Color.from_string(str(o.params.get("color", "#ffffff")), Color.WHITE)
+	elif str(o.kind) == "global":
+		swatch = UiTheme.GOLD
+	gem.add_theme_stylebox_override("panel", UiTheme.box(swatch, UiTheme.TEXT, 0, 2, 0))
 	gem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(gem)
-	var name := UiUtil.wrap_label(tr(str(def.get("name", o.id))), head, 0)
+	var who := tr("Alle deine Tower") if str(o.kind) == "global" else tr(str(def.get("name", o.id)))
+	if str(o.effect) in ["gold", "interest", "luck", "double_pick"]:
+		who = tr("Für dich")
+	var name := UiUtil.wrap_label(who, head, 0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.add_theme_font_override("font", UiTheme.font(true))
 	name.add_theme_font_size_override("font_size", 20)
 
-	var scope := tr("Grund-Gem · alle Stufen") if str(o.kind) == "gem" else tr("Spezialtower · mit Upgrades")
+	var scope: String = {"gem": tr("Grund-Gem · alle Stufen"), "special": tr("Spezialtower · mit Upgrades")}.get(str(o.kind), tr("Gilt bis zum Spielende"))
 	var sc := UiUtil.wrap_label(scope, v, CARD_W - 32)
 	sc.add_theme_color_override("font_color", UiTheme.MUTED)
 	sc.add_theme_font_size_override("font_size", 13)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 6
+	spacer.custom_minimum_size.y = 4
 	v.add_child(spacer)
-	var big := UiUtil.label(Rogue.value_text(float(o.value)), v, 40)
+	var stat: bool = str(o.effect) == "stat"
+	var big := UiUtil.wrap_label(Rogue.headline(o), v, CARD_W - 32)
+	big.add_theme_font_size_override("font_size", 40 if stat else 22)
 	big.add_theme_font_override("font", UiTheme.font(true))
 	big.add_theme_color_override("font_color", UiTheme.GOLD)
 	big.add_theme_color_override("font_shadow_color", UiTheme.CYAN)
 	big.add_theme_constant_override("shadow_offset_x", 2)
 	big.add_theme_constant_override("shadow_offset_y", 2)
-	var st := UiUtil.label(str(tr(Rogue.stat_name(str(o.stat)))).to_upper(), v, 16)
-	st.add_theme_font_override("font", UiTheme.font(true))
+	if not stat:
+		big.uppercase = true
+	var st := UiUtil.wrap_label(Rogue.details(o), v, CARD_W - 32)
+	if stat:
+		st.uppercase = true
+		st.add_theme_font_override("font", UiTheme.font(true))
+		st.add_theme_font_size_override("font_size", 16)
+	else:
+		st.add_theme_font_size_override("font_size", 13)
 
-	var flavor := UiUtil.wrap_label(tr(str(Rogue.rules().get("stats", {}).get(str(o.stat), {}).get("title", ""))), v, CARD_W - 32)
+	var flavor := UiUtil.wrap_label(tr(str(Rogue.boon_def(str(o.boon)).get("title", ""))), v, CARD_W - 32)
 	flavor.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
 	flavor.add_theme_font_size_override("font_size", 13)
 
@@ -128,7 +145,7 @@ func _card(o: Dictionary, index: int, parent: Node) -> Button:
 	var info := UiUtil.wrap_label(_card_info(o), v, CARD_W - 32)
 	info.add_theme_font_size_override("font_size", 13)
 	info.add_theme_color_override("font_color", UiTheme.HAVE if _owned(str(o.id)) > 0 else UiTheme.MUTED)
-	for c in [r, name, sc, big, st, flavor, info, gem, head]:
+	for c in m.find_children("*", "Control", true, false):
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return b
 
@@ -167,7 +184,10 @@ static func _color(key: String) -> Color:
 
 func _card_info(o: Dictionary) -> String:
 	var lines := []
-	var before: float = game.rogue.total(game.local_player, str(o.id), str(o.stat)) if game.rogue != null else 0.0
+	var have: int = game.rogue.count(game.local_player, str(o.effect)) if game.rogue != null else 0
+	if str(o.kind) == "global":
+		return tr("Hast du schon %d×, stapelt sich") % have if have > 0 else ""
+	var before: float = game.rogue.total(game.local_player, str(o.id), str(o.stat)) if game.rogue != null and str(o.effect) == "stat" else 0.0
 	if before > 0.0:
 		lines.append(tr("Bisher %s, danach %s") % [Rogue.value_text(before), Rogue.value_text(before + float(o.value))])
 	var n := _owned(str(o.id))
@@ -201,4 +221,4 @@ func _confirm() -> void:
 	if _chosen < 0:
 		return
 	_take.disabled = true
-	game.submit({"type": "rogue_pick", "index": _chosen, "id": str(offers[_chosen].id), "stat": str(offers[_chosen].stat)})
+	game.submit({"type": "rogue_pick", "index": _chosen, "id": str(offers[_chosen].id), "boon": str(offers[_chosen].boon)})

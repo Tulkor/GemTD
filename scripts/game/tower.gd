@@ -63,6 +63,10 @@ var damage_source := ""  ## Name des Towers, dessen Schadens-Aura gerade wirkt
 var rogue_damage := 0.0
 var rogue_speed := 0.0
 var rogue_range := 0.0
+var rogue_abilities: Array = []  ## Fähigkeiten aus Roguelike-Boni (zusätzlich zu stats.abilities)
+var rogue_anti_air := false      ## Roguelike „Luftabwehr“: Bodentower greift auch Flieger an
+var rogue_fx: Dictionary = {}    ## Roguelike: Flächen, Prozentschaden, Henker (rogue.gd → on_hit), leer = keine
+var _all_abilities: Array = []
 var cooldown_left := 0.0
 var kills := 0
 var moves_left := 0  ## wie oft eine Falle noch verschoben werden darf
@@ -119,7 +123,9 @@ func range_cells() -> float:
 
 
 func abilities() -> Array:
-	return stats.get("abilities", [])
+	if rogue_abilities.is_empty():
+		return stats.get("abilities", [])
+	return _all_abilities
 
 
 func ability(type: String) -> Dictionary:
@@ -130,7 +136,8 @@ func ability(type: String) -> Dictionary:
 
 
 func target_mode() -> String:
-	return str(stats.get("targets", def.get("targets", "both")))
+	var mode := str(stats.get("targets", def.get("targets", "both")))
+	return "both" if rogue_anti_air and mode == "ground" else mode
 
 
 func can_target(e) -> bool:
@@ -249,8 +256,9 @@ func _roll_damage() -> float:
 func _attack(e) -> void:
 	var dmg := _roll_damage()
 	var crit := ability("crit")
-	if not crit.is_empty() and randf() < float(crit.chance):
-		dmg *= float(crit.multiplier)
+	var crit_chance := float(crit.get("chance", 0.0)) + float(e.crit_mark)
+	if crit_chance > 0.0 and randf() < crit_chance:
+		dmg *= float(crit.get("multiplier", 2.0))
 	game.add_beam(position + Vector3(0, 0.9, 0), _hit_point(e), color, fx_key())
 	var target_pos: Vector2 = e.pos
 	_hit(e, dmg)
@@ -320,6 +328,8 @@ func _hit(e, dmg: float) -> void:
 	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
 		kills += 1
+	if not rogue_fx.is_empty() and game.rogue != null:
+		game.rogue.on_hit(self, e)
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
@@ -956,6 +966,21 @@ func _finish_visual() -> void:
 func set_rogue(b: Dictionary) -> void:
 	rogue_damage = float(b.get("damage", 0.0))
 	rogue_speed = float(b.get("speed", 0.0))
+	rogue_anti_air = bool(b.get("anti_air", false))
+	rogue_fx = {}
+	for k in ["flasks", "pct", "execute"]:
+		if not b.get(k, {}).is_empty():
+			rogue_fx[k] = b[k]
+	# Gift aus dem Pool hat seinen Schaden als Anteil am Tower-Schaden (dps_factor)
+	rogue_abilities = []
+	for ab in b.get("abilities", []):
+		var a: Dictionary = ab.duplicate()
+		if a.has("dps_factor"):
+			var dmg: Array = stats.get("damage", [0, 0])
+			a.dps = snappedf((float(dmg[0]) + float(dmg[1])) / 2.0 * float(a.dps_factor) / maxf(float(stats.get("cooldown", 1.0)), 0.05), 0.1)
+			a.erase("dps_factor")
+		rogue_abilities.append(a)
+	_all_abilities = stats.get("abilities", []) + rogue_abilities
 	var r := float(b.get("range", 0.0))
 	if is_equal_approx(r, rogue_range):
 		return

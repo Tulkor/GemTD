@@ -657,6 +657,11 @@ func _enter_build() -> void:
 	_refresh_hud()
 
 
+## Gegnerwerte: im Roguelike mit den eigenen Werten aus data/roguelike_enemies.json.
+func enemy_def(id: String) -> Dictionary:
+	return Rogue.enemy_def(id) if rogue != null else Database.enemies.get(id, {})
+
+
 ## Variante Roguelike einschalten (Einstellungen vor Runde 1, Spielstand oder Stand vom Host).
 func enable_rogue() -> Rogue:
 	if rogue == null:
@@ -677,7 +682,7 @@ func place_gem(c: Vector2i) -> Tower:
 		id = parts[0]
 		tier = int(parts[1]) if parts.size() > 1 else 0
 	else:
-		var roll := Database.roll_gem(chance_level, rng)
+		var roll := Database.roll_gem(chance_level + (rogue.luck(acting) if rogue != null else 0), rng)
 		id = roll[0]
 		tier = roll[1]
 	if not Database.towers.has(id):
@@ -1147,7 +1152,7 @@ func _execute(cmd: Dictionary) -> bool:
 			var i := int(cmd.get("index", -1))
 			var offer: Array = rogue.offers[acting]
 			# nur dasselbe Angebot nehmen, das der Spieler gesehen hat
-			if i < 0 or i >= offer.size() or offer[i].id != cmd.get("id") or offer[i].stat != cmd.get("stat"):
+			if i < 0 or i >= offer.size() or offer[i].id != cmd.get("id") or offer[i].boon != cmd.get("boon"):
 				return false
 			if not rogue.pick(acting, i):
 				return false
@@ -1194,7 +1199,12 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	gold -= int(o.cost)
 	for c in o.consume:
 		_consume(c)
-	if o.action == "keep":
+	# Roguelike „Doppelfund“: diesen Gem behalten, die anderen bleiben zur Wahl
+	var extra: bool = o.action == "keep" and rogue != null and round_towers.size() > 1 and rogue.take_extra_keep(acting)
+	if extra:
+		round_towers.erase(t)
+		t.is_new = false
+	elif o.action == "keep":
 		for r in round_towers:
 			if r != t and is_instance_valid(r):
 				_turn_into_rock(r)
@@ -1212,7 +1222,7 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	_update_paths()
 	board.refresh_rocks()
 	_update_auras()
-	if o.action == "keep":
+	if o.action == "keep" and not extra:
 		_finish_round()
 	else:
 		_refresh_hud()
@@ -1360,7 +1370,7 @@ func _process_wave(delta: float) -> void:
 
 ## Gegner der Gruppe g erscheinen an jeder aktiven Bahn (lane < 0) oder nur an Bahn lane.
 func _spawn_enemy(g: Dictionary, lane := -1) -> void:
-	var def: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
+	var def: Dictionary = enemy_def(str(g.get("enemy", "")))
 	if def.is_empty():
 		push_warning("Unbekannter Gegner: %s" % g.get("enemy", ""))
 		return
@@ -1521,7 +1531,9 @@ func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
 	# Kopfgeld bekommt der Spieler, dessen Tower zuletzt getroffen hat
-	earn_gold(e.bounty, e.last_hit_by)
+	earn_gold(e.bounty * (rogue.gold_factor(e.last_hit_by) if rogue != null else 1.0), e.last_hit_by)
+	if rogue != null:
+		rogue.on_kill(e)
 	if e.final_boss:
 		_final_boss_done(e, true)
 	else:
@@ -1634,7 +1646,7 @@ func queued_hp() -> float:
 
 
 func _group_hp(g: Dictionary) -> float:
-	return float(g.get("hp", Database.enemies.get(str(g.get("enemy", "")), {}).get("hp", 10)))
+	return float(g.get("hp", enemy_def(str(g.get("enemy", ""))).get("hp", 10)))
 
 
 func _remove_enemy(e: Enemy) -> void:
@@ -1720,7 +1732,11 @@ func _set_phase_banner(my_stage: int, shot_text: String) -> void:
 		Phase.BUILD:
 			hud.set_phase(tr("Bauphase"), tr("Gems gesetzt: %d / %d · Steine anklicken: ersetzen oder entfernen") % [round_towers.size(), gems_per_round()], shot_text)
 		Phase.CHOOSE:
-			hud.set_phase(tr("Wahlphase"), tr("Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen."), shot_text)
+			var extra: int = rogue.extra_keeps_left(local_player) if rogue != null else 0
+			if extra > 0:
+				hud.set_phase(tr("Wahlphase"), tr("Doppelfund: du darfst %d Gems mehr behalten, danach werden die anderen zu Steinen.") % extra, shot_text)
+			else:
+				hud.set_phase(tr("Wahlphase"), tr("Wähle einen der neuen Gems und behalte ihn. Die anderen werden zu Steinen."), shot_text)
 		Phase.WAVE:
 			if is_final_boss_wave():
 				hud.set_phase(tr("Endboss"), tr("Schadenscheck: kostet keine Leben, zählt nur dein Schaden") if not score_mode
@@ -1804,7 +1820,7 @@ func _upcoming_waves(count: int) -> Array:
 		return list
 	for i in range(wave_index, mini(wave_index + count, waves.size())):
 		var groups: Array = waves[i].get("groups", [])
-		var defs := groups.map(func(g): return Database.enemies.get(str(g.get("enemy", "")), {}))
+		var defs := groups.map(func(g): return enemy_def(str(g.get("enemy", ""))))
 		var total := 0
 		for g in groups:
 			total += int(g.get("count", 1))

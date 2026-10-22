@@ -37,7 +37,8 @@ extends Node
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
 ##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
-##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Boni schon vorher gewählt (z. B. fürs Infofenster)
+##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Werte-Boni schon vorher gewählt (z. B. fürs Infofenster),
+##                           --angebot=flask:ruby,execute,ability:silver diese Boni (Bonus-ID[:Tower]) als Karten
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -207,12 +208,22 @@ func _prepare(game: Node) -> void:
 		r.on_build()
 		for b in String(opts.get("boni", "")).split(",", false):
 			var p := b.split(":")
-			r.boons[0].append({"id": p[0], "kind": str(Database.towers.get(p[0], {}).get("category", "gem")),
-					"stat": p[1], "value": float(p[2]) if p.size() > 2 else 0.2, "rarity": "common", "wave": 0})
+			r.boons[0].append({"boon": p[1], "effect": "stat", "id": p[0], "kind": str(Database.towers.get(p[0], {}).get("category", "gem")),
+					"stat": p[1], "value": float(p[2]) if p.size() > 2 else 0.2, "rarity": "common", "params": {}, "wave": 0})
 		game._update_auras()
 		if opts.has("roguelike"):
 			game.wave_index = int(opts.roguelike) if str(opts.roguelike) != "1" else 10
 			r.on_build()
+			if opts.has("angebot"):
+				var list := []
+				for spec in String(opts.angebot).split(",", false):
+					var parts := spec.split(":")
+					for i in 300:
+						var o: Dictionary = r._make_offer(Rogue.boon_def(parts[0]), 0, game.rng)
+						if not o.is_empty() and (parts.size() < 2 or o.id == parts[1]):
+							list.append(o)
+							break
+				r.offers[0] = list
 	if opts.has("auswahl"):
 		if not game.round_towers.is_empty():
 			game._select(game.round_towers[0])

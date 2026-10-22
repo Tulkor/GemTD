@@ -78,6 +78,16 @@ const hp1 = await page.evaluate(() => FILES["data/enemies/" + FILES["data/waves/
 check(hp1 === Math.round(hp0 * 1.05), `Welle 5 Leben +5 %: ${hp0} -> ${hp1}`);
 if (shots) await page.screenshot({ path: path.join(shots, "balance_editor_wellen.png"), fullPage: true });
 
+// Roguelike: eigene Gegnerwerte, die normalen bleiben
+await page.click(".tab >> text=GemTD Roguelike");
+await page.selectOption("#pick", "44");
+const rid = await page.evaluate(() => FILES["data/waves/classic.json"].cur.waves[44].groups[0].enemy);
+const rhp = await page.evaluate((id) => [FILES["data/roguelike_enemies.json"].cur.enemies[id].hp, FILES["data/enemies/" + id + ".json"].cur.hp], rid);
+await page.locator(".card .stat", { hasText: "Leben" }).first().locator(".arrow.up").click();
+const rhp2 = await page.evaluate((id) => [FILES["data/roguelike_enemies.json"].cur.enemies[id].hp, FILES["data/enemies/" + id + ".json"].cur.hp], rid);
+check(rhp2[0] === Math.round(rhp[0] * 1.05) && rhp2[1] === rhp[1], `Roguelike Welle 45 Leben +5 %, normale Werte gleich: ${rhp} -> ${rhp2}`);
+if (shots) await page.screenshot({ path: path.join(shots, "balance_editor_roguelike.png"), fullPage: true });
+
 // eeveTD und Maul
 await page.click(".tab >> text=eeveTD");
 await page.click("#kind >> text=Tower");
@@ -95,23 +105,23 @@ if (shots) await page.screenshot({ path: path.join(shots, "balance_editor_maul.p
 
 const n = await page.evaluate(() => allChanges().length);
 const rows = await page.locator("#changes tr").count();
-check(n === 12 && rows === n + 1, `Änderungsliste: ${n} Änderungen, ${rows - 1} Zeilen`);
+check(n === 13 && rows === n + 1, `Änderungsliste: ${n} Änderungen, ${rows - 1} Zeilen`);
 const badges = await page.locator(".tab .badge").allTextContents();
-check(badges.join() === "9,1,2", "Zähler an den Tabs: " + badges);
+check(badges.join() === "9,1,1,2", "Zähler an den Tabs: " + badges);
 
 // Eine zurücknehmen
 await page.locator("#changes tr").last().locator("button").click();
-check(await page.evaluate(() => allChanges().length) === 11, "einzelne Änderung zurückgenommen");
+check(await page.evaluate(() => allChanges().length) === 12, "einzelne Änderung zurückgenommen");
 
 // 3. Export und Übernahme (nur Probe)
 const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#b-export")]);
 const exp = path.join(tmp, "balance_aenderungen.json");
 await dl.saveAs(exp);
 const data = JSON.parse(readFileSync(exp, "utf-8"));
-check(data.aenderungen.length === 11, "Export enthält 11 Änderungen");
+check(data.aenderungen.length === 12, "Export enthält 12 Änderungen");
 try {
   const out = execFileSync("python3", ["tools/balance_anwenden.py", exp, "--probe"], { encoding: "utf-8" });
-  check(/11 übernommen, 0 ausgelassen/.test(out), "balance_anwenden.py --probe: " + out.trim().split("\n").pop());
+  check(/12 übernommen, 0 ausgelassen/.test(out), "balance_anwenden.py --probe: " + out.trim().split("\n").pop());
 } catch (e) { check(false, "balance_anwenden.py: " + (e.stdout || e.message)); }
 
 check(errors.length === 0, "keine JavaScript-Fehler" + (errors.length ? ": " + errors.join("; ") : ""));

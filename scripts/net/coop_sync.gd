@@ -319,7 +319,7 @@ func apply_enemies(packet: Dictionary) -> void:
 		seen[id] = true
 		var e: Enemy = enemies.get(id)
 		if e == null:
-			var def: Dictionary = Database.enemies.get(str(s[1]), {})
+			var def: Dictionary = game.enemy_def(str(s[1])) if game.has_method("enemy_def") else Database.enemies.get(str(s[1]), {})
 			if def.is_empty():
 				continue
 			e = Enemy.new()

@@ -161,7 +161,7 @@ static func apply(game, s: Dictionary) -> void:
 		game.spawn_timer = float(s.get("spawn_timer", 0.5))
 		for d in s.get("enemies", []):
 			var g: Dictionary = d.get("group", {})
-			var def: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
+			var def: Dictionary = game.enemy_def(str(g.get("enemy", ""))) if game.has_method("enemy_def") else Database.enemies.get(str(g.get("enemy", "")), {})
 			if def.is_empty():
 				continue
 			var e := Enemy.new()

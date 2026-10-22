@@ -58,6 +58,8 @@ var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
 var stacks := 0.0
+var crit_mark := 0.0      ## Roguelike (Diamantstaub): so viel mehr Chance, kritisch getroffen zu werden
+var damage_taken := 1.0   ## Roguelike (Opalnebel): Faktor auf jeden Schaden
 var stack_time := 0.0
 
 ## Mehrspieler: Nummer für den Abgleich, und ob dieser Gegner nur das Feld eines Mitspielers zeigt.
@@ -369,6 +371,7 @@ func take_damage(amount: float, damage_type := "") -> float:
 func take_raw_damage(amount: float) -> float:
 	if dead:
 		return 0.0
+	amount *= damage_taken
 	var dealt := minf(amount, hp)
 	hp -= amount
 	if hp <= 0.0:

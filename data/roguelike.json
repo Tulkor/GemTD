@@ -1,17 +1,50 @@
 {
-	"_info": "GemTD-Variante Roguelike: nach jeder every-ten Welle wählt jeder Spieler 1 von choices Boni. Ein Bonus gilt für alle Stufen eines Grund-Gems (target gem) oder für einen Spezialtower samt Upgrades (target special), nur für Tower dieses Spielers. stats: Wert = Zuschlag (0.2 = +20 %) bei Seltenheit scale 1; gleiche Boni addieren sich. Fallen sind ausgenommen. owned_weight: so viel wahrscheinlicher sind Spezialtower, die der Spieler schon auf dem Feld hat.",
+	"_info": "GemTD-Variante Roguelike (scripts/game/rogue.gd): nach jeder every-ten Welle wählt jeder Spieler 1 von choices Boni. target: tower = ein Grund-Gem in allen Stufen (gem) oder ein Spezialtower samt Upgrades (special), gem = nur Grund-Gems, global = alle eigenen Tower bzw. der Spieler. weight: wie oft der Bonus angeboten wird. scale: diese Werte wachsen mit der Seltenheit (rarities.scale), cap: Obergrenze danach. fixed_rarity: Bonus ohne Stufen. Gleiche Boni addieren sich. Fallen sind als Ziel ausgenommen. Gegnerwerte im Roguelike: data/roguelike_enemies.json.",
 	"every": 10,
 	"choices": 3,
 	"target_weights": {"gem": 0.55, "special": 0.45},
 	"owned_weight": 3.0,
-	"stats": {
-		"damage": {"name": "Schaden", "title": "Geschliffene Kanten", "gem": 0.2, "special": 0.25},
-		"speed": {"name": "Angriffstempo", "title": "Schneller Puls", "gem": 0.15, "special": 0.18},
-		"range": {"name": "Reichweite", "title": "Weiter Blick", "gem": 0.1, "special": 0.12}
-	},
 	"rarities": [
 		{"id": "common", "name": "Gewöhnlich", "weight": 60, "scale": 1.0, "color": "TEXT"},
 		{"id": "rare", "name": "Selten", "weight": 30, "scale": 1.6, "color": "CYAN"},
 		{"id": "epic", "name": "Episch", "weight": 10, "scale": 2.5, "color": "PURPLE_LIGHT"}
+	],
+	"boons": [
+		{"id": "damage", "effect": "stat", "stat": "damage", "target": "tower", "weight": 6, "name": "Schaden", "title": "Geschliffene Kanten", "value": {"gem": 0.2, "special": 0.25}},
+		{"id": "speed", "effect": "stat", "stat": "speed", "target": "tower", "weight": 5, "name": "Angriffstempo", "title": "Schneller Puls", "value": {"gem": 0.15, "special": 0.18}},
+		{"id": "range", "effect": "stat", "stat": "range", "target": "tower", "weight": 4, "name": "Reichweite", "title": "Weiter Blick", "value": {"gem": 0.1, "special": 0.12}},
+		{"id": "ability", "effect": "ability", "target": "tower", "weight": 10, "name": "Neue Fähigkeit", "title": "Fremde Kraft",
+			"pool": [
+				{"type": "splash", "radius": 1.2, "factor": 0.35, "scale": ["factor"], "cap": {"factor": 0.8}},
+				{"type": "slow", "factor": 0.2, "duration": 1.5, "scale": ["factor"], "cap": {"factor": 0.5}},
+				{"type": "poison", "dps_factor": 0.3, "duration": 3.0, "scale": ["dps_factor"]},
+				{"type": "crit", "chance": 0.12, "multiplier": 2.5, "scale": ["chance"], "cap": {"chance": 0.4}},
+				{"type": "stun", "chance": 0.06, "duration": 0.6, "scale": ["chance"], "cap": {"chance": 0.2}},
+				{"type": "armor_reduce", "amount": 3.0, "duration": 4.0, "scale": ["amount"]},
+				{"type": "multishot", "targets": 2, "scale": ["targets"], "cap": {"targets": 4}},
+				{"type": "pierce", "count": 2, "factor": 0.8, "scale": ["count"], "cap": {"count": 5}},
+				{"type": "fork", "count": 1, "angle": 30.0, "reach": 3.0, "factor": 0.6, "scale": ["factor"], "cap": {"factor": 1.0}}
+			]},
+		{"id": "bounce", "effect": "ability", "target": "tower", "weight": 6, "name": "Abpraller", "title": "Querschläger",
+			"pool": [{"type": "chain", "count": 2, "radius": 2.5, "factor": 0.75, "scale": ["count"], "cap": {"count": 5}}]},
+		{"id": "anti_air", "effect": "anti_air", "target": "tower", "weight": 4, "fixed_rarity": "rare", "name": "Luftabwehr", "title": "Blick nach oben"},
+		{"id": "flask", "effect": "flask", "target": "gem", "weight": 12, "name": "Elementfläche", "title": "Alchemie",
+			"radius": 0.9, "duration": 4.0, "cooldown": 2.5,
+			"elements": {
+				"ruby": {"element": "fire", "name": "Feuerfläche", "color": "#ff5a2a", "dps_factor": 0.6, "unarmored": 2.0, "scale": ["dps_factor"]},
+				"emerald": {"element": "acid", "name": "Giftfläche", "color": "#54e06a", "dps_factor": 0.25, "linger": 4.0, "shred": 0.6, "shred_max": 8.0, "scale": ["dps_factor", "shred"]},
+				"sapphire": {"element": "frost", "name": "Frostfläche", "color": "#6fb6ff", "slow": 0.3, "freeze_after": 1.5, "freeze": 1.2, "immune": 4.0, "scale": ["slow", "freeze"], "cap": {"slow": 0.6}},
+				"diamond": {"element": "weak", "name": "Diamantstaub", "color": "#f2f6ff", "crit": 0.2, "linger": 4.0, "scale": ["crit"], "cap": {"crit": 0.6}},
+				"opal": {"element": "vulnerable", "name": "Opalnebel", "color": "#f5a8e6", "amount": 0.15, "linger": 4.0, "scale": ["amount"], "cap": {"amount": 0.5}},
+				"topaz": {"element": "paralyze", "name": "Blitzfeld", "color": "#ffe14d", "linger": 6.0, "interval": 1.5, "stun": 0.3, "scale": ["stun"], "cap": {"stun": 0.8}},
+				"aquamarine": {"element": "wet", "name": "Strudel", "color": "#4de1e1", "amount": 4.0, "slow": 0.15, "linger": 2.0, "scale": ["amount"]}
+			}},
+		{"id": "double_pick", "effect": "double_pick", "target": "global", "weight": 3, "fixed_rarity": "epic", "name": "Doppelfund", "title": "Zwei auf einen Streich", "every": 3},
+		{"id": "pct_damage", "effect": "pct_damage", "target": "global", "weight": 5, "name": "Zermalmen", "title": "Schwere Treffer", "pct": 0.01, "boss_factor": 0.25, "scale": ["pct"]},
+		{"id": "execute", "effect": "execute", "target": "global", "weight": 4, "name": "Henker", "title": "Gnadenstoß", "chance": 0.004, "boss_pct": 0.05, "scale": ["chance"]},
+		{"id": "explode", "effect": "explode", "target": "global", "weight": 4, "name": "Kettenreaktion", "title": "Funkenflug", "pct": 0.12, "radius": 1.5, "scale": ["pct"], "cap": {"pct": 0.4}},
+		{"id": "gold", "effect": "gold", "target": "global", "weight": 3, "name": "Goldader", "title": "Reiche Beute", "bonus": 0.2, "scale": ["bonus"]},
+		{"id": "interest", "effect": "interest", "target": "global", "weight": 3, "name": "Zinsen", "title": "Sparbuch", "rate": 0.03, "max": 40, "scale": ["rate", "max"]},
+		{"id": "luck", "effect": "luck", "target": "global", "weight": 2, "fixed_rarity": "epic", "name": "Glückssträhne", "title": "Funkelnde Funde", "levels": 1}
 	]
 }

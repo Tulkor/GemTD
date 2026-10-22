@@ -14,7 +14,9 @@ läuft ohne Installation in Edge oder Chrome (Doppelklick).
 - **Fähigkeiten**: Typ wechseln, Zahlen mit Pfeilen ändern, Text-/Ja-Nein-Werte direkt, „JSON“ für alles andere,
   ✕ entfernt, „+ Fähigkeit“ fügt eine mit den Standardwerten aus `scripts/game/abilities.gd` hinzu.
 - **Änderungen** unten listet alles mit vorher/nachher; ↺ nimmt eine einzelne Änderung zurück.
-- GemTD-Wellen zeigen Anzahl/Abstand der Gruppe und die Gegnerwerte. Gegnerwerte gelten in allen Wellen,
+- Reiter **GemTD Roguelike**: dieselben Wellen, aber die Gegnerwerte stehen in `data/roguelike_enemies.json`
+  und gelten nur in der Roguelike-Variante (Anzahl, Abstand und Tower teilt es mit GemTD).
+  GemTD-Wellen zeigen Anzahl/Abstand der Gruppe und die Gegnerwerte. Gegnerwerte gelten in allen Wellen,
   in denen der Gegner vorkommt (steht dabei). eeveTD zeigt die Gegner je Gegnerstufe, Maul die 50 Level.
 
 ## Speichern
