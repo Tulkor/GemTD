@@ -175,6 +175,7 @@ pick_changed() {
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
       scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
+      scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;

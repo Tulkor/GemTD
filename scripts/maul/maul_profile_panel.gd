@@ -31,14 +31,7 @@ func _ready() -> void:
 		who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		who.add_theme_color_override("font_color", DecoTheme.MUTED)
 
-	_xp_bar(box)
-	_totals(box)
-
-	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 30)
-	box.add_child(cols)
-	_unlock_list(cols)
-	_shop_table(cols)
+	build_content(box)
 
 	var bottom := HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 16)
@@ -50,6 +43,17 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_color", DecoTheme.MUTED)
 	var back := UiUtil.button("Zurück", bottom, queue_free)
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+
+## Erfahrung, Summen, Freischaltungen und Filialen in box (auch im allgemeinen Profil, profile_panel.gd).
+func build_content(box: Node) -> void:
+	_xp_bar(box)
+	_totals(box)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 30)
+	box.add_child(cols)
+	_unlock_list(cols)
+	_shop_table(cols)
 
 
 func _unhandled_input(e: InputEvent) -> void:

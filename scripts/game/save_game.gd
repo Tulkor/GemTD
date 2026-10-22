@@ -68,6 +68,8 @@ static func capture(game) -> Dictionary:
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
 	}
+	st.run_stats = game.run_stats.capture(list)
+	st.debug_used = game.debug_used
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -147,6 +149,8 @@ static func apply(game, s: Dictionary) -> void:
 			ps.stage = game.Phase.BUILD
 		game.players.append(ps)
 	game.acting = clampi(game.local_player, 0, game.players.size() - 1)
+	game.run_stats.restore(s.get("run_stats", {}), made)
+	game.debug_used = bool(s.get("debug_used", false))
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:

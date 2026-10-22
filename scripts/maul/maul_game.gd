@@ -65,6 +65,7 @@ var debug_xp := false
 var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
+var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -529,6 +530,7 @@ func _end_level() -> void:
 		if shop_of(t.owner_player) == "obi":
 			t.value = floori(t.value * 0.99)
 	_fitness_upkeep()
+	run_stats.wave_done(_my_towers(), n, level_lost)
 	if n >= levels.size():
 		_finish(Phase.VICTORY)
 		return
@@ -547,6 +549,7 @@ func _finish(p: Phase) -> void:
 	Engine.time_scale = 1.0
 	build_id = ""
 	_record_profile(p == Phase.VICTORY)
+	_record_run(p == Phase.VICTORY)
 	hud.show_game_over(p == Phase.VICTORY)
 
 
@@ -556,6 +559,31 @@ func _record_profile(won: bool) -> void:
 	if sandbox or debug_used or Session.debug_immortal:
 		return
 	profile_news = MaulProfile.record(shop_of(local_player), difficulty, levels_done, won, enemies_killed, play_time)
+
+
+## Run ins allgemeine Profil (profile.gd), auch mit Sandbox und Debug (dann nur in der Liste).
+func _record_run(won: bool) -> void:
+	var me = players[local_player]
+	var info := {"map": shop_of(local_player), "shop": shop_of(local_player), "difficulty": difficulty, "victory": won,
+		"wave": levels_done, "waves": levels.size(), "lives": lives, "max_lives": max_lives, "kills": enemies_killed,
+		"play_time": roundi(play_time), "coop": players.size() > 1, "players": players.size(),
+		"xp": me.xp, "xp_gain": me.xp - xp_start, "gold": me.gold, "sandbox": sandbox,
+		"debug": sandbox or debug_used or Session.debug_immortal}
+	Profile.record_run("maul", info, run_stats.result(_my_towers()))
+
+
+func _my_towers() -> Array:
+	return towers.values().filter(func(t): return is_instance_valid(t) and t.owner_player == local_player)
+
+
+## Tower t wird zu to (Ausbau oder Kopie): Werte bis jetzt der alten Art gutschreiben.
+func _stats_change(t: MaulTower, to: String, action: String) -> void:
+	var mine := t.owner_player == local_player
+	if mine:
+		run_stats.flush(t)
+	t.set_tower(to, 0)
+	if mine:
+		run_stats.built(t, action, level)
 
 
 # --- Wege --------------------------------------------------------------------------
@@ -1072,12 +1100,16 @@ func _execute(cmd: Dictionary) -> bool:
 			t.setup(self, a, id, 0)
 			t.value = int(def.get("value", def.cost))
 			_register(t)
+			if p == local_player:
+				run_stats.built(t, "build", level)
 			return true
 		"sell":
 			var t: MaulTower = towers.get(cmd.cell, null)
 			if t == null or (t.owner_player != p and map.zone_at(t.cell) != players[p].zone):
 				return false
 			players[t.owner_player].gold += sell_value(t)
+			if t.owner_player == local_player:
+				run_stats.flush(t)
 			_unregister(t)
 			t.queue_free()
 			return true
@@ -1094,7 +1126,7 @@ func _execute(cmd: Dictionary) -> bool:
 				_tell(p, why)
 				return false
 			_pay(p, int(def.cost))
-			t.set_tower(to, 0)
+			_stats_change(t, to, "upgrade")
 			t.value = int(def.value) if def.get("swap", false) else t.value + int(def.cost)
 			t.set_selected(t == selected)
 			_update_detect()
@@ -1169,7 +1201,7 @@ func _execute(cmd: Dictionary) -> bool:
 				_tell(p, tr("Zu wenig Gold"))
 				return false
 			players[p].gold -= cost
-			t.set_tower(to, 0)
+			_stats_change(t, to, "copy")
 			t.value = int(def.get("value", def.cost))
 			_update_detect()
 			return true

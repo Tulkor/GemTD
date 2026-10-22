@@ -15,6 +15,7 @@ func check(cond: bool, msg: String) -> void:
 
 func _ready() -> void:
 	RunHistory.path = "user://test_run_history.json"
+	Profile.dir = "user://test_profile"
 	await get_tree().process_frame
 	var rules: Dictionary = Database.eeve
 	check(not rules.is_empty(), "data/eeve.json geladen")
