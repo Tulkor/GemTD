@@ -98,6 +98,8 @@ var round_path_start := 0
 var enemies_killed := 0
 var leaks_per_wave := {}  ## Welle (Index) -> verlorene Leben (Punkte-Modus: durchgelassene Gegner), für die Run-History
 var play_time := 0.0      ## gespielte Sekunden in Echtzeit, ohne Pause
+var run_stats := RunStats.new()  ## Statistik fürs Profil (profile.gd)
+var debug_used := false   ## Debug-Menü geöffnet: der Run zählt nicht für Summen und Rekorde im Profil
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
@@ -178,6 +180,7 @@ func _ready() -> void:
 	hud.leave_requested.connect(func(quit): leave(false, quit))
 	hud.debug_tower_changed.connect(func(k): debug_tower = k)
 	hud.debug_immortal_changed.connect(func(on): Session.debug_immortal = on)
+	hud.debug_button.toggled.connect(func(on): debug_used = debug_used or on)
 	hud.immortal_button.set_pressed_no_signal(Session.debug_immortal)
 	debug_tower = Session.test_tower
 	hud.setup_debug_towers(debug_tower)
@@ -1197,7 +1200,9 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	if t == null or o.action in ["move", "take_back"] or gold < int(o.cost):
 		return false
 	gold -= int(o.cost)
+	run_stats.flush(t)
 	for c in o.consume:
+		run_stats.flush(c)
 		_consume(c)
 	# Roguelike „Doppelfund“: diesen Gem behalten, die anderen bleiben zur Wahl
 	var extra: bool = o.action == "keep" and rogue != null and round_towers.size() > 1 and rogue.take_extra_keep(acting)
@@ -1215,6 +1220,7 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	_unregister(t)
 	t.set_tower(o.id, o.tier)
 	_register(t)
+	run_stats.built(t, o.action, wave_index + 1)
 	if t.is_trap() and (o.id != old_id or o.action == "keep"):
 		t.moves_left = trap_moves()
 	if t == selected:
@@ -1381,6 +1387,7 @@ func _process_wave(delta: float) -> void:
 				enemies[i]._process(late)
 		spawn_timer += float(g.get("interval", 1.0))
 	if spawn_queue.is_empty() and enemies.is_empty() and phase == Phase.WAVE:
+		run_stats.wave_done(all_towers(), wave_index + 1, int(leaks_per_wave.get(wave_index, 0)), int(wave_live.killed))
 		wave_index += 1
 		effects.clear()
 		if wave_index >= waves.size():
@@ -1684,10 +1691,28 @@ func _remove_enemy(e: Enemy) -> void:
 func _finish(p: Phase) -> void:
 	phase = p
 	RunHistory.record(RunHistory.entry_from(self, p == Phase.VICTORY))
+	record_profile(p == Phase.VICTORY)
 	Engine.time_scale = 1.0
 	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
 		roundi(score) if score_mode else null, run_summary())
 	_refresh_hud()
+
+
+## Run ins Profil (profile.gd): Kurzinfo wie in der Run-History plus alle Tower- und Wellenwerte.
+func record_profile(victory: bool) -> Dictionary:
+	var info := RunHistory.entry_from(self, victory)
+	info.erase("top")
+	info.coop = coop != null
+	info.players = players.size()
+	info.debug = debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0
+	if has_method("profile_extra"):
+		info.merge(call("profile_extra"), true)
+	return Profile.record_run(profile_mode(), info, run_stats.result(all_towers().filter(func(t): return not t.is_new)))
+
+
+## Modus im Profil (eeve_game.gd und der Roguelike-Modus überschreiben das).
+func profile_mode() -> String:
+	return "gemtd"
 
 
 # --- HUD ---------------------------------------------------------------------

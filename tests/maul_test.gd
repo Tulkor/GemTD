@@ -14,6 +14,7 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _ready() -> void:
+	Profile.dir = "user://test_maul_profil"
 	await get_tree().process_frame
 	check(MaulData.shops().size() == 20, "20 Filialen geladen")
 	check(MaulData.towers().size() >= 200, "Tower geladen: %d" % MaulData.towers().size())
@@ -109,10 +110,13 @@ func _spots(game: MaulGame, zone: Rect2i) -> Array:
 	return list
 
 
-## Profil: Partien und Rekorde bleiben gespeichert (eigene Testdatei statt user://maul.cfg).
+## Profil: Partien und Rekorde bleiben gespeichert (eigener Profil-Ordner statt user://profile).
 func _profile_tests() -> void:
 	MaulProfile.path = "user://test_maul_profile.cfg"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(MaulProfile.path))
+	Profile.dir = "user://test_maul_profil"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Profile.file()))
+	Profile.reset_cache()
 	check(MaulProfile.shop("ikea").best_win == -1 and MaulProfile.totals().games == 0, "Profil: leer am Anfang")
 	var n := MaulProfile.record("ikea", 1, 12, false, 300, 600.0)
 	check(n.has("best_level") and not n.has("best_win"), "Profil: erstes Level ist Rekord")

@@ -16,6 +16,7 @@ func check(cond: bool, msg: String) -> void:
 func _ready() -> void:
 	# Run-History der Tests nicht in die echte Liste schreiben
 	RunHistory.path = "user://test_run_history.json"
+	Profile.dir = "user://test_profile"
 	# Einstellungen vor Runde 1 prüft nur _setup_test, sonst startet jedes Spiel gleich
 	Session.skip_setup = true
 	if FileAccess.file_exists(RunHistory.path):
@@ -614,6 +615,9 @@ func _ready() -> void:
 	var runs := RunHistory.load_runs()
 	check(runs.size() == 1 and not runs[0].victory and runs[0].map == game.map.name and (runs[0].leaks as Array).size() == game.waves.size() and runs[0].has("summary"),
 			"Run-History: verlorenes Spiel gespeichert: %s" % [runs[0].keys() if not runs.is_empty() else []])
+	var pr: Array = Profile.runs("gemtd")
+	check(not pr.is_empty() and Profile.load_run(str(pr[0].id)).has("types") and Profile.load_run(str(pr[0].id)).has("wave_log"),
+		"Profil: Run mit Tower- und Wellenwerten gespeichert")
 	var rh := RunHistoryPanel.new()
 	add_child(rh)
 	await get_tree().process_frame

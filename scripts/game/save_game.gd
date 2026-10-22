@@ -70,6 +70,8 @@ static func capture(game) -> Dictionary:
 	}
 	if game.rogue != null:
 		st.rogue = game.rogue.to_dict()
+	st.run_stats = game.run_stats.capture(list)
+	st.debug_used = game.debug_used
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -153,6 +155,8 @@ static func apply(game, s: Dictionary) -> void:
 	if s.has("rogue"):
 		game.enable_rogue().from_dict(s.rogue)
 		game._update_auras()
+	game.run_stats.restore(s.get("run_stats", {}), made)
+	game.debug_used = bool(s.get("debug_used", false))
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:

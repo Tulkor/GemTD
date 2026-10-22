@@ -1,7 +1,7 @@
 class_name MaulXp
 extends RefCounted
 ## Erfahrung (XP) in Shopping Maul wie im Original: in Zehnteln gezählt (10 = 1,0 XP), bleibt über
-## Spiele hinweg erhalten (user://maul.cfg statt des 6-stelligen Codes). Nach jedem Level wächst
+## Spiele hinweg erhalten (im Profil statt des 6-stelligen Codes, früher user://maul.cfg). Nach jedem Level wächst
 ## ein Topf; solange er größer als 4·√XP ist, gibt es +0,1 XP (höchstens 5× pro Level), so wird
 ## jedes weitere Zehntel teurer. Ab 25 XP sind die Profi-Filialen offen, die XP-Tower des XPert
 ## ab 25 … 800 XP (Forschungen R00E … R00R in pro.json → xp.unlocks).
@@ -13,19 +13,14 @@ static func cfg() -> Dictionary:
 	return MaulData.pro().get("xp", {})
 
 
-## Gespeicherte XP dieses Rechners (in Zehnteln).
+## Gespeicherte XP dieses Rechners (in Zehnteln), im Profil (maul_profile.gd).
 static func load_xp() -> int:
-	var c := ConfigFile.new()
-	if c.load(FILE) != OK:
-		return int(cfg().get("start", 10))
-	return int(c.get_value("xp", "tenths", int(cfg().get("start", 10))))
+	return int(MaulProfile.prog().get("xp", int(cfg().get("start", 10))))
 
 
 static func save_xp(tenths: int) -> void:
-	var c := ConfigFile.new()
-	c.load(FILE)
-	c.set_value("xp", "tenths", tenths)
-	c.save(FILE)
+	MaulProfile.prog().xp = tenths
+	Profile.save()
 
 
 ## XP-Topf nach Level n wachsen lassen. Gibt [neue XP, neuer Topf] zurück.
