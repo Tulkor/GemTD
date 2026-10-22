@@ -199,6 +199,16 @@ func _ready() -> void:
 	g._update_auras()
 	r.on_hit(ruby, e)
 	check(e.dead, "Henker: Gegner sofort tot")
+	g.phase = g.Phase.WAVE
+	var e3 := _enemy(g)
+	e3.place_on_path(0.0)
+	r._add_patch(e3.pos, r.boons[0][-3].params, ruby)
+	hp0 = e3.hp
+	r._process(0.5)
+	check(e3.hp < hp0 and r.patches[-1].left < 4.0, "Feuerfläche brennt im Wellenablauf")
+	r.on_kill(e3)
+	r._process(0.1)
+	g.phase = g.Phase.BUILD
 	r.clear_field()
 	check(r.patches.is_empty(), "Flächen verschwinden zum Wellenende")
 
