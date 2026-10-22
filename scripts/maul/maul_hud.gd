@@ -124,6 +124,7 @@ func _build_top_bar() -> void:
 
 
 func toggle_debug() -> void:
+	game.debug_used = true
 	if _debug == null:
 		_debug = MaulDebug.new()
 		_debug.game = game
@@ -1048,6 +1049,11 @@ func show_game_over(victory: bool) -> void:
 	if not game.sandbox:
 		var xp := UiUtil.label(tr("Erfahrung: %s XP (+%s)") % [MaulXp.text(me.xp), MaulXp.text(me.xp - game.xp_start)], box, 15)
 		xp.add_theme_color_override("font_color", UiTheme.PURPLE_LIGHT)
+	var news := _profile_news_text()
+	if news != "":
+		UiUtil.label(news, box, 15).add_theme_color_override("font_color", UiTheme.COIN)
+	elif game.sandbox or game.debug_used or Session.debug_immortal:
+		UiUtil.label("Zählt nicht fürs Profil (Sandbox oder Debug)", box, 13).add_theme_color_override("font_color", UiTheme.MUTED)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	box.add_child(row)
@@ -1055,3 +1061,13 @@ func show_game_over(victory: bool) -> void:
 		var again := UiUtil.button("Nochmal", row, func(): Session.goto(Session.MAUL))
 		UiTheme.accent_button(again, UiTheme.GOLD, UiTheme.BAR)
 	UiUtil.button("Hauptmenü", row, func(): Session.goto(Session.MAIN_MENU))
+
+
+## Endbildschirm: neue Rekorde der Filiale aus dem Profil.
+func _profile_news_text() -> String:
+	var shop := MaulData.name_of(MaulData.shop(game.shop_of()))
+	if game.profile_news.has("best_win"):
+		return tr("Neuer Rekord für %s: gewonnen auf %s") % [shop, tr(str(MaulData.difficulty(game.difficulty).get("name", "")))]
+	if game.profile_news.has("best_level"):
+		return tr("Neuer Rekord für %s: Level %d") % [shop, game.levels_done]
+	return ""

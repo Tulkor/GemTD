@@ -111,6 +111,7 @@ func snapshot() -> Dictionary:
 		"phase": g.phase,
 		"level": g.level,
 		"levels_done": g.levels_done,
+		"debug": g.debug_used,
 		"lives": g.lives,
 		"max_lives": g.max_lives,
 		"difficulty": g.difficulty,
@@ -235,6 +236,7 @@ func apply_state(s: Dictionary) -> void:
 	# Gemeinsames
 	g.level = int(s.get("level", 0))
 	g.levels_done = int(s.get("levels_done", 0))
+	g.debug_used = g.debug_used or bool(s.get("debug", false))
 	g.lives = int(s.get("lives", g.lives))
 	g.max_lives = int(s.get("max_lives", g.max_lives))
 	g.difficulty = int(s.get("difficulty", g.difficulty))
