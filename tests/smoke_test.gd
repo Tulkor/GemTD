@@ -453,6 +453,15 @@ func _ready() -> void:
 	# Wellenvorschau links
 	var preview: Array = game._upcoming_waves(4)
 	check(preview.size() == 4 and preview[0].number == game.wave_index + 1, "Vorschau zeigt die nächsten 4 Wellen ab Welle %d" % (game.wave_index + 1))
+	# Massenwelle 10: 25 Gegner in Trupps zu 5, dicht im Trupp, Wellendauer wie einzeln
+	var mg: Dictionary = game.waves[9].groups[0]
+	var mq: Array = game.group_queue(mg)
+	var mt := 0.0
+	for q in mq:
+		mt += float(q.interval)
+	check(mq.size() == 25 and int(mg.get("pack", 0)) == 5 and float(mq[0].interval) < 0.3 and float(mq[4].interval) > 2.0
+		and absf(mt - 25 * float(mg.interval)) < 0.01, "Massenwelle in Trupps zu 5, gleiche Dauer (%.2f s)" % mt)
+	check(game.group_queue(game.waves[0].groups[0]).all(func(q): return q.interval == game.waves[0].groups[0].interval), "normale Welle einzeln")
 	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
 	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
 
