@@ -61,6 +61,8 @@ var scenery: EeveScenery    ## Wald, Laternen und Tag/Nacht rund um das Spielfel
 func _ready() -> void:
 	# Stil „Druidenhain“ für die ganze Oberfläche von eeveTD, vor dem Bau des HUD in game.gd
 	UiTheme.use_skin(UiTheme.DRUID)
+	# eeveTD spielt nachts (Laternen, Glühwürmchen), vor dem Licht in game.gd; Tag über das Debug-Menü
+	FieldStyle.night = bool(Session.eeve_choice.get("night", true))
 	rules = Database.eeve
 	var fresh: bool = Session.load_state.is_empty()
 	difficulty = int(Session.eeve_choice.get("difficulty", difficulty))
@@ -81,6 +83,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	super._exit_tree()
 	UiTheme.use_skin(UiTheme.ARCADE)
+	FieldStyle.night = false
 
 
 func _style_hud() -> void:

@@ -32,7 +32,8 @@ extends Node
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
-##                           eeveTD mit Laternen und Glühwürmchen)
+##                           eeveTD ist ohnehin nachts)
+##   --tag                   eeveTD bei Tag statt Nacht
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
@@ -55,6 +56,8 @@ func _ready() -> void:
 	RunHistory.path = "user://screenshot_run_history.json"
 	Session.skip_setup = not opts.has("einstellungen")
 	FieldStyle.night = opts.has("nacht")
+	if opts.has("tag"):
+		Session.eeve_choice["night"] = false
 	if opts.has("koop"):
 		var guest := opts.has("gast")
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
