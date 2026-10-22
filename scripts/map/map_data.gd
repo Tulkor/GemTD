@@ -25,6 +25,7 @@ const FORMAT := 2
 
 var id := "neue_map"
 var name := "Neue Map"
+var game := ""  ## Modus aus data/modes.json, leer = GemTD (Feld "game" in der Datei)
 var width := 30
 var height := 30
 var rows := PackedStringArray()
@@ -64,6 +65,7 @@ static func from_dict(d: Dictionary) -> MapData:
 	var m := MapData.new()
 	m.id = str(d.get("id", "map"))
 	m.name = str(d.get("name", m.id))
+	m.game = str(d.get("game", ""))
 	m.width = int(d.get("width", 20))
 	m.height = int(d.get("height", 20))
 	var tiles: Array = d.get("tiles", [])
@@ -132,6 +134,8 @@ func to_dict() -> Dictionary:
 		"start_gold": start_gold,
 		"variance": variance,
 	}
+	if game != "" and game != "gemtd":
+		d.game = game
 	if spawn_player >= 0:
 		d.spawn_player = spawn_player
 	if not lanes.is_empty():

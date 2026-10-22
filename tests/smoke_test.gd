@@ -16,6 +16,7 @@ func check(cond: bool, msg: String) -> void:
 func _ready() -> void:
 	# Run-History der Tests nicht in die echte Liste schreiben
 	RunHistory.path = "user://test_run_history.json"
+	Profile.dir = "user://test_profile"
 	# Einstellungen vor Runde 1 prüft nur _setup_test, sonst startet jedes Spiel gleich
 	Session.skip_setup = true
 	if FileAccess.file_exists(RunHistory.path):
@@ -453,6 +454,15 @@ func _ready() -> void:
 	# Wellenvorschau links
 	var preview: Array = game._upcoming_waves(4)
 	check(preview.size() == 4 and preview[0].number == game.wave_index + 1, "Vorschau zeigt die nächsten 4 Wellen ab Welle %d" % (game.wave_index + 1))
+	# Massenwelle 10: 25 Gegner in Trupps zu 5, dicht im Trupp, Wellendauer wie einzeln
+	var mg: Dictionary = game.waves[9].groups[0]
+	var mq: Array = game.group_queue(mg)
+	var mt := 0.0
+	for q in mq:
+		mt += float(q.interval)
+	check(mq.size() == 25 and int(mg.get("pack", 0)) == 5 and float(mq[0].interval) < 0.3 and float(mq[4].interval) > 2.0
+		and absf(mt - 25 * float(mg.interval)) < 0.01, "Massenwelle in Trupps zu 5, gleiche Dauer (%.2f s)" % mt)
+	check(game.group_queue(game.waves[0].groups[0]).all(func(q): return q.interval == game.waves[0].groups[0].interval), "normale Welle einzeln")
 	check(game.wave_type(game.waves[3]) == "Flieger" and game.wave_type(game.waves[0]) == "Boden" and game.wave_type(game.waves[49]) == "Boss", "Wellentypen: Boden, Flieger, Boss")
 	check(game.hud.waves_panel.visible, "Wellenvorschau sichtbar")
 
@@ -605,6 +615,9 @@ func _ready() -> void:
 	var runs := RunHistory.load_runs()
 	check(runs.size() == 1 and not runs[0].victory and runs[0].map == game.map.name and (runs[0].leaks as Array).size() == game.waves.size() and runs[0].has("summary"),
 			"Run-History: verlorenes Spiel gespeichert: %s" % [runs[0].keys() if not runs.is_empty() else []])
+	var pr: Array = Profile.runs("gemtd")
+	check(not pr.is_empty() and Profile.load_run(str(pr[0].id)).has("types") and Profile.load_run(str(pr[0].id)).has("wave_log"),
+		"Profil: Run mit Tower- und Wellenwerten gespeichert")
 	var rh := RunHistoryPanel.new()
 	add_child(rh)
 	await get_tree().process_frame

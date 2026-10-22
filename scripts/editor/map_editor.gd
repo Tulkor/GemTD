@@ -132,6 +132,7 @@ func _build_ui() -> void:
 	th.add_child(load_option)
 	UiUtil.button("Laden", th, _load_selected)
 	UiUtil.button("Neu", th, func(): _set_map(MapData.create_empty(int(w_spin.value), int(h_spin.value))))
+	UiUtil.button("Datei importieren", th, _import).tooltip_text = "Map-Datei (.json) laden, z. B. aus dem HTML-Editor; Speichern legt sie bei den Maps ab"
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	th.add_child(fill)
@@ -361,6 +362,16 @@ func _load_selected() -> void:
 	if m != null:
 		_set_map(m)
 		status_label.text = tr("Geladen: ") + tr(m.name)
+
+
+func _import() -> void:
+	UiUtil.open_json_file(self, func(d: Dictionary, file: String):
+		if not d.get("tiles") is Array:
+			status_label.text = tr("Keine Map-Datei: ") + file
+			return
+		_set_map(MapData.from_dict(d))
+		_touch()
+		status_label.text = tr("Importiert: %s. Speichern legt die Map ab.") % file)
 
 
 func _save() -> void:

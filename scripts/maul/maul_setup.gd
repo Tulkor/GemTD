@@ -55,6 +55,9 @@ func _ready() -> void:
 	_xp.add_theme_font_override("font", DecoTheme.font(true))
 	_xp.add_theme_color_override("font_color", DecoTheme.PURPLE_LIGHT)
 	_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var profile := UiUtil.button("Profil", head, _show_profile)
+	profile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	profile.tooltip_text = "Erfahrung, Freischaltungen und Rekorde je Filiale. Bleiben über alle Partien erhalten."
 
 	if not game.mirror:
 		var opts := HBoxContainer.new()
@@ -181,6 +184,9 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 	info.add_theme_color_override("font_color", DecoTheme.DIM)
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.tooltip_text = text.replace("  ", "\n")
+	var rec := MaulProfile.shop(id)
+	if int(rec.games) > 0:
+		b.tooltip_text += "\n\n" + tr("Dein Rekord: Level %d, %d von %d Partien gewonnen") % [int(rec.best_level), int(rec.wins), int(rec.games)]
 	var tag: Label = null
 	if bonus != "" or _kind == "pro":
 		tag = UiUtil.label("", v, 13)
@@ -284,6 +290,12 @@ func _card_color(id: String) -> Color:
 	if id.begins_with("random"):
 		return DecoTheme.PURPLE_LIGHT
 	return Color.from_string(str(MaulData.shop(id).get("color", "#ff4fd8")), DecoTheme.GOLD)
+
+
+func _show_profile() -> void:
+	var p := MaulProfilePanel.new()
+	p.xp = game.players[game.local_player].xp
+	add_child(p)
 
 
 func _start() -> void:

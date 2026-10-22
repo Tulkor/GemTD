@@ -15,6 +15,7 @@ func check(cond: bool, msg: String) -> void:
 
 func _ready() -> void:
 	RunHistory.path = "user://test_run_history.json"
+	Profile.dir = "user://test_profile"
 	await get_tree().process_frame
 	var rules: Dictionary = Database.eeve
 	check(not rules.is_empty(), "data/eeve.json geladen")
@@ -87,6 +88,10 @@ func _ready() -> void:
 	check(game.submit({"type": "build", "cell": cell}), "Barrikade bauen")
 	var t: Tower = game.towers.get(cell)
 	check(t != null and t.tower_id == "eeve_barricade" and game.gold == 198 and game.food_used() == 1, "Barrikade kostet 2 Gold und 1 Food")
+	# Auswahlkarte beim ersten Klick gleich in richtiger Höhe (früher kurz bildschirmhoch)
+	game._select(t)
+	await get_tree().process_frame
+	check(game.hud.bottom.size.y < game.hud.root.size.y * 0.8, "Auswahlkarte beim ersten Klick nicht bildschirmhoch: %d" % game.hud.bottom.size.y)
 	var opts: Array = game.tower_options(t)
 	var nature: int = opts.map(func(o): return o.id).find("eeve_nature_base_tower")
 	check(nature >= 0 and opts[nature].reason != "", "Grundturm ohne Elementpunkt gesperrt")
@@ -242,6 +247,8 @@ func _debug_tests() -> void:
 		"Debug-Auswahl hat Element-Tower, Fallen und Dual-Tower")
 	var sc: EeveScenery = game.scenery
 	check(sc != null and sc.get_child_count() > 20, "Wald und Laternen um die Karte")
+	check(FieldStyle.night and sc._lights[0].visible, "eeveTD startet nachts")
+	sc.set_night(false)
 	var day_sun: float = sc.sun().light_energy
 	sc.set_night(true)
 	var church := sc.find_children("*", "Node3D", true, false).any(func(n): return str(n.scene_file_path).ends_with("church.glb"))

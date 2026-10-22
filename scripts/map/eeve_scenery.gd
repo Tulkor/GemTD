@@ -50,6 +50,11 @@ const POOL_SIZE := 7.0
 ## Länge des Auslegers, an dem die Laterne hängt
 const ARM := 0.42
 const POOL_SHADER := "res://assets/shaders/lantern_pool.gdshader"
+## Dünner Bodennebel über Friedhof und Bergwerk: [Höhe, Dichte] je Schicht, Farbe bei Tag und Nacht.
+const MIST_SHADER := "res://assets/shaders/ground_mist.gdshader"
+const MIST_LAYERS := [[0.1, 0.32], [0.4, 0.22], [0.8, 0.15], [1.3, 0.09]]
+const MIST_DAY := Color(0.86, 0.88, 0.92)
+const MIST_NIGHT := Color(0.5, 0.56, 0.72)
 
 ## Nacht (FieldStyle.night): Licht und Nebel stehen in FieldStyle ("env_night" von Druidenhain), dazu hier
 ## Bodennebel und kühlerer, dunklerer Boden und Wald (Faktoren auf die Tagwerte).
@@ -69,6 +74,7 @@ var _lights: Array[OmniLight3D] = []
 var _pools: Array[MeshInstance3D] = []
 var _glass_mat: StandardMaterial3D
 var _fireflies: CPUParticles3D
+var _mist_mats: Array[ShaderMaterial] = []
 var _rng := RandomNumberGenerator.new()
 
 
@@ -96,6 +102,7 @@ func _ready() -> void:
 	_add_forest()
 	_add_graveyard()
 	_add_mine()
+	_add_mist()
 	_add_lanterns()
 	_add_fireflies()
 	# Laternen beleuchten Tower und Gegner, den Boden nur über ihren Lichtfleck (Ebene 2 ausgenommen)
@@ -152,6 +159,8 @@ func _apply(on: bool) -> void:
 	_glass_mat.emission_energy_multiplier = 3.2 if on else 0.35
 	_fireflies.emitting = on
 	_fireflies.visible = on
+	for m in _mist_mats:
+		m.set_shader_parameter("mist_color", MIST_NIGHT if on else MIST_DAY)
 
 
 func _size() -> Vector2:
@@ -311,6 +320,29 @@ func _add_mine() -> void:
 		var lamp := _my(side * 1.3, 4.4 - 0.7)
 		_prop(S % "mine_lamp_hanging", lamp, 0.6, 0.0, Color.WHITE, 1.45)
 		_lights.append(_lamp_light(Vector3(lamp.x, 1.55, lamp.y)))
+
+
+## Nebelschwaden über Friedhof und Bergwerk (eine Fläche über beide Lichtungen, mehrere Schichten übereinander).
+func _add_mist() -> void:
+	var a := _gy(-CLEARING.x - 0.5, 0.8)
+	var b := _my(5.0, CLEARING.y + 6.0)
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(b.x - a.x, b.y - a.y)
+	var shader: Shader = load(MIST_SHADER)
+	for i in MIST_LAYERS.size():
+		var m := ShaderMaterial.new()
+		m.shader = shader
+		m.set_shader_parameter("density", MIST_LAYERS[i][1])
+		m.set_shader_parameter("seed", float(i) * 17.3)
+		m.set_shader_parameter("wind", Vector2(0.05, 0.025) * (1.0 + i * 0.35))
+		m.render_priority = i
+		_mist_mats.append(m)
+		var mi := MeshInstance3D.new()
+		mi.mesh = plane
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.position = Vector3((a.x + b.x) / 2.0, MIST_LAYERS[i][0], (a.y + b.y) / 2.0)
+		add_child(mi)
 
 
 func _lamp_light(at: Vector3) -> OmniLight3D:

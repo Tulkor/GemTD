@@ -2,7 +2,8 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
-##   --seite=single|history|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --seite=single|history|profile|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
@@ -11,7 +12,8 @@ extends Node
 ##                           --welle (nächstes Level starten), --auswahl[=Tower-ID], --warten=S; Kamera aufs Zentrum
 ##                           (oder --punkt=x,y), Abstand --abstand=34;
 ##                           --sandbox, --gold=N, --reiter=xpert|main (Ladenreiter), --einheit (erste Einheit wählen),
-##                           --profi (Filialwahl: Reiter Profi-Filialen), --bauen=h01P,h02O (diese Tower zuerst)
+##                           --profi (Filialwahl: Reiter Profi-Filialen), --profil (Filialwahl: Profil-Fenster offen),
+##                           --bauen=h01P,h02O (diese Tower zuerst)
 ##   --map=<id>              Map aus data/maps (Standard classic)
 ##   --runden=N              N Runden automatisch spielen (Gems am Weg setzen, ersten behalten, Welle 8× laufen)
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
@@ -32,10 +34,14 @@ extends Node
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
-##                           eeveTD mit Laternen und Glühwürmchen)
+##                           eeveTD ist ohnehin nachts)
+##   --tag                   eeveTD bei Tag statt Nacht
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
+##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
+##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Werte-Boni schon vorher gewählt (z. B. fürs Infofenster),
+##                           --angebot=flask:ruby,execute,ability:silver diese Boni (Bonus-ID[:Tower]) als Karten
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -53,8 +59,11 @@ func _ready() -> void:
 			opts[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	rng.seed = int(opts.get("seed", "1"))
 	RunHistory.path = "user://screenshot_run_history.json"
+	Profile.dir = "user://screenshot_profile"
 	Session.skip_setup = not opts.has("einstellungen")
 	FieldStyle.night = opts.has("nacht")
+	if opts.has("tag"):
+		Session.eeve_choice["night"] = false
 	if opts.has("koop"):
 		var guest := opts.has("gast")
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
@@ -96,6 +105,8 @@ func _ready() -> void:
 		node._open_settings()
 	elif scene == "menu" and opts.has("seite"):
 		node.show_page(opts.seite)
+		if opts.has("reiter") and opts.seite == "profile":
+			node.profile.show_tab(int(opts.reiter))
 		await _frames(3)
 	if scene == "menu" and opts.has("lobby"):
 		await _fake_lobby(node)
@@ -200,6 +211,27 @@ func _prepare(game: Node) -> void:
 			for type in String(opts.faehigkeiten).split(","):
 				list.append(Abilities.default_for(type))
 			t.stats["abilities"] = list
+	if opts.has("roguelike") or opts.has("boni"):
+		var r: Rogue = game.enable_rogue()
+		r.on_build()
+		for b in String(opts.get("boni", "")).split(",", false):
+			var p := b.split(":")
+			r.boons[0].append({"boon": p[1], "effect": "stat", "id": p[0], "kind": str(Database.towers.get(p[0], {}).get("category", "gem")),
+					"stat": p[1], "value": float(p[2]) if p.size() > 2 else 0.2, "rarity": "common", "params": {}, "wave": 0})
+		game._update_auras()
+		if opts.has("roguelike"):
+			game.wave_index = int(opts.roguelike) if str(opts.roguelike) != "1" else 10
+			r.on_build()
+			if opts.has("angebot"):
+				var list := []
+				for spec in String(opts.angebot).split(",", false):
+					var parts := spec.split(":")
+					for i in 300:
+						var o: Dictionary = r._make_offer(Rogue.boon_def(parts[0]), 0, game.rng)
+						if not o.is_empty() and (parts.size() < 2 or o.id == parts[1]):
+							list.append(o)
+							break
+				r.offers[0] = list
 	if opts.has("auswahl"):
 		if not game.round_towers.is_empty():
 			game._select(game.round_towers[0])
@@ -221,6 +253,8 @@ func _prepare_maul(game: Node) -> void:
 		if opts.has("profi"):
 			game.hud._setup._kind = "pro"
 			game.hud._setup._build_cards()
+		if opts.has("profil"):
+			game.hud._setup._show_profile()
 		return
 	var shop: String = opts.filiale
 	game.start_game(shop, 1, "group", opts.has("sandbox"))

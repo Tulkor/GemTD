@@ -68,6 +68,10 @@ static func capture(game) -> Dictionary:
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
 	}
+	if game.rogue != null:
+		st.rogue = game.rogue.to_dict()
+	st.run_stats = game.run_stats.capture(list)
+	st.debug_used = game.debug_used
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -147,6 +151,12 @@ static func apply(game, s: Dictionary) -> void:
 			ps.stage = game.Phase.BUILD
 		game.players.append(ps)
 	game.acting = clampi(game.local_player, 0, game.players.size() - 1)
+	Session.rogue = s.has("rogue")
+	if s.has("rogue"):
+		game.enable_rogue().from_dict(s.rogue)
+		game._update_auras()
+	game.run_stats.restore(s.get("run_stats", {}), made)
+	game.debug_used = bool(s.get("debug_used", false))
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:
@@ -155,7 +165,7 @@ static func apply(game, s: Dictionary) -> void:
 		game.spawn_timer = float(s.get("spawn_timer", 0.5))
 		for d in s.get("enemies", []):
 			var g: Dictionary = d.get("group", {})
-			var def: Dictionary = Database.enemies.get(str(g.get("enemy", "")), {})
+			var def: Dictionary = game.enemy_def(str(g.get("enemy", ""))) if game.has_method("enemy_def") else Database.enemies.get(str(g.get("enemy", "")), {})
 			if def.is_empty():
 				continue
 			var e := Enemy.new()

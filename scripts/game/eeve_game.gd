@@ -61,6 +61,8 @@ var scenery: EeveScenery    ## Wald, Laternen und Tag/Nacht rund um das Spielfel
 func _ready() -> void:
 	# Stil „Druidenhain“ für die ganze Oberfläche von eeveTD, vor dem Bau des HUD in game.gd
 	UiTheme.use_skin(UiTheme.DRUID)
+	# eeveTD spielt nachts (Laternen, Glühwürmchen), vor dem Licht in game.gd; Tag über das Debug-Menü
+	FieldStyle.night = bool(Session.eeve_choice.get("night", true))
 	rules = Database.eeve
 	var fresh: bool = Session.load_state.is_empty()
 	difficulty = int(Session.eeve_choice.get("difficulty", difficulty))
@@ -81,6 +83,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	super._exit_tree()
 	UiTheme.use_skin(UiTheme.ARCADE)
+	FieldStyle.night = false
 
 
 func _style_hud() -> void:
@@ -188,6 +191,7 @@ func debug_place(id: String, a: Vector2i) -> bool:
 	t.setup(self, a, id, 0)
 	t.set_meta("spent", 0)
 	_register(t)
+	debug_used = true
 	if not t.is_trap():
 		_update_paths()
 	_update_auras()
@@ -438,10 +442,20 @@ func on_enemy_killed(e: Enemy) -> void:
 
 func _finish(p: Phase) -> void:
 	phase = p
+	record_profile(p == Phase.VICTORY)
 	Engine.time_scale = 1.0
 	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
 		null, run_summary())
 	_refresh_hud()
+
+
+func profile_mode() -> String:
+	return "eeve"
+
+
+## Zusätzlich fürs Profil: Elemente, Holz und Feld.
+func profile_extra() -> Dictionary:
+	return {"elements": elements.duplicate(), "lumber": lumber}
 
 
 # --- Koop (coop_sync.gd) -------------------------------------------------------------
@@ -647,6 +661,7 @@ func build_barricade(a: Vector2i) -> bool:
 	t.setup(self, a, BARRICADE, 0)
 	t.set_meta("spent", barricade_cost())
 	_register(t)
+	run_stats.built(t, "build", wave_index + 1)
 	_update_paths()
 	_update_auras()
 	board.hover_ok = can_build(a)
@@ -704,6 +719,7 @@ func build_trap(id: String, a: Vector2i) -> bool:
 	t.setup(self, a, id, 0)
 	t.set_meta("spent", int(e.cost))
 	_register(t)
+	run_stats.built(t, "trap", wave_index + 1)
 	_update_auras()
 	if acting == local_player:
 		placing_trap = ""
@@ -784,6 +800,7 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 		return false
 	if o.action == "scrap":
 		# Abreißen gibt kein Gold zurück (wie im Original)
+		run_stats.flush(t)
 		_unregister(t)
 		if t == selected:
 			_select(null)
@@ -797,9 +814,11 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	gold -= int(o.cost)
 	lumber -= int(o.get("lumber", 0))
 	t.set_meta("spent", int(t.get_meta("spent", 0)) + int(o.cost))
+	run_stats.flush(t)
 	_unregister(t)
 	t.set_tower(o.id, 0)
 	_register(t)
+	run_stats.built(t, "upgrade", wave_index + 1)
 	if t == selected:
 		t.set_selected(true)
 	_update_paths()

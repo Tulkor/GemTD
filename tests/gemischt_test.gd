@@ -30,6 +30,7 @@ func _ready() -> void:
 	get_tree().root.add_child(holder)
 	get_tree().current_scene = holder
 	RunHistory.path = "user://test_run_history_%s.json" % role
+	Profile.dir = "user://test_profile_%s" % role
 	Session.map_path = MAP
 	Session.game_kind = "eevetd"
 	Session.skip_setup = true

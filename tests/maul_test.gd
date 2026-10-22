@@ -14,6 +14,7 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _ready() -> void:
+	Profile.dir = "user://test_maul_profil"
 	await get_tree().process_frame
 	check(MaulData.shops().size() == 20, "20 Filialen geladen")
 	check(MaulData.towers().size() >= 200, "Tower geladen: %d" % MaulData.towers().size())
@@ -109,8 +110,33 @@ func _spots(game: MaulGame, zone: Rect2i) -> Array:
 	return list
 
 
+## Profil: Partien und Rekorde bleiben gespeichert (eigener Profil-Ordner statt user://profile).
+func _profile_tests() -> void:
+	MaulProfile.path = "user://test_maul_profile.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(MaulProfile.path))
+	Profile.dir = "user://test_maul_profil"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(Profile.file()))
+	Profile.reset_cache()
+	check(MaulProfile.shop("ikea").best_win == -1 and MaulProfile.totals().games == 0, "Profil: leer am Anfang")
+	var n := MaulProfile.record("ikea", 1, 12, false, 300, 600.0)
+	check(n.has("best_level") and not n.has("best_win"), "Profil: erstes Level ist Rekord")
+	n = MaulProfile.record("ikea", 2, 50, true, 900, 1800.0)
+	check(n.has("best_level") and n.has("best_win"), "Profil: Sieg ist Rekord")
+	n = MaulProfile.record("ikea", 0, 50, true, 10, 60.0)
+	check(n.is_empty(), "Profil: leichterer Sieg ist kein Rekord")
+	var r := MaulProfile.shop("ikea")
+	var t := MaulProfile.totals()
+	check(r.games == 3 and r.wins == 2 and r.best_level == 50 and r.best_win == 2, "Profil: Filiale %s" % r)
+	check(t.games == 3 and t.wins == 2 and t.levels == 112 and t.kills == 1210 and t.minutes == 41, "Profil: Summen %s" % t)
+	var u := MaulProfile.unlocks(250)
+	check(u.size() > 5 and u[0].open and not u[-1].open, "Profil: Freischaltungen sortiert")
+	check(int(MaulProfile.next_unlock(250).xp) > 250 and MaulProfile.next_unlock(99999).is_empty(), "Profil: nächste Freischaltung")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(MaulProfile.path))
+
+
 ## Etappe 2: XP, Hauptgebäude, Profi-Filialen, Items, Einheiten (Sandbox, damit alles offen ist).
 func _pro_tests() -> void:
+	_profile_tests()
 	check(not MaulXp.pro_unlocked(10) and MaulXp.pro_unlocked(250), "Profi-Filialen ab 25 XP")
 	var a: Array = MaulXp.gain(10, 0.0, 10, 1, 1.0)
 	var b: Array = MaulXp.gain(5000, 0.0, 10, 1, 1.0)

@@ -19,6 +19,10 @@ var wave_sets: Dictionary = {}
 var balance: Dictionary = {}
 ## Regeln für eeveTD (res://data/eeve.json): Wirtschaft, Elemente, Schwierigkeiten, Wellen, Schadenstabelle.
 var eeve: Dictionary = {}
+## GemTD-Variante Roguelike (res://data/roguelike.json): Boni alle zehn Wellen, siehe rogue.gd.
+var roguelike: Dictionary = {}
+## Gegnerwerte im Roguelike (res://data/roguelike_enemies.json), über die normalen gelegt (Rogue.enemy_def).
+var roguelike_enemies: Dictionary = {}
 ## TD-Modi aus data/modes.json, in der Reihenfolge der Datei (siehe mode()).
 var modes: Array = []
 
@@ -35,6 +39,10 @@ func reload() -> void:
 	balance = b if typeof(b) == TYPE_DICTIONARY else {}
 	var e = load_json(RES_DATA + "eeve.json")
 	eeve = e if typeof(e) == TYPE_DICTIONARY else {}
+	var rl = load_json(RES_DATA + "roguelike.json")
+	roguelike = rl if typeof(rl) == TYPE_DICTIONARY else {}
+	var re = load_json(RES_DATA + "roguelike_enemies.json")
+	roguelike_enemies = re if typeof(re) == TYPE_DICTIONARY else {}
 	var m = load_json(RES_DATA + "modes.json")
 	modes = m.get("modes", []) if typeof(m) == TYPE_DICTIONARY else []
 	if modes.is_empty():

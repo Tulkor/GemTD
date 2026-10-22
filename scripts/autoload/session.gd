@@ -35,6 +35,8 @@ var eeve_choice: Dictionary = {}
 var maul_choice: Dictionary = {}
 ## Wertung: false = Leben (Spiel endet bei 0), true = Punkte (Kills geben Punkte, Durchbrüche kosten welche).
 var score_mode := false
+## GemTD-Variante Roguelike: alle zehn Wellen einen von drei Boni wählen (rogue.gd).
+var rogue := false
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Hauptmenü nach dem Sprachwechsel mit offenen Einstellungen neu aufbauen.

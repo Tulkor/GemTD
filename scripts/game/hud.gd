@@ -52,6 +52,7 @@ var game_over_boss: Label        ## Endboss-Schadenscheck
 var game_over_table: GridContainer  ## Punkte-Modus: Punkte nach Wellentyp
 var editor_button: Button
 var chance_value: Label
+var _boons_value: Label = null  ## Roguelike: Anzahl Boni (set_boons)
 var title_label: Label
 var recipes_button: Button
 var left_col: VBoxContainer
@@ -468,7 +469,9 @@ func _build_bottom() -> void:
 	head.add_child(info_kills)
 	info_kills_label = UiUtil.label("", info_kills, 12)
 	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
-	info_sub = UiUtil.wrap_label("", info_left, 0)
+	# Breite gleich mitgeben: ohne sie misst Godot umbrechende Labels im ersten Frame ein Zeichen breit
+	# und damit tausende Pixel hoch, die Auswahlkarte sprang dann kurz auf volle Bildschirmhöhe
+	info_sub = UiUtil.wrap_label("", info_left, INFO_W)
 	info_sub.add_theme_font_size_override("font_size", 12)
 	info_sub.add_theme_color_override("font_color", UiTheme.MUTED)
 	info_tiles = GridContainer.new()
@@ -478,7 +481,7 @@ func _build_bottom() -> void:
 	info_left.add_child(info_tiles)
 	for i in 4:
 		_tiles.append(_stat_tile())
-	info_body = UiUtil.wrap_label("", info_left, 0)
+	info_body = UiUtil.wrap_label("", info_left, INFO_W)
 	info_body.add_theme_font_size_override("font_size", 13)
 	info_body.add_theme_color_override("font_color", UiTheme.DIM)
 	# Fähigkeiten in einem eigenen Fenster rechts neben den Werten (mit den neuen Gems daneben darunter)
@@ -655,6 +658,21 @@ func set_resources(wave: int, waves: int, lives: int, gold: int, score := false)
 	lives_value.add_theme_color_override("font_color", (UiTheme.CYAN if lives >= 0 else UiTheme.MISSING) if score else UiTheme.MISSING)
 	lives_value.get_parent().get_parent().tooltip_text = tr("Punkte-Modus: jeder Kill gibt Punkte, späte Wellen mehr als frühe. Ein Gegner, der durchkommt, kostet die Hälfte seines Werts.") if score else ""
 	gold_value.text = str(gold)
+
+
+## Roguelike: Anzahl gewählter Boni in der Leiste oben, Tooltip mit allen Boni und der nächsten Wahl
+## (next_wave -1 = keine mehr). Die Kachel entsteht beim ersten Aufruf rechts neben „Chance“.
+func set_boons(lines: Array, next_wave: int) -> void:
+	if _boons_value == null:
+		var bar := chance_value.get_parent().get_parent()
+		_boons_value = _chip("Boni", bar.get_parent(), UiTheme.PURPLE_LIGHT)
+		bar.get_parent().move_child(_boons_value.get_parent().get_parent(), bar.get_index() + 1)
+	_boons_value.text = str(lines.size())
+	var tip := tr("Roguelike: nach jeder zehnten Welle einen von drei Boni wählen.")
+	tip += "\n\n" + ("\n".join(lines) if not lines.is_empty() else tr("Noch keine Boni"))
+	if next_wave > 0:
+		tip += "\n\n" + tr("Nächste Wahl nach Welle %d") % next_wave
+	_boons_value.get_parent().get_parent().tooltip_text = tip
 
 
 ## level: aktuelle Chance-Stufe, next_wave: ab dieser Welle gilt die nächste (-1 = schon maximal).

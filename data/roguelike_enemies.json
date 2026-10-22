@@ -1,0 +1,355 @@
+{
+	"_info": "Gegnerwerte nur für die GemTD-Variante Roguelike (Rogue.enemy_def): je Gegner die Werte, die dort statt data/enemies/<id>.json gelten (fehlende Felder bleiben wie normal). Startwerte: Leben ab Welle 11 +8 % je zehn Wellen, weil die Boni die Tower stärker machen. Im Balance-Editor unter dem Reiter „GemTD Roguelike“.",
+	"enemies": {
+		"mine_rat": {
+			"hp": 10,
+			"speed": 2.07,
+			"armor": 12,
+			"bounty": 1,
+			"damage": 1
+		},
+		"mine_gekko": {
+			"hp": 30,
+			"speed": 2.07,
+			"armor": 12,
+			"bounty": 1,
+			"damage": 1
+		},
+		"mine_less": {
+			"hp": 55,
+			"speed": 2.07,
+			"armor": 12,
+			"bounty": 1,
+			"damage": 1
+		},
+		"bat": {
+			"hp": 71,
+			"speed": 1.22,
+			"armor": 12,
+			"bounty": 2,
+			"damage": 2
+		},
+		"rockmen": {
+			"hp": 90,
+			"speed": 2.15,
+			"armor": 12,
+			"bounty": 2,
+			"damage": 2
+		},
+		"bigger_rockmen": {
+			"hp": 120,
+			"speed": 2.15,
+			"armor": 12,
+			"bounty": 2,
+			"damage": 2
+		},
+		"greeny": {
+			"hp": 178,
+			"speed": 2.23,
+			"armor": 12,
+			"bounty": 2,
+			"damage": 2
+		},
+		"flying_gem_thief": {
+			"hp": 251,
+			"speed": 1.25,
+			"armor": 12,
+			"bounty": 3,
+			"damage": 3
+		},
+		"hoodsmen": {
+			"hp": 300,
+			"speed": 2.23,
+			"armor": 12,
+			"bounty": 3,
+			"damage": 3
+		},
+		"merc": {
+			"hp": 470,
+			"speed": 2.23,
+			"armor": 15,
+			"bounty": 3,
+			"damage": 3
+		},
+		"giant_slug": {
+			"hp": 529,
+			"speed": 2.23,
+			"armor": 15,
+			"bounty": 3,
+			"damage": 3
+		},
+		"green_dragon": {
+			"hp": 522,
+			"speed": 1.4,
+			"armor": 13,
+			"bounty": 4,
+			"damage": 4
+		},
+		"long_spider": {
+			"hp": 616,
+			"speed": 2.3,
+			"armor": 15,
+			"bounty": 4,
+			"damage": 4
+		},
+		"ogre": {
+			"hp": 702,
+			"speed": 2.3,
+			"armor": 15,
+			"bounty": 4,
+			"damage": 4
+		},
+		"demon": {
+			"hp": 1080,
+			"speed": 2.3,
+			"armor": 15,
+			"bounty": 4,
+			"damage": 4
+		},
+		"bird": {
+			"hp": 860,
+			"speed": 1.78,
+			"armor": 13,
+			"bounty": 5,
+			"damage": 5
+		},
+		"extreme_raider": {
+			"hp": 1566,
+			"speed": 2.54,
+			"armor": 15,
+			"bounty": 5,
+			"damage": 5
+		},
+		"extreme_razormane": {
+			"hp": 1998,
+			"speed": 2.54,
+			"armor": 15,
+			"bounty": 5,
+			"damage": 5
+		},
+		"extreme_water": {
+			"hp": 2538,
+			"speed": 2.73,
+			"armor": 15,
+			"bounty": 5,
+			"damage": 5
+		},
+		"tamed_bird": {
+			"hp": 1636,
+			"speed": 2.05,
+			"armor": 13,
+			"bounty": 6,
+			"damage": 6
+		},
+		"extreme_swamp_lord": {
+			"hp": 3654,
+			"speed": 3.12,
+			"armor": 19,
+			"bounty": 6,
+			"damage": 6
+		},
+		"extreme_mine_cart": {
+			"hp": 4060,
+			"speed": 3.28,
+			"armor": 19,
+			"bounty": 6,
+			"damage": 6
+		},
+		"extreme_dead_miner": {
+			"hp": 4988,
+			"speed": 3.44,
+			"armor": 19,
+			"bounty": 6,
+			"damage": 6
+		},
+		"ghost_bird": {
+			"hp": 3323,
+			"speed": 2.09,
+			"armor": 13,
+			"bounty": 7,
+			"damage": 7
+		},
+		"extreme_mine_disease": {
+			"hp": 6090,
+			"speed": 3.4,
+			"armor": 19,
+			"bounty": 7,
+			"damage": 7
+		},
+		"extreme_sb": {
+			"hp": 7308,
+			"speed": 3.44,
+			"armor": 19,
+			"bounty": 7,
+			"damage": 7
+		},
+		"extreme_kitty": {
+			"hp": 9164,
+			"speed": 3.48,
+			"armor": 19,
+			"bounty": 7,
+			"damage": 7
+		},
+		"owl": {
+			"hp": 5661,
+			"speed": 2.11,
+			"armor": 14,
+			"bounty": 8,
+			"damage": 8
+		},
+		"extreme_turtle": {
+			"hp": 10440,
+			"speed": 3.52,
+			"armor": 19,
+			"bounty": 8,
+			"damage": 8
+		},
+		"extreme_ogre_lord": {
+			"hp": 12760,
+			"speed": 3.55,
+			"armor": 23,
+			"bounty": 8,
+			"damage": 8
+		},
+		"extreme_red_panda": {
+			"hp": 15810,
+			"speed": 3.59,
+			"armor": 23,
+			"bounty": 8,
+			"damage": 8
+		},
+		"black_dragon": {
+			"hp": 9226,
+			"speed": 2.5,
+			"armor": 14,
+			"bounty": 9,
+			"damage": 9
+		},
+		"extreme_warlock_orc": {
+			"hp": 17980,
+			"speed": 3.63,
+			"armor": 23,
+			"bounty": 9,
+			"damage": 9
+		},
+		"extreme_succubus": {
+			"hp": 20460,
+			"speed": 3.67,
+			"armor": 23,
+			"bounty": 9,
+			"damage": 9
+		},
+		"extreme_melee_ranger": {
+			"hp": 23560,
+			"speed": 3.71,
+			"armor": 23,
+			"bounty": 9,
+			"damage": 9
+		},
+		"red_dragon": {
+			"hp": 12648,
+			"speed": 2.5,
+			"armor": 14,
+			"bounty": 10,
+			"damage": 10
+		},
+		"extreme_tauren": {
+			"hp": 26040,
+			"speed": 3.75,
+			"armor": 23,
+			"bounty": 10,
+			"damage": 10
+		},
+		"extreme_tauren_chief": {
+			"hp": 28520,
+			"speed": 3.79,
+			"armor": 23,
+			"bounty": 10,
+			"damage": 10
+		},
+		"extreme_prisoner": {
+			"hp": 31000,
+			"speed": 3.83,
+			"armor": 23,
+			"bounty": 10,
+			"damage": 10
+		},
+		"spirit_bird": {
+			"hp": 15624,
+			"speed": 2.58,
+			"armor": 14,
+			"bounty": 11,
+			"damage": 11
+		},
+		"extreme_kon": {
+			"hp": 45936,
+			"speed": 4.08,
+			"armor": 30,
+			"bounty": 11,
+			"damage": 11
+		},
+		"extreme_bryvx": {
+			"hp": 53064,
+			"speed": 4.08,
+			"armor": 34,
+			"bounty": 16,
+			"damage": 16
+		},
+		"extreme_mingo": {
+			"hp": 59400,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 16,
+			"damage": 16
+		},
+		"wisp": {
+			"hp": 20592,
+			"speed": 2.89,
+			"armor": 14,
+			"bounty": 16,
+			"damage": 16
+		},
+		"extreme_tiger_bear": {
+			"hp": 63360,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 18,
+			"damage": 18
+		},
+		"extreme_jax": {
+			"hp": 69696,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 18,
+			"damage": 18
+		},
+		"extreme_pickled_lobster": {
+			"hp": 74448,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 18,
+			"damage": 18
+		},
+		"phoenix": {
+			"hp": 23760,
+			"speed": 2.97,
+			"armor": 15,
+			"bounty": 20,
+			"damage": 20
+		},
+		"extreme_roller": {
+			"hp": 79200,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 20,
+			"damage": 20
+		},
+		"extreme_bryvx_boss": {
+			"hp": 112200,
+			"speed": 4.08,
+			"armor": 35,
+			"bounty": 20,
+			"damage": 20
+		}
+	}
+}

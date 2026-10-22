@@ -23,6 +23,8 @@ var map_scroll: ScrollContainer
 var no_map_hint: Label
 var single_page: Control
 var history_page: Control
+var profile: ProfilePanel
+var profile_page: Control
 
 
 func _ready() -> void:
@@ -41,6 +43,14 @@ func _ready() -> void:
 	history.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	history.replay_requested.connect(_replay)
 	hv.add_child(history)
+	profile_page = _page()
+	var pv: VBoxContainer = profile_page.get_meta("box")
+	_back_button(pv.get_child(0), func(): show_page(""))
+	DecoTheme.title(UiUtil.label("Profil", pv.get_child(0), 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	DecoTheme.head_line(pv.get_child(0))
+	profile = ProfilePanel.new()
+	profile.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	pv.add_child(profile)
 	_reload()
 	_build_settings()
 	lobby = LobbyPanel.new()
@@ -64,10 +74,13 @@ func _ready() -> void:
 		settings.show()
 
 
-## Seite zeigen: "" = Hub, "single" = Einzelspieler, "history" = Run-History, "lobby" = Mehrspieler.
+## Seite zeigen: "" = Hub, "single" = Einzelspieler, "history" = Run-History, "profile" = Profil, "lobby" = Mehrspieler.
 func show_page(page: String) -> void:
 	single_page.visible = page == "single"
 	history_page.visible = page == "history"
+	profile_page.visible = page == "profile"
+	if page == "profile":
+		profile.reload()
 	lobby.visible = page == "lobby"
 	if page == "history":
 		history.reload()
@@ -111,6 +124,7 @@ func _build_hub() -> void:
 	foot.add_theme_constant_override("separation", 10)
 	v.add_child(foot)
 	_foot_button("Spiel laden", foot, func(): loader.show())
+	_foot_button("Profil", foot, func(): show_page("profile"))
 	_foot_button("Run-History", foot, func(): show_page("history"))
 	_foot_button("Map-Editor", foot, _open_map_editor)
 	_foot_button("Tower-Editor", foot, _open_tower_editor)
@@ -338,7 +352,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if settings.visible:
 		settings.hide()
-	elif single_page.visible or history_page.visible:
+	elif single_page.visible or history_page.visible or profile_page.visible:
 		show_page("")
 	else:
 		return

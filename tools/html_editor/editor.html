@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TD Hub Editor</title>
+<!--
+  Map- und Tower-Editor für TD Hub außerhalb des Spiels. Läuft ohne Installation im Browser (Doppelklick).
+  Die mitgelieferten Maps und Tower bettet tools/html_editor/bauen.py ein; ohne sie geht nur „Datei öffnen“.
+  Gespeichert wird als eigene JSON-Datei im Format von data/maps bzw. data/towers, die man weiterschicken
+  und im Spiel über „Datei importieren“ im Map- oder Tower-Editor laden kann.
+  Anleitung: tools/html_editor/README.md
+-->
+<style>
+/*FONTS*/
+:root {
+  --bg: #07040e; --bar: #0d0618; --panel: #0d0618; --panel2: #160b28; --border: #3b2560; --border2: #5b3a8a;
+  --text: #f2eaff; --muted: #a99cc8; --gold: #ff4fd8; --cyan: #22c4ee; --coin: #ffd166;
+  --have: #5fe08a; --missing: #ff5d7a; --purple-light: #b38cff;
+  --tile-floor: #1b0f33; --tile-blocked: #574379; --tile-walk: #0b3a4a; --grid: #2a1a47; --grid2: #44306b;
+  --marker: rgba(255, 209, 102, 0.22); --p1: #ff4fd8; --p2: #22c4ee; --p3: #39ff6a; --p4: #f2f2f2;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px "DejaVu Sans Mono", Consolas, monospace; }
+body { padding: 16px; }
+button, select, input, textarea { font: inherit; color: var(--text); border-radius: 0; }
+h1 { margin: 0; font-size: 26px; font-weight: bold; color: var(--gold); text-shadow: 3px 3px 0 var(--cyan); letter-spacing: 1px; }
+h2 { margin: 0 0 10px; font-size: 15px; font-weight: bold; text-transform: uppercase; color: var(--gold); text-shadow: 2px 2px 0 var(--cyan); }
+h3 { margin: 0 0 8px; font-size: 13px; font-weight: bold; text-transform: uppercase; }
+.panel { background: var(--panel); border: 3px solid var(--gold); box-shadow: 6px 6px 0 var(--cyan); padding: 14px; margin-bottom: 18px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.btn { background: var(--panel2); border: 2px solid var(--border2); padding: 6px 12px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+.btn:hover:not(:disabled) { border-color: var(--cyan); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.on { background: var(--cyan); border-color: var(--cyan); color: var(--bar); }
+.btn.accent { background: var(--gold); border-color: var(--gold); color: var(--bar); }
+.btn.mini { padding: 2px 7px; font-size: 12px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { background: var(--panel2); border: 3px solid var(--border2); border-bottom: none; padding: 9px 18px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+.tab.on { background: var(--panel); border-color: var(--gold); color: var(--gold); }
+select, input[type=number], input[type=text], input:not([type]), textarea { background: var(--bar); border: 2px solid var(--border2); padding: 5px 8px; max-width: 100%; }
+select:focus, input:focus, textarea:focus { outline: none; border-color: var(--cyan); }
+input[type=number] { width: 96px; }
+input[type=color] { width: 56px; height: 32px; padding: 0 2px; background: var(--bar); border: 2px solid var(--border2); }
+textarea { width: 100%; min-height: 260px; resize: vertical; white-space: pre; }
+label.field { display: flex; flex-direction: column; gap: 3px; }
+label.field > span { font-size: 12px; color: var(--muted); text-transform: uppercase; overflow-wrap: anywhere; }
+.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.fields .wide { grid-column: 1 / -1; }
+.fields input:not([type=color]), .fields select { width: 100%; }
+.card { background: var(--panel2); border: 2px solid var(--border2); padding: 10px 12px; margin-bottom: 12px; }
+.card .card { background: var(--panel); }
+.note { font-size: 12px; color: var(--muted); margin: 4px 0 8px; overflow-wrap: anywhere; }
+.msg { padding: 8px 12px; border: 2px solid var(--cyan); margin-bottom: 14px; overflow-wrap: anywhere; }
+.msg.err { border-color: var(--missing); color: var(--missing); }
+.ok { color: var(--have); } .bad { color: var(--missing); } .coin { color: var(--coin); }
+.dirty { color: var(--coin); font-weight: bold; }
+.key { display: inline-block; min-width: 18px; padding: 0 4px; margin-left: 6px; border: 1px solid currentColor; font-size: 11px; text-align: center; }
+
+/* Map */
+.maplayout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+.side .card h3 { color: var(--gold); }
+.side .fields { grid-template-columns: 1fr 1fr; }
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tools .btn { text-align: left; display: flex; align-items: center; gap: 8px; }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border2); flex: none; }
+.cvwrap { position: relative; height: calc(100vh - 190px); min-height: 420px; border: 3px solid var(--gold); box-shadow: 6px 6px 0 var(--cyan); background: var(--bar); overflow: hidden; }
+#cv { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.cvbar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+.cvbar > * { pointer-events: auto; background: rgba(13, 6, 24, 0.88); border: 2px solid var(--border2); padding: 3px 8px; font-size: 12px; }
+.cps { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+.cps .row { gap: 6px; }
+
+/* Tower */
+.towerlayout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.tlist { max-height: calc(100vh - 290px); min-height: 300px; overflow-y: auto; border: 2px solid var(--border2); background: var(--bar); }
+.tlist .grp { padding: 8px 10px 4px; color: var(--gold); font-weight: bold; text-transform: uppercase; font-size: 12px; }
+.tlist .item { padding: 5px 10px; cursor: pointer; display: flex; gap: 8px; align-items: center; overflow-wrap: anywhere; }
+.tlist .item:hover { background: var(--panel2); }
+.tlist .item.on { background: var(--cyan); color: var(--bar); }
+.tname { font-size: 24px; font-weight: bold; margin: 0 0 12px; overflow-wrap: anywhere; }
+.ing { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.ing select { max-width: 280px; }
+.indent { margin-left: 28px; border-left: 2px solid var(--border2); padding-left: 10px; }
+.ab { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
+.ab .txt { flex-basis: 100%; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+
+@media (max-width: 860px) {
+  .maplayout, .towerlayout { grid-template-columns: minmax(0, 1fr); }
+  .cvwrap { height: 70vh; }
+  .tlist { max-height: 260px; }
+}
+</style>
+</head>
+<body>
+<div class="row" style="margin-bottom:14px">
+  <h1>TD-EDITOR</h1>
+  <span class="muted small" id="stand"></span>
+  <span class="spacer"></span>
+  <span class="dirty" id="dirty"></span>
+  <button class="btn" id="b-open" title="Map- oder Tower-Datei (.json) laden, auch per Ziehen ins Fenster">Datei öffnen</button>
+  <button class="btn accent" id="b-save" title="Strg+S">Als Datei speichern</button>
+  <input type="file" id="file" accept=".json,application/json" multiple hidden>
+</div>
+<div id="msg"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-tab="map">Map</button>
+  <button class="tab" data-tab="tower">Tower</button>
+</div>
+<div class="panel" id="main"></div>
+
+<script>
+"use strict";
+// Eingebettete Daten (bauen.py ersetzt null). Siehe bauen.py für die Felder.
+const EMBED = /*DATEN*/null/*ENDE*/;
+const D = Object.assign({
+  stand: "ohne eingebettete Daten", maps: {}, towers: {}, waves: ["classic"], modes: [["gemtd", "GemTD"]],
+  hit_fx: [], shot_fx: [], schema: {}, labels: {}, damage_types: {},
+  tier_names: ["Splitter", "Fehlerhafter", "Normaler", "Makelloser", "Perfekter", "Großartiger"],
+}, EMBED || {});
+
+// ---------------------------------------------------------------- JSON im Format der Spieldateien
+// Wie der Balance-Editor: Einrückung mit Tabs, Zahlen mit Komma (1.0) bleiben Kommazahlen.
+const FLOATS = new WeakMap();  // Container -> Set der Schlüssel/Indizes mit Kommazahl
+
+function markFloat(c, k) { let s = FLOATS.get(c); if (!s) FLOATS.set(c, s = new Set()); s.add(k); }
+function isFloatAt(c, k) { const s = FLOATS.get(c); return !!s && s.has(k); }
+
+function parseJson(text) {
+  let i = 0;
+  const ws = () => { while (i < text.length && " \t\n\r﻿".includes(text[i])) i++; };
+  const fail = (m) => { throw new Error(m + " bei Zeichen " + i); };
+  function value(parent, key) {
+    ws();
+    const ch = text[i];
+    if (ch === "{") {
+      i++; const o = {}; ws();
+      if (text[i] === "}") { i++; return o; }
+      for (;;) {
+        ws(); if (text[i] !== '"') fail("Schlüssel erwartet");
+        const k = str(); ws(); if (text[i++] !== ":") fail(": erwartet");
+        o[k] = value(o, k); ws();
+        if (text[i] === ",") { i++; continue; }
+        if (text[i] === "}") { i++; return o; }
+        fail(", oder } erwartet");
+      }
+    }
+    if (ch === "[") {
+      i++; const a = []; ws();
+      if (text[i] === "]") { i++; return a; }
+      for (;;) {
+        a.push(value(a, a.length)); ws();
+        if (text[i] === ",") { i++; continue; }
+        if (text[i] === "]") { i++; return a; }
+        fail(", oder ] erwartet");
+      }
+    }
+    if (ch === '"') return str();
+    for (const [w, v] of [["true", true], ["false", false], ["null", null]])
+      if (text.startsWith(w, i)) { i += w.length; return v; }
+    const m = /^-?\d+(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i, i + 40));
+    if (!m) fail("Wert erwartet");
+    i += m[0].length;
+    if (/[.eE]/.test(m[0]) && parent) markFloat(parent, key);
+    return Number(m[0]);
+  }
+  function str() {
+    const start = i; i++;
+    while (text[i] !== '"') { if (text[i] === "\\") i++; i++; if (i >= text.length) fail("Text ohne Ende"); }
+    i++;
+    return JSON.parse(text.slice(start, i));
+  }
+  const root = value(null, null); ws();
+  if (i < text.length) fail("Zeichen nach dem Ende");
+  return root;
+}
+
+function pyFloat(x) {
+  if (!isFinite(x)) return "0.0";
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-4 || a >= 1e16)) {
+    const [m, e] = x.toExponential().split("e");
+    const n = Math.abs(Number(e));
+    return m + "e" + (e[0] === "-" ? "-" : "+") + (n < 10 ? "0" : "") + n;
+  }
+  return Number.isInteger(x) ? String(x) + ".0" : String(x);
+}
+
+function pyStr(s, ascii) {
+  let out = JSON.stringify(s);
+  if (ascii) out = out.replace(/[\u007f-￿]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  return out;
+}
+
+function dumpJson(v, ascii = false, ind = "", parent = null, key = null) {
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return (isFloatAt(parent, key) || !Number.isInteger(v)) ? pyFloat(v) : String(v);
+  if (typeof v === "string") return pyStr(v, ascii);
+  const inner = ind + "\t";
+  if (Array.isArray(v)) {
+    if (!v.length) return "[]";
+    return "[\n" + v.map((x, k) => inner + dumpJson(x, ascii, inner, v, k)).join(",\n") + "\n" + ind + "]";
+  }
+  const ks = Object.keys(v);
+  if (!ks.length) return "{}";
+  return "{\n" + ks.map((k) => inner + pyStr(k, ascii) + ": " + dumpJson(v[k], ascii, inner, v, k)).join(",\n") + "\n" + ind + "}";
+}
+
+// Tiefe Kopie, die die Kommazahl-Markierungen mitnimmt.
+function clone(v) {
+  if (v === null || typeof v !== "object") return v;
+  const c = Array.isArray(v) ? v.map(clone) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, clone(x)]));
+  const s = FLOATS.get(v); if (s) FLOATS.set(c, new Set(s));
+  return c;
+}
+// Objekt mit Kommazahl-Markierungen aus einem Literal (für neue Daten).
+function withFloats(o, keys) { for (const k of keys) markFloat(o, k); return o; }
+// Neuen Schlüssel nach einem vorhandenen einfügen (Reihenfolge wie in den Spieldateien).
+function insertAfter(obj, after, key, value) {
+  if (key in obj) { obj[key] = value; return obj; }
+  const entries = Object.entries(obj);
+  const at = entries.findIndex(([k]) => k === after);
+  entries.splice(at < 0 ? entries.length : at + 1, 0, [key, value]);
+  const s = FLOATS.get(obj);
+  for (const k of Object.keys(obj)) delete obj[k];
+  for (const [k, v] of entries) obj[k] = v;
+  if (s) FLOATS.set(obj, s);
+  return obj;
+}
+
+// ---------------------------------------------------------------- Oberfläche
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (k === "class") e.className = v;
+    else if (k === "value") e.value = v;
+    else if (k === "checked") e.checked = true;
+    else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c instanceof Node ? c : String(c));
+  return e;
+}
+function message(text, err = false) { $("msg").replaceChildren(text ? el("div", { class: "msg" + (err ? " err" : "") }, text) : ""); }
+function field(label, control, wide = false) { return el("label", { class: "field" + (wide ? " wide" : "") }, el("span", {}, label), control); }
+function selectEl(options, cur, onchange) {
+  const s = el("select", { onchange: () => onchange(s.value) }, options.map(([v, l]) => el("option", { value: v }, l)));
+  s.value = cur;
+  return s;
+}
+// Zahlenfeld, das obj[key] direkt ändert. float: Wert bleibt Kommazahl (1.0).
+function numberEl(obj, key, opt = {}) {
+  const i = el("input", { type: "number", step: opt.step ?? (opt.float ? "any" : 1), min: opt.min, max: opt.max, value: obj[key] ?? opt.def ?? 0 });
+  i.addEventListener("input", () => {
+    const v = Number(i.value);
+    if (i.value === "" || !isFinite(v)) return;
+    obj[key] = opt.float ? v : Math.round(v);
+    if (opt.float) markFloat(obj, key);
+    (opt.onchange || touched)();
+  });
+  return i;
+}
+function textEl(obj, key, onchange) {
+  const i = el("input", { type: "text", value: obj[key] ?? "" });
+  i.addEventListener("input", () => { obj[key] = i.value; (onchange || touched)(); });
+  return i;
+}
+const validId = (s) => /^[a-z0-9_]+$/.test(s);
+
+function download(name, text) {
+  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+let TAB = "map";
+function touched() { updateDirty(); }
+function updateDirty() {
+  const d = TAB === "map" ? mapDirty() : towerDirty();
+  $("dirty").textContent = d ? "● ungespeichert" : "";
+}
+
+// ================================================================ MAP
+const TOOLS = [
+  { id: "#", name: "Blockiert", key: 1, color: "--tile-blocked", hint: "weder begehbar noch bebaubar" },
+  { id: "_", name: "Nur Weg", key: 2, color: "--tile-walk", hint: "begehbar, aber nicht bebaubar" },
+  { id: ".", name: "Boden", key: 3, color: "--tile-floor", hint: "begehbar und bebaubar" },
+  { id: "spawn", name: "Spawn", key: 4, color: "--cyan", hint: "Startpunkt der Gegner" },
+  { id: "goal", name: "Ziel", key: 5, color: "--gold", hint: "hier kostet ein Gegner Leben" },
+  { id: "cp", name: "Checkpoint", key: 6, color: "--coin", hint: "Klick setzt oder entfernt, Reihenfolge links" },
+];
+const M = {
+  obj: null, grid: [], saved: "", tool: "#", brush: 2, lane: 0,
+  zoom: 8, ox: 0, oy: 0, hover: null, paint: 0, pan: null, space: false,
+  undo: [], redo: [], paths: [], needPath: true, needDraw: true,
+};
+const CSS = {};
+function css(name) { return CSS[name] || (CSS[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim()); }
+const PLAYER = ["--p1", "--p2", "--p3", "--p4"];
+
+function newMapObj(w = 74, h = 74) {
+  return {
+    format: 2, id: "neue_map", name: "Neue Map", width: w, height: h,
+    tiles: Array.from({ length: h }, () => ".".repeat(w)),
+    spawn: [4, 4], goal: [w - 5, h - 5], checkpoints: [], marker_radius: 1, waves: D.waves[0] || "classic",
+    lives: 50, start_gold: 0, variance: { random_rocks: 0, seed: -1 },
+  };
+}
+
+// Wie MapData.from_dict: Zeilen auf Breite bringen, altes Format (1 Feld = 1 Tower) verdoppeln.
+function normalizeMap(o) {
+  o.width = Math.max(1, Math.round(o.width ?? 20)); o.height = Math.max(1, Math.round(o.height ?? 20));
+  if (!Array.isArray(o.checkpoints)) o.checkpoints = [];
+  if (!Array.isArray(o.spawn)) o.spawn = [0, 0];
+  if (!Array.isArray(o.goal)) o.goal = [o.width - 1, o.height - 1];
+  if ((o.format ?? 1) < 2) {
+    const dbl = (p) => [p[0] * 2, p[1] * 2];
+    o.tiles = (o.tiles || []).flatMap((r) => { const w = [...String(r)].map((c) => c + c).join(""); return [w, w]; });
+    o.width *= 2; o.height *= 2; o.spawn = dbl(o.spawn); o.goal = dbl(o.goal); o.checkpoints = o.checkpoints.map(dbl);
+    o.marker_radius = Math.max((o.marker_radius ?? 1) * 2 - 1, 0);
+    o = Object.assign({ format: 2 }, o); o.format = 2;
+  }
+  return o;
+}
+
+// nl: Datei endet mit Zeilenumbruch (die Godot-Editoren schreiben einen, die Maul-Maps aus maul_daten.py nicht).
+function loadMap(obj, label, nl = true) {
+  M.nl = nl;
+  M.obj = normalizeMap(obj);
+  M.grid = Array.from({ length: M.obj.height }, (_, y) => {
+    const r = String((M.obj.tiles || [])[y] ?? "");
+    return (r + ".".repeat(M.obj.width)).slice(0, M.obj.width).split("");
+  });
+  M.lane = 0; M.undo = []; M.redo = [];
+  M.saved = mapText();
+  fitView();
+  M.needPath = true;
+  if (TAB === "map") renderMap();
+  if (label) message("Geladen: " + label);
+}
+
+function mapText() {
+  M.obj.tiles = M.grid.map((r) => r.join(""));
+  return dumpJson(M.obj) + (M.nl ? "\n" : "");
+}
+function mapDirty() { return M.obj && mapText() !== M.saved; }
+
+// Bahnen: 0 = spawn/checkpoints oben, weitere aus "lanes".
+const laneCount = () => 1 + (M.obj.lanes || []).length;
+const laneOf = (i) => (i === 0 ? M.obj : M.obj.lanes[i - 1]);
+function waypoints(i) { const l = laneOf(i); return [l.spawn, ...(l.checkpoints || []), M.obj.goal]; }
+function allWaypoints() { const out = []; for (let i = 0; i < laneCount(); i++) out.push(...waypoints(i)); return out; }
+const inBounds = (x, y) => x >= 0 && y >= 0 && x < M.obj.width && y < M.obj.height;
+const walkable = (x, y) => inBounds(x, y) && M.grid[y][x] !== "#";
+function isMarker(x, y) {
+  const r = M.obj.marker_radius ?? 1;
+  return allWaypoints().some((p) => Math.max(Math.abs(p[0] - x), Math.abs(p[1] - y)) <= r);
+}
+
+// A* wie AStarGrid2D im Spiel: diagonal nur, wenn keins der beiden Nachbarfelder blockiert ist.
+function astar(a, b) {
+  const W = M.obj.width, H = M.obj.height, N = W * H;
+  if (!walkable(a[0], a[1]) || !walkable(b[0], b[1])) return null;
+  const g = new Float64Array(N).fill(Infinity), came = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+  const heap = [];  // [f, idx]
+  const push = (f, idx) => {
+    heap.push([f, idx]); let i = heap.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; }
+  };
+  const pop = () => {
+    const top = heap[0], last = heap.pop();
+    if (heap.length) {
+      heap[0] = last; let i = 0;
+      for (;;) {
+        const l = i * 2 + 1, r = l + 1; let m = i;
+        if (l < heap.length && heap[l][0] < heap[m][0]) m = l;
+        if (r < heap.length && heap[r][0] < heap[m][0]) m = r;
+        if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m;
+      }
+    }
+    return top;
+  };
+  const hx = (x, y) => { const dx = Math.abs(x - b[0]), dy = Math.abs(y - b[1]); return Math.max(dx, dy) + (Math.SQRT2 - 1) * Math.min(dx, dy); };
+  const s = a[1] * W + a[0], t = b[1] * W + b[0];
+  g[s] = 0; push(hx(a[0], a[1]), s);
+  while (heap.length) {
+    const [, cur] = pop();
+    if (closed[cur]) continue;
+    if (cur === t) break;
+    closed[cur] = 1;
+    const x = cur % W, y = (cur / W) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy;
+      if (!walkable(nx, ny)) continue;
+      if (dx && dy && (!walkable(x + dx, y) || !walkable(x, y + dy))) continue;
+      const n = ny * W + nx;
+      if (closed[n]) continue;
+      const ng = g[cur] + (dx && dy ? Math.SQRT2 : 1);
+      if (ng < g[n]) { g[n] = ng; came[n] = cur; push(ng + hx(nx, ny), n); }
+    }
+  }
+  if (s !== t && came[t] < 0) return null;
+  const out = [];
+  for (let c = t; c !== -1; c = c === s ? -1 : came[c]) out.push([c % W, (c / W) | 0]);
+  return out.reverse();
+}
+function lanePath(i) {
+  const pts = waypoints(i), out = [];
+  for (let k = 0; k < pts.length - 1; k++) {
+    const seg = astar(pts[k], pts[k + 1]);
+    if (!seg) return null;
+    out.push(...(out.length ? seg.slice(1) : seg));
+  }
+  return out;
+}
+
+// ---- Ansicht
+function fitView() {
+  const wrap = $("cvwrap");
+  const w = wrap ? wrap.clientWidth : 900, h = wrap ? wrap.clientHeight : 700;
+  M.zoom = Math.max(2, Math.min(40, Math.floor(Math.min((w - 20) / M.obj.width, (h - 50) / M.obj.height))));
+  M.ox = Math.round((w - M.obj.width * M.zoom) / 2);
+  M.oy = Math.round((h - 40 - M.obj.height * M.zoom) / 2);
+  M.needDraw = true;
+}
+function cellAt(ev) {
+  const r = $("cv").getBoundingClientRect();
+  return [(ev.clientX - r.left - M.ox) / M.zoom, (ev.clientY - r.top - M.oy) / M.zoom];
+}
+const isPointTool = () => ["spawn", "goal", "cp"].includes(M.tool);
+function brushCells(m, size) {
+  const ax = size === 1 ? Math.floor(m[0]) : Math.round(m[0] - size / 2);
+  const ay = size === 1 ? Math.floor(m[1]) : Math.round(m[1] - size / 2);
+  const out = [];
+  for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) out.push([ax + dx, ay + dy]);
+  return out;
+}
+
+function drawMap() {
+  const cv = $("cv"); if (!cv || !M.obj) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = css("--bar"); ctx.fillRect(0, 0, W, H);
+  const s = M.zoom, mw = M.obj.width, mh = M.obj.height;
+  const x0 = Math.max(0, Math.floor(-M.ox / s)), x1 = Math.min(mw, Math.ceil((W - M.ox) / s));
+  const y0 = Math.max(0, Math.floor(-M.oy / s)), y1 = Math.min(mh, Math.ceil((H - M.oy) / s));
+  const col = { ".": css("--tile-floor"), "#": css("--tile-blocked"), "_": css("--tile-walk") };
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+    ctx.fillStyle = col[M.grid[y][x]] || col["."];
+    ctx.fillRect(M.ox + x * s, M.oy + y * s, s, s);
+  }
+  // Sperrzone um Wegpunkte
+  ctx.fillStyle = css("--marker");
+  const r = M.obj.marker_radius ?? 1;
+  for (const p of allWaypoints()) ctx.fillRect(M.ox + (p[0] - r) * s, M.oy + (p[1] - r) * s, (2 * r + 1) * s, (2 * r + 1) * s);
+  // Gitter: dünn je Feld, kräftig je Towerbreite (2 Felder)
+  if (s >= 5) {
+    ctx.lineWidth = 1;
+    for (const [step, color] of [[1, css("--grid")], [2, css("--grid2")]]) {
+      if (step === 1 && s < 9) continue;
+      ctx.strokeStyle = color; ctx.beginPath();
+      for (let x = x0 - (x0 % step); x <= x1; x += step) { ctx.moveTo(M.ox + x * s + 0.5, M.oy + y0 * s); ctx.lineTo(M.ox + x * s + 0.5, M.oy + y1 * s); }
+      for (let y = y0 - (y0 % step); y <= y1; y += step) { ctx.moveTo(M.ox + x0 * s, M.oy + y * s + 0.5); ctx.lineTo(M.ox + x1 * s, M.oy + y * s + 0.5); }
+      ctx.stroke();
+    }
+  }
+  ctx.strokeStyle = css("--gold"); ctx.lineWidth = 2; ctx.strokeRect(M.ox - 1, M.oy - 1, mw * s + 2, mh * s + 2);
+  // Zonen (Maul): jeder Spieler baut nur in seiner
+  for (const z of M.obj.zones || []) {
+    const [zx, zy, zw, zh] = z.rect;
+    ctx.strokeStyle = z.player < 0 ? css("--muted") : css(PLAYER[z.player % PLAYER.length]);
+    ctx.setLineDash([6, 4]); ctx.lineWidth = 2;
+    ctx.strokeRect(M.ox + zx * s + 2, M.oy + zy * s + 2, zw * s - 4, zh * s - 4);
+    ctx.setLineDash([]);
+  }
+  // Wege
+  M.paths.forEach((p, i) => {
+    if (!p || p.length < 2) return;
+    ctx.strokeStyle = laneCount() > 1 ? css(PLAYER[Math.max(0, laneOf(i).player ?? M.obj.spawn_player ?? i) % PLAYER.length]) : css("--have");
+    ctx.globalAlpha = i === M.lane ? 0.95 : 0.5;
+    ctx.lineWidth = Math.max(2, s * 0.25); ctx.lineJoin = "round";
+    ctx.beginPath();
+    p.forEach(([x, y], k) => (k ? ctx.lineTo : ctx.moveTo).call(ctx, M.ox + (x + 0.5) * s, M.oy + (y + 0.5) * s));
+    ctx.stroke(); ctx.globalAlpha = 1;
+  });
+  // Wegpunkte
+  const font = Math.max(9, Math.min(16, s * 0.9));
+  ctx.font = "bold " + font + "px 'DejaVu Sans Mono', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const mark = (p, fill, text) => {
+    const cx = M.ox + (p[0] + 0.5) * s, cy = M.oy + (p[1] + 0.5) * s, rr = Math.max(5, s * 0.75);
+    ctx.fillStyle = fill; ctx.fillRect(cx - rr, cy - rr, rr * 2, rr * 2);
+    ctx.strokeStyle = css("--bar"); ctx.lineWidth = 2; ctx.strokeRect(cx - rr, cy - rr, rr * 2, rr * 2);
+    ctx.fillStyle = css("--bar"); ctx.fillText(text, cx, cy + 1);
+  };
+  for (let i = 0; i < laneCount(); i++) {
+    const l = laneOf(i);
+    (l.checkpoints || []).forEach((c, k) => mark(c, css("--coin"), String(k + 1)));
+    mark(l.spawn, css("--cyan"), laneCount() > 1 ? "S" + (i + 1) : "S");
+  }
+  mark(M.obj.goal, css("--gold"), "Z");
+  // Pinsel unter der Maus
+  if (M.hover) {
+    const cells = brushCells(M.hover, isPointTool() ? 1 : M.brush);
+    const [ax, ay] = cells[0], n = Math.sqrt(cells.length);
+    ctx.strokeStyle = css("--text"); ctx.lineWidth = 2;
+    ctx.strokeRect(M.ox + ax * s, M.oy + ay * s, n * s, n * s);
+  }
+}
+
+function frame() {
+  if (TAB === "map" && M.obj) {
+    if (M.needPath) {
+      M.needPath = false;
+      M.paths = Array.from({ length: laneCount() }, (_, i) => lanePath(i));
+      updateMapStatus();
+      M.needDraw = true;
+    }
+    if (M.needDraw) { M.needDraw = false; drawMap(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+function updateMapStatus() {
+  const st = $("pathstat"); if (!st) return;
+  const bad = M.paths.findIndex((p) => !p);
+  if (bad >= 0) {
+    st.className = "bad";
+    st.textContent = "✗ Kein gültiger Weg" + (laneCount() > 1 ? " (Bahn " + (bad + 1) + ")" : "") + ": Spawn, Checkpoints und Ziel müssen verbunden sein";
+  } else {
+    st.className = "ok";
+    st.textContent = "✓ Weg gültig · " + M.paths.map((p) => p.length).join(" / ") + " Felder ohne Labyrinth · " +
+      (laneOf(M.lane).checkpoints || []).length + " Checkpoints";
+  }
+  updateDirty();
+}
+
+// ---- Bearbeiten
+function snapshot() { return JSON.stringify({ g: M.grid.map((r) => r.join("")), o: { ...M.obj, tiles: undefined } }); }
+function pushUndo() { M.undo.push(snapshot()); if (M.undo.length > 200) M.undo.shift(); M.redo = []; }
+function restore(snap) {
+  const s = JSON.parse(snap);
+  const floats = FLOATS.get(M.obj);
+  // Kommazahl-Markierungen bleiben erhalten: nur Koordinaten und Kacheln ändern sich beim Malen.
+  for (const k of ["spawn", "goal", "checkpoints", "lanes", "width", "height"]) if (k in s.o) M.obj[k] = s.o[k];
+  if (floats) FLOATS.set(M.obj, floats);
+  M.grid = s.g.map((r) => r.split(""));
+  M.needPath = true; renderMapSide();
+}
+function undo() { if (!M.undo.length) return; M.redo.push(snapshot()); restore(M.undo.pop()); }
+function redo() { if (!M.redo.length) return; M.undo.push(snapshot()); restore(M.redo.pop()); }
+
+function paintTile(m, t) {
+  const wp = allWaypoints();
+  let changed = false;
+  for (const [x, y] of brushCells(m, M.brush)) {
+    if (!inBounds(x, y) || M.grid[y][x] === t) continue;
+    if (t === "#" && wp.some((p) => p[0] === x && p[1] === y)) continue;
+    M.grid[y][x] = t; changed = true;
+  }
+  return changed;
+}
+function applyPaint(m, isClick) {
+  const c = [Math.floor(m[0]), Math.floor(m[1])];
+  const lane = laneOf(M.lane);
+  if (!lane.checkpoints) lane.checkpoints = [];
+  let changed = false, side = false;
+  if (M.paint === 2) {
+    const idx = lane.checkpoints.findIndex((p) => p[0] === c[0] && p[1] === c[1]);
+    if (idx >= 0 && isClick) { lane.checkpoints.splice(idx, 1); changed = side = true; }
+    else changed = paintTile(m, ".");
+  } else if (["#", "_", "."].includes(M.tool)) {
+    changed = paintTile(m, M.tool);
+  } else if (isClick && inBounds(c[0], c[1])) {
+    if (M.grid[c[1]][c[0]] === "#") M.grid[c[1]][c[0]] = ".";
+    if (M.tool === "spawn") lane.spawn = c;
+    else if (M.tool === "goal") M.obj.goal = c;
+    else {
+      const idx = lane.checkpoints.findIndex((p) => p[0] === c[0] && p[1] === c[1]);
+      if (idx >= 0) lane.checkpoints.splice(idx, 1); else lane.checkpoints.push(c);
+    }
+    changed = side = true;
+  }
+  if (changed) { M.needPath = true; if (side) renderCheckpoints(); }
+}
+
+function resizeMap(w, h) {
+  w = Math.max(10, Math.min(400, Math.round(w))); h = Math.max(10, Math.min(400, Math.round(h)));
+  if (w === M.obj.width && h === M.obj.height) return;
+  pushUndo();
+  M.grid = Array.from({ length: h }, (_, y) => (M.grid[y] || []).slice(0, w).concat(Array(Math.max(0, w - (M.grid[y] || []).length)).fill(".")));
+  M.obj.width = w; M.obj.height = h;
+  const cl = (p) => [Math.max(0, Math.min(w - 1, p[0])), Math.max(0, Math.min(h - 1, p[1]))];
+  M.obj.spawn = cl(M.obj.spawn); M.obj.goal = cl(M.obj.goal); M.obj.checkpoints = M.obj.checkpoints.map(cl);
+  for (const l of M.obj.lanes || []) { l.spawn = cl(l.spawn); l.checkpoints = (l.checkpoints || []).map(cl); }
+  fitView(); M.needPath = true;
+}
+
+// ---- Seitenleiste
+function renderMap() {
+  const tpl = selectEl([["", "Mitgelieferte Map laden …"], ...Object.entries(D.maps).map(([p, t]) => [p, mapName(t, p)])], "", (p) => {
+    if (!p) return;
+    if (mapDirty() && !confirm("Ungespeicherte Änderungen verwerfen?")) { tpl.value = ""; return; }
+    loadMap(parseJson(D.maps[p]), p.split("/").pop(), D.maps[p].endsWith("\n"));
+  });
+  $("main").replaceChildren(el("div", { class: "maplayout" },
+    el("div", { class: "side" },
+      el("div", { class: "row", style: "margin-bottom:12px" }, tpl,
+        el("button", { class: "btn", onclick: () => {
+          if (mapDirty() && !confirm("Ungespeicherte Änderungen verwerfen?")) return;
+          loadMap(newMapObj(), "neue Map (74 × 74)");
+        } }, "Neu")),
+      el("div", { id: "mapside" })),
+    el("div", { class: "cvwrap", id: "cvwrap" },
+      el("canvas", { id: "cv" }),
+      el("div", { class: "cvbar" }, el("span", { id: "pathstat" }), el("span", { id: "cellstat", class: "muted" }),
+        el("button", { class: "btn mini", onclick: fitView, title: "Ganze Map zeigen" }, "Einpassen")))));
+  renderMapSide();
+  bindCanvas();
+  fitView();
+  M.needPath = true;
+}
+function mapName(text, p) { try { return parseJson(text).name || p; } catch (e) { return p; } }
+
+function renderMapSide() {
+  const o = M.obj;
+  const toolBtns = TOOLS.map((t) => el("button", { class: "btn" + (M.tool === t.id ? " on" : ""), title: t.hint + " (Taste " + t.key + ")", onclick: () => { M.tool = t.id; renderMapSide(); } },
+    el("span", { class: "swatch", style: "background:var(" + t.color + ")" }), t.name, el("span", { class: "key" }, t.key)));
+  const brushBtns = [1, 2, 4].map((n) => el("button", { class: "btn mini" + (M.brush === n ? " on" : ""), onclick: () => { M.brush = n; renderMapSide(); } }, n + "×" + n));
+  const modeOpts = D.modes.map(([id, name]) => [id, name]);
+  const curMode = o.game || "gemtd";
+  if (!modeOpts.some(([id]) => id === curMode)) modeOpts.push([curMode, curMode]);
+  const waveOpts = D.waves.map((w) => [w, w]);
+  if (!D.waves.includes(o.waves)) waveOpts.push([o.waves, o.waves]);
+  if (!o.variance || typeof o.variance !== "object") o.variance = { random_rocks: 0, seed: -1 };
+  const wIn = el("input", { type: "number", min: 10, max: 400, value: o.width }), hIn = el("input", { type: "number", min: 10, max: 400, value: o.height });
+  const radius = numberEl(o, "marker_radius", { min: 0, max: 10, onchange: () => { M.needPath = true; } });
+
+  $("mapside").replaceChildren(...[
+    el("div", { class: "card" }, el("h3", {}, "Werkzeug"),
+      el("div", { class: "tools" }, toolBtns),
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "muted small" }, "PINSEL"), brushBtns),
+      el("div", { class: "note" }, "2 Felder = eine Towerbreite. Linksklick malt, Rechtsklick radiert, mittlere Maustaste oder Leertaste + Ziehen verschiebt, Mausrad zoomt. Strg+Z / Strg+Y.")),
+    laneCount() > 1 ? el("div", { class: "card" }, el("h3", {}, "Bahn"),
+      selectEl(Array.from({ length: laneCount() }, (_, i) => {
+        const p = i === 0 ? (o.spawn_player ?? -1) : (o.lanes[i - 1].player ?? -1);
+        return [String(i), "Bahn " + (i + 1) + (p >= 0 ? " · Spieler " + (p + 1) : " · immer")];
+      }), String(M.lane), (v) => { M.lane = Number(v); renderMapSide(); M.needDraw = true; }),
+      el("div", { class: "note" }, "Spawn und Checkpoints gelten für die gewählte Bahn, das Ziel für alle.")) : null,
+    el("div", { class: "card" }, el("h3", {}, "Checkpoints (Reihenfolge des Wegs)"), el("div", { class: "cps", id: "cps" })),
+    el("div", { class: "card" }, el("h3", {}, "Map"),
+      el("div", { class: "fields" },
+        field("Name", textEl(o, "name"), true),
+        field("ID (Dateiname: Kleinbuchstaben, Ziffern, _)", textEl(o, "id"), true),
+        field("Modus", selectEl(modeOpts, curMode, (v) => {
+          if (v === "gemtd") delete o.game; else insertAfter(o, "name", "game", v);
+          touched();
+        })),
+        field("Wellen", selectEl(waveOpts, o.waves, (v) => { o.waves = v; touched(); })),
+        field("Leben", numberEl(o, "lives", { min: 1, max: 1000 })),
+        field("Startgold", numberEl(o, "start_gold", { min: 0, max: 100000 })),
+        field("Sperrzone um Wegpunkte", radius),
+        field("Breite", wIn), field("Höhe", hIn),
+        el("button", { class: "btn wide", onclick: () => { resizeMap(Number(wIn.value), Number(hIn.value)); renderMapSide(); } }, "Größe übernehmen"))),
+    el("div", { class: "card" }, el("h3", {}, "Zufall beim Spielstart"),
+      el("div", { class: "fields" },
+        field("Zufällige Steine", numberEl(o.variance, "random_rocks", { min: 0, max: 500 })),
+        field("Seed (−1 = jedes Mal zufällig)", numberEl(o.variance, "seed", { min: -1 }))),
+      el("div", { class: "note" }, "Mit einem festen Seed liegen die Steine in jedem Spiel gleich.")),
+    (o.zones || []).length ? el("div", { class: "note" }, "Diese Map hat " + o.zones.length + " Baugebiete (gestrichelt). Sie bleiben beim Speichern unverändert.") : null,
+  ].filter(Boolean));
+  renderCheckpoints();
+  updateDirty();
+}
+
+function renderCheckpoints() {
+  const box = $("cps"); if (!box) return;
+  const cps = laneOf(M.lane).checkpoints || [];
+  const move = (i, d) => { pushUndo(); const [c] = cps.splice(i, 1); cps.splice(i + d, 0, c); M.needPath = true; renderCheckpoints(); };
+  box.replaceChildren(...(cps.length ? cps.map((c, i) => el("div", { class: "row" },
+    el("span", { class: "coin", style: "min-width:26px" }, (i + 1) + "."),
+    el("span", { style: "min-width:84px" }, c[0] + ", " + c[1]),
+    el("button", { class: "btn mini", disabled: i === 0, onclick: () => move(i, -1), title: "früher" }, "↑"),
+    el("button", { class: "btn mini", disabled: i === cps.length - 1, onclick: () => move(i, 1), title: "später" }, "↓"),
+    el("button", { class: "btn mini", onclick: () => { pushUndo(); cps.splice(i, 1); M.needPath = true; renderCheckpoints(); }, title: "entfernen" }, "✕")))
+    : [el("div", { class: "muted small" }, "Keine. Werkzeug Checkpoint wählen und auf die Map klicken.")]));
+}
+
+function bindCanvas() {
+  const cv = $("cv");
+  cv.addEventListener("contextmenu", (e) => e.preventDefault());
+  cv.addEventListener("pointerdown", (e) => {
+    cv.setPointerCapture(e.pointerId);
+    if (e.button === 1 || (e.button === 0 && M.space)) { M.pan = [e.clientX - M.ox, e.clientY - M.oy]; cv.style.cursor = "grabbing"; return; }
+    if (e.button !== 0 && e.button !== 2) return;
+    pushUndo();
+    M.paint = e.button === 0 ? 1 : 2;
+    applyPaint(cellAt(e), true);
+    M.needDraw = true;
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (M.pan) { M.ox = e.clientX - M.pan[0]; M.oy = e.clientY - M.pan[1]; M.needDraw = true; return; }
+    const m = cellAt(e);
+    M.hover = inBounds(Math.floor(m[0]), Math.floor(m[1])) ? m : null;
+    $("cellstat").textContent = M.hover ? "Feld " + Math.floor(m[0]) + ", " + Math.floor(m[1]) : "";
+    if (M.paint && !isPointTool()) applyPaint(m, false);
+    else if (M.paint === 2) applyPaint(m, false);
+    M.needDraw = true;
+  });
+  const stop = () => {
+    if (M.paint && M.undo.length && M.undo[M.undo.length - 1] === snapshot()) M.undo.pop();  // nichts geändert
+    M.paint = 0; M.pan = null; cv.style.cursor = "crosshair"; updateDirty();
+  };
+  cv.addEventListener("pointerup", stop);
+  cv.addEventListener("pointercancel", stop);
+  cv.addEventListener("pointerleave", () => { M.hover = null; M.needDraw = true; });
+  cv.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    const old = M.zoom;
+    M.zoom = Math.max(2, Math.min(48, Math.round(old * (e.deltaY < 0 ? 1.2 : 1 / 1.2)) || 2));
+    if (M.zoom === old) M.zoom = Math.max(2, Math.min(48, old + (e.deltaY < 0 ? 1 : -1)));
+    M.ox = px - (px - M.ox) * (M.zoom / old); M.oy = py - (py - M.oy) * (M.zoom / old);
+    M.needDraw = true;
+  }, { passive: false });
+}
+
+function saveMap() {
+  const o = M.obj;
+  if (!validId(o.id)) { message("Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt.", true); return; }
+  const text = mapText();
+  download(o.id + ".json", text);
+  M.saved = text; updateDirty();
+  const warn = M.paths.some((p) => !p) ? " Achtung: Der Weg ist noch nicht gültig, so lässt sich die Map nicht spielen." : "";
+  message("Gespeichert als " + o.id + ".json. Im Spiel: Map-Editor → „Datei importieren“, dann Speichern." + warn, !!warn);
+}
+
+// ================================================================ TOWER
+const CATEGORIES = [["gem", "Gem (zufällig würfelbar)"], ["special", "Spezial (per Rezept)"], ["eeve", "eeveTD"]];
+const KINDS = [["tower", "Tower (blockiert den Weg)"], ["trap", "Falle (Gegner laufen darüber)"]];
+const TARGETS = [["both", "Boden und Luft"], ["ground", "Nur Boden"], ["air", "Nur Luft"]];
+const T = { obj: null, saved: "", search: "", srcId: "" };
+const TOWERS = {};  // id -> geparste mitgelieferte Daten
+for (const [p, t] of Object.entries(D.towers)) { try { const o = parseJson(t); TOWERS[o.id || p.split("/").pop().replace(/\.json$/, "")] = o; } catch (e) { /* kaputte Datei überspringen */ } }
+
+const towerText = () => dumpJson(cleanTower(T.obj)) + "\n";
+function towerDirty() { return T.obj && towerText() !== T.saved; }
+function defaultTier() { const t = withFloats({ damage: [10, 15], range: 3.0, cooldown: 1.0, abilities: [] }, ["range", "cooldown"]); return t; }
+function defaultAbility(type) {
+  const ab = { type };
+  for (const [k, p] of Object.entries((D.schema[type] || {}).params || {})) { ab[k] = p.value; if (p.float) markFloat(ab, k); }
+  return ab;
+}
+function towerLabel(id, tier) {
+  const t = TOWERS[id] || (T.obj && T.obj.id === id ? T.obj : null);
+  const name = t ? t.name || id : id;
+  return tier == null ? name : name + " (" + (tier + 1) + ")";
+}
+
+function loadTower(obj, label) {
+  T.obj = obj;
+  if (!Array.isArray(T.obj.tiers)) T.obj.tiers = [];
+  T.saved = towerText();
+  T.srcId = obj.id;
+  if (TAB === "tower") renderTower();
+  if (label) message("Geladen: " + label);
+}
+function newTower(category) {
+  const o = { id: "neuer_tower", name: "Neuer Tower", category, color: "#ffffff", targets: "both", tiers: [defaultTier()] };
+  if (category === "special") o.recipe = [];
+  T.obj = o; T.saved = ""; T.srcId = ""; renderTower();
+}
+
+// Wie tower_editor.gd _save: leeres Modell weg, Rezept nur bei Spezial-Towern, Upgrades passend zu den Stufen.
+function cleanTower(src) {
+  const d = clone(src);
+  if (String(d.model ?? "") === "") delete d.model;
+  if (d.category !== "special") { delete d.recipe; delete d.upgrades; }
+  else if (Array.isArray(d.upgrades)) d.upgrades = d.upgrades.slice(0, Math.max(d.tiers.length - 1, 0));
+  return d;
+}
+function validateTower() {
+  if (!validId(String(T.obj.id ?? ""))) return "Ungültige ID: nur Kleinbuchstaben, Ziffern und _ erlaubt.";
+  if (!T.obj.tiers.length) return "Der Tower braucht mindestens eine Stufe.";
+  if (T.obj.category === "special" && !(T.obj.recipe || []).length) return "Ein Spezial-Tower braucht ein Rezept.";
+  return "";
+}
+function saveTower() {
+  const err = validateTower();
+  if (err) { message(err, true); return; }
+  const text = towerText();
+  download(T.obj.id + ".json", text);
+  T.saved = text; updateDirty();
+  message("Gespeichert als " + T.obj.id + ".json. Im Spiel: Tower-Editor → „Datei importieren“, dann Speichern.");
+}
+
+function groupOf(t) {
+  if (t.category === "eeve" || String(t.id).startsWith("eeve_")) return "eeveTD";
+  return t.category === "special" ? "Spezial-Tower" : "Gems";
+}
+function renderTowerList() {
+  const box = $("tlist"); if (!box) return;
+  const q = T.search.toLowerCase();
+  const groups = {};
+  for (const [id, t] of Object.entries(TOWERS)) {
+    if (q && !(id + " " + (t.name || "") + " " + (t.name_original || "")).toLowerCase().includes(q)) continue;
+    (groups[groupOf(t)] ||= []).push([id, t]);
+  }
+  const kids = [];
+  for (const g of ["Gems", "Spezial-Tower", "eeveTD"]) {
+    if (!groups[g]) continue;
+    kids.push(el("div", { class: "grp" }, g));
+    groups[g].sort((a, b) => String(a[1].name).localeCompare(String(b[1].name), "de"));
+    for (const [id, t] of groups[g]) kids.push(el("div", { class: "item" + (T.srcId === id ? " on" : ""), "data-id": id, onclick: () => {
+      if (towerDirty() && !confirm("Ungespeicherte Änderungen verwerfen?")) return;
+      loadTower(clone(t));
+    } }, el("span", { class: "swatch", style: "background:" + (t.color || "#fff") }), t.name || id));
+  }
+  if (!kids.length) kids.push(el("div", { class: "grp muted" }, Object.keys(TOWERS).length ? "Nichts gefunden" : "Keine Tower eingebettet: Datei öffnen"));
+  box.replaceChildren(...kids.filter(Boolean));
+}
+
+function renderTower() {
+  const search = el("input", { type: "text", placeholder: "Tower suchen", value: T.search, style: "width:100%" });
+  search.addEventListener("input", () => { T.search = search.value; renderTowerList(); });
+  const guard = (fn) => () => { if (towerDirty() && !confirm("Ungespeicherte Änderungen verwerfen?")) return; fn(); };
+  $("main").replaceChildren(el("div", { class: "towerlayout" },
+    el("div", {},
+      el("div", { class: "row", style: "margin-bottom:10px" },
+        el("button", { class: "btn", onclick: guard(() => newTower("gem")) }, "+ Gem"),
+        el("button", { class: "btn", onclick: guard(() => newTower("special")) }, "+ Spezial"),
+        el("button", { class: "btn", onclick: duplicateTower, disabled: !T.obj }, "Duplizieren")),
+      search, el("div", { class: "tlist", id: "tlist", style: "margin-top:8px" })),
+    el("div", { id: "tform" })));
+  renderTowerList();
+  renderTowerForm();
+}
+function duplicateTower() {
+  if (!T.obj) return;
+  T.obj = clone(T.obj); T.obj.id = String(T.obj.id || "tower") + "_kopie"; T.obj.name = String(T.obj.name || "") + " (Kopie)";
+  T.saved = ""; T.srcId = ""; renderTower();
+}
+
+function section(title, hint, ...kids) {
+  return el("div", { class: "card" }, el("h2", {}, title), hint ? el("div", { class: "note" }, hint) : null, ...kids);
+}
+
+function renderTowerForm() {
+  const box = $("tform"); if (!box) return;
+  const o = T.obj;
+  if (!o) { box.replaceChildren(el("div", { class: "muted" }, "Links einen Tower wählen oder einen neuen anlegen.")); return; }
+  const rerender = () => { renderTowerForm(); updateDirty(); };
+  const title = el("div", { class: "tname", style: "color:" + (o.color || "#fff") }, o.name || o.id);
+  const color = el("input", { type: "color", value: /^#[0-9a-fA-F]{6}$/.test(o.color) ? o.color.toLowerCase() : "#ffffff" });
+  color.addEventListener("input", () => { o.color = color.value; title.style.color = color.value; touched(); });
+  const fxOpts = (ids) => [["auto", "Automatisch (nach Farbe)"], ["none", "Keiner"], ...ids.map((i) => [i, i])];
+  const fxSel = (key, ids) => {
+    const opts = fxOpts(ids); if (o[key] && !opts.some(([v]) => v === o[key])) opts.push([o[key], o[key]]);
+    return selectEl(opts, o[key] || "auto", (v) => { if (v === "auto") delete o[key]; else o[key] = v; touched(); });
+  };
+  const dmgOpts = Object.entries(D.damage_types).map(([k, n]) => [k, n + " (" + k + ")"]);
+  if (o.damage_type && !D.damage_types[o.damage_type]) dmgOpts.push([o.damage_type, o.damage_type]);
+  const catOpts = CATEGORIES.slice(); if (o.category && !catOpts.some(([v]) => v === o.category)) catOpts.push([o.category, o.category]);
+  const nameIn = textEl(o, "name", () => { title.textContent = o.name || o.id; touched(); });
+
+  const kids = [title,
+    section("Allgemein", null, el("div", { class: "fields" },
+      field("ID (Dateiname)", textEl(o, "id")),
+      field("Name", nameIn),
+      field("Kategorie", selectEl(catOpts, o.category || "gem", (v) => { o.category = v; if (v === "special" && !o.recipe) o.recipe = []; rerender(); })),
+      field("Art", selectEl(KINDS, o.kind || "tower", (v) => { if (v === "tower" && !("kind" in o)) return; insertAfter(o, "category", "kind", v); touched(); })),
+      field("Farbe", color),
+      field("Ziele", selectEl(TARGETS, o.targets || "both", (v) => { o.targets = v; touched(); })),
+      field("Schadensart", selectEl([["", "—"], ...dmgOpts], o.damage_type || "", (v) => { if (v) insertAfter(o, "model", "damage_type", v); else delete o.damage_type; touched(); })),
+      field("Treffer-Effekt", fxSel("hit_fx", D.hit_fx)),
+      field("Schuss-Effekt", fxSel("shot_fx", D.shot_fx)),
+      field("Modell (optional, res://…glb)", textEl(o, "model"), true),
+      "description" in o || o.category === "special" ? field("Beschreibung", textEl(o, "description"), true) : null)),
+  ];
+  if (o.category === "special") {
+    if (!Array.isArray(o.recipe)) o.recipe = [];
+    const same = el("input", { type: "checkbox", checked: !!o.recipe_same_round });
+    same.addEventListener("change", () => { o.recipe_same_round = same.checked; touched(); });
+    kids.push(section("Rezept", "Der ausgewählte Gem muss eine Zutat sein; die anderen werden zu Steinen.",
+      el("label", { class: "row", style: "margin-bottom:10px" }, same, "Nur aus Gems derselben Runde (sonst auch fertige Tower auf dem Feld)"),
+      ingredientList(o.recipe, rerender)));
+  }
+  kids.push(section("Stufen", o.category === "gem" ? "Bei Gems: " + D.tier_names.join(", ") + "." : null, tiersBox(o, rerender)));
+  if (o.category === "special" && o.tiers.length >= 2) kids.push(section("Upgrades", "Goldkosten; optionale Zutaten müssen fertig auf dem Feld stehen und werden zu Steinen.", upgradesBox(o, rerender)));
+  kids.push(rawBox(o));
+  box.replaceChildren(...kids.filter(Boolean));
+}
+
+// Zutaten [{tower, tier}] oder {any_of: [...]}, wie im Spiel-Editor.
+function ingredientList(list, rerender) {
+  const ids = [...new Set([...Object.keys(TOWERS), ...(T.obj.id ? [T.obj.id] : [])])];
+  const opts = ids.map((id) => [id, towerLabel(id) + " (" + id + ")"]).sort((a, b) => a[1].localeCompare(b[1], "de"));
+  const tierOpts = D.tier_names.map((n, i) => [String(i), (i + 1) + " – " + n]);
+  const rows = list.map((ing, k) => {
+    const del = el("button", { class: "btn mini", onclick: () => { list.splice(k, 1); rerender(); } }, "Entfernen");
+    if (ing.any_of) {
+      return el("div", {}, el("div", { class: "ing" }, el("span", { class: "muted" }, "Einer von:"), del),
+        el("div", { class: "indent" }, ingredientList(ing.any_of, rerender)));
+    }
+    if (!ing.tower) ing.tower = ids[0] || "";
+    const tOpts = opts.slice(); if (!ids.includes(ing.tower)) tOpts.push([ing.tower, ing.tower]);
+    const tierSel = tierOpts.slice(); if (ing.tier >= tierOpts.length) tierSel.push([String(ing.tier), String(ing.tier + 1)]);
+    return el("div", { class: "ing" },
+      selectEl(tOpts, ing.tower, (v) => { ing.tower = v; touched(); }),
+      el("span", { class: "muted" }, "Stufe"),
+      selectEl(tierSel, String(ing.tier ?? 0), (v) => { ing.tier = Number(v); touched(); }), del);
+  });
+  const gem = Object.entries(TOWERS).find(([, t]) => t.category === "gem");
+  return el("div", {}, ...rows, el("div", { class: "row" },
+    el("button", { class: "btn mini", onclick: () => { list.push({ tower: gem ? gem[0] : "", tier: 0 }); rerender(); } }, "+ Zutat"),
+    el("button", { class: "btn mini", onclick: () => { list.push({ any_of: [] }); rerender(); } }, "+ Zutat „einer von …“")));
+}
+
+function tiersBox(o, rerender) {
+  const box = el("div", {});
+  o.tiers.forEach((tier, i) => {
+    if (!Array.isArray(tier.damage)) tier.damage = [10, 15];
+    if (!Array.isArray(tier.abilities)) tier.abilities = [];
+    let name = "Stufe " + (i + 1);
+    if (o.category === "gem" && i < D.tier_names.length) name += " – " + D.tier_names[i];
+    const dps = el("span", { class: "muted small" });
+    const upd = () => { const avg = (Number(tier.damage[0]) + Number(tier.damage[1])) / 2; dps.textContent = tier.cooldown > 0 ? "≈ " + (avg / tier.cooldown).toFixed(1) + " Schaden/s" : ""; touched(); };
+    upd();
+    const abil = tier.abilities.map((ab, j) => abilityRow(tier.abilities, j, rerender));
+    box.append(el("div", { class: "card tier" },
+      el("div", { class: "row", style: "margin-bottom:8px" }, el("h3", { style: "margin:0" }, name), dps, el("span", { class: "spacer" }),
+        el("button", { class: "btn mini", disabled: i === 0, onclick: () => { o.tiers.splice(i - 1, 0, ...o.tiers.splice(i, 1)); rerender(); }, title: "nach oben" }, "↑"),
+        el("button", { class: "btn mini", onclick: () => { o.tiers.splice(i, 1); rerender(); } }, "Entfernen")),
+      el("div", { class: "fields" },
+        field("Schaden min", numberEl(tier.damage, 0, { min: 0, float: isFloatAt(tier.damage, 0), onchange: upd })),
+        field("Schaden max", numberEl(tier.damage, 1, { min: 0, float: isFloatAt(tier.damage, 1), onchange: upd })),
+        field("Reichweite (Towerbreiten)", numberEl(tier, "range", { float: true, step: 0.25, min: 0.5, def: 3.0 })),
+        field("Abklingzeit (s)", numberEl(tier, "cooldown", { float: true, step: 0.05, min: 0.05, def: 1.0, onchange: upd }))),
+      el("h3", { style: "margin:12px 0 6px" }, "Fähigkeiten"), ...abil,
+      el("button", { class: "btn mini", onclick: () => { tier.abilities.push(defaultAbility(Object.keys(D.schema)[0] || "splash")); rerender(); } }, "+ Fähigkeit")));
+  });
+  box.append(el("button", { class: "btn", onclick: () => { o.tiers.push(o.tiers.length ? clone(o.tiers[o.tiers.length - 1]) : defaultTier()); rerender(); } }, "+ Stufe"));
+  return box;
+}
+
+function abilityRow(list, j, rerender) {
+  const ab = list[j];
+  const types = Object.keys(D.schema);
+  const opts = types.map((t) => [t, D.schema[t].label]);
+  if (!types.includes(ab.type)) opts.push([ab.type, ab.type + " (eigene)"]);
+  const params = (D.schema[ab.type] || {}).params;
+  const keys = params ? Object.keys(params) : Object.keys(ab).filter((k) => k !== "type" && typeof ab[k] === "number");
+  return el("div", { class: "ab" },
+    field("Art", selectEl(opts, ab.type, (v) => { list[j] = defaultAbility(v); rerender(); })),
+    ...keys.map((k) => {
+      const isFloat = params ? params[k].float : isFloatAt(ab, k);
+      return field(D.labels[k] || k, numberEl(ab, k, { float: isFloat, step: isFloat ? 0.05 : 1, def: params ? params[k].value : 0 }));
+    }),
+    el("button", { class: "btn mini", onclick: () => { list.splice(j, 1); rerender(); }, title: "Fähigkeit entfernen" }, "✕"),
+    ab.text ? el("div", { class: "txt" }, ab.text) : null);
+}
+
+function upgradesBox(o, rerender) {
+  const box = el("div", {});
+  for (let i = 0; i < o.tiers.length - 1; i++) {
+    // Einträge erst anlegen, wenn etwas geändert wird, damit unveränderte Dateien gleich bleiben.
+    const get = () => {
+      if (!Array.isArray(o.upgrades)) o.upgrades = [];
+      while (o.upgrades.length <= i) o.upgrades.push({ recipe: [], cost: 0 });
+      if (!Array.isArray(o.upgrades[i].recipe)) o.upgrades[i].recipe = [];
+      return o.upgrades[i];
+    };
+    const up = (o.upgrades || [])[i];
+    const view = up || { recipe: [], cost: 0 };
+    const cost = el("input", { type: "number", min: 0, value: view.cost ?? 0 });
+    cost.addEventListener("input", () => { get().cost = Math.round(Number(cost.value) || 0); touched(); });
+    const recipe = up ? ingredientList(get().recipe, rerender)
+      : el("button", { class: "btn mini", onclick: () => { get(); rerender(); } }, "+ Zutaten");
+    box.append(el("div", { class: "card" }, el("h3", {}, "Stufe " + (i + 1) + " → " + (i + 2)),
+      el("div", { class: "fields", style: "margin-bottom:8px" }, field("Goldkosten", cost)), recipe));
+  }
+  return box;
+}
+
+function rawBox(o) {
+  const ta = el("textarea", { spellcheck: "false" });
+  ta.value = dumpJson(o);
+  const card = el("details", { class: "card" }, el("summary", { style: "cursor:pointer" }, el("b", { style: "color:var(--gold)" }, "ERWEITERT (JSON)"),
+    el("span", { class: "muted small" }, " alle Felder, auch die ohne eigenes Eingabefeld")),
+  el("div", { class: "note" }, "Ändern und „Übernehmen“ drücken. Das Formular oben zeigt danach den neuen Stand."),
+  ta, el("div", { class: "row", style: "margin-top:8px" },
+    el("button", { class: "btn", onclick: () => {
+      try {
+        const n = parseJson(ta.value);
+        if (!n || typeof n !== "object" || Array.isArray(n)) throw new Error("kein Objekt");
+        T.obj = n; if (!Array.isArray(n.tiers)) n.tiers = [];
+        renderTowerForm(); updateDirty(); message("JSON übernommen.");
+      } catch (e) { message("JSON fehlerhaft: " + e.message, true); }
+    } }, "Übernehmen")));
+  let edited = false;
+  ta.addEventListener("input", () => { edited = true; });
+  card.addEventListener("toggle", () => { if (card.open && !edited) ta.value = dumpJson(T.obj); });
+  return card;
+}
+
+// ================================================================ Laden, Speichern, Tabs
+function setTab(t) {
+  TAB = t;
+  for (const b of document.querySelectorAll(".tab")) b.classList.toggle("on", b.dataset.tab === t);
+  message("");
+  if (t === "map") renderMap(); else renderTower();
+  updateDirty();
+}
+
+async function openFiles(files) {
+  for (const f of files) {
+    let obj, text;
+    try { text = await f.text(); obj = parseJson(text); } catch (e) { message(f.name + ": keine gültige JSON-Datei (" + e.message + ")", true); continue; }
+    if (!obj || typeof obj !== "object") { message(f.name + ": unbekanntes Format", true); continue; }
+    const fallbackId = f.name.replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    if (Array.isArray(obj.tiles)) {
+      if (!obj.id) obj.id = fallbackId;
+      if (TAB !== "map") setTab("map");
+      loadMap(obj, f.name, text.endsWith("\n"));
+    } else if (Array.isArray(obj.tiers)) {
+      if (!obj.id) obj.id = fallbackId;
+      if (TAB !== "tower") setTab("tower");
+      loadTower(obj, f.name);
+    } else message(f.name + ": weder Map (tiles) noch Tower (tiers)", true);
+  }
+}
+
+function init() {
+  $("stand").textContent = D.stand;
+  for (const b of document.querySelectorAll(".tab")) b.addEventListener("click", () => {
+    if (b.dataset.tab !== TAB) setTab(b.dataset.tab);
+  });
+  $("b-open").addEventListener("click", () => $("file").click());
+  $("file").addEventListener("change", (e) => { openFiles([...e.target.files]); e.target.value = ""; });
+  $("b-save").addEventListener("click", () => (TAB === "map" ? saveMap() : saveTower()));
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files.length) openFiles([...e.dataTransfer.files]); });
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); $("b-save").click(); return; }
+    if (typing || TAB !== "map") return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+    if (e.key === " ") { M.space = true; e.preventDefault(); return; }
+    const t = TOOLS.find((x) => String(x.key) === e.key);
+    if (t) { M.tool = t.id; renderMapSide(); M.needDraw = true; }
+  });
+  document.addEventListener("keyup", (e) => { if (e.key === " ") M.space = false; });
+  window.addEventListener("resize", () => { M.needDraw = true; });
+  window.addEventListener("beforeunload", (e) => { if (mapDirty() || towerDirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+  const first = Object.keys(D.maps).find((p) => p.endsWith("/classic.json")) || Object.keys(D.maps)[0];
+  if (first) loadMap(parseJson(D.maps[first]), "", D.maps[first].endsWith("\n")); else loadMap(newMapObj());
+  const ruby = TOWERS.ruby || Object.values(TOWERS)[0];
+  if (ruby) loadTower(clone(ruby)); else newTower("gem");
+  setTab("map");
+  requestAnimationFrame(frame);
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TD Hub Balance-Editor</title>
+<!--
+  Balance-Editor für GemTD, eeveTD und Shopping Maul. Läuft ohne Installation im Browser (Edge/Chrome).
+  Daten kommen entweder eingebettet (tools/balance_editor/bauen.py) oder aus einem Repo-Ordner ("Ordner öffnen").
+  Gespeichert wird direkt in den Ordner oder als Änderungsdatei für tools/balance_anwenden.py.
+  Anleitung: tools/balance_editor/README.md
+-->
+<style>
+/*FONTS*/
+:root {
+  --bg: #07040e; --bar: #0d0618; --panel: #0d0618; --panel2: #160b28; --border: #3b2560; --border2: #5b3a8a;
+  --text: #f2eaff; --muted: #a99cc8; --gold: #ff4fd8; --cyan: #22c4ee; --coin: #ffd166;
+  --have: #5fe08a; --missing: #ff5d7a; --purple-light: #b38cff;
+}
+* { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px "DejaVu Sans Mono", Consolas, monospace; }
+body { padding: 16px; }
+button, select, input, textarea { font: inherit; color: var(--text); }
+h1 { margin: 0; font-size: 26px; font-weight: bold; color: var(--gold); text-shadow: 3px 3px 0 var(--cyan); letter-spacing: 1px; }
+h2 { margin: 0 0 10px; font-size: 15px; font-weight: bold; text-transform: uppercase; color: var(--gold); text-shadow: 2px 2px 0 var(--cyan); }
+.panel { background: var(--panel); border: 3px solid var(--gold); box-shadow: 6px 6px 0 var(--cyan); padding: 14px; margin-bottom: 18px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.btn { background: var(--panel2); border: 2px solid var(--border2); padding: 6px 12px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+.btn:hover:not(:disabled) { border-color: var(--cyan); }
+.btn:disabled, .btn.accent:disabled { color: #5a4d74; border-color: #24183a; background: #0b0614; cursor: default; }
+.btn.on { background: var(--cyan); border-color: var(--cyan); color: var(--bar); }
+.btn.accent { background: var(--gold); border-color: var(--gold); color: var(--bar); }
+.tabs { display: flex; gap: 0; margin-bottom: -3px; position: relative; z-index: 1; flex-wrap: wrap; }
+.tab { background: var(--panel2); border: 3px solid var(--border2); border-bottom: none; padding: 9px 18px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+.tab.on { background: var(--panel); border-color: var(--gold); color: var(--gold); }
+.badge { display: inline-block; min-width: 20px; padding: 0 5px; margin-left: 6px; background: var(--coin); color: var(--bar); font-size: 12px; text-align: center; }
+select, input[type=number], input[type=text], textarea { background: var(--bar); border: 2px solid var(--border2); padding: 5px 8px; }
+select:focus, input:focus, textarea:focus { outline: none; border-color: var(--cyan); }
+select.big { min-width: 320px; max-width: 100%; border-color: var(--gold); }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px 26px; }
+.stat .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; overflow-wrap: anywhere; }
+.stat .line { display: flex; align-items: center; gap: 6px; }
+.stat input { width: 110px; text-align: right; }
+.stat.changed input { border-color: var(--coin); }
+.arrow { width: 34px; height: 32px; border: 2px solid; background: var(--bar); cursor: pointer; font-size: 17px; line-height: 1; padding: 0; }
+.arrow.up { color: var(--have); border-color: var(--have); }
+.arrow.down { color: var(--missing); border-color: var(--missing); }
+.arrow.up:hover { background: var(--have); color: var(--bar); }
+.arrow.down:hover { background: var(--missing); color: var(--bar); }
+.delta { font-size: 12px; min-width: 70px; }
+.delta.plus { color: var(--have); } .delta.minus { color: var(--missing); }
+.card { background: var(--panel2); border: 2px solid var(--border2); padding: 10px 12px; margin-bottom: 12px; }
+.card.changed { border-color: var(--coin); }
+.card h3 { margin: 0 0 8px; font-size: 14px; text-transform: uppercase; }
+.note { font-size: 12px; color: var(--muted); margin: 4px 0 8px; overflow-wrap: anywhere; }
+.chip { display: inline-block; padding: 1px 6px; border: 1px solid var(--border2); color: var(--purple-light); font-size: 12px; margin-left: 6px; text-transform: uppercase; }
+textarea { width: 100%; min-height: 110px; }
+table { border-collapse: collapse; width: 100%; }
+td:nth-child(-n+3), th { white-space: nowrap; }
+td, th { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+.old { color: var(--muted); } .new { color: var(--coin); }
+.msg { padding: 8px 12px; border: 2px solid var(--cyan); margin-bottom: 14px; }
+.msg.err { border-color: var(--missing); color: var(--missing); }
+.pct input { width: 70px; }
+label.check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.empty { color: var(--muted); padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class="row" style="margin-bottom:14px">
+  <h1>BALANCE-EDITOR</h1>
+  <span class="muted small" id="stand"></span>
+  <span class="spacer"></span>
+  <button class="btn" id="b-open" title="Repo-Ordner (oder dessen data-Ordner) wählen; Speichern schreibt dann direkt hinein">Ordner öffnen</button>
+  <button class="btn accent" id="b-save" disabled>Speichern</button>
+  <button class="btn" id="b-export" disabled title="Änderungen als Datei für tools/balance_anwenden.py">Änderungen exportieren</button>
+  <button class="btn" id="b-reset" disabled>Alles zurück</button>
+</div>
+<div id="msg"></div>
+<div class="tabs" id="tabs"></div>
+<div class="panel" id="main">
+  <div class="row" style="margin-bottom:12px">
+    <div class="row" id="kind"></div>
+    <span class="spacer"></span>
+    <div class="row pct" id="pct"></div>
+  </div>
+  <div class="row" style="margin-bottom:14px">
+    <select class="big" id="pick"></select>
+    <span id="sub" class="row"></span>
+  </div>
+  <div id="content"></div>
+</div>
+<div class="panel" id="changes"></div>
+
+<script>
+"use strict";
+// Eingebettete Daten (bauen.py ersetzt null durch {stand, texts: {pfad: text}, schema, labels}).
+const EMBED = /*DATEN*/null/*ENDE*/;
+
+// ---------------------------------------------------------------- JSON mit Python-Format
+// Zahlen, die in der Datei mit Komma standen (1.0), bleiben beim Schreiben Kommazahlen.
+const FLOATS = new WeakMap();  // Container -> Set der Schlüssel/Indizes mit Kommazahl
+
+function markFloat(c, k) { let s = FLOATS.get(c); if (!s) FLOATS.set(c, s = new Set()); s.add(k); }
+function isFloatAt(c, k) { const s = FLOATS.get(c); return !!s && s.has(k); }
+
+function parseJson(text) {
+  let i = 0;
+  const ws = () => { while (i < text.length && " \t\n\r".includes(text[i])) i++; };
+  const fail = (m) => { throw new Error(m + " bei Zeichen " + i); };
+  function value(parent, key) {
+    ws();
+    const ch = text[i];
+    if (ch === "{") {
+      i++; const o = {}; ws();
+      if (text[i] === "}") { i++; return o; }
+      for (;;) {
+        ws(); if (text[i] !== '"') fail("Schlüssel erwartet");
+        const k = str(); ws(); if (text[i++] !== ":") fail(": erwartet");
+        o[k] = value(o, k); ws();
+        if (text[i] === ",") { i++; continue; }
+        if (text[i] === "}") { i++; return o; }
+        fail(", oder } erwartet");
+      }
+    }
+    if (ch === "[") {
+      i++; const a = []; ws();
+      if (text[i] === "]") { i++; return a; }
+      for (;;) {
+        a.push(value(a, a.length)); ws();
+        if (text[i] === ",") { i++; continue; }
+        if (text[i] === "]") { i++; return a; }
+        fail(", oder ] erwartet");
+      }
+    }
+    if (ch === '"') return str();
+    for (const [w, v] of [["true", true], ["false", false], ["null", null]])
+      if (text.startsWith(w, i)) { i += w.length; return v; }
+    const m = /^-?\d+(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i, i + 40));
+    if (!m) fail("Wert erwartet");
+    i += m[0].length;
+    if (/[.eE]/.test(m[0]) && parent) markFloat(parent, key);
+    return Number(m[0]);
+  }
+  function str() {
+    const start = i; i++;
+    while (text[i] !== '"') { if (text[i] === "\\") i++; i++; if (i >= text.length) fail("Text ohne Ende"); }
+    i++;
+    return JSON.parse(text.slice(start, i));
+  }
+  const root = value(null, null); ws();
+  if (i < text.length) fail("Zeichen nach dem Ende");
+  return root;
+}
+
+function pyFloat(x) {
+  if (!isFinite(x)) return isNaN(x) ? "NaN" : (x > 0 ? "Infinity" : "-Infinity");
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-4 || a >= 1e16)) {
+    const [m, e] = x.toExponential().split("e");
+    const n = Math.abs(Number(e));
+    return m + "e" + (e[0] === "-" ? "-" : "+") + (n < 10 ? "0" : "") + n;
+  }
+  return Number.isInteger(x) ? String(x) + ".0" : String(x);
+}
+
+function pyStr(s, ascii) {
+  let out = JSON.stringify(s);
+  if (ascii) out = out.replace(/[\u007f-￿]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  return out;
+}
+
+// Wie Pythons json.dumps(..., indent="\t", ensure_ascii=ascii).
+function dumpJson(v, ascii, ind = "", parent = null, key = null) {
+  if (v === null) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return (isFloatAt(parent, key) || !Number.isInteger(v)) ? pyFloat(v) : String(v);
+  if (typeof v === "string") return pyStr(v, ascii);
+  const inner = ind + "\t";
+  if (Array.isArray(v)) {
+    if (!v.length) return "[]";
+    return "[\n" + v.map((x, k) => inner + dumpJson(x, ascii, inner, v, k)).join(",\n") + "\n" + ind + "]";
+  }
+  const ks = Object.keys(v);
+  if (!ks.length) return "{}";
+  return "{\n" + ks.map((k) => inner + pyStr(k, ascii) + ": " + dumpJson(v[k], ascii, inner, v, k)).join(",\n") + "\n" + ind + "}";
+}
+
+// Tiefe Kopie, die die Kommazahl-Markierungen mitnimmt.
+function clone(v) {
+  if (v === null || typeof v !== "object") return v;
+  const c = Array.isArray(v) ? v.map(clone) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, clone(x)]));
+  const s = FLOATS.get(v); if (s) FLOATS.set(c, new Set(s));
+  return c;
+}
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const isPrim = (v) => v === null || typeof v !== "object";
+
+// ---------------------------------------------------------------- Dateien
+const FILES = {};  // pfad -> {orig, cur, nl, ascii}
+let SCHEMA = {}, LABELS = {}, STAND = "", DIR = null, DATA_DIR = null;
+
+function loadTexts(texts) {
+  for (const k of Object.keys(FILES)) delete FILES[k];
+  for (const [p, t] of Object.entries(texts)) {
+    const obj = parseJson(t);
+    FILES[p] = { orig: clone(obj), cur: obj, nl: t.endsWith("\n"), ascii: /\\u[0-9a-fA-F]{4}/.test(t) && !/[^\x00-\x7f]/.test(t) };
+  }
+}
+function fileText(p) { const f = FILES[p]; return dumpJson(f.cur, f.ascii) + (f.nl ? "\n" : ""); }
+
+// Unterschiede orig -> cur als Liste {pfad, alt, neu}; Zahlenlisten wie Schaden [min, max] zählen als ein Wert.
+function diff(a, b, path = [], out = []) {
+  if (same(a, b)) return out;
+  const leaf = (x) => isPrim(x) || (Array.isArray(x) && x.every(isPrim));
+  if (leaf(a) || leaf(b) || Array.isArray(a) !== Array.isArray(b)) { out.push({ pfad: path, alt: a, neu: b }); return out; }
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) { out.push({ pfad: path, alt: a, neu: b }); return out; }
+    a.forEach((x, k) => diff(x, b[k], path.concat(k), out));
+    return out;
+  }
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (!same(ka.slice().sort(), kb.slice().sort())) { out.push({ pfad: path, alt: a, neu: b }); return out; }
+  for (const k of ka) diff(a[k], b[k], path.concat(k), out);
+  return out;
+}
+function allChanges() {
+  const out = [];
+  for (const [p, f] of Object.entries(FILES)) for (const c of diff(f.orig, f.cur)) out.push(Object.assign({ datei: p }, c));
+  return out;
+}
+function getAt(obj, path) { return path.reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+function setAt(obj, path, v) { const parent = getAt(obj, path.slice(0, -1)); parent[path[path.length - 1]] = v; }
+
+// ---------------------------------------------------------------- Modi und Auswahl
+const MODES = [
+  { id: "gemtd", name: "GemTD" },
+  { id: "rogue", name: "GemTD Roguelike" },
+  { id: "eeve", name: "eeveTD" },
+  { id: "maul", name: "Shopping Maul" },
+];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+const ELEMENTS = { nature: "Natur", fire: "Feuer", water: "Wasser", earth: "Erde", storm: "Sturm", magic: "Magie", "": "Grundtürme, Dual-Tower, Fallen" };
+const EEVE_KIND = { ground: "Boden", ground_mass: "Masse Boden", air: "Luft", air_mass: "Masse Luft", boss: "Boss", challenge: "Challenge" };
+
+const STAT_LABELS = {
+  damage: "Schaden (min / max)", cooldown: "Abklingzeit (s)", range: "Reichweite (Towerbreiten)", range_air: "Reichweite Luft",
+  cost: "Kosten", value: "Wert", build_time: "Bauzeit (s)", lumber: "Holz",
+  hp: "Leben", speed: "Tempo", armor: "Rüstung", bounty: "Kopfgeld", size: "Größe",
+  count: "Anzahl", interval: "Abstand (s)", pack: "Gruppengröße", pack_gap: "Abstand in der Gruppe (s)", jv: "HP-Faktor (jv)",
+};
+const TOWER_KEYS = ["damage", "cooldown", "range", "range_air", "cost", "value", "build_time"];
+const ENEMY_KEYS = ["hp", "speed", "armor", "bounty", "damage", "size", "jv"];
+const ENEMY_LABELS = { damage: "Lebensverlust am Ziel", speed: "Tempo" };
+const SKIP_KEYS = new Set(["level", "stage", "id", "name", "wc3", "abilities"]);
+
+function towerFiles(eeve) {
+  return Object.keys(FILES).filter((p) => p.startsWith("data/towers/") && ((FILES[p].cur.category === "eeve") === eeve));
+}
+function enemyFile(id) { return "data/enemies/" + id + ".json"; }
+// Roguelike: eigene Gegnerwerte je Gegner in einer Datei (Tower, Anzahl und Abstand teilt es mit GemTD)
+const ROGUE_FILE = "data/roguelike_enemies.json";
+function enemyName(id) { const f = FILES[enemyFile(id)]; return f ? f.cur.name : id; }
+
+// Einträge fürs Auswahlmenü: {key, label, group}
+function entries(mode, kind) {
+  if (mode === "rogue") mode = "gemtd";
+  const out = [];
+  if (mode === "gemtd" && kind === "tower") {
+    for (const p of towerFiles(false)) {
+      const t = FILES[p].cur;
+      out.push({ key: p, label: t.name, group: t.category === "gem" ? "Edelsteine" : (t.kind === "trap" ? "Fallen" : "Spezial-Tower") });
+    }
+  } else if (mode === "eeve" && kind === "tower") {
+    for (const p of towerFiles(true)) {
+      const t = FILES[p].cur, e = t.eeve || {};
+      out.push({ key: p, label: t.name + (e.level ? " (Lv " + e.level + ")" : ""), group: ELEMENTS[e.element || ""] || e.element, sort: e.level || 0 });
+    }
+  } else if (mode === "maul" && kind === "tower") {
+    const s = FILES["data/maul/shops.json"]; if (!s) return out;
+    const shops = s.cur.shops.map((x, i) => [["shops", i], x]);
+    for (const k of Object.keys(s.cur)) if (s.cur[k] && Array.isArray(s.cur[k].towers)) shops.push([[k], s.cur[k]]);
+    for (const [sp, shop] of shops)
+      shop.towers.forEach((t, j) => out.push({ key: JSON.stringify(sp.concat("towers", j)), label: t.name + " (" + t.cost + " Gold)", group: shop.name, sort: 0 }));
+    return out;
+  } else if (mode === "gemtd") {
+    const w = FILES["data/waves/classic.json"]; if (!w) return out;
+    w.cur.waves.forEach((wave, i) => out.push({
+      key: String(i), group: "",
+      label: "Welle " + (i + 1) + ": " + wave.groups.map((g) => enemyName(g.enemy) + " ×" + g.count).join(", "),
+    }));
+    return out;
+  } else if (mode === "eeve") {
+    const stages = {};
+    for (const p of Object.keys(FILES).filter((p) => p.startsWith("data/enemies/eeve_"))) {
+      const st = (FILES[p].cur.eeve || {}).stage || 0; (stages[st] = stages[st] || []).push(p);
+    }
+    for (const st of Object.keys(stages).map(Number).sort((a, b) => (a || 99) - (b || 99)))
+      out.push({ key: String(st), group: "", label: st ? "Gegnerstufe " + st + " (" + stages[st].length + " Gegner)" : "Challenges (" + stages[st].length + ")" });
+    return out;
+  } else if (mode === "maul") {
+    const w = FILES["data/maul/waves.json"]; if (!w) return out;
+    w.cur.levels.forEach((l, i) => out.push({ key: String(i), group: "", label: "Level " + l.level + ": " + l.name + " (" + l.kind + ")" }));
+    return out;
+  }
+  out.sort((a, b) => a.group.localeCompare(b.group, "de") || (a.sort || 0) - (b.sort || 0) || a.label.localeCompare(b.label, "de"));
+  return out;
+}
+
+// ---------------------------------------------------------------- Zustand
+const state = { mode: "gemtd", kind: "tower", sel: {}, tier: 0, pct: 5, custom: 15, useCustom: false, allTiers: false, raw: {} };
+try { Object.assign(state, JSON.parse(localStorage.getItem("balance_editor") || "{}")); } catch (e) { /* ohne Speicher */ }
+function remember() {
+  try { localStorage.setItem("balance_editor", JSON.stringify({ mode: state.mode, kind: state.kind, sel: state.sel, pct: state.pct, custom: state.custom, useCustom: state.useCustom, allTiers: state.allTiers })); } catch (e) { /* egal */ }
+}
+const step = () => (state.useCustom ? Number(state.custom) || 0 : state.pct);
+const selKey = () => state.sel[state.mode + "/" + state.kind];
+
+// ---------------------------------------------------------------- Werte ändern
+function bump(v, dir, isFloat) {
+  const f = 1 + dir * step() / 100;
+  if (typeof v !== "number") return v;
+  let n = v * f;
+  if (!isFloat && Number.isInteger(v)) {
+    n = Math.round(n);
+    if (n === v && v !== 0 && step() > 0) n = v + dir;
+    return n;
+  }
+  return Number(n.toPrecision(4));
+}
+// Wert an (Datei, Pfad) um einen Schritt ändern; Listen (Schaden) Eintrag für Eintrag.
+function bumpAt(file, path, dir) {
+  const root = FILES[file].cur, parent = getAt(root, path.slice(0, -1)), key = path[path.length - 1];
+  const v = parent[key];
+  if (Array.isArray(v)) v.forEach((x, k) => { v[k] = bump(x, dir, isFloatAt(v, k)); });
+  else parent[key] = bump(v, dir, isFloatAt(parent, key));
+}
+function setNumber(file, path, idx, text) {
+  const n = Number(String(text).replace(",", "."));
+  if (text === "" || !isFinite(n)) return;
+  const v = getAt(FILES[file].cur, path);
+  if (Array.isArray(v)) v[idx] = n; else setAt(FILES[file].cur, path, n);
+}
+
+// ---------------------------------------------------------------- Oberfläche
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (k === "class") e.className = v;
+    else if (v !== undefined && v !== null && v !== false) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) e.append(c.nodeType ? c : String(c));
+  return e;
+}
+function message(text, err = false) { $("msg").replaceChildren(text ? el("div", { class: "msg" + (err ? " err" : "") }, text) : ""); }
+const fmtNum = (v) => (typeof v === "number" ? String(Number(v.toPrecision(6))) : String(v));
+function pctDelta(a, b) {
+  const x = Array.isArray(a) ? a[a.length - 1] : a, y = Array.isArray(b) ? b[b.length - 1] : b;
+  if (typeof x !== "number" || typeof y !== "number" || x === y) return null;
+  if (x === 0) return "neu";
+  return (y > x ? "+" : "") + Math.round((y / x - 1) * 1000) / 10 + " %";
+}
+
+// Ein Wert mit grünem und rotem Pfeil. ref = {file, path, others?: [{file, path}]} (others = gleiche Stelle in anderen Stufen)
+function statField(label, ref) {
+  const cur = getAt(FILES[ref.file].cur, ref.path), old = getAt(FILES[ref.file].orig, ref.path);
+  const isNew = old === undefined, changed = !same(cur, old), d = changed && !isNew ? pctDelta(old, cur) : null;
+  const go = (dir) => () => { for (const r of [ref].concat(ref.others || [])) if (typeof getAt(FILES[r.file].cur, r.path) !== "undefined") bumpAt(r.file, r.path, dir); render(); };
+  const vals = Array.isArray(cur) ? cur : [cur];
+  const inputs = vals.map((v, k) => el("input", {
+    type: "number", step: "any", value: fmtNum(v), "data-path": ref.path.join("."),
+    onchange: (ev) => { setNumber(ref.file, ref.path, k, ev.target.value); render(); },
+  }));
+  return el("div", { class: "stat" + (changed ? " changed" : "") },
+    el("div", { class: "lbl" }, label),
+    el("div", { class: "line" },
+      el("button", { class: "arrow up", title: "+" + step() + " %", onclick: go(1) }, "▲"),
+      inputs,
+      el("button", { class: "arrow down", title: "−" + step() + " %", onclick: go(-1) }, "▼"),
+      el("span", { class: "delta " + (d && d[0] === "+" ? "plus" : "minus") }, changed ? (isNew ? "neu" : d || "geändert") : ""),
+    ),
+    changed && !isNew ? el("div", { class: "note" }, "vorher: " + (Array.isArray(old) ? old.map(fmtNum).join(" / ") : fmtNum(old))) : null,
+  );
+}
+const isNumLike = (v) => typeof v === "number" || (Array.isArray(v) && v.length > 0 && v.length <= 4 && v.every((x) => typeof x === "number"));
+
+// Alle Zahlenfelder eines Objekts (bekannte zuerst), mit Pfeilen.
+function statGrid(file, path, order, othersFor, labels) {
+  const obj = getAt(FILES[file].cur, path);
+  const keys = order.filter((k) => k in obj && isNumLike(obj[k]))
+    .concat(Object.keys(obj).filter((k) => !order.includes(k) && !SKIP_KEYS.has(k) && isNumLike(obj[k])));
+  return el("div", { class: "stats" }, keys.map((k) => statField((labels || {})[k] || STAT_LABELS[k] || k, { file, path: path.concat(k), others: othersFor ? othersFor(k) : [] })));
+}
+
+function abilityTypes() {
+  const types = new Set(Object.keys(SCHEMA));
+  const scan = (abs) => (abs || []).forEach((a) => a && a.type && types.add(a.type));
+  for (const f of Object.values(FILES)) {
+    (f.cur.tiers || []).forEach((t) => scan(t.abilities));
+    (f.cur.shops || []).forEach((s) => s.towers.forEach((t) => scan(t.abilities)));
+  }
+  return [...types].sort();
+}
+function abilityTemplate(type) {
+  if (SCHEMA[type]) {
+    const a = { type };
+    for (const [k, v] of Object.entries(SCHEMA[type].params)) { a[k] = v.value; if (v.float) markFloat(a, k); }
+    return a;
+  }
+  for (const f of Object.values(FILES)) {
+    const lists = (f.cur.tiers || []).map((t) => t.abilities).concat((f.cur.shops || []).flatMap((s) => s.towers.map((t) => t.abilities)));
+    for (const l of lists) for (const a of l || []) if (a.type === type) return clone(a);
+  }
+  return { type };
+}
+
+// Fähigkeiten einer Fähigkeitenliste (file, path) bearbeiten. othersFor(i, key) -> gleiche Stelle in anderen Stufen.
+function abilityPanel(file, path, othersFor) {
+  let list = getAt(FILES[file].cur, path);
+  const origList = getAt(FILES[file].orig, path);
+  const box = el("div", { class: "panel", style: "margin:16px 0 0" }, el("h2", {}, "Fähigkeiten"));
+  if (!Array.isArray(list)) {
+    box.append(el("div", { class: "empty" }, "Keine Fähigkeitenliste. ", el("button", { class: "btn", onclick: () => { setAt(FILES[file].cur, path, []); render(); } }, "Liste anlegen")));
+    return box;
+  }
+  const types = abilityTypes();
+  list.forEach((a, i) => {
+    const ap = path.concat(i), rawKey = file + ":" + ap.join(".");
+    const changed = !origList || !same(a, origList[i]);
+    const head = el("div", { class: "row", style: "margin-bottom:8px" },
+      el("select", { onchange: (ev) => { list[i] = abilityTemplate(ev.target.value); render(); } },
+        types.map((t) => el("option", { value: t, selected: t === a.type }, t + (SCHEMA[t] ? " – " + SCHEMA[t].label : "")))),
+      el("span", { class: "spacer" }),
+      el("button", { class: "btn" + (state.raw[rawKey] ? " on" : ""), onclick: () => { state.raw[rawKey] = !state.raw[rawKey]; render(); } }, "JSON"),
+      el("button", { class: "btn", title: "Fähigkeit entfernen", onclick: () => { list.splice(i, 1); render(); } }, "✕"),
+    );
+    const card = el("div", { class: "card" + (changed ? " changed" : "") }, head);
+    if (state.raw[rawKey]) {
+      const ta = el("textarea", {}, JSON.stringify(a, null, 2));
+      ta.addEventListener("change", () => {
+        try { const v = parseJson(ta.value); if (!v || typeof v !== "object" || Array.isArray(v)) throw new Error("Objekt erwartet"); list[i] = v; message(""); render(); }
+        catch (e) { message("Fähigkeit " + (i + 1) + ": kein gültiges JSON (" + e.message + ")", true); }
+      });
+      card.append(ta);
+    } else {
+      const nums = Object.keys(a).filter((k) => k !== "type" && isNumLike(a[k]));
+      const others = Object.keys(a).filter((k) => k !== "type" && !isNumLike(a[k]));
+      card.append(el("div", { class: "stats" }, nums.map((k) => statField((LABELS[k] || k), { file, path: ap.concat(k), others: othersFor ? othersFor(i, a.type, k) : [] }))));
+      for (const k of others) {
+        const v = a[k];
+        if (typeof v === "boolean") {
+          card.append(el("label", { class: "check", style: "margin-top:8px;margin-right:16px" },
+            el("input", { type: "checkbox", checked: v, onchange: (ev) => { a[k] = ev.target.checked; render(); } }), LABELS[k] || k));
+        } else if (typeof v === "string") {
+          card.append(el("div", { class: "stat", style: "margin-top:8px" }, el("div", { class: "lbl" }, LABELS[k] || k),
+            el("input", { type: "text", value: v, style: "width:100%", onchange: (ev) => { a[k] = ev.target.value; render(); } })));
+        } else {
+          card.append(el("div", { class: "note" }, (LABELS[k] || k) + ": " + JSON.stringify(v) + " (über JSON bearbeiten)"));
+        }
+      }
+    }
+    box.append(card);
+  });
+  const addSel = el("select", {}, types.map((t) => el("option", { value: t }, t + (SCHEMA[t] ? " – " + SCHEMA[t].label : ""))));
+  box.append(el("div", { class: "row" }, addSel,
+    el("button", { class: "btn", onclick: () => { list.push(abilityTemplate(addSel.value)); render(); } }, "+ Fähigkeit")));
+  return box;
+}
+
+// ---- Ansichten
+function viewTowerFile(p) {
+  const t = FILES[p].cur, tiers = t.tiers || [];
+  if (state.tier >= tiers.length) state.tier = 0;
+  const ti = state.tier;
+  $("sub").replaceChildren(
+    tiers.length > 1 ? el("span", { class: "row" }, tiers.map((x, k) => el("button", {
+      class: "btn" + (k === ti ? " on" : ""), onclick: () => { state.tier = k; render(); },
+    }, (x.name || "Stufe " + (ROMAN[k] || k + 1))))) : null,
+    tiers.length > 1 ? el("label", { class: "check small" }, el("input", {
+      type: "checkbox", checked: state.allTiers, onchange: (ev) => { state.allTiers = ev.target.checked; remember(); render(); },
+    }), "Pfeile auf alle Stufen") : null,
+  );
+  const others = (k) => state.allTiers ? tiers.map((_, j) => j).filter((j) => j !== ti).map((j) => ({ file: p, path: ["tiers", j, k] })) : [];
+  const abOthers = (i, type, k) => state.allTiers ? tiers.map((_, j) => j).filter((j) => j !== ti && tiers[j].abilities && tiers[j].abilities[i] && tiers[j].abilities[i].type === type)
+    .map((j) => ({ file: p, path: ["tiers", j, "abilities", i, k] })) : [];
+  const box = el("div", {});
+  const info = [t.damage_type, t.targets, t.eeve && t.eeve.element].filter(Boolean);
+  box.append(el("div", { class: "note" }, p + (info.length ? " · " + info.join(" · ") : "")));
+  if (t.eeve) {
+    const ek = ["cost", "lumber"].filter((k) => typeof t.eeve[k] === "number");
+    if (ek.length) box.append(el("div", { class: "stats", style: "margin-bottom:14px" }, ek.map((k) => statField(STAT_LABELS[k], { file: p, path: ["eeve", k] }))));
+  }
+  if (tiers[ti]) {
+    box.append(statGrid(p, ["tiers", ti], TOWER_KEYS, others));
+    box.append(abilityPanel(p, ["tiers", ti, "abilities"], abOthers));
+  }
+  if (t.eeve && t.eeve.todo && t.eeve.todo.length) box.append(el("div", { class: "note" }, "Noch nicht umgesetzt: " + t.eeve.todo.join("; ")));
+  return box;
+}
+function viewMaulTower(key) {
+  const file = "data/maul/shops.json", path = JSON.parse(key), t = getAt(FILES[file].cur, path);
+  $("sub").replaceChildren();
+  if (!t) return el("div", { class: "empty" }, "Tower nicht gefunden.");
+  return el("div", {},
+    el("div", { class: "note" }, t.id + " · " + t.damage_type + " · " + t.targets + (t.upgrade_from ? " · Ausbau von " + t.upgrade_from : "")),
+    statGrid(file, path, TOWER_KEYS),
+    abilityPanel(file, path.concat("abilities")),
+    t.tooltip ? el("div", { class: "note", style: "margin-top:10px" }, t.tooltip) : null);
+}
+function enemyCard(id, extra, rogue) {
+  const p = enemyFile(id), f = FILES[p];
+  if (!f) return el("div", { class: "card" }, "Gegner " + id + " fehlt.");
+  const rf = FILES[ROGUE_FILE], rpath = ["enemies", id];
+  if (rogue && !(rf && getAt(rf.cur, rpath))) return el("div", { class: "card" }, "Gegner " + id + " fehlt in " + ROGUE_FILE + ".");
+  const e = f.cur, changed = rogue ? !same(getAt(rf.cur, rpath), getAt(rf.orig, rpath)) : !same(e, f.orig);
+  return el("div", { class: "card" + (changed ? " changed" : "") },
+    el("h3", {}, e.name, e.flying ? el("span", { class: "chip" }, "Luft") : null, e.boss ? el("span", { class: "chip" }, "Boss") : null,
+      e.eeve && e.eeve.kind ? el("span", { class: "chip" }, EEVE_KIND[e.eeve.kind] || e.eeve.kind) : null),
+    extra || null,
+    rogue ? statGrid(ROGUE_FILE, rpath, ENEMY_KEYS, null, ENEMY_LABELS) : statGrid(p, [], ENEMY_KEYS, null, ENEMY_LABELS));
+}
+function viewGemWave(i, rogue) {
+  const file = "data/waves/classic.json", wave = FILES[file].cur.waves[i];
+  $("sub").replaceChildren();
+  const box = el("div", {});
+  wave.groups.forEach((g, gi) => {
+    const used = FILES[file].cur.waves.map((w, k) => (w.groups.some((x) => x.enemy === g.enemy) ? k + 1 : 0)).filter(Boolean);
+    box.append(el("h2", {}, "Gruppe " + (gi + 1)));
+    box.append(el("div", { class: "stats", style: "margin-bottom:10px" },
+      ["count", "interval", "pack", "pack_gap"].filter((k) => k in g).map((k) => statField(STAT_LABELS[k], { file, path: ["waves", i, "groups", gi, k] }))));
+    if ("pack" in g) box.append(el("div", { class: "note" }, "Massenwelle in Gruppen: eine Gruppe startet alle Gruppengröße × Abstand Sekunden, Gruppengröße 1 = alle einzeln."));
+    const where = (used.length > 1 ? "den Wellen " + used.join(", ") : "Welle " + used[0]);
+    box.append(enemyCard(g.enemy, el("div", { class: "note" }, rogue
+      ? "Nur im Roguelike, gilt dort in " + where + ". Anzahl, Abstand und Gruppen teilt es mit GemTD."
+      : "Gegnerwerte gelten in " + where + " (nicht im Roguelike, das hat eigene Werte)."), rogue));
+  });
+  return box;
+}
+function viewEeveStage(st) {
+  $("sub").replaceChildren();
+  const ps = Object.keys(FILES).filter((p) => p.startsWith("data/enemies/eeve_") && ((FILES[p].cur.eeve || {}).stage || 0) === st);
+  const order = ["ground", "ground_mass", "air", "air_mass", "boss", "challenge"];
+  ps.sort((a, b) => order.indexOf(FILES[a].cur.eeve.kind) - order.indexOf(FILES[b].cur.eeve.kind));
+  return el("div", {},
+    el("div", { class: "note" }, "eeveTD würfelt die Level aus Gegnerstufe und Wellentyp (Regeln in data/eeve.json). Leben hier = Grundwert vor Schwierigkeit und Wellentyp."),
+    ps.map((p) => enemyCard(FILES[p].cur.id)));
+}
+function viewMaulLevel(i) {
+  $("sub").replaceChildren();
+  const file = "data/maul/waves.json", l = FILES[file].cur.levels[i];
+  return el("div", {},
+    el("div", { class: "note" }, l.unit + " · " + l.kind + " · Rüstungstyp " + l.armor_type + (l.specials && l.specials.length ? " · " + l.specials.join(", ") : "") + ". Leben im Spiel = HP-Faktor × hp aus data/maul/rules.json."),
+    statGrid(file, ["levels", i], ENEMY_KEYS, null, ENEMY_LABELS));
+}
+
+// ---------------------------------------------------------------- Zeichnen
+let rendering = false;
+function render() {
+  // Ein Eingabefeld meldet beim Entfernen (blur) noch "change": dann danach neu zeichnen statt mittendrin.
+  if (rendering) { queueMicrotask(render); return; }
+  rendering = true;
+  try { draw(); } finally { rendering = false; }
+}
+function draw() {
+  const changes = allChanges();
+  const perMode = { gemtd: 0, rogue: 0, eeve: 0, maul: 0 };
+  for (const c of changes) perMode[modeOf(c.datei)]++;
+  $("tabs").replaceChildren(...MODES.map((m) => el("div", {
+    class: "tab" + (m.id === state.mode ? " on" : ""), onclick: () => { state.mode = m.id; state.tier = 0; remember(); render(); },
+  }, m.name, perMode[m.id] ? el("span", { class: "badge" }, perMode[m.id]) : null)));
+  $("kind").replaceChildren(
+    ...[["enemies", "Enemies"], ["tower", "Tower"]].map(([k, n]) => el("button", {
+      class: "btn" + (state.kind === k ? " on" : ""), onclick: () => { state.kind = k; state.tier = 0; remember(); render(); },
+    }, n)));
+  $("pct").replaceChildren(el("span", { class: "muted small" }, "SCHRITT"),
+    ...[1, 5, 10].map((v) => el("button", { class: "btn" + (!state.useCustom && state.pct === v ? " on" : ""), onclick: () => { state.pct = v; state.useCustom = false; remember(); render(); } }, v + " %")),
+    el("button", { class: "btn" + (state.useCustom ? " on" : ""), onclick: () => { state.useCustom = true; remember(); render(); } }, "Custom"),
+    el("input", { type: "number", min: "0", step: "any", value: state.custom, title: "eigener Schritt in %",
+      onchange: (ev) => { state.custom = Number(ev.target.value) || 0; state.useCustom = true; remember(); render(); } }), el("span", {}, "%"));
+
+  const list = entries(state.mode, state.kind);
+  const k = state.mode + "/" + state.kind;
+  if (!list.some((e) => e.key === state.sel[k])) state.sel[k] = list.length ? list[0].key : undefined;
+  const pick = $("pick");
+  const groups = {};
+  for (const e of list) (groups[e.group] = groups[e.group] || []).push(e);
+  const opt = (e) => el("option", { value: e.key, selected: e.key === state.sel[k] }, e.label);
+  pick.replaceChildren(...Object.entries(groups).map(([g, es]) => (g ? el("optgroup", { label: g }, es.map(opt)) : es.map(opt))).flat());
+  pick.onchange = () => { state.sel[k] = pick.value; state.tier = 0; remember(); render(); };
+
+  const key = selKey();
+  let view;
+  if (!Object.keys(FILES).length) view = el("div", { class: "empty" }, "Keine Daten geladen. „Ordner öffnen“ und den Repo-Ordner wählen.");
+  else if (key === undefined) view = el("div", { class: "empty" }, "Keine Einträge.");
+  else if (state.kind === "tower") view = state.mode === "maul" ? viewMaulTower(key) : viewTowerFile(key);
+  else if (state.mode === "gemtd" || state.mode === "rogue") view = viewGemWave(Number(key), state.mode === "rogue");
+  else if (state.mode === "eeve") view = viewEeveStage(Number(key));
+  else view = viewMaulLevel(Number(key));
+  const scroll = window.scrollY;
+  $("content").replaceChildren(view);
+  renderChanges(changes);
+  window.scrollTo(0, scroll);
+
+  $("b-save").disabled = !DATA_DIR || !changes.length;
+  $("b-export").disabled = !changes.length;
+  $("b-reset").disabled = !changes.length;
+  $("b-open").disabled = !window.showDirectoryPicker;
+  if (!window.showDirectoryPicker) $("b-open").title = "Geht nur in Edge oder Chrome";
+}
+function modeOf(p) {
+  if (p === ROGUE_FILE) return "rogue";
+  if (p.startsWith("data/maul/")) return "maul";
+  if (p.includes("/eeve_")) return "eeve";
+  return "gemtd";
+}
+function changeLabel(c) {
+  const root = FILES[c.datei].cur;
+  let name = root.name || c.datei, rest = c.pfad.slice();
+  if (c.datei === "data/maul/shops.json") {
+    const ti = rest.indexOf("towers"); const t = getAt(root, rest.slice(0, ti + 2)); name = t ? t.name : name; rest = rest.slice(ti + 2);
+  } else if (c.datei === "data/maul/waves.json" && rest[0] === "levels") { name = "Level " + (rest[1] + 1); rest = rest.slice(2); }
+  else if (c.datei === ROGUE_FILE && rest[0] === "enemies") { name = enemyName(rest[1]) + " (Roguelike)"; rest = rest.slice(2); }
+  else if (rest[0] === "waves") { name = "Welle " + (rest[1] + 1); rest = rest.slice(2); }
+  else if (rest[0] === "tiers") { name += " " + ((root.tiers[rest[1]] || {}).name || "Stufe " + (ROMAN[rest[1]] || rest[1] + 1)); rest = rest.slice(2); }
+  return [name, rest.join(".")];
+}
+function renderChanges(changes) {
+  const box = $("changes");
+  box.replaceChildren(el("h2", {}, "Änderungen (" + changes.length + ")"));
+  if (!changes.length) { box.append(el("div", { class: "muted" }, "Noch nichts geändert.")); return; }
+  const short = (v) => { const s = isPrim(v) ? fmtNum(v) : JSON.stringify(v); return s.length > 90 ? s.slice(0, 87) + "…" : s; };
+  box.append(el("table", {},
+    el("tr", {}, ["Modus", "Objekt", "Feld", "vorher", "nachher", "", ""].map((h) => el("th", {}, h))),
+    changes.map((c) => {
+      const [name, field] = changeLabel(c), d = pctDelta(c.alt, c.neu);
+      return el("tr", {},
+        el("td", {}, MODES.find((m) => m.id === modeOf(c.datei)).name), el("td", {}, name), el("td", {}, field || "(ganz)"),
+        el("td", { class: "old" }, short(c.alt)), el("td", { class: "new" }, short(c.neu)),
+        el("td", { class: "delta " + (d && d[0] === "+" ? "plus" : "minus") }, d || ""),
+        el("td", {}, el("button", { class: "btn", title: "Diese Änderung zurücknehmen", onclick: () => {
+          if (c.pfad.length) setAt(FILES[c.datei].cur, c.pfad, clone(c.alt)); else FILES[c.datei].cur = clone(c.alt);
+          render();
+        } }, "↺")));
+    })));
+}
+
+// ---------------------------------------------------------------- Laden und Speichern
+const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE].includes(p);
+
+// Liest die Fähigkeiten-Liste aus scripts/game/abilities.gd (Zeilen wie "splash": {"label": …, "params": {…}},)
+function parseAbilitiesGd(text) {
+  const schema = {}, labels = {};
+  for (const line of text.split("\n")) {
+    let m = /^\t"(\w+)": (\{"label".*\}),\s*$/.exec(line);
+    if (m) {
+      const raw = parseJson(m[2]), params = {};
+      for (const [k, v] of Object.entries(raw.params)) params[k] = { value: v, float: isFloatAt(raw.params, k) };
+      schema[m[1]] = { label: raw.label, params };
+      continue;
+    }
+    m = /^\t"(\w+)": ("[^"]*"),\s*$/.exec(line);
+    if (m) labels[m[1]] = JSON.parse(m[2]);
+  }
+  return { schema, labels };
+}
+
+async function openFolder() {
+  try {
+    const dir = await window.showDirectoryPicker({ id: "tdhub", mode: "readwrite" });
+    let data = dir, root = null;
+    try { data = await dir.getDirectoryHandle("data"); root = dir; } catch (e) { /* data-Ordner selbst gewählt */ }
+    const texts = {};
+    for (const sub of ["towers", "enemies", "waves", "maul"]) {
+      let h; try { h = await data.getDirectoryHandle(sub); } catch (e) { continue; }
+      for await (const [name, fh] of h.entries()) {
+        const p = "data/" + sub + "/" + name;
+        if (fh.kind === "file" && WANTED(p)) texts[p] = await (await fh.getFile()).text();
+      }
+    }
+    try { texts[ROGUE_FILE] = await (await (await data.getFileHandle(ROGUE_FILE.split("/")[1])).getFile()).text(); } catch (e) { /* ältere Stände ohne Roguelike */ }
+    if (!Object.keys(texts).length) throw new Error("Im gewählten Ordner liegt kein data/towers. Bitte den Repo-Ordner (oder seinen data-Ordner) wählen.");
+    if (allChanges().length && !confirm("Ungespeicherte Änderungen verwerfen und Daten aus dem Ordner laden?")) return;
+    if (root) {
+      try {
+        const gd = await (await (await (await root.getDirectoryHandle("scripts")).getDirectoryHandle("game")).getFileHandle("abilities.gd")).getFile();
+        const r = parseAbilitiesGd(await gd.text()); if (Object.keys(r.schema).length) { SCHEMA = r.schema; LABELS = r.labels; }
+      } catch (e) { /* bleibt beim eingebetteten Schema */ }
+    }
+    loadTexts(texts);
+    DIR = dir; DATA_DIR = data;
+    STAND = "Ordner: " + dir.name;
+    $("stand").textContent = STAND;
+    message("Daten aus „" + dir.name + "“ geladen. Speichern schreibt direkt in diese Dateien.");
+    render();
+  } catch (e) {
+    if (e.name !== "AbortError") message("Ordner konnte nicht gelesen werden: " + e.message, true);
+  }
+}
+
+function changedFiles() { return [...new Set(allChanges().map((c) => c.datei))]; }
+
+async function save() {
+  const files = changedFiles();
+  try {
+    for (const p of files) {
+      const parts = p.split("/").slice(1);
+      let h = DATA_DIR;
+      for (const d of parts.slice(0, -1)) h = await h.getDirectoryHandle(d);
+      const fh = await h.getFileHandle(parts[parts.length - 1]);
+      const w = await fh.createWritable();
+      await w.write(fileText(p)); await w.close();
+      FILES[p].orig = clone(FILES[p].cur);
+    }
+    const towers = files.some((p) => p.startsWith("data/towers/"));
+    message(files.length + " Datei(en) gespeichert: " + files.join(", ") + "." +
+      (towers ? " Tower-Daten geändert: die Tower-Tabelle erneuert der Commit-Hook (oder python3 tools/tower_tabelle.py --kopieren)." : ""));
+    render();
+  } catch (e) { message("Speichern fehlgeschlagen: " + e.message, true); }
+}
+
+function exportChanges() {
+  const changes = allChanges().map((c) => ({ datei: c.datei, pfad: c.pfad, objekt: changeLabel(c).join(" "), alt: c.alt, neu: c.neu }));
+  const out = { stand: STAND, erstellt: new Date().toISOString(), aenderungen: changes };
+  const blob = new Blob([JSON.stringify(out, null, "\t") + "\n"], { type: "application/json" });
+  const a = el("a", { href: URL.createObjectURL(blob), download: "balance_aenderungen.json" });
+  document.body.append(a); a.click(); a.remove();
+  message("balance_aenderungen.json heruntergeladen (" + changes.length + " Änderungen). In einen Thread hochladen oder im Repo: python3 tools/balance_anwenden.py balance_aenderungen.json");
+}
+
+$("b-open").onclick = openFolder;
+$("b-save").onclick = save;
+$("b-export").onclick = exportChanges;
+$("b-reset").onclick = () => {
+  if (!confirm("Alle Änderungen verwerfen?")) return;
+  for (const f of Object.values(FILES)) f.cur = clone(f.orig);
+  render();
+};
+window.addEventListener("beforeunload", (ev) => { if (allChanges().length) { ev.preventDefault(); ev.returnValue = ""; } });
+
+if (EMBED) {
+  SCHEMA = EMBED.schema || {}; LABELS = EMBED.labels || {}; STAND = EMBED.stand || "";
+  loadTexts(EMBED.texts);
+  $("stand").textContent = STAND;
+}
+render();
+</script>
+</body>
+</html>
