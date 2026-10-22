@@ -1705,14 +1705,20 @@ func record_profile(victory: bool) -> Dictionary:
 	info.coop = coop != null
 	info.players = players.size()
 	info.debug = debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0
-	if has_method("profile_extra"):
-		info.merge(call("profile_extra"), true)
+	info.merge(profile_extra(), true)
 	return Profile.record_run(profile_mode(), info, run_stats.result(all_towers().filter(func(t): return not t.is_new)))
 
 
-## Modus im Profil (eeve_game.gd und der Roguelike-Modus überschreiben das).
+## Modus im Profil (eeve_game.gd überschreibt das, die Variante Roguelike zählt eigen).
 func profile_mode() -> String:
-	return "gemtd"
+	return "roguelike" if rogue != null else "gemtd"
+
+
+## Zusätzliche Werte für den Run im Profil (eeve_game.gd überschreibt das), im Roguelike die gewählten Boni.
+func profile_extra() -> Dictionary:
+	if rogue != null and local_player < rogue.boons.size():
+		return {"boons": rogue.boons[local_player]}
+	return {}
 
 
 # --- HUD ---------------------------------------------------------------------
