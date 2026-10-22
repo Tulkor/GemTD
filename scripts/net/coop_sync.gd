@@ -17,7 +17,7 @@ const CHECK_INTERVAL := 0.05
 const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 64
 ## Befehle, die ein Mitspieler schicken darf (siehe game.gd → execute)
-const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed"]
+const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed", "rogue_pick"]
 
 var game  # game.gd
 var host := true
@@ -147,6 +147,8 @@ func snapshot() -> Dictionary:
 		"rocks": rs,
 		"tstats": stats,
 	}
+	if game.rogue != null:
+		s.rogue = game.rogue.to_dict()
 	if game.has_method("coop_snapshot"):
 		s.mode = game.coop_snapshot()
 	return s
@@ -250,6 +252,8 @@ func apply_state(s: Dictionary) -> void:
 	g.score_stats = s.get("score_stats", {})
 	g.final_boss = s.get("final_boss", g.final_boss)
 	g.leaks_per_wave = s.get("leaks", {})
+	if s.has("rogue"):
+		g.enable_rogue().from_dict(s.rogue)
 	if s.has("mode") and g.has_method("apply_coop_snapshot"):
 		g.apply_coop_snapshot(s.mode)
 	if s.get("setup", true) and not g.setup_done:
@@ -314,7 +318,7 @@ func apply_enemies(packet: Dictionary) -> void:
 		seen[id] = true
 		var e: Enemy = enemies.get(id)
 		if e == null:
-			var def: Dictionary = Database.enemies.get(str(s[1]), {})
+			var def: Dictionary = game.enemy_def(str(s[1])) if game.has_method("enemy_def") else Database.enemies.get(str(s[1]), {})
 			if def.is_empty():
 				continue
 			e = Enemy.new()

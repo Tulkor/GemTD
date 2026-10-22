@@ -9,10 +9,18 @@ const MODES := [
 	["Punkte", true, "Kills geben Punkte, späte Wellen mehr als frühe. Wer durchkommt, kostet die Hälfte seines Werts. Gespielt wird bis zur letzten Welle."],
 ]
 
+## Spielvarianten: [Name, Roguelike an, Erklärung]
+const VARIANTS := [
+	["Klassisch", false, "GemTD wie im Original."],
+	["Roguelike", true, "Nach jeder zehnten Welle wählst du einen von drei zufälligen Boni: mehr Schaden, Tempo oder Reichweite für einen Grund-Gem in allen Stufen oder für einen Spezialtower."],
+]
+
 var game  # game.gd
 var difficulty := 1
 var score_mode := false
+var rogue := false
 var _mode_text: Label
+var _variant_text: Label
 
 
 func _ready() -> void:
@@ -22,6 +30,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	difficulty = Session.difficulty
 	score_mode = Session.score_mode
+	rogue = Session.rogue
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -64,8 +73,22 @@ func _ready() -> void:
 	_mode_text.add_theme_color_override("font_color", DecoTheme.DIM)
 	_update_text()
 
+	DecoTheme.caption("Variante", v)
+	h = _row(v)
+	group = ButtonGroup.new()
+	for m in VARIANTS:
+		var on: bool = m[1]
+		var b := _toggle(str(m[0]), h, group, on == rogue, func():
+			rogue = on
+			_update_text())
+		b.tooltip_text = str(m[2])
+		b.disabled = not host
+	_variant_text = UiUtil.wrap_label("", v, 470)
+	_variant_text.add_theme_color_override("font_color", DecoTheme.DIM)
+	_update_text()
+
 	if host:
-		var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "difficulty": difficulty, "score_mode": score_mode}))
+		var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "difficulty": difficulty, "score_mode": score_mode, "rogue": rogue}))
 		go.custom_minimum_size.y = 60
 		go.add_theme_font_size_override("font_size", 28)
 		DecoTheme.accent_button(go, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
@@ -81,6 +104,8 @@ func _process(_delta: float) -> void:
 
 func _update_text() -> void:
 	_mode_text.text = tr(str(MODES[1 if score_mode else 0][2]))
+	if _variant_text != null:
+		_variant_text.text = tr(str(VARIANTS[1 if rogue else 0][2]))
 
 
 func _row(parent: Node) -> HBoxContainer:

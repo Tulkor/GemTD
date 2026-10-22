@@ -59,6 +59,14 @@ var speed_bonus := 0.0   ## von Tempo-Auren anderer Tower
 var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
 var speed_source := ""   ## Name des Towers, dessen Tempo-Aura gerade wirkt (fürs Infofenster)
 var damage_source := ""  ## Name des Towers, dessen Schadens-Aura gerade wirkt
+## Roguelike-Boni des Besitzers (rogue.gd), Zuschläge wie 0.2 = +20 %
+var rogue_damage := 0.0
+var rogue_speed := 0.0
+var rogue_range := 0.0
+var rogue_abilities: Array = []  ## Fähigkeiten aus Roguelike-Boni (zusätzlich zu stats.abilities)
+var rogue_anti_air := false      ## Roguelike „Luftabwehr“: Bodentower greift auch Flieger an
+var rogue_fx: Dictionary = {}    ## Roguelike: Flächen, Prozentschaden, Henker (rogue.gd → on_hit), leer = keine
+var _all_abilities: Array = []
 var cooldown_left := 0.0
 var kills := 0
 var moves_left := 0  ## wie oft eine Falle noch verschoben werden darf
@@ -111,11 +119,13 @@ func is_trap() -> bool:
 
 
 func range_cells() -> float:
-	return float(stats.get("range", 3.0))
+	return float(stats.get("range", 3.0)) * (1.0 + rogue_range)
 
 
 func abilities() -> Array:
-	return stats.get("abilities", [])
+	if rogue_abilities.is_empty():
+		return stats.get("abilities", [])
+	return _all_abilities
 
 
 func ability(type: String) -> Dictionary:
@@ -126,7 +136,8 @@ func ability(type: String) -> Dictionary:
 
 
 func target_mode() -> String:
-	return str(stats.get("targets", def.get("targets", "both")))
+	var mode := str(stats.get("targets", def.get("targets", "both")))
+	return "both" if rogue_anti_air and mode == "ground" else mode
 
 
 func can_target(e) -> bool:
@@ -146,7 +157,7 @@ func can_attack() -> bool:
 ## Reichweite gegen ein bestimmtes Ziel (manche Fallen haben gegen Flieger mehr Reichweite).
 func range_for(e) -> float:
 	if e.flying and stats.has("range_air"):
-		return float(stats.range_air)
+		return float(stats.range_air) * (1.0 + rogue_range)
 	return range_cells()
 
 
@@ -173,7 +184,7 @@ func kill_bonus() -> float:
 
 
 func cooldown() -> float:
-	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus)
+	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus + rogue_speed)
 
 
 # --- Kampf -------------------------------------------------------------------
@@ -239,14 +250,15 @@ func _roll_damage() -> float:
 	var wd := ability("wave_damage")
 	if not wd.is_empty():
 		base += float(wd.per_wave) * game.current_wave()
-	return base * (1.0 + damage_bonus + kill_bonus())
+	return base * (1.0 + damage_bonus + kill_bonus() + rogue_damage)
 
 
 func _attack(e) -> void:
 	var dmg := _roll_damage()
 	var crit := ability("crit")
-	if not crit.is_empty() and randf() < float(crit.chance):
-		dmg *= float(crit.multiplier)
+	var crit_chance := float(crit.get("chance", 0.0)) + float(e.crit_mark)
+	if crit_chance > 0.0 and randf() < crit_chance:
+		dmg *= float(crit.get("multiplier", 2.0))
 	game.add_beam(position + Vector3(0, 0.9, 0), _hit_point(e), color, fx_key())
 	var target_pos: Vector2 = e.pos
 	_hit(e, dmg)
@@ -316,6 +328,8 @@ func _hit(e, dmg: float) -> void:
 	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
 		kills += 1
+	if not rogue_fx.is_empty() and game.rogue != null:
+		game.rogue.on_hit(self, e)
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
@@ -464,7 +478,7 @@ func _cone(target_pos: Vector2, ab: Dictionary, dmg: float, target) -> void:
 			continue
 		if spell:
 			other.last_hit_by = owner_player
-			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus()), "spells")
+			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus() + rogue_damage), "spells")
 			if other.dead:
 				kills += 1
 		else:
@@ -944,8 +958,38 @@ func _finish_visual() -> void:
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)
 	# Fallen zeigen ihre Fläche über die Platte, der Ring nur Luft- oder Aurareichweite
-	_range_ring = _ring(ring_radius(stats, is_trap()), 0.05, Color(1, 1, 1, 0.6))
+	_range_ring = _ring(ring_radius(stats, is_trap()) * (1.0 + rogue_range), 0.05, Color(1, 1, 1, 0.6))
 	set_selected(selected)
+
+
+## Roguelike-Boni übernehmen ({damage, speed, range}, leer = keine); der Reichweitenring wächst mit.
+func set_rogue(b: Dictionary) -> void:
+	rogue_damage = float(b.get("damage", 0.0))
+	rogue_speed = float(b.get("speed", 0.0))
+	rogue_anti_air = bool(b.get("anti_air", false))
+	rogue_fx = {}
+	for k in ["flasks", "pct", "execute"]:
+		if not b.get(k, {}).is_empty():
+			rogue_fx[k] = b[k]
+	# Gift aus dem Pool hat seinen Schaden als Anteil am Tower-Schaden (dps_factor)
+	rogue_abilities = []
+	for ab in b.get("abilities", []):
+		var a: Dictionary = ab.duplicate()
+		if a.has("dps_factor"):
+			var dmg: Array = stats.get("damage", [0, 0])
+			a.dps = snappedf((float(dmg[0]) + float(dmg[1])) / 2.0 * float(a.dps_factor) / maxf(float(stats.get("cooldown", 1.0)), 0.05), 0.1)
+			a.erase("dps_factor")
+		rogue_abilities.append(a)
+	_all_abilities = stats.get("abilities", []) + rogue_abilities
+	var r := float(b.get("range", 0.0))
+	if is_equal_approx(r, rogue_range):
+		return
+	rogue_range = r
+	if _range_ring != null and is_instance_valid(_range_ring):
+		var vis := _range_ring.visible
+		_range_ring.queue_free()
+		_range_ring = _ring(ring_radius(stats, is_trap()) * (1.0 + rogue_range), 0.05, Color(1, 1, 1, 0.6))
+		_range_ring.visible = vis
 
 
 func _ring(radius: float, thickness: float, col: Color) -> MeshInstance3D:

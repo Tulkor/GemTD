@@ -239,6 +239,7 @@ function setAt(obj, path, v) { const parent = getAt(obj, path.slice(0, -1)); par
 // ---------------------------------------------------------------- Modi und Auswahl
 const MODES = [
   { id: "gemtd", name: "GemTD" },
+  { id: "rogue", name: "GemTD Roguelike" },
   { id: "eeve", name: "eeveTD" },
   { id: "maul", name: "Shopping Maul" },
 ];
@@ -261,10 +262,13 @@ function towerFiles(eeve) {
   return Object.keys(FILES).filter((p) => p.startsWith("data/towers/") && ((FILES[p].cur.category === "eeve") === eeve));
 }
 function enemyFile(id) { return "data/enemies/" + id + ".json"; }
+// Roguelike: eigene Gegnerwerte je Gegner in einer Datei (Tower, Anzahl und Abstand teilt es mit GemTD)
+const ROGUE_FILE = "data/roguelike_enemies.json";
 function enemyName(id) { const f = FILES[enemyFile(id)]; return f ? f.cur.name : id; }
 
 // Einträge fürs Auswahlmenü: {key, label, group}
 function entries(mode, kind) {
+  if (mode === "rogue") mode = "gemtd";
   const out = [];
   if (mode === "gemtd" && kind === "tower") {
     for (const p of towerFiles(false)) {
@@ -509,17 +513,19 @@ function viewMaulTower(key) {
     abilityPanel(file, path.concat("abilities")),
     t.tooltip ? el("div", { class: "note", style: "margin-top:10px" }, t.tooltip) : null);
 }
-function enemyCard(id, extra) {
+function enemyCard(id, extra, rogue) {
   const p = enemyFile(id), f = FILES[p];
   if (!f) return el("div", { class: "card" }, "Gegner " + id + " fehlt.");
-  const e = f.cur, changed = !same(e, f.orig);
+  const rf = FILES[ROGUE_FILE], rpath = ["enemies", id];
+  if (rogue && !(rf && getAt(rf.cur, rpath))) return el("div", { class: "card" }, "Gegner " + id + " fehlt in " + ROGUE_FILE + ".");
+  const e = f.cur, changed = rogue ? !same(getAt(rf.cur, rpath), getAt(rf.orig, rpath)) : !same(e, f.orig);
   return el("div", { class: "card" + (changed ? " changed" : "") },
     el("h3", {}, e.name, e.flying ? el("span", { class: "chip" }, "Luft") : null, e.boss ? el("span", { class: "chip" }, "Boss") : null,
       e.eeve && e.eeve.kind ? el("span", { class: "chip" }, EEVE_KIND[e.eeve.kind] || e.eeve.kind) : null),
     extra || null,
-    statGrid(p, [], ENEMY_KEYS, null, ENEMY_LABELS));
+    rogue ? statGrid(ROGUE_FILE, rpath, ENEMY_KEYS, null, ENEMY_LABELS) : statGrid(p, [], ENEMY_KEYS, null, ENEMY_LABELS));
 }
-function viewGemWave(i) {
+function viewGemWave(i, rogue) {
   const file = "data/waves/classic.json", wave = FILES[file].cur.waves[i];
   $("sub").replaceChildren();
   const box = el("div", {});
@@ -529,7 +535,10 @@ function viewGemWave(i) {
     box.append(el("div", { class: "stats", style: "margin-bottom:10px" },
       ["count", "interval", "pack", "pack_gap"].filter((k) => k in g).map((k) => statField(STAT_LABELS[k], { file, path: ["waves", i, "groups", gi, k] }))));
     if ("pack" in g) box.append(el("div", { class: "note" }, "Massenwelle in Gruppen: eine Gruppe startet alle Gruppengröße × Abstand Sekunden, Gruppengröße 1 = alle einzeln."));
-    box.append(enemyCard(g.enemy, el("div", { class: "note" }, "Gegnerwerte gelten in " + (used.length > 1 ? "den Wellen " + used.join(", ") : "Welle " + used[0]))));
+    const where = (used.length > 1 ? "den Wellen " + used.join(", ") : "Welle " + used[0]);
+    box.append(enemyCard(g.enemy, el("div", { class: "note" }, rogue
+      ? "Nur im Roguelike, gilt dort in " + where + ". Anzahl, Abstand und Gruppen teilt es mit GemTD."
+      : "Gegnerwerte gelten in " + where + " (nicht im Roguelike, das hat eigene Werte)."), rogue));
   });
   return box;
 }
@@ -560,7 +569,7 @@ function render() {
 }
 function draw() {
   const changes = allChanges();
-  const perMode = { gemtd: 0, eeve: 0, maul: 0 };
+  const perMode = { gemtd: 0, rogue: 0, eeve: 0, maul: 0 };
   for (const c of changes) perMode[modeOf(c.datei)]++;
   $("tabs").replaceChildren(...MODES.map((m) => el("div", {
     class: "tab" + (m.id === state.mode ? " on" : ""), onclick: () => { state.mode = m.id; state.tier = 0; remember(); render(); },
@@ -590,7 +599,7 @@ function draw() {
   if (!Object.keys(FILES).length) view = el("div", { class: "empty" }, "Keine Daten geladen. „Ordner öffnen“ und den Repo-Ordner wählen.");
   else if (key === undefined) view = el("div", { class: "empty" }, "Keine Einträge.");
   else if (state.kind === "tower") view = state.mode === "maul" ? viewMaulTower(key) : viewTowerFile(key);
-  else if (state.mode === "gemtd") view = viewGemWave(Number(key));
+  else if (state.mode === "gemtd" || state.mode === "rogue") view = viewGemWave(Number(key), state.mode === "rogue");
   else if (state.mode === "eeve") view = viewEeveStage(Number(key));
   else view = viewMaulLevel(Number(key));
   const scroll = window.scrollY;
@@ -605,6 +614,7 @@ function draw() {
   if (!window.showDirectoryPicker) $("b-open").title = "Geht nur in Edge oder Chrome";
 }
 function modeOf(p) {
+  if (p === ROGUE_FILE) return "rogue";
   if (p.startsWith("data/maul/")) return "maul";
   if (p.includes("/eeve_")) return "eeve";
   return "gemtd";
@@ -615,6 +625,7 @@ function changeLabel(c) {
   if (c.datei === "data/maul/shops.json") {
     const ti = rest.indexOf("towers"); const t = getAt(root, rest.slice(0, ti + 2)); name = t ? t.name : name; rest = rest.slice(ti + 2);
   } else if (c.datei === "data/maul/waves.json" && rest[0] === "levels") { name = "Level " + (rest[1] + 1); rest = rest.slice(2); }
+  else if (c.datei === ROGUE_FILE && rest[0] === "enemies") { name = enemyName(rest[1]) + " (Roguelike)"; rest = rest.slice(2); }
   else if (rest[0] === "waves") { name = "Welle " + (rest[1] + 1); rest = rest.slice(2); }
   else if (rest[0] === "tiers") { name += " " + ((root.tiers[rest[1]] || {}).name || "Stufe " + (ROMAN[rest[1]] || rest[1] + 1)); rest = rest.slice(2); }
   return [name, rest.join(".")];
@@ -640,7 +651,7 @@ function renderChanges(changes) {
 }
 
 // ---------------------------------------------------------------- Laden und Speichern
-const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json"].includes(p);
+const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE].includes(p);
 
 // Liest die Fähigkeiten-Liste aus scripts/game/abilities.gd (Zeilen wie "splash": {"label": …, "params": {…}},)
 function parseAbilitiesGd(text) {
@@ -672,6 +683,7 @@ async function openFolder() {
         if (fh.kind === "file" && WANTED(p)) texts[p] = await (await fh.getFile()).text();
       }
     }
+    try { texts[ROGUE_FILE] = await (await (await data.getFileHandle(ROGUE_FILE.split("/")[1])).getFile()).text(); } catch (e) { /* ältere Stände ohne Roguelike */ }
     if (!Object.keys(texts).length) throw new Error("Im gewählten Ordner liegt kein data/towers. Bitte den Repo-Ordner (oder seinen data-Ordner) wählen.");
     if (allChanges().length && !confirm("Ungespeicherte Änderungen verwerfen und Daten aus dem Ordner laden?")) return;
     if (root) {
