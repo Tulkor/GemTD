@@ -2,7 +2,7 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
-##   --seite=single|history|profile|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --seite=single|history|profile|credits|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler

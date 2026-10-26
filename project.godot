@@ -8,6 +8,7 @@ config_version=5
 config/name="TD Hub"
 config/description="Drei Tower-Defense-Spiele in einem: GemTD, eeveTD und Shopping Maul"
 run/main_scene="res://scenes/main_menu.tscn"
+config/icon="res://assets/icon/icon.png"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 ; Alter Speicherort (wie vor der Umbenennung zu TD Hub), damit Spielstände, XP und Einstellungen erhalten bleiben.
 config/use_custom_user_dir=true

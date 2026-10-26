@@ -25,6 +25,7 @@ var single_page: Control
 var history_page: Control
 var profile: ProfilePanel
 var profile_page: Control
+var credits_page: Control
 
 
 func _ready() -> void:
@@ -51,6 +52,14 @@ func _ready() -> void:
 	profile = ProfilePanel.new()
 	profile.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	pv.add_child(profile)
+	credits_page = _page()
+	var cv: VBoxContainer = credits_page.get_meta("box")
+	_back_button(cv.get_child(0), func(): show_page(""))
+	DecoTheme.title(UiUtil.label("Mitwirkende", cv.get_child(0), 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	DecoTheme.head_line(cv.get_child(0))
+	var credits := CreditsPanel.new()
+	credits.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cv.add_child(credits)
 	_reload()
 	_build_settings()
 	lobby = LobbyPanel.new()
@@ -74,9 +83,11 @@ func _ready() -> void:
 		settings.show()
 
 
-## Seite zeigen: "" = Hub, "single" = Einzelspieler, "history" = Run-History, "profile" = Profil, "lobby" = Mehrspieler.
+## Seite zeigen: "" = Hub, "single" = Einzelspieler, "history" = Run-History, "profile" = Profil,
+## "credits" = Mitwirkende, "lobby" = Mehrspieler.
 func show_page(page: String) -> void:
 	single_page.visible = page == "single"
+	credits_page.visible = page == "credits"
 	history_page.visible = page == "history"
 	profile_page.visible = page == "profile"
 	if page == "profile":
@@ -129,9 +140,13 @@ func _build_hub() -> void:
 	_foot_button("Map-Editor", foot, _open_map_editor)
 	_foot_button("Tower-Editor", foot, _open_tower_editor)
 	_foot_button("Einstellungen", foot, _open_settings)
+	_foot_button("Mitwirkende", foot, func(): show_page("credits"))
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	foot.add_child(fill)
+	var version := UiUtil.label(CreditsPanel.version_text(), foot, 14)
+	version.add_theme_color_override("font_color", DecoTheme.MUTED)
+	version.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var reload := _foot_button("Daten neu laden", foot, _reload)
 	reload.tooltip_text = "JSON-Dateien unter data/ neu einlesen"
 	_foot_button("Beenden", foot, func(): get_tree().quit())

@@ -48,7 +48,16 @@ NAME="GemTD_V0_${N}.zip"
 python3 tools/tower_tabelle.py --kopieren >/dev/null
 
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
+# Versionsnummer nur für den Export eintragen (Hub und Mitwirkende zeigen sie), danach zurücksetzen.
+cp project.godot "$TMP/project.godot.orig"
+trap 'cp "$TMP/project.godot.orig" project.godot; rm -rf "$TMP"' EXIT
+python3 - "0.${N}" <<'PY'
+import re, sys
+s = open("project.godot", encoding="utf-8").read()
+s = re.sub(r'\nconfig/version="[^"]*"', "", s)
+s = s.replace('config/name="TD Hub"', 'config/name="TD Hub"\nconfig/version="%s"' % sys.argv[1], 1)
+open("project.godot", "w", encoding="utf-8").write(s)
+PY
 mkdir -p export/windows "$TMP/GemTD"
 tools/godot_import.sh
 godot --headless --path . --export-release "Windows" "$TMP/GemTD/GemTD.exe" >"$TMP/export.log" 2>&1 || {

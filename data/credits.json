@@ -1,0 +1,64 @@
+{
+	"_info": "Mitwirkende und Lizenzen für die Seite \"Mitwirkende\" im Hub (scripts/ui/credits_panel.gd). Bei neuen Assets hier und in der QUELLEN.md/CREDITS.md des Ordners eintragen.",
+	"sections": [
+		{
+			"title": "TD Hub",
+			"entries": [
+				{"name": "Idee, Spieldesign, eigene Sounds", "by": "Lukas", "license": ""},
+				{"name": "Engine", "by": "Godot Engine 4.3", "license": "MIT", "url": "https://godotengine.org/license"}
+			]
+		},
+		{
+			"title": "Vorbilder",
+			"note": "Die drei Spiele sind Nachbauten von Warcraft-III-Karten. Dank an ihre Autoren.",
+			"entries": [
+				{"name": "GemTD", "by": "Warcraft-III-Karte, dazu Ideen aus den Versionen für StarCraft II und Dota 2", "license": ""},
+				{"name": "eeveTD", "by": "Warcraft-III-Karte „eeve! TD“ v1.01 von geX", "license": ""},
+				{"name": "Shopping Maul", "by": "Warcraft-III-Karte „Shopping Maul“ 5.44f", "license": ""}
+			]
+		},
+		{
+			"title": "Modelle",
+			"entries": [
+				{"name": "Little Man (Boss)", "by": "Don Carson, via Poly Pizza, geändert (Skelett, Animationen)", "license": "CC-BY 3.0", "url": "https://poly.pizza/m/8KU4S7I0sL8"},
+				{"name": "Crystal Pack", "by": "iPoly3D", "license": "CC0", "url": "https://poly.pizza/bundle/Crystal-Pack-AywAG7aywi"},
+				{"name": "Crystals, Rocks, Stylized Nature MegaKit, Animated Monster Pack, Ultimate Textured Building Pack", "by": "Quaternius", "license": "CC0", "url": "https://quaternius.com"},
+				{"name": "Nature Kit, Survival Kit, City Kit (Commercial), Graveyard Kit", "by": "Kenney", "license": "CC0", "url": "https://kenney.nl"},
+				{"name": "Medieval Church", "by": "Daniel74, Blend Swap", "license": "CC0", "url": "http://www.blendswap.com/blends/view/75990"},
+				{"name": "HandPainted Plants 2", "by": "Nobiax / Yughues", "license": "CC0"},
+				{"name": "Free Mine Assets Pack", "by": "OpenGameArt", "license": "CC0", "url": "https://opengameart.org/content/free-mine-assets-pack"}
+			]
+		},
+		{
+			"title": "Effekte",
+			"entries": [
+				{"name": "Particle Pack", "by": "Kenney", "license": "CC0", "url": "https://kenney.nl"},
+				{"name": "Brackeys VFX Bundle (Flipbooks von Thomas Iché)", "by": "Brackeys", "license": "CC0"},
+				{"name": "Particle Pack", "by": "Kronbits", "license": "CC0", "url": "https://kronbits.itch.io/particle-pack"}
+			]
+		},
+		{
+			"title": "Texturen",
+			"entries": [
+				{"name": "Bodenfotos", "by": "Samuel Ramos, Palani Selvam, Dimas H (Unsplash)", "license": "Unsplash-Lizenz", "url": "https://unsplash.com/license"},
+				{"name": "Sternenhimmel, erzeugt mit Space 3D", "by": "wwwtyro", "license": "Unlicense", "url": "https://github.com/wwwtyro/space-3d"}
+			]
+		},
+		{
+			"title": "Sounds",
+			"entries": [
+				{"name": "Vibrating Thud, Teleport Error, Random Sound 1, Ghost Wails, FX Bird Water Whistle", "by": "freesound_community (Pixabay)", "license": "Pixabay Content License", "url": "https://pixabay.com/service/license-summary/"}
+			]
+		},
+		{
+			"title": "Schriften",
+			"entries": [
+				{"name": "DejaVu Sans Mono", "by": "DejaVu-Projekt", "license": "Bitstream Vera / gemeinfrei"},
+				{"name": "Limelight", "by": "Eben Sorkin", "license": "SIL OFL 1.1"},
+				{"name": "Federo", "by": "Cyreal", "license": "SIL OFL 1.1"},
+				{"name": "Uncial Antiqua", "by": "Astigmatic", "license": "SIL OFL 1.1"},
+				{"name": "Alegreya", "by": "Huerta Tipográfica", "license": "SIL OFL 1.1"}
+			]
+		}
+	]
+}
