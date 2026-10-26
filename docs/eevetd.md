@@ -99,7 +99,7 @@ Werte in `data/eeve_items.json` (im Balance-Editor unter eeveTD → Items), wie 
   Eingesetzte Items bleiben im Tower, nur der Läuterungstrank holt sie zurück. Abreißen gibt sie ins Lager.
 - **Items:** Klingen (+50 bis +300 Schaden), Ärmel (+10 bis +40 % Tempo), Klauen (Schaden + 15 % Krit), Hämmer
   (Schaden + Betäubung mit Zusatzschaden), Glühende Kette der Macht, Kugeln (Zauberschaden auf zufällige Gegner),
-  Zauberschild (zauberimmun, wirkt erst, wenn Gegner Tower verzaubern), Erfahrungstrank (+10 Kills).
+  Erfahrungstrank (+10 Kills). Den Zauberschild des Originals gibt es nicht, weil Gegner keine Tower verzaubern.
 - **Drops:** ab Level 11 wird je Level gewürfelt, ob der erste Kill ein Item bringt (Chance und Stufe steigen mit dem
   Level). Golems (Level 11–44) bringen immer ein Verbrauchs-Item und ein Item. Holz zählt sofort, volles Lager verkauft.
 

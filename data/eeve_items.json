@@ -1,5 +1,5 @@
 {
-	"_comment": "Items und Marktplatz in eeveTD (Vorbild: eeve! TD v1.01, Werte aus der Kartendatei: w3t I000–I00W, Drops in script.j). Logik in scripts/game/eeve_items.gd. Erfahrung gibt es bei uns nur als Kills (Kill-Rang), deshalb zählen Trank und Phiole in Kills.",
+	"_comment": "Items und Marktplatz in eeveTD (Vorbild: eeve! TD v1.01, Werte aus der Kartendatei: w3t I000–I00W, Drops in script.j). Logik in scripts/game/eeve_items.gd. Erfahrung gibt es bei uns nur als Kills (Kill-Rang), deshalb zählen Trank und Phiole in Kills. Zauberschild (I00C) bewusst weggelassen (Lukas, 2026-10-26): Gegner verzaubern bei uns keine Tower.",
 	"inventory_size": 8,
 	"sell_ratio": 0.5,
 	"max_slots": 6,
@@ -18,7 +18,6 @@
 			[
 				"xp_potion",
 				"lumber",
-				"spell_shield",
 				"expansion",
 				"purge"
 			],
@@ -298,14 +297,6 @@
 					"text": "Kugel: 1600 Zauberschaden/s auf zufällige Gegner im Radius 6,3"
 				}
 			]
-		},
-		"spell_shield": {
-			"name": "Zauberschild",
-			"name_original": "Spell Shield",
-			"icon": "shield",
-			"stage": 0,
-			"value": 200,
-			"spell_immune": true
 		},
 		"xp_potion": {
 			"name": "Erfahrungstrank",

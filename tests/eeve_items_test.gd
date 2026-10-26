@@ -30,7 +30,7 @@ func _ready() -> void:
 		if EeveItems.item(str(s.item)).is_empty():
 			missing.append(s.item)
 	check(missing.is_empty(), "alle Drops und Marktplatz-Items haben Daten %s" % [missing])
-	check((d.items as Dictionary).size() == 25, "25 Items wie im Original (ohne Doppel der Marktplatz-Versionen): %d" % (d.items as Dictionary).size())
+	check((d.items as Dictionary).size() == 24, "24 Items wie im Original (ohne Zauberschild und Doppel der Marktplatz-Versionen): %d" % (d.items as Dictionary).size())
 	check(EeveItems.sell_price("razorblades") == 100 and EeveItems.shop_price("lumber") == 900, "Verkauf zum halben Wert, Holz 900 Gold")
 	check(EeveItems.effect_text("killer_claws").contains("+50") and EeveItems.effect_text("killer_claws").contains("15%"), "Wirkung als Text: %s" % EeveItems.effect_text("killer_claws"))
 
@@ -106,9 +106,6 @@ func _ready() -> void:
 	game.eitems.give(0, "orb_fire")
 	check(game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)}) and not t.ability("orb").is_empty(), "Kugel des Feuers gibt die Fähigkeit orb")
 	check(not t._orb(t.ability("orb")), "Kugel schießt nicht ohne Gegner")
-	game.eitems.give(0, "spell_shield")
-	game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)})
-	check(t.spell_immune, "Zauberschild macht zauberimmun")
 
 	# Upgrades
 	var bonus: float = t.rogue_damage
@@ -131,9 +128,9 @@ func _ready() -> void:
 	g = game.gold
 	check(game.submit({"type": "item_sell", "index": 0}) and game.gold == g + 75 and game.ep().items.is_empty(), "Trank verkauft für 75 Gold")
 	game.eitems.give(0, "purge")
-	check(game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)}) and t.items.is_empty() and game.ep().items.size() == 3,
+	check(game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)}) and t.items.is_empty() and game.ep().items.size() == 2,
 		"Läuterungstrank: Items zurück ins Lager %s" % [game.ep().items])
-	check(is_zero_approx(t.flat_damage) and not t.spell_immune, "ohne Items kein Zusatzschaden mehr")
+	check(is_zero_approx(t.flat_damage), "ohne Items kein Zusatzschaden mehr")
 	game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)})
 	check(t.items.size() == 1, "Item wieder einsetzen")
 

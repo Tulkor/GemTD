@@ -412,7 +412,7 @@ func _prepare_eeve(game: Node) -> void:
 		var h: Tower = game.towers.get(Vector2i(44, 76))
 		h.set_tower("eeve_hell_brazier", 0)
 		h.items = ["glowing_blade", "orb_fire"]
-		for id in ["razorblades", "sleeve_speed", "killer_claws", "orb_ice", "xp_potion", "spell_shield"]:
+		for id in ["razorblades", "sleeve_speed", "killer_claws", "orb_ice", "xp_potion", "expansion"]:
 			game.ep().items.append(id)
 		game.ep().market = {"damage": 1}
 		game._update_auras()

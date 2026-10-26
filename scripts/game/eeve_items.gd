@@ -48,8 +48,6 @@ static func effect_text(id: String) -> String:
 		lines.append(TranslationServer.translate("+%d %% Angriffstempo") % roundi(float(it.speed) * 100.0))
 	for ab in it.get("abilities", []):
 		lines.append(Abilities.describe(ab))
-	if it.get("spell_immune", false):
-		lines.append(TranslationServer.translate("Tower wird zauberimmun"))
 	match str(it.get("use", "")):
 		"xp":
 			lines.append(TranslationServer.translate("+%d Kills für einen Tower") % int(it.amount))
@@ -87,7 +85,7 @@ static func market_level(st: Dictionary, kind: String) -> int:
 
 
 ## Boni eines Towers für Tower.set_rogue(): Items im Tower und die Marktplatz-Stufen seines Besitzers.
-## Fester Zusatzschaden und Zauberschild setzt die Funktion direkt am Tower.
+## Den festen Zusatzschaden setzt die Funktion direkt am Tower.
 func apply_to(t: Tower) -> void:
 	if not t is EeveTower:
 		return
@@ -95,12 +93,10 @@ func apply_to(t: Tower) -> void:
 	var ups: Dictionary = data().get("market", {}).get("upgrades", {})
 	var b := {"damage": 0.0, "speed": 0.0, "range": 0.0, "abilities": []}
 	var flat := 0.0
-	var immune := false
 	for id in t.items:
 		var it := item(id)
 		flat += float(it.get("damage", 0))
 		b.speed += float(it.get("speed", 0.0))
-		immune = immune or bool(it.get("spell_immune", false))
 		for ab in it.get("abilities", []):
 			var a: Dictionary = ab.duplicate()
 			if it.has("color"):
@@ -113,7 +109,6 @@ func apply_to(t: Tower) -> void:
 		if base_range > 0.0:
 			b.range = market_level(st, "range") * float(ups.get("range", {}).get("per_level", 0.0)) / base_range
 	t.flat_damage = flat
-	t.spell_immune = immune
 	t.bonus_label = "Items und Marktplatz"
 	if b.damage > 0.0 or b.speed > 0.0 or b.range > 0.0 or not b.abilities.is_empty():
 		t.set_rogue(b)

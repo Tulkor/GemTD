@@ -18,7 +18,6 @@ var rage_left := 0.0       ## Sekunden, die der Schadens-Buff noch wirkt
 var _cd := {}              ## Index der Fähigkeit -> Restzeit (pulse, rage)
 var items: Array = []      ## eingesetzte Items (ids aus data/eeve_items.json), bleiben im Tower
 var extra_slots := 0       ## zusätzliche Item-Plätze aus Erweiterungstränken
-var spell_immune := false  ## Zauberschild: gegnerische Zauber wirken nicht auf diesen Tower
 
 
 func set_tower(id: String, t: int) -> void:
