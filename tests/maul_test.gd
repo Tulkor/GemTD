@@ -93,6 +93,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await _pro_tests()
 	await _bank_tests()
+	await _save_tests()
 	await _debug_tests()
 	await _coop_tests()
 	print("FERTIG mit %d Fehlern" % failures)
@@ -358,6 +359,49 @@ func _bank_tests() -> void:
 	other.account = 20000
 	check(MaulBank.owner_income(game) == 750, "Ab 15.000 auf allen Konten fest 750 Gold")
 	game.queue_free()
+	await get_tree().process_frame
+
+
+## Spielstand (maul_save.gd): Countdown speichert jetzt, mitten im Level der Stand vom Levelbeginn.
+func _save_tests() -> void:
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	check(MaulSave.capture(game).is_empty(), "Vor der Filialwahl kein Spielstand")
+	game.start_game("aldi", 2, "group")
+	var me: MaulGame.Player = game.players[0]
+	me.gold = 5000
+	var cheap := str(MaulData.buyable("aldi")[1].id)
+	var built := 0
+	for a in _spots(game, game.map.zones[0].rect):
+		if built < 5 and game.submit({"type": "build", "tower": cheap, "cell": a}):
+			built += 1
+	me.account = 777
+	me.bank_level = 2
+	game.lives = 60
+	var gold := me.gold
+	game._start_level(1)
+	check(game.phase == MaulGame.Phase.WAVE, "Level 1 läuft")
+	me.gold += 999
+	var st: Dictionary = _wire(MaulSave.capture(game))
+	check(int(st.sync.level) == 0 and int(st.sync.players[0].gold) == gold, "Mitten im Level: Stand vom Levelbeginn")
+	game.queue_free()
+	await get_tree().process_frame
+	Session.load_state = st
+	var loaded: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(loaded)
+	await get_tree().process_frame
+	var p: MaulGame.Player = loaded.players[0]
+	check(loaded.phase == MaulGame.Phase.COUNTDOWN and loaded.countdown >= 10.0, "Geladen: Countdown vor Level 1")
+	check(loaded.shop_of() == "aldi" and loaded.difficulty == 2 and loaded.lives == 60, "Filiale, Schwierigkeit, Leben geladen")
+	check(loaded.towers.size() == built and p.gold == gold, "%d Tower und %d Gold geladen" % [loaded.towers.size(), p.gold])
+	check(p.account == 777 and p.bank_level == 2, "Konto und Bank-Upgrade geladen")
+	check(not loaded.hud.setup_visible(), "Keine Filialwahl nach dem Laden")
+	loaded.submit({"type": "start_now"})
+	for i in 10:
+		await get_tree().process_frame
+	check(loaded.phase == MaulGame.Phase.WAVE and loaded.level == 1, "Geladenes Spiel startet Level 1")
+	loaded.queue_free()
 	await get_tree().process_frame
 
 

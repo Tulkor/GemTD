@@ -1324,5 +1324,7 @@
 	"+2 % Zinsen, 5 s schneller abheben": "+2 % interest, withdraw 5 s faster",
 	"Stammkundin": "Regular customer",
 	"Bringt %d Gold alle %d s aus dem Laden, noch %s von %s Gold.": "Brings %d gold every %d s from the shop, %s of %s gold left.",
-	"Ein Altenheim wirbt eine Stammkundin an, die laufend Gold aus dem Laden holt.": "A Nursing Home hires a regular customer who keeps bringing gold from the shop."
+	"Ein Altenheim wirbt eine Stammkundin an, die laufend Gold aus dem Laden holt.": "A Nursing Home hires a regular customer who keeps bringing gold from the shop.",
+	"Mitten im Level wird der Stand vom Levelbeginn gespeichert.": "During a level, the state from the start of that level is saved.",
+	"Level %d/%d": "Level %d/%d"
 }

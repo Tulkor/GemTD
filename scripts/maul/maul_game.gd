@@ -72,6 +72,7 @@ var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
+var level_save := {}        ## Einzelspiel: Stand vom Beginn des laufenden Levels (maul_save.gd)
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -178,6 +179,12 @@ func _ready() -> void:
 	_refresh_paths()
 	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
+	var saved: Dictionary = Session.load_state
+	Session.load_state = {}
+	if coop_info.is_empty() and not saved.is_empty():
+		MaulSave.apply(self, saved)
+	elif coop_info.is_empty():
+		Session.save_id = ""
 	if not coop_info.is_empty():
 		sync = MaulSync.new()
 		sync.game = self
@@ -337,6 +344,8 @@ func _start_level(n: int) -> void:
 	if n > levels.size():
 		_finish(Phase.VICTORY)
 		return
+	if sync == null:
+		level_save = MaulSave.state(self)
 	level = n
 	var lv := level_def(n)
 	level_kind = str(lv.get("kind", "ground"))
@@ -556,6 +565,9 @@ func _end_level() -> void:
 
 func _finish(p: Phase) -> void:
 	phase = p
+	if sync == null and Session.save_id != "":
+		SaveGame.remove(Session.save_id)
+		Session.save_id = ""
 	Engine.time_scale = 1.0
 	build_id = ""
 	_record_profile(p == Phase.VICTORY)

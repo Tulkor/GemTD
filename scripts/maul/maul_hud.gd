@@ -46,6 +46,7 @@ var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var _save_button: Button
 var settings_panel: SettingsPanel
 var _debug: MaulDebug
 var _debug_button: Button
@@ -168,7 +169,12 @@ func _build_menu() -> void:
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
 	UiUtil.button("Einstellungen", box, func(): settings_panel.open())
 	if game.sync == null:
-		UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
+		var save := UiUtil.button("Speichern und verlassen", box, _save_and_leave)
+		save.tooltip_text = "Mitten im Level wird der Stand vom Levelbeginn gespeichert."
+		_save_button = save
+		UiUtil.button("Neu starten", box, func():
+			Session.save_id = ""
+			Session.goto(Session.MAUL))
 	UiUtil.button("Hauptmenü", box, func(): Session.goto(Session.MAIN_MENU))
 	_menu = panel
 	settings_panel = SettingsPanel.new(false, true)
@@ -181,6 +187,17 @@ func toggle_menu() -> void:
 		settings_panel.close()
 	else:
 		_menu.visible = not _menu.visible
+		if _save_button != null:
+			_save_button.text = tr("Speichern und verlassen")
+			_save_button.disabled = MaulSave.capture(game).is_empty()
+
+
+## Einzelspiel speichern (maul_save.gd) und zurück ins Hauptmenü.
+func _save_and_leave() -> void:
+	if MaulSave.save(game):
+		Session.goto(Session.MAIN_MENU)
+	else:
+		_save_button.text = tr("Speichern fehlgeschlagen")
 
 
 # --- Laden rechts -----------------------------------------------------------------

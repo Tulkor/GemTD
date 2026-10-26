@@ -115,3 +115,6 @@ Das Spieltempo bestimmt der Host.
 - Spielfeld im Art-déco-Stil mit Blockstadt rund um die Gebiete, dazu eine Minikarte.
 - Debug-Menü (im Koop nur der Host): Gold, Leben, XP ohne Speichern, Filiale wechseln (auch Profi), freies Bauen,
   Level-Sprung.
+- Spielstand (Einzelspiel): Menü → „Speichern und verlassen“, laden über „Spiel laden“ im Hub. Gespeichert wird immer
+  zwischen zwei Leveln, mitten im Level der Stand von dessen Beginn (`scripts/maul/maul_save.gd`). Koop-Partien lassen
+  sich noch nicht speichern.

@@ -543,7 +543,7 @@ func _load_save(data: Dictionary) -> void:
 	Session.game_kind = str(data.get("mode", "gemtd"))
 	Session.load_state = st
 	Session.save_id = str(data.get("id", ""))
-	Session.map_override = MapData.from_dict(st.get("map", {}))
+	Session.map_override = MapData.from_dict(st.map) if st.has("map") else null
 	Session.test_tower = ""
 	Session.return_scene = Session.MAIN_MENU
 	Session.goto(Session.game_scene())
