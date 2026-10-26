@@ -59,6 +59,7 @@ var speed_bonus := 0.0   ## von Tempo-Auren anderer Tower
 var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
 var speed_source := ""   ## Name des Towers, dessen Tempo-Aura gerade wirkt (fürs Infofenster)
 var damage_source := ""  ## Name des Towers, dessen Schadens-Aura gerade wirkt
+var xp_factor := 1.0     ## Kills zählen so viel für die Kill-Ränge (eeveTD: schwarzer Marmor = 2)
 ## Roguelike-Boni des Besitzers (rogue.gd), Zuschläge wie 0.2 = +20 %
 var rogue_damage := 0.0
 var rogue_speed := 0.0
@@ -179,7 +180,7 @@ func kill_bonus() -> float:
 	var kr: Dictionary = Database.balance.get("kill_rank", {})
 	if kr.is_empty():
 		return 0.0
-	var ranks := floori(kills / float(kr.get("kills_per_rank", 10)))
+	var ranks := floori(kills * xp_factor / float(kr.get("kills_per_rank", 10)))
 	return minf(ranks * float(kr.get("bonus_per_rank", 0.1)), float(kr.get("max_bonus", 1.2)))
 
 

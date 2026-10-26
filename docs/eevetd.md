@@ -86,6 +86,26 @@ wird pro Spiel neu ausgewürfelt (die nächsten Level stehen links im Bild):
 Ein durchgelassener Gegner kostet Leben. Ein Boss kostet Level + seine restlichen Leben in Prozent
 (Level 20 mit 11 % Rest: 31 Leben). Wer Level 57 übersteht, hat gewonnen.
 
+## Bonusfelder
+
+Auf jedem Feld liegen je 15 Bonusfelder (WTF-Feld 18) jeder Sorte, so groß wie ein Tower. Der Tower muss genau
+darauf stehen: **Lava** +40 % Schaden, **Eis** +35 % Angriffstempo, **schwarzer Marmor** doppelte Erfahrung
+(Kills zählen doppelt für die Kill-Ränge). Felsen liegen nie auf Bonusfeldern, Fallen bekommen keinen Bonus.
+
+## Wertung
+
+Wie im Original (Werte aus der Kartendatei), alles mal Punktefaktor der Schwierigkeit (0,65 bis 4,5):
+
+- **Punkte je Kill:** jeder Gegner hat einen festen Punktwert (`points` in `data/enemies/eeve_*.json`).
+- **Challenge-Punkte:** Anteil des Schadens an der Challenge mal 3000 (Lehmgolem), 5000 (Fleisch), 7000 (Fels),
+  9000 (Stahl) oder 20000 (Massen-, Luft-Challenge, Höllengolem; bei der Masse geteilt auf die 40 Gegner).
+  Nach jeder Challenge steht in der Seitenleiste, wie viel Prozent Schaden das gebracht hat.
+- **Am Ende, nur nach einem Sieg:** 100 je übrigem Leben, 0,5 je übrigem Gold (alle Spieler) und der Feldbonus
+  (Felsenfeld 3000, WTF-Feld 5000).
+
+Den Zwischenstand zeigt die Seitenleiste („Wertung“), die Aufschlüsselung der Endbildschirm. Im Koop zählt ein
+gemeinsamer Stand. Der Zeitbonus des Speed-Modus fehlt, solange es den Modus nicht gibt.
+
 ## Koop
 
 Bis 4 Spieler. Alle bauen auf einem Feld und teilen die Leben. Jeder hat eigenes Gold, Food, Holz und eigene
@@ -94,6 +114,6 @@ Alternativ spielt in der Lobby jeder sein eigenes Feld (verschiedene Feldnummern
 
 ## Sonstiges
 
-- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. Nacht gibt es bisher nur über
+- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. eeveTD spielt nachts, Tag über
   das Debug-Menü („Tageszeit“).
 - Debug-Menü: Ressourcen, alle Elemente auf 8, jeden Tower und jede Falle gratis setzen, Level-Sprung, Unsterblich.

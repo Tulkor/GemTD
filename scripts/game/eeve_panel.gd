@@ -7,6 +7,7 @@ var game  # eeve_game.gd
 var _lumber: Label
 var _food: Label
 var _points: Label
+var _score: Label
 var _rows := {}   ## Element -> {level: Label, pips: HBoxContainer, plus: Button}
 var _next: Button
 var _traps: VBoxContainer
@@ -27,6 +28,7 @@ func _ready() -> void:
 	_lumber = _value("Holz", res, UiTheme.HAVE)
 	_food = _value("Food", res, UiTheme.TEXT)
 	_food.get_parent().tooltip_text = tr("Jede Barrikade und jeder Tower braucht 1 Food. Pro Level gibt es abwechselnd 1 und 2 Food dazu.")
+	_score = _value("Wertung", res, UiTheme.COIN)
 
 	var head := HBoxContainer.new()
 	v.add_child(head)
@@ -103,6 +105,9 @@ func refresh() -> void:
 	if _lumber == null:
 		return
 	_lumber.text = str(game.lumber)
+	_score.text = str(game.score_total())
+	_score.get_parent().tooltip_text = tr("Punkte je Kill: %d\nChallenges: %d\nAm Ende kommen übrige Leben, übriges Gold und der Feldbonus dazu, alles × %s.") % [
+		roundi(game.eeve_score.creeps), roundi(game.eeve_score.challenges), str(game.score_factor())]
 	_food.text = "%d / %d" % [game.food_used(), game.food_cap]
 	_food.add_theme_color_override("font_color", UiTheme.MISSING if game.food_used() >= game.food_cap else UiTheme.TEXT)
 	_points.text = tr("%d Punkte frei") % game.points if game.points != 1 else tr("1 Punkt frei")
