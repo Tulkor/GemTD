@@ -5,14 +5,15 @@
 			"title": "TD Hub",
 			"entries": [
 				{"name": "Idee, Spieldesign, eigene Sounds", "by": "Lukas", "license": ""},
+				{"name": "Quellcode", "by": "TD Hub", "license": "GPL-3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.html"},
 				{"name": "Engine", "by": "Godot Engine 4.3", "license": "MIT", "url": "https://godotengine.org/license"}
 			]
 		},
 		{
 			"title": "Vorbilder",
-			"note": "Die drei Spiele sind Nachbauten von Warcraft-III-Karten. Dank an ihre Autoren.",
+			"note": "Die drei Spiele sind Fan-Nachbauten von Warcraft-III-Karten. Die Originalkarten gehören ihren Autoren. TD Hub steht in keiner Verbindung zu Blizzard Entertainment.",
 			"entries": [
-				{"name": "GemTD", "by": "Warcraft-III-Karte, dazu Ideen aus den Versionen für StarCraft II und Dota 2", "license": ""},
+				{"name": "GemTD", "by": "Warcraft-III-Karte „Gem TD“ von Bryvx, dazu Ideen aus den Versionen für StarCraft II und Dota 2", "license": ""},
 				{"name": "eeveTD", "by": "Warcraft-III-Karte „eeve! TD“ v1.01 von geX", "license": ""},
 				{"name": "Shopping Maul", "by": "Warcraft-III-Karte „Shopping Maul“ 5.44f", "license": ""}
 			]

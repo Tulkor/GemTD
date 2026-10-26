@@ -99,6 +99,10 @@ docs/          Regeln der drei Modi, Tower-Werte, WC3-Referenz
 
 ## Credits und Lizenzen
 
+Der Quellcode von TD Hub steht unter der **GNU General Public License v3.0** ([LICENSE](LICENSE)). Das gilt nur für den
+eigenen Code und die eigenen Daten; Modelle, Effekte, Sounds, Schriften und Texturen behalten ihre eigenen Lizenzen (unten).
+Im Spiel zeigt der Hub alle Nennungen unter „Mitwirkende“ (`data/credits.json`).
+
 Ins Repo kommt nur, was öffentlich liegen und mit dem Spiel verkauft werden darf. Fast alles ist CC0:
 
 - **Modelle:** Crystal Pack (iPoly3D), Rocks, Stylized Nature MegaKit, animierte Monster u. a. von Quaternius (CC0).
