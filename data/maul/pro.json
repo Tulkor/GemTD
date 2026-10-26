@@ -21,6 +21,27 @@
 		"rebate_step": 0.05,
 		"_formel": "Stufe n kostet n · ⌊√n⌋ · Grundpreis / Spielerzahl"
 	},
+	"bank": {
+		"_info": "Konto aus dem Original (-da/-wa/-ad): Einzahlen, Zinsen am Levelende, Abheben mit Wartezeit. Upgrade im Hauptgebäude (R006).",
+		"rate": 0.04,
+		"rate_step": 0.02,
+		"cap": 5000,
+		"withdraw_delay": 25,
+		"delay_step": 5,
+		"levels": 3,
+		"cost": 75,
+		"cost_step": 75,
+		"owner_share": 0.05,
+		"owner_cap_sum": 15000,
+		"owner_cap": 750
+	},
+	"stammkundin": {
+		"_info": "Tante Emma: das Altenheim (n008) wirbt eine Stammkundin an, die aus dem Laden Gold holt (Original: Arbeiter, 10 Gold je Gang, Laden als Goldmine mit 15.000). Dauer eines Gangs geschätzt.",
+		"tower": "n008",
+		"gold_per_trip": 10,
+		"trip": 10.0,
+		"mine": 15000
+	},
 	"ultimate_level": 20,
 	"food_small": 6,
 	"aok": {

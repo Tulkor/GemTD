@@ -94,6 +94,6 @@ Alternativ spielt in der Lobby jeder sein eigenes Feld (verschiedene Feldnummern
 
 ## Sonstiges
 
-- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. Nacht gibt es bisher nur über
-  das Debug-Menü („Tageszeit“).
+- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. eeveTD spielt nachts
+  (Glühwürmchen, Nebel über Friedhof und Bergwerk); Tag gibt es über das Debug-Menü („Tageszeit“).
 - Debug-Menü: Ressourcen, alle Elemente auf 8, jeden Tower und jede Falle gratis setzen, Level-Sprung, Unsterblich.

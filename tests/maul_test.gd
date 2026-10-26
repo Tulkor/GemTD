@@ -92,6 +92,7 @@ func _ready() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await _pro_tests()
+	await _bank_tests()
 	await _debug_tests()
 	await _coop_tests()
 	print("FERTIG mit %d Fehlern" % failures)
@@ -306,6 +307,57 @@ func _coop_tests() -> void:
 	host.queue_free()
 	client.queue_free()
 	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Konto, Deutsche Bank und Stammkundin (maul_bank.gd).
+func _bank_tests() -> void:
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.start_game("tante_emma", 1, "group")
+	var me: MaulGame.Player = game.players[0]
+	me.gold = 1000
+	check(game.submit({"type": "deposit"}) and me.account == 1000 and me.gold == 0, "Einzahlen: 1000 Gold aufs Konto")
+	MaulBank.end_level(game)
+	check(me.account == 1040, "4 %% Zinsen am Levelende: %d" % me.account)
+	check(not game.submit({"type": "bank_upgrade"}), "Bank-Upgrade ohne Gold geht nicht")
+	me.gold = 100
+	check(game.submit({"type": "bank_upgrade"}) and me.bank_level == 1 and me.gold == 25, "Bank-Upgrade 1 kostet 75")
+	check(game.submit({"type": "withdraw"}) and is_equal_approx(me.withdraw_in, 20.0), "Abheben dauert nach Upgrade 20 s")
+	check(not game.submit({"type": "withdraw"}), "Zweite Überweisung geht nicht")
+	MaulBank.process(game, 19.0)
+	check(me.account == 1040 and me.gold == 25, "Nach 19 s noch nicht ausgezahlt")
+	MaulBank.process(game, 2.0)
+	check(me.account == 0 and me.gold == 1065, "Überweisung ausgezahlt: %d Gold" % me.gold)
+	me.account = 10000
+	MaulBank.end_level(game)
+	check(me.account == 10300, "Zinsen höchstens auf 5000 Gold (6 %%): %d" % me.account)
+	me.account = 0
+	check(game.submit({"type": "auto_deposit"}) and me.auto_deposit, "Auto-Einzahlen an")
+	MaulBank.end_level(game)
+	check(me.gold == 0 and me.account == 1065 + floori(1065 * 0.06), "Auto-Einzahlen legt das Gold aufs Konto: %d" % me.account)
+	# Stammkundin: Altenheim bauen, dann alle 10 s 10 Gold
+	me.gold = 500
+	var home := str(MaulBank.emma_cfg().tower)
+	var spot: Vector2i = _spots(game, game.map.zones[0].rect).filter(func(c): return game.build_problem(home, c, 0) == "")[0]
+	check(game.submit({"type": "build", "tower": home, "cell": spot}), "Altenheim gebaut")
+	var gold := me.gold
+	MaulBank.process(game, 25.0)
+	check(me.gold == gold + 20 and me.emma_mined == 20, "Stammkundin bringt 2 × 10 Gold: %d" % (me.gold - gold))
+	# Deutsche Bank: kein Konto, 5 % aller Konten, höchstens 750
+	var other := MaulGame.Player.new()
+	other.shop = "aldi"
+	other.account = 4000
+	game.players.append(other)
+	me.shop = MaulBank.OWNER
+	me.gold = 100
+	check(not game.submit({"type": "deposit"}), "Deutsche Bank kann nicht einzahlen")
+	MaulBank.end_level(game)
+	check(me.account == 0 and me.gold == 100 + 1128 + 200, "Bank zahlt ihr Konto aus und bekommt 5 %% (200): %d" % me.gold)
+	other.account = 20000
+	check(MaulBank.owner_income(game) == 750, "Ab 15.000 auf allen Konten fest 750 Gold")
+	game.queue_free()
 	await get_tree().process_frame
 
 

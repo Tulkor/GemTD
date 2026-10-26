@@ -20,7 +20,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EN = ROOT / "data" / "i18n" / "en.json"
 PATTERNS = [
-    re.compile(r'\btr\(\s*"((?:[^"\\]|\\.)*)"'),
+    re.compile(r'\btr_?\(\s*"((?:[^"\\]|\\.)*)"'),
     re.compile(r'\b(?:text|tooltip_text|placeholder_text|title)\s*=\s*"((?:[^"\\]|\\.)*)"'),
     re.compile(r'\.(?:set_text|add_item|add_tab|set_tooltip_text)\(\s*"((?:[^"\\]|\\.)*)"'),
     re.compile(r'\b(?:UiUtil|UiTheme)\.\w+\([^"()]*"((?:[^"\\]|\\.)*)"'),

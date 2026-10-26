@@ -69,12 +69,24 @@ dazu Kopfgeld für jeden eigenen Kill.
 | Beate Uhse Sexshop | normal / hoch / niedrig | schnell gebaut, Flächenzauber; Rabatt statt Schadensbonus |
 | CinemaxX | mäßig / mäßig / sehr hoch | drei Tower gegen Luft |
 
-Das Gold-Einkommen der Deutschen Bank und die Stammkundin des Tante-Emma-Ladens aus dem Original fehlen noch.
+### Konto, Deutsche Bank und Stammkundin
+
+Im Hauptgebäude (Reiter „Zentrale“) hat jeder Spieler ein **Konto** wie im Original (dort die Chatbefehle `-da`, `-wa`, `-ad`):
+Einzahlen, am Levelende 4 % Zinsen (höchstens auf 5.000 Gold), Abheben dauert 25 s. Drei **Bank-Upgrades**
+(75/150/225 Gold) bringen je +2 % Zinsen und 5 s schnelleres Abheben. „Am Levelende alles einzahlen“ legt das Gold
+vor den Zinsen aufs Konto.
+
+- **Deutsche Bank:** kein eigenes Konto, bekommt am Levelende 5 % der Summe aller Konten (fest 750 Gold ab 15.000).
+- **Tante Emma Laden:** das Altenheim (50 Gold) wirbt eine Stammkundin an, die alle 10 s 10 Gold aus dem Laden holt,
+  bis 15.000 Gold geholt sind. Im Original läuft sie zwischen Laden und Altenheim hin und her, die Dauer eines Gangs
+  ist geschätzt (`data/maul/pro.json`, `stammkundin.trip`).
+
+Logik in `scripts/maul/maul_bank.gd`, Werte unter `bank` und `stammkundin` in `data/maul/pro.json`.
 
 ## Erfahrung und Profi-Filialen
 
 Nach jedem Level gibt es Erfahrungspunkte (mehr bei höherer Schwierigkeit und mehr Spielern). Sie werden auf dem
-Rechner gespeichert (`user://maul.cfg`) und bleiben zwischen den Partien erhalten, auch solo.
+Rechner im Spielerprofil gespeichert (`user://profile/profile.json`, `modes.maul.progress`) und bleiben zwischen den Partien erhalten, auch solo.
 
 - Ab **25 XP** sind die Profi-Filialen wählbar.
 - Ab 10 XP und weiteren Schwellen (bis 800 XP) werden **XPert-Tower** frei, die jede Filiale bauen kann:
