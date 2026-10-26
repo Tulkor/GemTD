@@ -373,7 +373,7 @@ def build_towers(rs, out):
             xpert = entry
         else:
             shops.append(entry)
-    # echte Marken und Figuren nur leicht abgewandelt zeigen (maul_namen.py)
+    # echte Marken nur leicht abgewandelt zeigen (maul_namen.py)
     shops, xpert = maul_namen.anwenden(shops), maul_namen.anwenden(xpert)
     with open(out, "w", encoding="utf-8") as f:
         json.dump({"source": "Shopping Maul 5.44f, maulwork/maul_towers.json + objects.json", "shops": shops,

@@ -841,7 +841,7 @@
 				},
 				{
 					"id": "o01O",
-					"name": "Tim Tayler And Al Boreland",
+					"name": "Tim Taylor And Al Borland",
 					"cost": 740,
 					"value": 740,
 					"upgrade_from": null,
@@ -2415,7 +2415,7 @@
 				},
 				{
 					"id": "h00J",
-					"name": "John McClean",
+					"name": "John McClane",
 					"cost": 400,
 					"value": 400,
 					"upgrade_from": null,
@@ -2443,7 +2443,7 @@
 				},
 				{
 					"id": "h00I",
-					"name": "Robocob",
+					"name": "Robocop",
 					"cost": 710,
 					"value": 710,
 					"upgrade_from": null,
@@ -3244,11 +3244,11 @@
 			"bonus": "damage",
 			"color": "#b38cff",
 			"text": "Reichweite: Mäßig Schaden: Mäßig Geschwindigkeit: Sehr hoch  Besonderheiten: Drei Tower gegen Luftangriffe.",
-			"rules": "Filmhelden; drei Lufttower (Jacky Chen, Terminater->Terminater II). Kurze bis mittlere Reichweite, sehr schnelle Angriffe. Manager: Aufdecken.",
+			"rules": "Filmhelden; drei Lufttower (Jacky Chan, Terminator->Terminator II). Kurze bis mittlere Reichweite, sehr schnelle Angriffe. Manager: Aufdecken.",
 			"towers": [
 				{
 					"id": "o01S",
-					"name": "Shrok",
+					"name": "Shrek",
 					"cost": 17,
 					"value": 17,
 					"upgrade_from": null,
@@ -3268,7 +3268,7 @@
 				},
 				{
 					"id": "o01T",
-					"name": "Private Brian",
+					"name": "Private Ryan",
 					"cost": 34,
 					"value": 34,
 					"upgrade_from": null,
@@ -3294,7 +3294,7 @@
 				},
 				{
 					"id": "o01U",
-					"name": "Jacky Chen",
+					"name": "Jacky Chan",
 					"cost": 130,
 					"value": 130,
 					"upgrade_from": null,
@@ -3314,7 +3314,7 @@
 				},
 				{
 					"id": "o01V",
-					"name": "Judge Dread",
+					"name": "Judge Dredd",
 					"cost": 225,
 					"value": 225,
 					"upgrade_from": null,
@@ -3340,7 +3340,7 @@
 				},
 				{
 					"id": "o01W",
-					"name": "Terminater",
+					"name": "Terminator",
 					"cost": 360,
 					"value": 360,
 					"upgrade_from": null,
@@ -3368,7 +3368,7 @@
 				},
 				{
 					"id": "o01X",
-					"name": "Darth Wader",
+					"name": "Darth Vader",
 					"cost": 420,
 					"value": 420,
 					"upgrade_from": null,
@@ -3388,7 +3388,7 @@
 				},
 				{
 					"id": "o01Y",
-					"name": "Hellbaby",
+					"name": "Hellboy",
 					"cost": 570,
 					"value": 570,
 					"upgrade_from": null,
@@ -3408,7 +3408,7 @@
 				},
 				{
 					"id": "o02K",
-					"name": "Saurom",
+					"name": "Sauron",
 					"cost": 880,
 					"value": 880,
 					"upgrade_from": null,
@@ -3434,7 +3434,7 @@
 				},
 				{
 					"id": "o01Z",
-					"name": "The Godfatter",
+					"name": "The Godfather",
 					"cost": 1280,
 					"value": 1280,
 					"upgrade_from": null,
@@ -3454,7 +3454,7 @@
 				},
 				{
 					"id": "o01I",
-					"name": "Wolverin",
+					"name": "Wolverine",
 					"cost": 2500,
 					"value": 2500,
 					"upgrade_from": null,
@@ -3506,7 +3506,7 @@
 				},
 				{
 					"id": "o02R",
-					"name": "Terminater II",
+					"name": "Terminator II",
 					"cost": 1640,
 					"value": 2000,
 					"upgrade_from": "o01W",
@@ -3526,8 +3526,8 @@
 				}
 			],
 			"todo": [
-				"Hellbaby: Life (ACbh)",
-				"Hellbaby: Bond Of Death (Ambt)"
+				"Hellboy: Life (ACbh)",
+				"Hellboy: Bond Of Death (Ambt)"
 			]
 		},
 		{
@@ -4461,7 +4461,7 @@
 				},
 				{
 					"id": "h032",
-					"name": "President Busch",
+					"name": "President Bush",
 					"cost": 6,
 					"value": 12,
 					"upgrade_from": "h02W",
@@ -4527,7 +4527,7 @@
 				},
 				{
 					"id": "h035",
-					"name": "Tree Herder",
+					"name": "Ent",
 					"cost": 36,
 					"value": 84,
 					"upgrade_from": "h034",
@@ -4791,8 +4791,8 @@
 				"Camomile: Rache des Gärtners I AA (Afak)",
 				"Camomile: Rache des Gärtners I (Afak)",
 				"Irrigation Plant II: Wässern II (Arpm)",
-				"President Busch: Rache des Gärtners II AA (Afak)",
-				"President Busch: Rache des Gärtners II (Afak)",
+				"President Bush: Rache des Gärtners II AA (Afak)",
+				"President Bush: Rache des Gärtners II (Afak)",
 				"Irrigation Plant III: Wässern III (Arpm)",
 				"Underwater Cactus: Rache des Gärtners III AA (Afak)",
 				"Underwater Cactus: Rache des Gärtners III (Afak)",
@@ -4872,7 +4872,7 @@
 				},
 				{
 					"id": "H038",
-					"name": "Drug Taker (Ben Jonson)",
+					"name": "Drug Taker (Ben Johnson)",
 					"cost": 5,
 					"value": 11,
 					"upgrade_from": "h039",
@@ -4892,7 +4892,7 @@
 				},
 				{
 					"id": "H03A",
-					"name": "Drug Taker (Tyler Hamiltan)",
+					"name": "Drug Taker (Tyler Hamilton)",
 					"cost": 125,
 					"value": 131,
 					"upgrade_from": "h039",
@@ -4912,7 +4912,7 @@
 				},
 				{
 					"id": "H03B",
-					"name": "Drug Taker (Floyd Landes)",
+					"name": "Drug Taker (Floud Landis)",
 					"cost": 400,
 					"value": 406,
 					"upgrade_from": "h039",
@@ -4932,7 +4932,7 @@
 				},
 				{
 					"id": "H03C",
-					"name": "Drug Taker (Jan Ulrik)",
+					"name": "Drug Taker (Jan Ullrich)",
 					"cost": 1200,
 					"value": 1206,
 					"upgrade_from": "h039",

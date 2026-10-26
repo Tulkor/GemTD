@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Echte Marken, Filmfiguren und Personen in Shopping Maul leicht umbenennen (Release, Lukas 2026-10-26).
+"""Echte Marken in Shopping Maul leicht umbenennen (Release, Lukas 2026-10-26).
 
 Die Originalkarte nennt Filialen und Tower nach echten Marken (Aldi, Mc Donalds, Porsche …). Im Spiel
 stehen stattdessen erkennbare Abwandlungen (Oldi, Mc Donuts, Borsche …). Interne IDs bleiben gleich.
@@ -45,6 +45,7 @@ MARKEN = [
     ("Pippi Longstocking", "Pippa Kneesock"),
 ]
 
+# Filmfiguren und echte Personen: Lukas will sie vorerst behalten (2026-10-26), deshalb nicht in PAARE.
 FIGUREN = [
     ("Shrek", "Shrok"),
     ("Private Ryan", "Private Brian"),
@@ -66,10 +67,10 @@ FIGUREN = [
     ("Jan Ullrich", "Jan Ulrik"),
 ]
 
-# Ganze Namen, die als Wort zu allgemein sind ("Ent" steckt in vielen Wörtern)
-GANZE_NAMEN = {"Ent": "Tree Herder"}
+# Ganze Namen, die als Wort zu allgemein sind (z. B. {"Ent": "Tree Herder"}, falls FIGUREN dazukommen)
+GANZE_NAMEN = {}
 
-PAARE = MARKEN + FIGUREN
+PAARE = MARKEN
 _MUSTER = [(re.compile(r"(?<![\w&])" + re.escape(alt) + r"(?![\w&])"), neu) for alt, neu in PAARE]
 
 
