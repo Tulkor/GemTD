@@ -12,7 +12,7 @@ extends Node3D
 ##
 ## Etappe 2 (pro.json): Hauptgebäude mit Bonus (+5 % Schaden je Stufe) oder Rabatt (5 % des
 ## Kaufpreises zurück), XP über Spiele hinweg (maul_xp.gd) mit XPert-Towern, die Profi-Filialen
-## mit Items (Post, IKEA, Fitness, Waffenladen), Wasser (Gärtnerei), Zombies und Drohnen (maul_unit.gd).
+## mit Items (Post, IKEO, Fitness, Waffenladen), Wasser (Gärtnerei), Zombies und Drohnen (maul_unit.gd).
 
 enum Phase { SETUP, COUNTDOWN, WAVE, GAME_OVER, VICTORY }
 
@@ -32,8 +32,8 @@ class Player:
 	var bonus := 0            ## Stufe Bonus-Upgrade bzw. Rabatt im Hauptgebäude (0–5)
 	var xp := 10              ## Erfahrung in Zehnteln (10 = 1,0 XP)
 	var xp_pot := 0.0
-	var research := {}        ## TUI: Forschung → Stufe
-	var aok_lives := 0        ## AOK: in diesem Level zurückgeholte Leben
+	var research := {}        ## TOI: Forschung → Stufe
+	var aok_lives := 0        ## AOX: in diesem Level zurückgeholte Leben
 	var away := false
 
 var rules: Dictionary
@@ -525,7 +525,7 @@ func _end_level() -> void:
 		if i == 0:
 			share += floori(income_pot * float(inc.red_share) / m)
 		players[i].gold += share
-	# Obi: jede Runde −1 % Towerwert
+	# Obo: jede Runde −1 % Towerwert
 	for t in towers.values():
 		if shop_of(t.owner_player) == "obi":
 			t.value = floori(t.value * 0.99)
@@ -748,7 +748,7 @@ func on_enemy_killed(e) -> void:
 	players[p].gold += int(e.bounty)
 	players[p].kills += 1
 	players[p].level_kills += 1
-	# AOK: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
+	# AOX: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
 	var aok: Dictionary = MaulData.pro().aok
 	if players[p].shop == "aok" and lives < max_lives and randf() < float(aok.life_chance):
 		var room: int = int(aok.life_max_per_level) - players[p].aok_lives
@@ -970,7 +970,7 @@ static func tower_slot(def: Dictionary) -> String:
 	return ""
 
 
-## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOK,
+## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOX,
 ## höchstens ein XP- und ein Ultimate-Tower. ignore: Tower, der gerade aufgewertet wird.
 func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> String:
 	if debug_free:
@@ -985,7 +985,7 @@ func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> S
 					return tr("Erst ab Level %d") % (int(MaulData.pro().get("ultimate_level", 20)) + 1)
 			"R00U":
 				if shop_of(p) == "aok":
-					return tr("Nicht mit der AOK")
+					return tr("Nicht mit der AOX")
 	var slot := tower_slot(def)
 	if slot != "" and ignore == null:
 		for t in towers.values():
@@ -1328,7 +1328,7 @@ func _buy_item(p: int, t: MaulTower, id: String) -> bool:
 	return true
 
 
-## IKEA: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
+## IKEO: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
 func _combine(t: MaulTower) -> void:
 	var again := true
 	while again:
@@ -1406,7 +1406,7 @@ func sell_value(t: MaulTower) -> int:
 
 # --- Profi-Filialen: Schaden, Wasser, Einheiten, Levelende -------------------------------
 
-## Faktor auf den Schaden aller Tower von Spieler p: Bonus-Upgrade +5 % je Stufe, AOK mit vollen
+## Faktor auf den Schaden aller Tower von Spieler p: Bonus-Upgrade +5 % je Stufe, AOX mit vollen
 ## Leben +33 %, First/Second Aid +40/+50 % (nicht stapelbar).
 func damage_factor_for(p: int) -> float:
 	if p < 0 or p >= players.size():
@@ -1431,7 +1431,7 @@ func damage_factor(t) -> float:
 	return damage_factor_for(t.owner_player)
 
 
-## Zusätzlicher Schaden pro Treffer: TUI-Forschung (Grundschaden, Profischaden für die Endstufen).
+## Zusätzlicher Schaden pro Treffer: TOI-Forschung (Grundschaden, Profischaden für die Endstufen).
 func flat_bonus_for(t) -> float:
 	var pl: Player = players[t.owner_player] if t.owner_player < players.size() else null
 	if pl == null or pl.shop != "tui" or str(t.def.get("shop", "")) != "tui":
@@ -1532,7 +1532,7 @@ func _fitness_upkeep() -> void:
 			_tell(t.owner_player, tr("Kalter Entzug: %s setzt ein Level aus") % t.label())
 
 
-## AOK-Bonus und XP am Levelende.
+## AOX-Bonus und XP am Levelende.
 func _end_level_pro(n: int) -> void:
 	var aok: Dictionary = MaulData.pro().aok
 	for p in players:

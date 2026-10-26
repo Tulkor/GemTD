@@ -7,7 +7,7 @@ extends Tower
 ## höher je teurer; ohne Modell eine Neon-Säule.
 ##
 ## Profi-Filialen (Etappe 2, Daten in pro.json):
-##   Post/IKEA: items = eingelegte Waffen (Slots je Tower), jede feuert mit eigener Abklingzeit.
+##   Post/IKEO: items = eingelegte Waffen (Slots je Tower), jede feuert mit eigener Abklingzeit.
 ##   Fitness:   flat = gesammelte Stärke und Doping-Schaden, side = Nebenwirkungsstufen, paused = Kalter Entzug.
 ##   Gärtnerei: water = Füllstand; Pflanzen greifen nur aktiv (ab 90 %, aus unter 75 %) und mit Wasser an.
 ##   Bestatter: corpses = gefressene Leichen der Contained Darkness, unleashed_until = Zeit als Unleashed Darkness.
@@ -15,7 +15,7 @@ extends Tower
 const SPELLS := ["nova_spell", "chain_spell", "wave_spell"]
 
 var value := 0             ## Gold, das im Tower steckt (Kauf und Upgrades); Verkauf bringt 75 %
-var items: Array = []      ## eingelegte Items (Post, IKEA)
+var items: Array = []      ## eingelegte Items (Post, IKEO)
 var flat := 0.0            ## zusätzlicher Schaden pro Treffer (Fitness: Stärke und Doping)
 var side := 0              ## Nebenwirkungsstufen (Fitness)
 var paused := false        ## Fitness: Anabolika nicht bezahlt, greift dieses Level nicht an
@@ -146,7 +146,7 @@ func _process(delta: float) -> void:
 		_spell_cd[i] = maxf(left, -delta)
 
 
-## Eingelegte Items (Post, IKEA): jedes ist eine eigene Waffe mit Schaden, Abklingzeit und Reichweite.
+## Eingelegte Items (Post, IKEO): jedes ist eine eigene Waffe mit Schaden, Abklingzeit und Reichweite.
 func _fire_items(delta: float) -> void:
 	for i in items.size():
 		var it := MaulData.item(str(items[i]))

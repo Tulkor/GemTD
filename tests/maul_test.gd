@@ -184,7 +184,7 @@ func _pro_tests() -> void:
 	check(t.flat == 25.0, "Amphetamin: +25 Schaden")
 	game._take_drug(t, MaulData.item("I01T"))
 	check(t.side == 10 and is_equal_approx(t.side_factor(), 0.5), "Steroide: 10 Stufen Nebenwirkungen")
-	# IKEA-Combo
+	# IKEO-Combo
 	var combo: Array = MaulData.pro().combos[0]
 	t.items = [combo[0], combo[1]]
 	game._combine(t)
@@ -285,7 +285,7 @@ func _coop_tests() -> void:
 	check(client.phase == MaulGame.Phase.COUNTDOWN, "Mitspieler sieht den Countdown")
 	client.start_game("aldi", 0, "group")
 	pump.call()
-	check(host.shop_of(1) == "aldi" and client.shop_of() == "aldi", "Mitspieler hat Aldi eröffnet")
+	check(host.shop_of(1) == "aldi" and client.shop_of() == "aldi", "Mitspieler hat Oldi eröffnet")
 	check(not client.hud.setup_visible(), "Filialwahl beim Mitspieler zu")
 	var zone: Rect2i = host.map.zones[1].rect
 	var cheap := str(MaulData.buyable("aldi")[0].id)

@@ -139,6 +139,7 @@ do_test() {
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
+    marken)  run_check marken python3 tools/wc3/maul_namen.py --pruefe ;;
     werkzeuge) run_check werkzeuge check_tools ;;
     balanceeditor) run_check balanceeditor node tools/balance_editor/pruefen.mjs ;;
     htmleditor) run_check htmleditor node tools/html_editor/pruefen.mjs ;;
@@ -160,7 +161,7 @@ tools/godot_import.sh "$LOG_DIR/import.log"
 
 # Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
 pick_changed() {
-  local base files f n t=" tabelle ui maps werkzeuge skripte "
+  local base files f n t=" tabelle ui maps marken werkzeuge skripte "
   base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   for f in $files; do
@@ -199,9 +200,9 @@ if [ "$MODE" = geaendert ]; then
 fi
 case $MODE in
   # shellcheck disable=SC2046
-  schnell) set -- tabelle ui maps werkzeuge $(all_tests ohne_fest) ;;
+  schnell) set -- tabelle ui maps marken werkzeuge $(all_tests ohne_fest) ;;
   # shellcheck disable=SC2046
-  alle)    set -- tabelle ui maps werkzeuge $(all_tests) ;;
+  alle)    set -- tabelle ui maps marken werkzeuge $(all_tests) ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=(); declare -A WEIGHT
