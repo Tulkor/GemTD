@@ -75,6 +75,8 @@ var total_damage := 0.0
 
 var _visual: Node3D
 var _gem: Node3D
+var base_tint := Color(0, 0, 0, 0)  ## Sockel in dieser Farbe (eeveTD: Bonusfeld darunter), Alpha 0 = normal
+var _base_mat: StandardMaterial3D
 var _new_ring: MeshInstance3D
 var _select_ring: MeshInstance3D
 var _range_ring: MeshInstance3D
@@ -651,7 +653,9 @@ func _build_visual() -> void:
 	var base_h := BASE_HEIGHT_SPECIAL if category == "special" else BASE_HEIGHT
 	var base := MeshInstance3D.new()
 	base.mesh = rounded_slab(foot * 0.96, base_h, 0.1)
-	base.material_override = _glass_material()
+	_base_mat = _glass_material()
+	base.material_override = _base_mat
+	_apply_base_tint()
 	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_visual.add_child(base)
 	ModelLoader.add_outline(base)
@@ -928,6 +932,32 @@ func _texture_look(n: Node) -> void:
 		stone.roughness = 0.95
 		stone.metallic_specular = 0.12
 		ModelLoader._apply_material(n, stone)
+
+
+## Sockel einfärben (Alpha 0 = wieder normal); bleibt beim Aufwerten erhalten.
+func set_base_tint(c: Color) -> void:
+	if c == base_tint:
+		return
+	base_tint = c
+	if _base_mat != null:
+		var fresh := _glass_material()
+		_base_mat.albedo_color = fresh.albedo_color
+		_base_mat.roughness = fresh.roughness
+		_base_mat.emission_enabled = fresh.emission_enabled
+		_base_mat.emission = fresh.emission
+		_base_mat.emission_energy_multiplier = fresh.emission_energy_multiplier
+	_apply_base_tint()
+
+
+func _apply_base_tint() -> void:
+	if _base_mat == null or base_tint.a <= 0.0:
+		return
+	# poliert und leicht leuchtend in der Farbe, damit auch dunkler Marmor vom Stein absticht
+	_base_mat.albedo_color = Color(base_tint, _base_mat.albedo_color.a)
+	_base_mat.roughness = 0.3
+	_base_mat.emission_enabled = true
+	_base_mat.emission = base_tint
+	_base_mat.emission_energy_multiplier = 0.35
 
 
 func _glass_material() -> StandardMaterial3D:

@@ -771,6 +771,7 @@ func _update_auras() -> void:
 	for t in all_towers():
 		var tile := bonus_tile_of(t)
 		t.xp_factor = 1.0 + float(tile.get("xp", 0.0))
+		t.set_base_tint(Color(str(tile.color)) if not tile.is_empty() else Color(0, 0, 0, 0))
 		if tile.is_empty():
 			continue
 		var name: String = tr("%s-Feld") % tr(str(tile.name))
