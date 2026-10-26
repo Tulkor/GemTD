@@ -14,10 +14,10 @@ Alles kommt aus `scripts/ui/ui_theme.gd`, keine eigenen Farben oder Schriften er
 - Ausnahme eeveTD: Stil „Druidenhain“ (Lukas, 2026-10-19). `eeve_game.gd` ruft `UiTheme.use_skin(UiTheme.DRUID)`, danach liefern dieselben `UiTheme`-Namen Moosgrau, Messing, Triquetren, Uncial Antiqua (Titel) und Alegreya (Text) aus `scripts/ui/druid_theme.gd`/`druid_box.gd`; beim Verlassen zurück auf Arcade. Fenster ohne Farbverlauf. Panel-Überschriften über `UiTheme.heading(label)`, nicht von Hand Großbuchstaben setzen. Die UiTheme-Farben sind deshalb `static var`, nicht in `const`-Ausdrücken verwenden.
 
 ## Menüs vor dem Spiel: Art déco (Entscheidung von Lukas, 2026-10-19)
-Hub, Einzelspieler, Lobby, Spiel laden, Run-History und die Einstellungsfenster vor Runde 1 (GemTD, eeveTD, Maul-Filialwahl) nutzen `scripts/ui/deco_theme.gd` statt `UiTheme` (gleiche Namen: `DecoTheme.GOLD` = Messing, `CYAN` = Auswahl in hellem Messing, `GOLD_DARK` = Schrift darauf).
+Hub, Einzelspieler, Lobby, Spiel laden, Run-History und die Maul-Filialwahl nutzen `scripts/ui/deco_theme.gd` statt `UiTheme` (gleiche Namen: `DecoTheme.GOLD` = Messing, `CYAN` = Auswahl in hellem Messing, `GOLD_DARK` = Schrift darauf).
 - Petrol und Messing, doppelte Messingrahmen (`DecoTheme.panel`, `DecoBackdrop`), keine runden Ecken, Hauptknopf mit spitzen Enden (`DecoTheme.accent_button`).
 - Schrift: ab 28 px Limelight kräftig (`DecoTheme.title`, `DecoTheme.display`), kleiner Federo (Theme-Standard). Beide OFL in `assets/fonts/`.
-- Die Oberfläche im Spiel bleibt Arcade (oben).
+- Die Oberfläche im Spiel folgt dem Modus (oben), auch die Fenster vor Runde 1 mit Schwierigkeit, Wertung und Variante: GemTD Arcade (`setup_panel.gd`), eeveTD Druidenhain (`eeve_setup_panel.gd`), nur Shopping Maul Art déco (Lukas, 2026-10-26).
 
 ## Threads: ein Feature, ein Thread (feste Regel von Lukas)
 Jede Antwort schleppt den ganzen Verlauf eines Threads mit, lange Threads kosten deshalb viele Tokens.
