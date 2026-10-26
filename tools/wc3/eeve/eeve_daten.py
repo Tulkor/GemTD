@@ -379,6 +379,17 @@ def dual_element(uid):
     return "+".join(ELEMENTS[e] for e in TOWERS[uid]["element"].split("+"))
 
 
+# Marktplatz (h0AV): im Original vom Erbauer gebaut (40 Gold, 1 Food), bei uns eine Barrikade für 38 Gold mehr.
+# Kauft Items an, verkauft Holz und Tränke, hat die globalen Upgrades (data/eeve_items.json, eeve_items.gd).
+MARKETPLACE = {
+    "id": "eeve_marketplace", "name": "Marktplatz", "name_original": "Marketplace", "category": "eeve",
+    "color": "#d8b860", "model": "res://assets/models/scenery/mine_chest.glb", "model_tint": False, "model_solid": True,
+    "damage_type": "", "targets": "both",
+    "eeve": {"element": "", "level": 0, "cost": 38, "lumber": 0, "from": "eeve_barricade", "next": [], "wc3": "h0AV", "market": True},
+    "tiers": [{"damage": [0, 0], "range": 0.0, "cooldown": 0.0, "abilities": []}],
+}
+
+
 def towers():
     out = [{
         "id": "eeve_barricade", "name": "Barrikade", "name_original": "Barricade", "category": "eeve",
@@ -403,6 +414,8 @@ def towers():
         out.append(tower_json(uid, ELEMENTS[TOWERS[uid]["element"]], i + 2, [], kind="trap"))
     duals = TOWERS[DUAL_BASE]["upgrades"].split(",") + TOWERS[DUAL_PAGE_2]["upgrades"].split(",")
     out[0]["eeve"]["next"].append("eeve_dual_element_base_tower")
+    out[0]["eeve"]["next"].append(MARKETPLACE["id"])
+    out.append(MARKETPLACE)
     out.append(tower_json(DUAL_BASE, "", 5, duals))
     for i, uid in enumerate(duals):
         out.append(tower_json(uid, dual_element(uid), i, []))

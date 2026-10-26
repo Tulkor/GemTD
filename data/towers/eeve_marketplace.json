@@ -1,0 +1,33 @@
+{
+	"id": "eeve_marketplace",
+	"name": "Marktplatz",
+	"name_original": "Marketplace",
+	"category": "eeve",
+	"color": "#d8b860",
+	"model": "res://assets/models/scenery/mine_chest.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "",
+	"targets": "both",
+	"eeve": {
+		"element": "",
+		"level": 0,
+		"cost": 38,
+		"lumber": 0,
+		"from": "eeve_barricade",
+		"next": [],
+		"wc3": "h0AV",
+		"market": true
+	},
+	"tiers": [
+		{
+			"damage": [
+				0,
+				0
+			],
+			"range": 0.0,
+			"cooldown": 0.0,
+			"abilities": []
+		}
+	]
+}

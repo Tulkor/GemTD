@@ -86,6 +86,23 @@ wird pro Spiel neu ausgewürfelt (die nächsten Level stehen links im Bild):
 Ein durchgelassener Gegner kostet Leben. Ein Boss kostet Level + seine restlichen Leben in Prozent
 (Level 20 mit 11 % Rest: 31 Leben). Wer Level 57 übersteht, hat gewonnen.
 
+## Items und Marktplatz
+
+Werte in `data/eeve_items.json` (im Balance-Editor unter eeveTD → Items), wie in der Originalkarte.
+
+- **Marktplatz:** eine Barrikade für 38 Gold zum Marktplatz aufwerten (zusammen 40 Gold und 1 Food), einer je Spieler.
+  Anklicken öffnet das Fenster: Holz (900), Erweiterungstrank (650), Läuterungstrank (350), Leere Erfahrungsphiole (140),
+  Items verkaufen (halber Wert) und Upgrades für alle eigenen Tower: Schaden +10 %, Reichweite +40, Tempo +8 %,
+  je 4 Stufen zu 300/600/900/1.200 Gold und 1 Holz.
+- **Lager** (rechts unten, 8 Plätze): Item anklicken, eigenen Tower wählen, „einsetzen“ bzw. „benutzen“.
+- **Item-Plätze:** ab Elementstufe 3 einer, je Stufe einer mehr, Dual-Tower 2, Fallen keine; Erweiterungstrank bis 6.
+  Eingesetzte Items bleiben im Tower, nur der Läuterungstrank holt sie zurück. Abreißen gibt sie ins Lager.
+- **Items:** Klingen (+50 bis +300 Schaden), Ärmel (+10 bis +40 % Tempo), Klauen (Schaden + 15 % Krit), Hämmer
+  (Schaden + Betäubung mit Zusatzschaden), Glühende Kette der Macht, Kugeln (Zauberschaden auf zufällige Gegner),
+  Zauberschild (zauberimmun, wirkt erst, wenn Gegner Tower verzaubern), Erfahrungstrank (+10 Kills).
+- **Drops:** ab Level 11 wird je Level gewürfelt, ob der erste Kill ein Item bringt (Chance und Stufe steigen mit dem
+  Level). Golems (Level 11–44) bringen immer ein Verbrauchs-Item und ein Item. Holz zählt sofort, volles Lager verkauft.
+
 ## Koop
 
 Bis 4 Spieler. Alle bauen auf einem Feld und teilen die Leben. Jeder hat eigenes Gold, Food, Holz und eigene

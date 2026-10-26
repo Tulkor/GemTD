@@ -66,6 +66,8 @@ var rogue_range := 0.0
 var rogue_abilities: Array = []  ## Fähigkeiten aus Roguelike-Boni (zusätzlich zu stats.abilities)
 var rogue_anti_air := false      ## Roguelike „Luftabwehr“: Bodentower greift auch Flieger an
 var rogue_fx: Dictionary = {}    ## Roguelike: Flächen, Prozentschaden, Henker (rogue.gd → on_hit), leer = keine
+var bonus_label := "Roguelike-Bonus"  ## Name der Boni aus set_rogue() im Infofenster (eeveTD: Items und Marktplatz)
+var flat_damage := 0.0  ## fester Zusatzschaden je Schuss nach allen Prozenten (eeveTD-Items)
 var _all_abilities: Array = []
 var cooldown_left := 0.0
 var kills := 0
@@ -250,7 +252,7 @@ func _roll_damage() -> float:
 	var wd := ability("wave_damage")
 	if not wd.is_empty():
 		base += float(wd.per_wave) * game.current_wave()
-	return base * (1.0 + damage_bonus + kill_bonus() + rogue_damage)
+	return base * (1.0 + damage_bonus + kill_bonus() + rogue_damage) + flat_damage
 
 
 func _attack(e) -> void:

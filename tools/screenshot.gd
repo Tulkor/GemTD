@@ -24,6 +24,8 @@ extends Node
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
 ##   --treffer               nach --warten weiter warten, bis ein Treffer-Effekt leuchtet (höchstens 10 s), dann Bild
 ##   --grundtower=water      eeveTD: statt des festen Plans überall den Grundturm dieses Elements
+##   --items                 eeveTD: Marktplatz (Feld 32,76), Lager mit Items, Höllenkohlenbecken (44,76) mit zwei Items;
+##                           --auswahl wählt es, --lagerwahl=N wählt Item N im Lager, --markt öffnet das Marktplatz-Fenster
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
@@ -403,12 +405,27 @@ func _prepare_eeve(game: Node) -> void:
 		for p in path:
 			if game.build_trap("eeve_flame_grate", Vector2i(p) - Vector2i.ONE):
 				break
-	game.gold = 412
+	if opts.has("items"):
+		var m: Tower = game.towers.get(Vector2i(32, 76))
+		var mo: Array = game.tower_options(m)
+		game._apply_option(m, mo[mo.map(func(x): return x.id).find("eeve_marketplace")])
+		var h: Tower = game.towers.get(Vector2i(44, 76))
+		h.set_tower("eeve_hell_brazier", 0)
+		h.items = ["glowing_blade", "orb_fire"]
+		for id in ["razorblades", "sleeve_speed", "killer_claws", "orb_ice", "xp_potion", "spell_shield"]:
+			game.ep().items.append(id)
+		game.ep().market = {"damage": 1}
+		game._update_auras()
+		if opts.has("lagerwahl"):
+			game.items_panel.picked = int(opts.lagerwahl)
+	game.gold = 412 if not opts.has("items") else 1840
 	game.log_lines = []
 	if opts.get("phase", "bau") == "welle":
 		game.submit({"type": "start_level"})
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(32, 68) if opts.has("fallen") else Vector2i(44, 76)))
+	if opts.has("markt"):
+		game.market_panel.open()
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:

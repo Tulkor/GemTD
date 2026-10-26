@@ -27,8 +27,8 @@ func _ready() -> void:
 			if not Database.towers.has(n):
 				broken.append("%s → %s" % [id, n])
 	check(broken.is_empty(), "alle Aufwertungen zeigen auf vorhandene Tower %s" % [broken])
-	check(ids.size() == 108, "108 eeve-Tower wie im Original: %d" % ids.size())
-	check((Database.towers["eeve_barricade"].eeve.next as Array).size() == 7, "Barrikade wird zu sechs Element-Grundtürmen oder zum Dual-Grundturm")
+	check(ids.size() == 109, "108 eeve-Tower wie im Original und der Marktplatz: %d" % ids.size())
+	check((Database.towers["eeve_barricade"].eeve.next as Array).size() == 8, "Barrikade wird zu sechs Element-Grundtürmen, zum Dual-Grundturm oder zum Marktplatz")
 	check((Database.towers["eeve_dual_element_base_tower"].eeve.next as Array).size() == 15, "Dual-Grundturm hat 15 Dual-Tower")
 	var trap_count := ids.filter(func(id): return Database.towers[id].get("kind", "") == "trap").size()
 	check(trap_count == 6, "sechs Fallen, eine je Element: %d" % trap_count)

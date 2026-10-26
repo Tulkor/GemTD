@@ -1,0 +1,410 @@
+{
+	"_comment": "Items und Marktplatz in eeveTD (Vorbild: eeve! TD v1.01, Werte aus der Kartendatei: w3t I000–I00W, Drops in script.j). Logik in scripts/game/eeve_items.gd. Erfahrung gibt es bei uns nur als Kills (Kill-Rang), deshalb zählen Trank und Phiole in Kills.",
+	"inventory_size": 8,
+	"sell_ratio": 0.5,
+	"max_slots": 6,
+	"slots": {
+		"from_level": 3,
+		"dual": 2
+	},
+	"drops": {
+		"_comment": "Je Level und Spieler wird vorher gewürfelt, ob sein erster Kill ein Item bringt (ab Stufe 2 = Level 11). stufe = min(Level / 5,5 + 1, 10) - 1; Chance auf ein Item aus pools[stufe / 2]: item_base + item_step × stufe Prozent, danach auf ein Verbrauchs-Item aus pools[0]: bis consumable_base + consumable_step × stufe. Golems geben ein Verbrauchs-Item und ein Item aus Pool min(Stufe/2 + 1, 4).",
+		"from_stage": 2,
+		"item_base": 25,
+		"item_step": 3,
+		"consumable_base": 40,
+		"consumable_step": 4,
+		"pools": [
+			[
+				"xp_potion",
+				"lumber",
+				"spell_shield",
+				"expansion",
+				"purge"
+			],
+			[
+				"razorblades",
+				"sleeve_haste",
+				"orb_fire"
+			],
+			[
+				"glowing_blade",
+				"sleeve_speed",
+				"killer_claws",
+				"bashing_hammer",
+				"orb_ice"
+			],
+			[
+				"magical_blade",
+				"sleeve_rage",
+				"heart_perforator",
+				"bombard_hammer",
+				"orb_light"
+			],
+			[
+				"burning_blade",
+				"sleeve_swiftness",
+				"throat_slitter",
+				"double_smasher",
+				"chain_of_power",
+				"orb_darkness"
+			]
+		]
+	},
+	"items": {
+		"razorblades": {
+			"name": "Rasierklingen",
+			"name_original": "Razorblades",
+			"icon": "blade",
+			"stage": 1,
+			"value": 200,
+			"damage": 50
+		},
+		"glowing_blade": {
+			"name": "Glühende Klinge",
+			"name_original": "Glowing Blade",
+			"icon": "blade",
+			"stage": 2,
+			"value": 300,
+			"damage": 100
+		},
+		"magical_blade": {
+			"name": "Magische Klinge",
+			"name_original": "Magical Blade",
+			"icon": "blade",
+			"stage": 3,
+			"value": 450,
+			"damage": 200
+		},
+		"burning_blade": {
+			"name": "Brennende Klinge",
+			"name_original": "Burning Blade",
+			"icon": "blade",
+			"stage": 4,
+			"value": 600,
+			"damage": 300
+		},
+		"sleeve_haste": {
+			"name": "Ärmel der Eile",
+			"name_original": "Sleeve of Haste",
+			"icon": "sleeve",
+			"stage": 1,
+			"value": 200,
+			"speed": 0.1
+		},
+		"sleeve_speed": {
+			"name": "Ärmel der Geschwindigkeit",
+			"name_original": "Sleeve of Speed",
+			"icon": "sleeve",
+			"stage": 2,
+			"value": 300,
+			"speed": 0.2
+		},
+		"sleeve_rage": {
+			"name": "Ärmel der Wut",
+			"name_original": "Sleeve of Rage",
+			"icon": "sleeve",
+			"stage": 3,
+			"value": 450,
+			"speed": 0.3
+		},
+		"sleeve_swiftness": {
+			"name": "Ärmel der Flinkheit",
+			"name_original": "Sleeve of Swiftness",
+			"icon": "sleeve",
+			"stage": 4,
+			"value": 600,
+			"speed": 0.4
+		},
+		"killer_claws": {
+			"name": "Mörderklauen",
+			"name_original": "Killer Claws",
+			"icon": "claw",
+			"stage": 2,
+			"value": 300,
+			"damage": 50,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.15,
+					"multiplier": 1.5
+				}
+			]
+		},
+		"heart_perforator": {
+			"name": "Herzdurchbohrer",
+			"name_original": "Heart Perforator",
+			"icon": "claw",
+			"stage": 3,
+			"value": 450,
+			"damage": 100,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.15,
+					"multiplier": 2.0
+				}
+			]
+		},
+		"throat_slitter": {
+			"name": "Kehlenschlitzer",
+			"name_original": "Throat Slitter",
+			"icon": "claw",
+			"stage": 4,
+			"value": 600,
+			"damage": 150,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.15,
+					"multiplier": 2.5
+				}
+			]
+		},
+		"bashing_hammer": {
+			"name": "Schmetterhammer",
+			"name_original": "Bashing Hammer",
+			"icon": "hammer",
+			"stage": 2,
+			"value": 300,
+			"damage": 50,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.05,
+					"duration": 0.4,
+					"damage": 100
+				}
+			]
+		},
+		"bombard_hammer": {
+			"name": "Bombardenhammer",
+			"name_original": "Bombard Hammer",
+			"icon": "hammer",
+			"stage": 3,
+			"value": 450,
+			"damage": 100,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.1,
+					"duration": 0.4,
+					"damage": 200
+				}
+			]
+		},
+		"double_smasher": {
+			"name": "Doppelzertrümmerer",
+			"name_original": "Double Smasher",
+			"icon": "hammer",
+			"stage": 4,
+			"value": 600,
+			"damage": 150,
+			"abilities": [
+				{
+					"type": "stun",
+					"chance": 0.15,
+					"duration": 0.4,
+					"damage": 400
+				}
+			]
+		},
+		"chain_of_power": {
+			"name": "Glühende Kette der Macht",
+			"name_original": "Glowing Chain of Power",
+			"icon": "chain",
+			"stage": 4,
+			"value": 700,
+			"damage": 100,
+			"speed": 0.2,
+			"abilities": [
+				{
+					"type": "crit",
+					"chance": 0.15,
+					"multiplier": 1.5
+				},
+				{
+					"type": "stun",
+					"chance": 0.05,
+					"duration": 0.4,
+					"damage": 100
+				}
+			]
+		},
+		"orb_fire": {
+			"name": "Kugel des Feuers",
+			"name_original": "Orb of Fire",
+			"icon": "orb",
+			"stage": 1,
+			"value": 200,
+			"color": "#ff7a30",
+			"abilities": [
+				{
+					"type": "orb",
+					"dps": 130.0,
+					"radius": 6.25,
+					"every": 0.5,
+					"text": "Kugel: 130 Zauberschaden/s auf zufällige Gegner im Radius 6,3"
+				}
+			]
+		},
+		"orb_ice": {
+			"name": "Kugel des Eises",
+			"name_original": "Orb of Ice",
+			"icon": "orb",
+			"stage": 2,
+			"value": 300,
+			"color": "#8fd8ff",
+			"abilities": [
+				{
+					"type": "orb",
+					"dps": 300.0,
+					"radius": 6.25,
+					"every": 0.5,
+					"text": "Kugel: 300 Zauberschaden/s auf zufällige Gegner im Radius 6,3"
+				}
+			]
+		},
+		"orb_light": {
+			"name": "Kugel des Lichts",
+			"name_original": "Orb of Light",
+			"icon": "orb",
+			"stage": 3,
+			"value": 450,
+			"color": "#fff0a0",
+			"abilities": [
+				{
+					"type": "orb",
+					"dps": 800.0,
+					"radius": 6.25,
+					"every": 0.5,
+					"text": "Kugel: 800 Zauberschaden/s auf zufällige Gegner im Radius 6,3"
+				}
+			]
+		},
+		"orb_darkness": {
+			"name": "Kugel der Finsternis",
+			"name_original": "Orb of Darkness",
+			"icon": "orb",
+			"stage": 4,
+			"value": 600,
+			"color": "#a070ff",
+			"abilities": [
+				{
+					"type": "orb",
+					"dps": 1600.0,
+					"radius": 6.25,
+					"every": 0.5,
+					"text": "Kugel: 1600 Zauberschaden/s auf zufällige Gegner im Radius 6,3"
+				}
+			]
+		},
+		"spell_shield": {
+			"name": "Zauberschild",
+			"name_original": "Spell Shield",
+			"icon": "shield",
+			"stage": 0,
+			"value": 200,
+			"spell_immune": true
+		},
+		"xp_potion": {
+			"name": "Erfahrungstrank",
+			"name_original": "Experience Potion",
+			"icon": "potion",
+			"stage": 0,
+			"value": 150,
+			"use": "xp",
+			"amount": 10
+		},
+		"xp_vial": {
+			"name": "Leere Erfahrungsphiole",
+			"name_original": "Empty Experience Vial",
+			"icon": "vial",
+			"stage": 0,
+			"value": 140,
+			"use": "vial",
+			"amount": 10,
+			"becomes": "xp_potion"
+		},
+		"expansion": {
+			"name": "Erweiterungstrank",
+			"name_original": "Expansion Potion",
+			"icon": "potion",
+			"stage": 0,
+			"value": 150,
+			"use": "slot"
+		},
+		"purge": {
+			"name": "Läuterungstrank",
+			"name_original": "Purging Potion",
+			"icon": "potion",
+			"stage": 0,
+			"value": 150,
+			"use": "purge"
+		},
+		"lumber": {
+			"name": "Holz",
+			"name_original": "Lumber",
+			"icon": "wood",
+			"stage": 0,
+			"value": 200,
+			"use": "lumber"
+		}
+	},
+	"market": {
+		"building": "eeve_marketplace",
+		"shop": [
+			{
+				"item": "lumber",
+				"price": 900
+			},
+			{
+				"item": "expansion",
+				"price": 650
+			},
+			{
+				"item": "purge",
+				"price": 350
+			},
+			{
+				"item": "xp_vial",
+				"price": 140
+			}
+		],
+		"upgrades": {
+			"damage": {
+				"name": "Schaden",
+				"per_level": 0.1,
+				"costs": [
+					300,
+					600,
+					900,
+					1200
+				],
+				"lumber": 1
+			},
+			"range": {
+				"name": "Reichweite",
+				"per_level": 0.3125,
+				"costs": [
+					300,
+					600,
+					900,
+					1200
+				],
+				"lumber": 1
+			},
+			"speed": {
+				"name": "Angriffstempo",
+				"per_level": 0.08,
+				"costs": [
+					300,
+					600,
+					900,
+					1200
+				],
+				"lumber": 1
+			}
+		}
+	}
+}
