@@ -1,0 +1,19 @@
+{
+	"id": "rg_besserwisser",
+	"name": "Besserwisser",
+	"category": "randgruppen",
+	"hp": 925,
+	"speed": 2.5,
+	"armor": 9.0,
+	"armor_type": "rg_medium",
+	"bounty": 4,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 16,
+		"wc3": "n00G"
+	}
+}

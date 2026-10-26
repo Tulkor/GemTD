@@ -33,6 +33,8 @@ var difficulty := 1
 var eeve_choice: Dictionary = {}
 ## Shopping Maul: zuletzt gewählte Einstellungen ({shop, kind, difficulty, mode, sandbox}), beim Neustart vorausgewählt.
 var maul_choice: Dictionary = {}
+## Randgruppen TD: zuletzt gewählte Rasse und Schwierigkeit ({race, difficulty}), beim Neustart vorausgewählt.
+var rg_choice: Dictionary = {}
 ## Wertung: false = Leben (Spiel endet bei 0), true = Punkte (Kills geben Punkte, Durchbrüche kosten welche).
 var score_mode := false
 ## GemTD-Variante Roguelike: alle zehn Wellen einen von drei Boni wählen (rogue.gd).

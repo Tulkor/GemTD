@@ -1,0 +1,19 @@
+{
+	"id": "rg_ordnungshueter",
+	"name": "Ordnungshüter",
+	"category": "randgruppen",
+	"hp": 670,
+	"speed": 2.461,
+	"armor": 7.0,
+	"armor_type": "rg_medium",
+	"bounty": 3,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 13,
+		"wc3": "n00D"
+	}
+}

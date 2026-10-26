@@ -1,0 +1,41 @@
+{
+	"id": "rg_der_ritterkoenig",
+	"name": "Der Ritterkönig",
+	"category": "randgruppen",
+	"color": "#c06040",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"ritter"
+		],
+		"place": 6,
+		"cost": 870,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_steinschleuder",
+			"rg_knappe",
+			"rg_raufbold",
+			"rg_gralsritter",
+			"rg_burgtor",
+			"rg_der_burgherr"
+		],
+		"wc3": "o00K"
+	},
+	"tiers": [
+		{
+			"damage": [
+				951.0,
+				1050.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

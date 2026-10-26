@@ -19,6 +19,8 @@ var wave_sets: Dictionary = {}
 var balance: Dictionary = {}
 ## Regeln für eeveTD (res://data/eeve.json): Wirtschaft, Elemente, Schwierigkeiten, Wellen, Schadenstabelle.
 var eeve: Dictionary = {}
+## Regeln für Randgruppen TD (res://data/randgruppen.json): Rassen, Level, Wirtschaft, Schadenstabelle.
+var randgruppen: Dictionary = {}
 ## GemTD-Variante Roguelike (res://data/roguelike.json): Boni alle zehn Wellen, siehe rogue.gd.
 var roguelike: Dictionary = {}
 ## Gegnerwerte im Roguelike (res://data/roguelike_enemies.json), über die normalen gelegt (Rogue.enemy_def).
@@ -39,6 +41,8 @@ func reload() -> void:
 	balance = b if typeof(b) == TYPE_DICTIONARY else {}
 	var e = load_json(RES_DATA + "eeve.json")
 	eeve = e if typeof(e) == TYPE_DICTIONARY else {}
+	var rg = load_json(RES_DATA + "randgruppen.json")
+	randgruppen = rg if typeof(rg) == TYPE_DICTIONARY else {}
 	var rl = load_json(RES_DATA + "roguelike.json")
 	roguelike = rl if typeof(rl) == TYPE_DICTIONARY else {}
 	var re = load_json(RES_DATA + "roguelike_enemies.json")
@@ -149,11 +153,15 @@ func maps_for_mode(id: String, all_maps: Array) -> Array:
 
 
 ## Schadensfaktor Schadensart gegen Rüstungsart, 1.0 wenn nichts eingetragen ist.
-## eeveTD-Gegner (Rüstungsart "eeve_…") nutzen die Tabelle aus eeve.json.
+## eeveTD-Gegner (Rüstungsart "eeve_…") nutzen die Tabelle aus eeve.json, Randgruppen TD ("rg_…") die aus randgruppen.json.
 func damage_factor(damage_type: String, armor_type: String) -> float:
 	if damage_type == "" or armor_type == "":
 		return 1.0
-	var table: Dictionary = eeve.get("damage_table", {}) if armor_type.begins_with("eeve_") else balance.get("damage_table", {})
+	var table: Dictionary = balance.get("damage_table", {})
+	if armor_type.begins_with("eeve_"):
+		table = eeve.get("damage_table", {})
+	elif armor_type.begins_with("rg_"):
+		table = randgruppen.get("damage_table", {})
 	return float(table.get(damage_type, {}).get(armor_type, 1.0))
 
 

@@ -1,0 +1,34 @@
+{
+	"id": "rg_flohmarkt_profi",
+	"name": "Flohmarkt-Profi",
+	"category": "randgruppen",
+	"color": "#e8c440",
+	"model": "res://assets/models/city/2story_balcony.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.51,
+	"damage_type": "spells",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"schnaeppchen"
+		],
+		"place": 3,
+		"cost": 130,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01M"
+	},
+	"tiers": [
+		{
+			"damage": [
+				79.0,
+				91.0
+			],
+			"range": 7.422,
+			"cooldown": 0.6,
+			"abilities": []
+		}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"id": "rg_spiessbuerger",
+	"name": "Spießbürger",
+	"category": "randgruppen",
+	"hp": 1360,
+	"speed": 2.5,
+	"armor": 10.0,
+	"armor_type": "rg_small",
+	"bounty": 4,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 19,
+		"wc3": "n00K"
+	}
+}

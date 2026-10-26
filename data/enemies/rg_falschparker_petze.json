@@ -1,0 +1,19 @@
+{
+	"id": "rg_falschparker_petze",
+	"name": "Falschparker-Petze",
+	"category": "randgruppen",
+	"hp": 150,
+	"speed": 2.266,
+	"armor": 2.0,
+	"armor_type": "rg_medium",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 3,
+		"wc3": "n003"
+	}
+}

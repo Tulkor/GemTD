@@ -1,0 +1,40 @@
+{
+	"id": "rg_dreifach_espresso",
+	"name": "Dreifach-Espresso",
+	"category": "randgruppen",
+	"color": "#ff8a3d",
+	"model": "res://assets/models/city/4story_center.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.57,
+	"damage_type": "pierce",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"spaetkauf"
+		],
+		"place": 5,
+		"cost": 410,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00C"
+	},
+	"tiers": [
+		{
+			"damage": [
+				376.0,
+				406.0
+			],
+			"range": 4.688,
+			"cooldown": 0.3,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.273,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

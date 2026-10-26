@@ -1,0 +1,41 @@
+{
+	"id": "rg_der_stammtisch_praesident",
+	"name": "Der Stammtisch-Präsident",
+	"category": "randgruppen",
+	"color": "#c8b8a0",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"senioren"
+		],
+		"place": 6,
+		"cost": 800,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_fruehrentner",
+			"rg_gehstock_schwinger",
+			"rg_rollator_raser",
+			"rg_kaffeekraenzchen",
+			"rg_bingo_runde",
+			"rg_kurschatten"
+		],
+		"wc3": "o00Y"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

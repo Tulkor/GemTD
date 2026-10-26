@@ -1,0 +1,19 @@
+{
+	"id": "rg_der_scharfmacher",
+	"name": "Der Scharfmacher",
+	"category": "randgruppen",
+	"hp": 9000,
+	"speed": 2.5,
+	"armor": 24.0,
+	"armor_type": "rg_normal",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 34,
+		"wc3": "n010"
+	}
+}

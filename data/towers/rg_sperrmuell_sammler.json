@@ -1,0 +1,40 @@
+{
+	"id": "rg_sperrmuell_sammler",
+	"name": "Sperrmüll-Sammler",
+	"category": "randgruppen",
+	"color": "#e8c440",
+	"model": "res://assets/models/city/2story.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.48,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"schnaeppchen"
+		],
+		"place": 2,
+		"cost": 65,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o002"
+	},
+	"tiers": [
+		{
+			"damage": [
+				65.0,
+				85.0
+			],
+			"range": 5.469,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.625,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

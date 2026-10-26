@@ -1,0 +1,19 @@
+{
+	"id": "rg_leserbrief_schreiber",
+	"name": "Leserbrief-Schreiber",
+	"category": "randgruppen",
+	"hp": 700,
+	"speed": 2.344,
+	"armor": 7.0,
+	"armor_type": "rg_medium",
+	"bounty": 3,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 12,
+		"wc3": "n00C"
+	}
+}

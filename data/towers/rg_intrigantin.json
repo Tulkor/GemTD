@@ -1,0 +1,40 @@
+{
+	"id": "rg_intrigantin",
+	"name": "Intrigantin",
+	"category": "randgruppen",
+	"color": "#d070ff",
+	"model": "res://assets/models/city/2story.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.48,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"theater"
+		],
+		"place": 2,
+		"cost": 90,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				80.0,
+				110.0
+			],
+			"range": 11.719,
+			"cooldown": 0.9,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 4.0,
+					"duration": 4.0
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"id": "rg_hecken_inspektor",
+	"name": "Hecken-Inspektor",
+	"category": "randgruppen",
+	"hp": 1700,
+	"speed": 2.5,
+	"armor": 12.0,
+	"armor_type": "rg_normal",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 22,
+		"wc3": "n00N"
+	}
+}

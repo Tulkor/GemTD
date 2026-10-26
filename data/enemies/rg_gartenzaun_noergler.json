@@ -1,0 +1,19 @@
+{
+	"id": "rg_gartenzaun_noergler",
+	"name": "Gartenzaun-Nörgler",
+	"category": "randgruppen",
+	"hp": 30,
+	"speed": 2.109,
+	"armor": 1.0,
+	"armor_type": "rg_normal",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 1,
+		"wc3": "n002"
+	}
+}

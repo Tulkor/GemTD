@@ -1,0 +1,672 @@
+{
+	"_comment": "Regeln für Randgruppen TD (Vorbild: Randgruppen TD2 UltraMods, Fan-Mod von vers.2b). Erzeugt von tools/wc3/randgruppen/rg_daten.py, nicht von Hand ändern.",
+	"start_gold": 550,
+	"builder_cost": 500,
+	"sell_factor": 0.75,
+	"first_pause": 60,
+	"pause": 30,
+	"level_gold": {
+		"base": 10,
+		"per_level": 2
+	},
+	"center_bonus": 0.5,
+	"lumber": {
+		"25": 1
+	},
+	"difficulties": [
+		{
+			"name": "Gemütlich",
+			"lives": 50
+		},
+		{
+			"name": "Locker",
+			"lives": 35
+		},
+		{
+			"name": "Normal",
+			"lives": 25
+		},
+		{
+			"name": "Hart",
+			"lives": 10
+		},
+		{
+			"name": "Perfekt",
+			"lives": 1
+		}
+	],
+	"difficulty_default": 2,
+	"races": [
+		{
+			"id": "schnaeppchen",
+			"name": "Schnäppchenjäger",
+			"color": "#e8c440",
+			"hint": "Masse statt Klasse: extrem billige Tower, viele davon.",
+			"wc3": "u001",
+			"towers": [
+				"rg_wuehltisch_kunde",
+				"rg_coupon_sammler",
+				"rg_sperrmuell_sammler",
+				"rg_flohmarkt_profi",
+				"rg_ramschhaendler",
+				"rg_schlussverkauf_stuermer",
+				"rg_mister_sonderpreis"
+			]
+		},
+		{
+			"id": "spaetkauf",
+			"name": "Spätkauf",
+			"color": "#ff8a3d",
+			"hint": "Alles aus dem Kiosk um die Ecke: viel Flächenschaden, teuer und stark.",
+			"wc3": "u002",
+			"towers": [
+				"rg_brausepulver",
+				"rg_grillanzuender",
+				"rg_zuckerschock",
+				"rg_leuchtreklame",
+				"rg_energydrink",
+				"rg_dreifach_espresso",
+				"rg_der_kioskkoenig"
+			]
+		},
+		{
+			"id": "kleingarten",
+			"name": "Kleingartenverein",
+			"color": "#5cc85c",
+			"hint": "Solide Allrounder, Flächenschaden und ein Rasensprenger, der verlangsamt.",
+			"wc3": "u003",
+			"towers": [
+				"rg_gartenzwerg",
+				"rg_heckenschneider",
+				"rg_hochsitz",
+				"rg_vereinsheim",
+				"rg_vereinswart",
+				"rg_rasensprenger",
+				"rg_der_obmann"
+			]
+		},
+		{
+			"id": "theater",
+			"name": "Laientheater",
+			"color": "#d070ff",
+			"hint": "Große Reichweite, verlangsamt und vergiftet die Gegner.",
+			"wc3": "u004",
+			"towers": [
+				"rg_statist",
+				"rg_kuehler_kritiker",
+				"rg_intrigantin",
+				"rg_stepptaenzer",
+				"rg_buehnennebel",
+				"rg_der_regisseur",
+				"rg_der_star"
+			]
+		},
+		{
+			"id": "senioren",
+			"name": "Seniorenklub",
+			"color": "#c8b8a0",
+			"hint": "Schwacher Start, starke späte Tower mit Flächenschaden.",
+			"wc3": "u005",
+			"towers": [
+				"rg_fruehrentner",
+				"rg_gehstock_schwinger",
+				"rg_rollator_raser",
+				"rg_kaffeekraenzchen",
+				"rg_bingo_runde",
+				"rg_kurschatten",
+				"rg_der_stammtisch_praesident"
+			]
+		},
+		{
+			"id": "zocker",
+			"name": "Zocker",
+			"color": "#40d0ff",
+			"hint": "Schnelle Angriffe auf kurze Distanz, Gift gegen zähe Gegner.",
+			"wc3": "u006",
+			"towers": [
+				"rg_konsolenkind",
+				"rg_rollenspieler",
+				"rg_strategie_general",
+				"rg_shooter_profi",
+				"rg_ruhestoerer",
+				"rg_hack_and_slay_fan",
+				"rg_der_clanchef"
+			]
+		},
+		{
+			"id": "buero",
+			"name": "Bürohengste",
+			"color": "#8ca0c0",
+			"hint": "Teure Spezialisten: Gift auf lange Distanz, Dauerfeuer mit Fläche.",
+			"wc3": "u007",
+			"towers": [
+				"rg_pfoertner",
+				"rg_praktikant",
+				"rg_abteilungsleiter",
+				"rg_vorstandsetage",
+				"rg_boersenhai",
+				"rg_alleinunterhalter",
+				"rg_der_aufsichtsrat"
+			]
+		},
+		{
+			"id": "ritter",
+			"name": "Ritterspiele",
+			"color": "#c06040",
+			"hint": "Nahkämpfer mit hohem Schaden, ein Gralsritter mit Gift.",
+			"wc3": "u000",
+			"towers": [
+				"rg_steinschleuder",
+				"rg_knappe",
+				"rg_raufbold",
+				"rg_gralsritter",
+				"rg_burgtor",
+				"rg_der_burgherr",
+				"rg_der_ritterkoenig"
+			]
+		},
+		{
+			"id": "hiphop",
+			"name": "Hip-Hop-Crew",
+			"color": "#ff5aa0",
+			"hint": "Zauber- und Heldenschaden, eine Bassbox mit riesigem Treffer.",
+			"wc3": "u008",
+			"towers": [
+				"rg_reimschmied",
+				"rg_freestyler",
+				"rg_beatboxer",
+				"rg_battle_rapper",
+				"rg_die_cypher",
+				"rg_bassbox",
+				"rg_das_label"
+			]
+		},
+		{
+			"id": "wg",
+			"name": "Studenten-WG",
+			"color": "#7ad0a0",
+			"hint": "Große Reichweite, Gift und eine Professorin mit Flächenschaden.",
+			"wc3": "u00B",
+			"towers": [
+				"rg_erstsemester",
+				"rg_wg_party",
+				"rg_bibliotheksratte",
+				"rg_klimaaktivistin",
+				"rg_ruhestoerer",
+				"rg_die_professorin",
+				"rg_die_abschlussfeier"
+			]
+		},
+		{
+			"id": "zirkus",
+			"name": "Wanderzirkus",
+			"color": "#ffd060",
+			"hint": "Flächenschaden fast überall, eine Eisläuferin, die verlangsamt (aus dem UltraMods-Zusatz).",
+			"wc3": "n016",
+			"towers": [
+				"rg_jongleur",
+				"rg_schlangenbeschwoerer",
+				"rg_kanonenkugel_mann",
+				"rg_trapezkuenstlerin",
+				"rg_eislaeuferin",
+				"rg_dompteur",
+				"rg_der_zirkusdirektor"
+			]
+		}
+	],
+	"levels": [
+		{
+			"level": 1,
+			"enemy": "rg_gartenzaun_noergler",
+			"counts": {
+				"main": 12,
+				"two": 18,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 2,
+			"enemy": "rg_ruhestoerungs_melder",
+			"counts": {
+				"main": 12,
+				"two": 18,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 3,
+			"enemy": "rg_falschparker_petze",
+			"counts": {
+				"main": 12,
+				"two": 18,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 4,
+			"enemy": "rg_kehrwochen_kontrolleur",
+			"counts": {
+				"main": 12,
+				"two": 18,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 5,
+			"enemy": "rg_nachbarschafts_drohne",
+			"counts": {
+				"main": 15,
+				"two": 20,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 6,
+			"enemy": "rg_hausmeister",
+			"counts": {
+				"main": 20,
+				"two": 20,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 7,
+			"enemy": "rg_treppenhaus_waechter",
+			"counts": {
+				"main": 20,
+				"two": 20,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 8,
+			"enemy": "rg_vereinsmeier",
+			"counts": {
+				"main": 20,
+				"two": 20,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 9,
+			"enemy": "rg_paragraphenreiter",
+			"counts": {
+				"main": 20,
+				"two": 20,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 10,
+			"enemy": "rg_tratsch_taube",
+			"counts": {
+				"main": 15,
+				"two": 20,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 11,
+			"enemy": "rg_buerokrat",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 12,
+			"enemy": "rg_leserbrief_schreiber",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 13,
+			"enemy": "rg_ordnungshueter",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 14,
+			"enemy": "rg_mittagsruhe_waechter",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 22
+			}
+		},
+		{
+			"level": 15,
+			"enemy": "rg_spaehballon",
+			"counts": {
+				"main": 15,
+				"two": 32,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 16,
+			"enemy": "rg_besserwisser",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 17,
+			"enemy": "rg_beschwerde_profi",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 18,
+			"enemy": "rg_bedenkentraeger",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 19,
+			"enemy": "rg_spiessbuerger",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 20,
+			"enemy": "rg_ueberwachungs_drohne",
+			"counts": {
+				"main": 15,
+				"two": 32,
+				"three": 0,
+				"four": 15
+			}
+		},
+		{
+			"level": 21,
+			"enemy": "rg_moralapostel",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 22,
+			"enemy": "rg_hecken_inspektor",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 23,
+			"enemy": "rg_satzungs_hueter",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 24,
+			"enemy": "rg_stammtisch_schreier",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 25,
+			"enemy": "rg_geizhals_luftschiff",
+			"counts": {
+				"main": 15,
+				"two": 32,
+				"three": 0,
+				"four": 15
+			}
+		},
+		{
+			"level": 26,
+			"enemy": "rg_sturkopf",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 27,
+			"enemy": "rg_prinzipienreiter",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 28,
+			"enemy": "rg_ewiggestriger",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 29,
+			"enemy": "rg_obernoergler",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 25
+			}
+		},
+		{
+			"level": 30,
+			"enemy": "rg_tratsch_satellit",
+			"counts": {
+				"main": 15,
+				"two": 32,
+				"three": 0,
+				"four": 10
+			}
+		},
+		{
+			"level": 31,
+			"enemy": "rg_hardliner",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 30
+			}
+		},
+		{
+			"level": 32,
+			"enemy": "rg_hetzer",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 30
+			}
+		},
+		{
+			"level": 33,
+			"enemy": "rg_wutbuerger",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 30
+			}
+		},
+		{
+			"level": 34,
+			"enemy": "rg_der_scharfmacher",
+			"counts": {
+				"main": 20,
+				"two": 32,
+				"three": 0,
+				"four": 30
+			}
+		},
+		{
+			"level": 35,
+			"enemy": "rg_der_oberspiesser",
+			"counts": {
+				"main": 0,
+				"two": 0,
+				"three": 1,
+				"four": 0
+			}
+		}
+	],
+	"lane_counts": [
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main+three",
+		"main+three",
+		"main",
+		"two",
+		"two",
+		"four",
+		"four"
+	],
+	"zones": [
+		"Rot",
+		"Gelb",
+		"Blau",
+		"Türkis",
+		"Orange",
+		"Lila",
+		"Grün",
+		"Rosa",
+		"Hellblau"
+	],
+	"boss_level": 35,
+	"anti_stuck": {
+		"damage": 10000,
+		"cooldown": 25.0,
+		"until_level": 34
+	},
+	"damage_table": {
+		"normal": {
+			"rg_small": 1.0,
+			"rg_medium": 1.5,
+			"rg_large": 1.0,
+			"rg_fort": 0.7,
+			"rg_normal": 1.0,
+			"rg_hero": 1.0,
+			"rg_divine": 0.05,
+			"rg_none": 1.0
+		},
+		"pierce": {
+			"rg_small": 2.0,
+			"rg_medium": 0.75,
+			"rg_large": 1.0,
+			"rg_fort": 0.35,
+			"rg_normal": 1.0,
+			"rg_hero": 0.5,
+			"rg_divine": 0.05,
+			"rg_none": 1.5
+		},
+		"siege": {
+			"rg_small": 1.0,
+			"rg_medium": 0.5,
+			"rg_large": 1.0,
+			"rg_fort": 1.5,
+			"rg_normal": 1.0,
+			"rg_hero": 0.5,
+			"rg_divine": 0.05,
+			"rg_none": 1.5
+		},
+		"magic": {
+			"rg_small": 1.25,
+			"rg_medium": 0.75,
+			"rg_large": 2.0,
+			"rg_fort": 0.35,
+			"rg_normal": 1.0,
+			"rg_hero": 0.5,
+			"rg_divine": 0.05,
+			"rg_none": 1.0
+		},
+		"chaos": {
+			"rg_small": 1.0,
+			"rg_medium": 1.0,
+			"rg_large": 1.0,
+			"rg_fort": 1.0,
+			"rg_normal": 1.0,
+			"rg_hero": 1.0,
+			"rg_divine": 1.0,
+			"rg_none": 1.0
+		},
+		"spells": {
+			"rg_small": 1.0,
+			"rg_medium": 1.0,
+			"rg_large": 1.0,
+			"rg_fort": 1.0,
+			"rg_normal": 1.0,
+			"rg_hero": 0.7,
+			"rg_divine": 0.05,
+			"rg_none": 1.0
+		},
+		"hero": {
+			"rg_small": 1.0,
+			"rg_medium": 1.0,
+			"rg_large": 1.0,
+			"rg_fort": 0.5,
+			"rg_normal": 1.0,
+			"rg_hero": 1.0,
+			"rg_divine": 0.05,
+			"rg_none": 1.0
+		}
+	}
+}

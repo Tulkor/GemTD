@@ -1,0 +1,19 @@
+{
+	"id": "rg_tratsch_taube",
+	"name": "Tratsch-Taube",
+	"category": "randgruppen",
+	"hp": 650,
+	"speed": 1.953,
+	"armor": 5.0,
+	"armor_type": "rg_small",
+	"bounty": 3,
+	"damage": 1,
+	"flying": true,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 10,
+		"wc3": "n00A"
+	}
+}

@@ -1,0 +1,34 @@
+{
+	"id": "rg_fruehrentner",
+	"name": "Frührentner",
+	"category": "randgruppen",
+	"color": "#c8b8a0",
+	"model": "res://assets/models/city/1story.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.42,
+	"damage_type": "pierce",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"senioren"
+		],
+		"place": 0,
+		"cost": 14,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00S"
+	},
+	"tiers": [
+		{
+			"damage": [
+				16.0,
+				24.0
+			],
+			"range": 6.25,
+			"cooldown": 0.7,
+			"abilities": []
+		}
+	]
+}

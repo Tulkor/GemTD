@@ -1,0 +1,19 @@
+{
+	"id": "rg_spaehballon",
+	"name": "Spähballon",
+	"category": "randgruppen",
+	"hp": 890,
+	"speed": 2.031,
+	"armor": 6.0,
+	"armor_type": "rg_small",
+	"bounty": 4,
+	"damage": 1,
+	"flying": true,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 15,
+		"wc3": "n00F"
+	}
+}

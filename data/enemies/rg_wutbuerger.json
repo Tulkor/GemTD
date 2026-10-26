@@ -1,0 +1,19 @@
+{
+	"id": "rg_wutbuerger",
+	"name": "Wutbürger",
+	"category": "randgruppen",
+	"hp": 7800,
+	"speed": 2.5,
+	"armor": 24.0,
+	"armor_type": "rg_normal",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 33,
+		"wc3": "n00Z"
+	}
+}

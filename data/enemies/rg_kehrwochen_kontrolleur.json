@@ -1,0 +1,19 @@
+{
+	"id": "rg_kehrwochen_kontrolleur",
+	"name": "Kehrwochen-Kontrolleur",
+	"category": "randgruppen",
+	"hp": 210,
+	"speed": 2.344,
+	"armor": 3.0,
+	"armor_type": "rg_medium",
+	"bounty": 1,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 4,
+		"wc3": "n004"
+	}
+}
