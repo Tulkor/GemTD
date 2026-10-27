@@ -208,10 +208,13 @@ func _process(delta: float) -> void:
 		total_damage = core.get_total_damage()
 
 
-## Der Kern greift an: Schussgeräusch (das Geschoss zeichnet YtProjectileView).
-func yt_attacked(_target) -> void:
+## Der Kern greift an: Schussgeräusch (das Geschoss zeichnet YtProjectileView), im Koop Schusslinie für Mitspieler.
+func yt_attacked(target) -> void:
 	if game != null and game.effects != null and game.effects.sounds:
 		Sfx.play_shot(tower_id, tier)
+	# Koop: Mitspieler haben keine Geschosse, sie sehen den Schuss als Linie
+	if game != null and game.coop != null and not game.mirror and target is YtUnit and target.body is Enemy:
+		game.coop.add_beam(position + Vector3(0, 0.9, 0), _hit_point(target.body), color, fx_key())
 
 
 ## Verkaufen: Kern abmelden (Fähigkeit räumt auf), dann den Tower entfernen.

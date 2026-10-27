@@ -1976,5 +1976,10 @@
 	"Ladungen: %d": "Charges: %d",
 	"Für den Würfel gesperrt": "Locked for the cube",
 	"Aura: %s": "Aura: %s",
-	"Effekte:": "Effects:"
+	"Effekte:": "Effects:",
+	"Koop: jeder hat seinen eigenen Weg, sein Gebiet, Gold und Bücher; Portal und Wellen-Timer sind gemeinsam. Weisheit und Baumeister wählt jeder selbst.": "Co-op: everyone has their own path, area, gold and tomes; portal and wave timer are shared. Everyone picks their own wisdom and builder.",
+	"Bereit": "Ready",
+	"Modus, Länge und Schwierigkeit wählt der Host.": "The host picks mode, length and difficulty.",
+	"Bereit. Warte auf den Host …": "Ready. Waiting for the host …",
+	"Elemente erforschen, Tower würfeln oder kaufen, Items sammeln, feste Wege. Koop bis 4 Spieler, jeder mit eigenem Weg. Spieler-XP bleibt über Partien.": "Research elements, roll or buy towers, collect items, fixed paths. Co-op up to 4 players, each with their own path. Player XP carries over between games."
 }

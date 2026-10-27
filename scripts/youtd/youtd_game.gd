@@ -12,7 +12,8 @@ extends "res://scripts/game/game.gd"
 ## Tower-Fähigkeiten, Auren, Zauber und Wellen-Eigenschaften laufen in der portierten Laufzeit von YouTD 2
 ## (scripts/youtd/rt/, YtWorld hängt am Spielfeld): YoutdTower und YoutdEnemy haben je einen Kern (YtTower, YtCreep),
 ## der rechnet; Kopfgeld, Erfahrung und Itemfunde kommen von dort (drop_item, earn_gold).
-## Noch nicht: Mehrspieler, Spielstand, Item-Fähigkeiten (Items wirken über ihre Werte).
+## Items (YtItem mit Skript), Horadrischer Würfel (youtd_cube.gd), Baumeister (YtBuilder), Spielstand (youtd_save.gd)
+## und Koop mit eigenem Weg je Spieler (youtd_coop.gd) seit Etappe 3.
 
 const MODE_IDS := ["random_with_upgrades", "build", "totally_random"]
 
@@ -58,7 +59,8 @@ var portal := 100.0          ## Leben des Portals in Prozent (gemeinsam)
 var youtd_score := 0.0
 var build_id := ""           ## Tower, der gerade gesetzt wird (lokal)
 var picked_item := -1        ## Index im Item-Lager, das gerade eingelegt wird (lokal)
-var log_lines: Array = []
+var log_lines: Array:        ## Meldungen für den lokalen Spieler (je Spieler in YtPlayer.notes)
+	get: return yt_players[local_player].notes if local_player < yt_players.size() else []
 var player_level_at_start := 0
 
 ## Wellen: nächste Welle, Zeit bis dahin, laufende Spawner und lebende Gegner je Welle
@@ -72,6 +74,8 @@ var youtd_panel: YoutdPanel
 var scenery: EeveScenery
 var world: YtWorld           ## Laufzeit von YouTD 2 (Takt, Geschosse, Effekte)
 var _pending_load := {}      ## YouTD-Teil eines Spielstands, bis YtWorld steht
+var _coop_count := 0         ## Spieler im Koop (0 = solo)
+var _player_cfg := {}        ## Host: Baumeister und Weisheit der Mitspieler (Befehl player_setup)
 
 
 func _ready() -> void:
@@ -79,12 +83,16 @@ func _ready() -> void:
 	FieldStyle.night = true
 	rules = YoutdData.rules()
 	Session.score_mode = false
+	_coop_count = (Session.coop.get("names", []) as Array).size()
 	super._ready()
 	if map == null:
 		return
 	scenery = EeveScenery.add_to(self)
 	world = YtWorld.new()
 	board.add_child(world)
+	if mirror:
+		# Mitspieler: gerechnet wird beim Host, die Kerne hier liefern nur Werte fürs Infofenster
+		world.process_mode = Node.PROCESS_MODE_DISABLED
 	YtWorld.game = self
 	world.add_child(YtWaveSpecial.new())
 	_style_hud()
@@ -145,12 +153,56 @@ func _make_waves() -> Array:
 	return []
 
 
+## Koop: die Solo-Karte einmal je Spieler (eigener Weg und Gebiet), ein gespeicherter Koop bringt seine Karte mit.
+func _load_map() -> MapData:
+	var m := super._load_map()
+	return YoutdCoop.koop_map(m, _coop_count) if m != null else null
+
+
 func _apply_variance() -> void:
 	pass
 
 
 func save_mode() -> String:
 	return super.save_mode() if setup_done else "none"
+
+
+# --- Koop (coop_sync.gd, youtd_coop.gd) ------------------------------------------------
+
+func coop_commands() -> Array:
+	return ["research", "roll", "build", "item_put", "item_use", "item_lock", "transmute", "next_wave", "player_setup"]
+
+
+func new_tower() -> Tower:
+	return YoutdTower.new()
+
+
+func coop_snapshot() -> Dictionary:
+	return YoutdCoop.snapshot(self)
+
+
+func apply_coop_snapshot(d: Dictionary) -> void:
+	var prev = YtWorld.use(self)
+	YoutdCoop.apply(self, d)
+	YtWorld.use(prev)
+
+
+func coop_stats() -> Dictionary:
+	return YoutdCoop.stats(self)
+
+
+func apply_coop_stats(d: Dictionary) -> void:
+	var prev = YtWorld.use(self)
+	YoutdCoop.apply_stats(self, d)
+	YtWorld.use(prev)
+
+
+## Mitspieler zeigen Gegner vom Host an: Aussehen aus Größe und Rasse ("youtd_champion:orc").
+func enemy_def(id: String) -> Dictionary:
+	if not id.begins_with("youtd_"):
+		return super.enemy_def(id)
+	var parts := id.trim_prefix("youtd_").split(":")
+	return YoutdEnemy.def_for(parts[0], parts[1] if parts.size() > 1 else "orc", 1.0, 0.0, "")
 
 
 # --- Spielstand (save_game.gd, youtd_save.gd) ----------------------------------------
@@ -224,11 +276,9 @@ func _apply_setup(cmd: Dictionary) -> void:
 	var st: Dictionary = rules.get("start", {})
 	portal = float(st.get("lives", 100))
 	_make_players()
-	# Einstellungen je Spieler: solo direkt im Befehl, im Koop unter "players" (Spielernummer -> Werte)
-	var per: Dictionary = cmd.get("players", {})
+	# Baumeister und Weisheit: der Host im Befehl, Mitspieler über player_setup (ohne: keine, Level 0)
 	for p in yt_players:
-		var cfg: Dictionary = per.get(str(p.id), cmd if p.id == local_player or per.is_empty() and p.id == 0 else {})
-		_apply_player(p, cfg)
+		_apply_player(p, cmd if p.id == local_player else _player_cfg.get(p.id, {"level": 0}))
 	waves = []
 	for i in wave_count():
 		waves.append(_wave(i + 1))
@@ -239,6 +289,24 @@ func _apply_setup(cmd: Dictionary) -> void:
 	_note(tr("Erforsche ein Element mit Wissensbüchern, dann würfle deine ersten Tower.") if not is_build_mode()
 			else tr("Erforsche ein Element mit Wissensbüchern, dann kaufe Tower im Baumenü."))
 	_refresh_hud()
+
+
+## Mitspieler wählen Baumeister und Weisheit selbst (aus ihrem Profil), auch bevor der Host startet. Nach dem Start
+## gilt die Wahl noch, solange der Spieler nichts gebaut hat und die erste Welle nicht lief.
+func execute(cmd: Dictionary) -> bool:
+	if str(cmd.get("type", "")) != "player_setup":
+		return super.execute(cmd)
+	var pid := int(cmd.get("player", -1))
+	if pid <= 0 or pid >= players.size() or _player_cfg.has(pid):
+		return false
+	_player_cfg[pid] = {"builder": str(cmd.get("builder", "")), "wisdom": (cmd.get("wisdom", []) as Array).duplicate(),
+		"level": clampi(int(cmd.get("level", 0)), 0, 1000)}
+	if setup_done and next_wave == 1 and pid < yt_players.size():
+		if all_towers().any(func(t): return t.owner_player == pid):
+			return false
+		_apply_player(yt_players[pid], _player_cfg[pid])
+		_refresh_hud()
+	return true
 
 
 func _wave(level: int) -> Dictionary:
@@ -559,8 +627,7 @@ func transmute(uids: Array) -> bool:
 		text += " " + tr("(Pech: %d Level)") % luck
 	elif luck > 0:
 		text += " " + tr("(Glück: +%d Level)") % luck
-	if acting == local_player:
-		_note(text)
+	_note(text)
 	_refresh_hud()
 	return true
 
@@ -631,8 +698,7 @@ func drop_item_id(_creep: YtCreep, id: String, owner: YtPlayer = null) -> void:
 	if it == null:
 		return
 	stash_add(it)
-	if owner.id == local_player:
-		_note(tr("Item gefunden: %s (%s)") % [it.get_display_name(), YoutdData.rarity_name(str(YoutdData.item(id).get("rarity", "")))])
+	_note(tr("Item gefunden: %s (%s)") % [it.get_display_name(), YoutdData.rarity_name(str(YoutdData.item(id).get("rarity", "")))], owner.id)
 
 
 # --- Wellen ----------------------------------------------------------------------
@@ -773,12 +839,20 @@ func creep_score(e: YoutdEnemy) -> float:
 	return e.damage_done() * (int(e.level / 8) + 1) * settings * size
 
 
+## Punkte gehören dem Spieler, auf dessen Weg der Gegner lief (zusammen in youtd_score).
+func _add_score(e: YoutdEnemy) -> void:
+	var pts := creep_score(e)
+	youtd_score += pts
+	if not yt_players.is_empty():
+		yt_players[clampi(e.lane, 0, yt_players.size() - 1)].score += pts
+
+
 ## Kopfgeld, Erfahrung und Items hat der Kern schon verteilt (YtUnit._accept_kill); hier Punkte und Wellenstand.
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
 	var ye := e as YoutdEnemy
 	if ye != null:
-		youtd_score += creep_score(ye)
+		_add_score(ye)
 		_creep_gone(ye)
 	_remove_enemy(e)
 	_refresh_hud()
@@ -797,7 +871,7 @@ func on_enemy_leaked(e: Enemy) -> void:
 			dmg = 2.5 * float(rules.get("sizes", {}).get(ye.creep_size, {}).get("portal", 1)) * (1.0 - pow(ye.damage_done(), p))
 			if ye.core != null:
 				dmg *= ye.core.get_portal_damage_multiplier()
-		youtd_score += creep_score(ye)
+		_add_score(ye)
 		leaks_per_wave[ye.level - 1] = int(leaks_per_wave.get(ye.level - 1, 0)) + 1
 		if dmg > 0.0:
 			_note(tr("%s durchgelaufen: −%s %% Leben") % [ye.display_name(), TowerStats.num(dmg)])
@@ -832,12 +906,11 @@ func _wave_finished(lvl: int, lane := 0) -> void:
 	gold += upkeep + interest
 	p.add_tomes(int(inc.get("tomes", 8)))
 	p.get_builder().apply_wave_finished_effect(p)
-	if acting == local_player:
-		_note(tr("Welle %d geschafft: +%d Gold, +%d Zinsen, +%d Bücher") % [lvl, upkeep, interest, int(inc.get("tomes", 8))])
+	_note(tr("Welle %d geschafft: +%d Gold, +%d Zinsen, +%d Bücher") % [lvl, upkeep, interest, int(inc.get("tomes", 8))])
 	if not is_build_mode():
 		var rolled := YoutdRoll.per_wave(self)
 		stash.append_array(rolled)
-		if not rolled.is_empty() and acting == local_player:
+		if not rolled.is_empty():
 			_note(tr("Neue Tower: %s") % ", ".join(rolled.map(func(id): return YoutdData.tower(id).get("name", id))))
 	acting = before
 	# Welle geschafft, wenn sie auf keiner Bahn mehr läuft
@@ -879,12 +952,12 @@ func _finish(p: Phase) -> void:
 		return
 	phase = p
 	if not debug_used:
-		xp_result = YoutdProgress.record(youtd_score, waves_done, p == Phase.VICTORY, enemies_killed)
+		xp_result = YoutdProgress.record(my_score(), waves_done, p == Phase.VICTORY, enemies_killed)
 	record_profile(p == Phase.VICTORY)
 	Engine.time_scale = 1.0
 	lives = ceili(portal)
 	hud.show_game_over(p == Phase.VICTORY, mini(waves_done + 1, waves.size()), waves.size(), lives, enemies_killed, 0, null, {})
-	var text := tr("Welle %d von %d · Portal %s %%\nGegner besiegt: %d\nPunkte: %d") % [waves_done, waves.size(), TowerStats.num(portal), enemies_killed, roundi(youtd_score)]
+	var text := tr("Welle %d von %d · Portal %s %%\nGegner besiegt: %d\nPunkte: %d") % [waves_done, waves.size(), TowerStats.num(portal), enemies_killed, roundi(my_score())]
 	if not xp_result.is_empty():
 		text += "\n" + tr("Spieler-XP: +%s (Level %d)") % [TowerStats.num(float(xp_result.xp)), int(xp_result.level_after)]
 		if int(xp_result.level_after) > int(xp_result.level_before):
@@ -900,13 +973,22 @@ func profile_mode() -> String:
 
 
 func profile_extra() -> Dictionary:
-	return {"elements": elements.duplicate(), "mode": mode_id(), "score": roundi(youtd_score), "wisdom": wisdom.duplicate()}
+	return {"elements": elements.duplicate(), "mode": mode_id(), "score": roundi(my_score()), "wisdom": wisdom.duplicate()}
 
 
-func _note(text: String) -> void:
-	log_lines.append(text)
-	if log_lines.size() > 5:
-		log_lines.pop_front()
+## Punkte des lokalen Spielers (solo alle).
+func my_score() -> float:
+	return yt_players[local_player].score if yt_players.size() > 1 and local_player < yt_players.size() else youtd_score
+
+
+## Meldung für den handelnden Spieler (oder Spieler pid) in der Seitenleiste.
+func _note(text: String, pid := -1) -> void:
+	if yt_players.is_empty():
+		return
+	var n: Array = (yt_players[clampi(pid, 0, yt_players.size() - 1)] if pid >= 0 else yp()).notes
+	n.append(text)
+	if n.size() > 5:
+		n.pop_front()
 
 
 # --- Wegsuche: nur auf dem Weg ------------------------------------------------------

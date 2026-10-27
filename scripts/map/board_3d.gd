@@ -470,6 +470,9 @@ func _rebuild_markers() -> void:
 	for c in order:
 		_add_marker(c, " / ".join(labels[c]), style.marker)
 	_add_marker(map.goal, "Z", style.marker)
+	for lane in range(1, map.lane_count()):
+		if map.lane_goal(lane) != map.goal:
+			_add_marker(map.lane_goal(lane), "Z%d" % (lane + 1), style.marker)
 	for z in map.zones:
 		_add_zone(z.rect, PLAYER_COLORS[z.player % PLAYER_COLORS.size()] if z.player >= 0 else style.marker)
 

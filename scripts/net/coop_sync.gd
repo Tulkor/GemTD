@@ -10,7 +10,8 @@ extends Node
 ##                Weg weiter (enemy.gd → _remote_step).
 ##   Andere Modi auf game.gd (eeveTD) hängen sich mit eigenen Methoden an, falls vorhanden:
 ##                coop_commands() weitere erlaubte Befehle, new_tower() Tower-Klasse für Mitspieler,
-##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode").
+##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode"), coop_stats()/apply_coop_stats(d)
+##                was sich laufend ändert und nicht als neuer Stand zählt (unter "mstats", wie "tstats").
 
 const STATE_INTERVAL := 1.0
 const CHECK_INTERVAL := 0.05
@@ -151,12 +152,15 @@ func snapshot() -> Dictionary:
 		s.rogue = game.rogue.to_dict()
 	if game.has_method("coop_snapshot"):
 		s.mode = game.coop_snapshot()
+	if game.has_method("coop_stats"):
+		s.mstats = game.coop_stats()
 	return s
 
 
 static func structure_hash(s: Dictionary) -> int:
 	var d := s.duplicate()
 	d.erase("tstats")
+	d.erase("mstats")
 	return hash(d)
 
 
@@ -256,6 +260,8 @@ func apply_state(s: Dictionary) -> void:
 		g.enable_rogue().from_dict(s.rogue)
 	if s.has("mode") and g.has_method("apply_coop_snapshot"):
 		g.apply_coop_snapshot(s.mode)
+	if s.has("mstats") and g.has_method("apply_coop_stats"):
+		g.apply_coop_stats(s.mstats)
 	if s.get("setup", true) and not g.setup_done:
 		Session.difficulty = int(s.get("difficulty", Session.difficulty))
 		Session.score_mode = bool(s.get("score_mode", false))

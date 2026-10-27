@@ -135,4 +135,89 @@ func _save_tests() -> void:
 # --- Koop ------------------------------------------------------------------------------
 
 func _coop_tests() -> void:
-	pass
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	var host: Node = load(SCENE).instantiate()
+	add_child(host)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client: Node = load(SCENE).instantiate()
+	add_child(client)
+	await get_tree().process_frame
+	check(host.coop != null and client.mirror and client.local_player == 1, "Koop: Host und Mitspieler angelegt")
+	YtWorld.use(host)   # die Laufzeit gehört dem Host, der Mitspieler setzt sie nur beim Übernehmen kurz um
+	check(host.map.lane_count() == 2 and host.map.width == 148 and client.map.width == 148 and host.map.lane_goal(1) != host.map.goal,
+		"Karte: eigener Weg mit eigenem Ziel je Spieler")
+	client.coop.command_sink = func(cmd): host.coop.receive(1, _wire(cmd))
+	var pump := func():
+		client.coop.apply_state(_wire(host.coop.snapshot()))
+		client.coop.apply_enemies(_wire(host.coop.enemy_packet()))
+	var beginner := ""
+	for b in YoutdProgress.builders():
+		if b.open and int(b.level) == 0:
+			beginner = str(b.id)
+			break
+	client.submit({"type": "player_setup", "builder": beginner, "wisdom": [], "level": 0})
+	client.submit({"type": "setup", "mode": 0, "length": 0, "difficulty": 0, "seed": 1})
+	check(not host.setup_done, "nur der Host startet die Partie")
+	host.submit({"type": "setup", "mode": 1, "length": 0, "difficulty": 1, "seed": 5, "wisdom": [], "builder": "", "level": 0})
+	pump.call()
+	check(client.setup_done and client.wave_seed == 5 and is_equal_approx(float(client.waves[7].hp), float(host.waves[7].hp)),
+		"Mitspieler übernimmt Einstellungen und Wellen")
+	check(beginner != "" and host.yt_players[1].builder_id == beginner and client.yp().builder_id == beginner and host.yt_players[0].builder_id == "",
+		"Baumeister je Spieler (%s)" % beginner)
+	# Mitspieler erforscht und baut in seinem Gebiet
+	var el: String = YoutdData.elements()[0]
+	client.submit({"type": "research", "element": el})
+	pump.call()
+	check(int(host.yt_players[1].elements.get(el, 0)) == 1 and int(host.yt_players[0].elements.get(el, 0)) == 0 and int(client.elements.get(el, 0)) == 1,
+		"Elemente je Spieler")
+	var id: String = client.buildable()[0] if not client.buildable().is_empty() else ""
+	var a1: Vector2i = _anchor(client, 1)
+	var a0: Vector2i = _anchor(host, 0)
+	check(not host.can_place_for(a0, 1) and not host.can_place_for(a1, 0), "jeder baut nur in seinem Gebiet")
+	var gold0: int = host.players[0].gold
+	client.submit({"type": "build", "id": id, "cell": a1})
+	pump.call()
+	var t: YoutdTower = host.towers.get(a1)
+	var ct: YoutdTower = client.towers.get(a1)
+	check(t != null and t.owner_player == 1 and ct != null and ct.yid == id and ct.core != null, "Host baut den Tower des Mitspielers, er sieht ihn (%s)" % id)
+	check(host.players[0].gold == gold0 and host.players[1].gold < gold0 and client.gold == host.players[1].gold, "Gold je Spieler")
+	# Items: Fund beim Host, Lager und Einlegen beim Mitspieler
+	var claws := YtItem.make(2, host.yt_players[1])
+	host.stash_add(claws)
+	pump.call()
+	check(client.item_stash.size() == 1 and client.item_stash[0].get_uid() == claws.get_uid() and host.yt_players[0].item_stash.is_empty(),
+		"Item im Lager des Mitspielers")
+	client.submit({"type": "item_put", "tower": client.tower_ref(ct), "uid": claws.get_uid()})
+	pump.call()
+	check(t.items == [claws] and ct.items.size() == 1 and ct.items[0].get_uid() == claws.get_uid() and client.item_stash.is_empty(),
+		"Item im Tower bei beiden (Host %d, Gast %d, Lager %d)" % [t.items.size(), ct.items.size(), client.item_stash.size()])
+	check(is_equal_approx(ct.mod("MOD_DAMAGE_ADD_PERC"), t.mod("MOD_DAMAGE_ADD_PERC")), "Item wirkt auch im Infofenster des Mitspielers")
+	t.core.add_exp_flat(500.0)
+	pump.call()
+	check(ct.level == t.level and t.level > 0, "Tower-Level kommt an (%d)" % ct.level)
+	# Welle: auf beiden Wegen, gemeinsamer Timer
+	client.submit({"type": "next_wave"})
+	await _wait_for(func(): return host.enemies.any(func(e): return e.lane == 0) and host.enemies.any(func(e): return e.lane == 1))
+	check(host.enemies.any(func(e): return e.lane == 1) and host.enemies.any(func(e): return e.lane == 0), "Welle 1 läuft auf beiden Wegen")
+	var lane1: Array = host.enemies.filter(func(e): return e.lane == 1)
+	check(lane1[0].path[0].x > 74 * 0.5 * 0.9 if not lane1.is_empty() else false, "Gegner des Gasts laufen auf seiner Kartenhälfte")
+	pump.call()
+	check(client.phase == client.Phase.WAVE and client.enemies.size() == host.enemies.size() and client.enemies.size() > 0,
+		"Gegner gespiegelt: %d" % client.enemies.size())
+	host.modify_portal(-10.0)
+	host._note("Testmeldung", 1)
+	pump.call()
+	check(is_equal_approx(client.portal, host.portal) and client.log_lines.has("Testmeldung") and not host.log_lines.has("Testmeldung"),
+		"Portal gemeinsam, Meldungen je Spieler")
+	var st: Dictionary = SaveGame.capture(host)
+	check(host.save_mode() == "single" and (st.mode.players as Array).size() == 2 and st.map.has("lanes"), "Koop-Stand mit beiden Spielern und Karte")
+	# Verkaufen: Item zurück ins Lager, Tower weg bei beiden
+	var opts: Array = client.tower_options(ct)
+	var k: int = opts.map(func(o): return o.action).find("sell")
+	client.submit({"type": "option", "tower": client.tower_ref(ct), "index": k, "action": "sell", "id": opts[k].id})
+	pump.call()
+	check(not host.towers.has(a1) and not client.towers.has(a1) and client.item_stash.size() == 1, "Verkauft: Tower weg, Item zurück im Lager")
+	host.queue_free()
+	client.queue_free()
+	Session.coop = {}
+	await get_tree().process_frame

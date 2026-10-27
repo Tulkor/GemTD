@@ -3,6 +3,8 @@ extends Control
 ## Einstellungen vor der ersten Welle von YouTD: Spielmodus, Länge, Schwierigkeit, Weisheits-Boni und Baumeister
 ## (je 6 Spielerlevel ein Punkt, die Wahl bleibt im Profil). Oben Spielerlevel und Erfahrung.
 ## „Los geht's“ schickt den Befehl setup an youtd_game.gd; das Fenster schließt sich, sobald game.setup_done gilt.
+## Koop: Modus, Länge und Schwierigkeit wählt der Host, Weisheit und Baumeister jeder selbst („Bereit“ schickt
+## player_setup); das Fenster eines Mitspielers bleibt, bis er bereit ist oder die erste Welle läuft.
 
 var game  # youtd_game.gd
 var mode := 0
@@ -15,6 +17,8 @@ var _builder_text: Label
 var _diff_text: Label
 var _wisdom_head: Label
 var _wisdom_buttons := {}
+var _sent := false
+var _wait: Label
 
 
 func _ready() -> void:
@@ -60,13 +64,14 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	v.add_child(row)
+	var host_only: Array = []
 	var group := ButtonGroup.new()
 	var modes: Array = game.rules.get("modes", [])
 	for i in modes.size():
 		var idx := i
-		_toggle(str(modes[i].name), row, group, i == mode, func():
+		host_only.append(_toggle(str(modes[i].name), row, group, i == mode, func():
 			mode = idx
-			_update_text())
+			_update_text()))
 	_mode_text = UiUtil.wrap_label("", v, 700)
 	_mode_text.add_theme_color_override("font_color", UiTheme.DIM)
 
@@ -78,9 +83,9 @@ func _ready() -> void:
 	var lengths: Array = game.rules.get("lengths", [])
 	for i in lengths.size():
 		var idx := i
-		_toggle(tr("%s · %d Wellen") % [tr(str(lengths[i].name)), int(lengths[i].waves)], row, group, i == length, func():
+		host_only.append(_toggle(tr("%s · %d Wellen") % [tr(str(lengths[i].name)), int(lengths[i].waves)], row, group, i == length, func():
 			length = idx
-			_update_text())
+			_update_text()))
 
 	UiTheme.caption("Schwierigkeit", v)
 	row = HBoxContainer.new()
@@ -90,9 +95,9 @@ func _ready() -> void:
 	var diffs: Array = game.rules.get("difficulties", [])
 	for i in diffs.size():
 		var idx := i
-		_toggle(str(diffs[i].name), row, group, i == difficulty, func():
+		host_only.append(_toggle(str(diffs[i].name), row, group, i == difficulty, func():
 			difficulty = idx
-			_update_text())
+			_update_text()))
 	_diff_text = UiUtil.wrap_label("", v, 700)
 	_diff_text.add_theme_color_override("font_color", UiTheme.DIM)
 
@@ -142,6 +147,19 @@ func _ready() -> void:
 	_builder_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_update_text()
 
+	if game.players.size() > 1:
+		var coop_hint := UiUtil.wrap_label(tr("Koop: jeder hat seinen eigenen Weg, sein Gebiet, Gold und Bücher; Portal und Wellen-Timer sind gemeinsam. Weisheit und Baumeister wählt jeder selbst."), v, 700)
+		coop_hint.add_theme_color_override("font_color", UiTheme.CYAN)
+	if game.mirror:
+		for b in host_only:
+			b.disabled = true
+		var rb := UiUtil.button("Bereit", v, _ready_up)
+		rb.custom_minimum_size.y = 50
+		rb.add_theme_font_size_override("font_size", 20)
+		UiTheme.accent_button(rb, UiTheme.GOLD, UiTheme.GOLD_DARK)
+		_wait = UiUtil.wrap_label(tr("Modus, Länge und Schwierigkeit wählt der Host."), v, 700)
+		_wait.add_theme_color_override("font_color", UiTheme.MUTED)
+		return
 	var go := UiUtil.button("Los geht's", v, _start)
 	go.custom_minimum_size.y = 50
 	go.add_theme_font_size_override("font_size", 20)
@@ -155,6 +173,17 @@ func _start() -> void:
 			"builder": builder, "level": YoutdProgress.level()})
 
 
+## Mitspieler: eigene Weisheit und eigenen Baumeister an den Host schicken.
+func _ready_up() -> void:
+	if _sent:
+		return
+	_sent = true
+	YoutdProgress.set_wisdom(wisdom)
+	YoutdProgress.set_last_builder(builder)
+	game.submit({"type": "player_setup", "wisdom": wisdom.duplicate(), "builder": builder, "level": YoutdProgress.level()})
+	_wait.text = tr("Bereit. Warte auf den Host …")
+
+
 func _toggle_wisdom(id: String) -> void:
 	if wisdom.has(id):
 		wisdom.erase(id)
@@ -164,7 +193,7 @@ func _toggle_wisdom(id: String) -> void:
 
 
 func _process(_delta: float) -> void:
-	if game.setup_done:
+	if game.setup_done and (not game.mirror or _sent or game.next_wave > 1):
 		queue_free()
 
 

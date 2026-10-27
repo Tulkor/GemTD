@@ -14,7 +14,8 @@ var elements := {}           ## Element -> Stufe
 var stash: Array = []        ## gewürfelte Tower-IDs, die noch gebaut werden können
 var item_stash: Array = []   ## YtItem im Lager
 var can_reroll := true       ## Startwurf wiederholen, bis der erste Tower steht
-var score := 0.0
+var score := 0.0              ## Punkte dieses Spielers (werden am Ende zu seiner Spieler-XP)
+var notes: Array = []        ## letzte Meldungen für diesen Spieler (Seitenleiste)
 
 ## Weisheits-Boni (vor dem Start gewählt) und was daraus folgt
 var wisdom: Array = []
@@ -131,8 +132,11 @@ func get_attack_range_bonus() -> float:
 
 
 func get_builder() -> YtBuilder:
-	if builder == null:
+	if builder == null or not is_instance_valid(builder):
+		# ohne Wahl: Baumeister ohne Sonderregeln, hängt unter YtWorld (sonst bliebe der Knoten bis zum Ende liegen)
 		builder = YtBuilder.new()
+		if YtWorld.node != null:
+			YtWorld.node.add_child(builder)
 	return builder
 
 

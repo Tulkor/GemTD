@@ -49,6 +49,15 @@ func item_holder() -> Node:
 	return h
 
 
+## Welt und Spiel für die statischen Zugriffe setzen (Mitspieler im Koop, Tests mit Host und Mitspieler in einem
+## Prozess). Gibt das vorige Spiel zurück.
+static func use(g):
+	var prev = game
+	game = g
+	node = g.world if g != null else null
+	return prev
+
+
 static func next_uid() -> int:
 	if node == null:
 		return 0
@@ -84,14 +93,16 @@ func _process(delta: float) -> void:
 	if game == null or not game.setup_done or game.phase >= game.Phase.GAME_OVER:
 		return
 	time += delta
+	# Nur was auf dem eigenen Spielfeld liegt (Tests haben Host und Mitspieler in einem Prozess)
+	var field := get_parent()
 	for t in get_tree().get_nodes_in_group("yt_timers"):
-		if is_instance_valid(t) and not t.is_queued_for_deletion():
+		if is_instance_valid(t) and not t.is_queued_for_deletion() and field.is_ancestor_of(t):
 			t.update(delta)
 	for u in get_tree().get_nodes_in_group("yt_units"):
-		if is_instance_valid(u) and not u.is_queued_for_deletion() and u.is_inside_tree():
+		if is_instance_valid(u) and not u.is_queued_for_deletion() and u.is_inside_tree() and field.is_ancestor_of(u):
 			u.update(delta)
 	for p in get_tree().get_nodes_in_group("yt_projectiles"):
-		if is_instance_valid(p) and not p.is_queued_for_deletion() and p.is_inside_tree():
+		if is_instance_valid(p) and not p.is_queued_for_deletion() and p.is_inside_tree() and field.is_ancestor_of(p):
 			p.update(delta)
 	projectile_view.refresh()
 	_update_effects(delta)

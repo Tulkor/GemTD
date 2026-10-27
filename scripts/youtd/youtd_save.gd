@@ -13,7 +13,7 @@ static func capture(g) -> Dictionary:
 	var ps := []
 	for p in g.yt_players:
 		var d := {"builder": p.builder_id, "elements": p.elements.duplicate(), "stash": p.stash.duplicate(),
-			"wisdom": p.wisdom.duplicate(), "wisdom_mods": p.wisdom_mods.duplicate(),
+			"wisdom": p.wisdom.duplicate(), "wisdom_mods": p.wisdom_mods.duplicate(), "notes": p.notes.duplicate(),
 			"items": p.item_stash.map(func(it): return item_dict(it))}
 		for f in PLAYER_FIELDS:
 			d[f] = p.get(f)
@@ -39,7 +39,7 @@ static func capture(g) -> Dictionary:
 		"mode": g.mode_index, "length": g.length_index, "difficulty": g.difficulty, "seed": g.wave_seed,
 		"wave_rng": g.wave_rng.state, "roll_rng": g.roll_rng.state, "synced_rng": YtGlobals.synced_rng.state,
 		"portal": g.portal, "score": g.youtd_score, "next_wave": g.next_wave, "next_wave_in": g.next_wave_in,
-		"waves_done": g.waves_done, "alive": g.alive.duplicate(), "log": g.log_lines.duplicate(),
+		"waves_done": g.waves_done, "alive": g.alive.duplicate(),
 		"spawners": g.spawners.map(func(s): return {"level": int(s.wave.level), "index": s.index, "timer": s.timer, "lane": s.get("lane", 0)}),
 		"players": ps, "towers": ts, "enemies": es,
 	}
@@ -105,6 +105,7 @@ static func restore(g, d: Dictionary) -> void:
 		for el in els:
 			p.elements[str(el)] = int(els[el])
 		p.stash = (pd.get("stash", []) as Array).map(func(id): return str(id))
+		p.notes = (pd.get("notes", []) as Array).duplicate()
 		for idd in pd.get("items", []):
 			var it := make_item(idd, p)
 			if it != null:
@@ -128,7 +129,6 @@ static func restore(g, d: Dictionary) -> void:
 	g.next_wave = int(d.get("next_wave", 1))
 	g.next_wave_in = float(d.get("next_wave_in", 15.0))
 	g.waves_done = int(d.get("waves_done", 0))
-	g.log_lines = (d.get("log", []) as Array).duplicate()
 	g.setup_done = true
 	g.hud.setup_debug(0, g.waves.size())
 

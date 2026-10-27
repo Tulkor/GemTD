@@ -95,8 +95,12 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 - Seltenheit wie bei Towern; Drop beim Kill (Grundchance 4,75 %, mehr Würfe bei größeren Gegnern, Boss 20),
   Stufe nach Gegnerwelle („required wave level“).
 - Jeder Tower hat **Item-Plätze** (1–6, nach Kosten und Seltenheit). Items liegen sonst im Lager.
-- 180 Items wirken nur über Werte (z. B. „+25 % Schaden“) und kommen sofort, 135 haben eigene Skripte (Etappe 3).
-- **Horadrischer Würfel**: 8 Rezepte (z. B. 2 Verbrauchsgegenstände → 1 neuer, 5 gleiche Items → 1 seltener). Etappe 3.
+- 180 Items wirken nur über Werte (z. B. „+25 % Schaden“), die übrigen haben seit Etappe 3 ihr Skript aus YouTD 2
+  (141 Skripte in `scripts/youtd/items/`): Auslöser, Auren, Zauber (von Hand über die Auswahlkarte), Ladungen.
+  Verbrauchsgegenstände benutzt man mit einem Klick im Lager.
+- **Horadrischer Würfel** (Seitenleiste, Lager-Bereich): 7 Rezepte nach `horadric_cube.gd`, z. B. 2 Öle oder
+  Verbrauchsgegenstände → 1 neuer, 5 gleiche Items → 1 neues höherer Stufe, 4 → 1 seltener. Drei davon (Verflüssigen,
+  Ausfällen, Durchtränken) nur mit dem Baumeister Backpacker. Rechtsklick sperrt ein Item gegen den Würfel.
 
 ## Spieler-XP und Level (sessionübergreifend)
 
@@ -105,7 +109,8 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 - **Spieler-XP = Punkte × 0,002**, Level 0–300 nach Tabelle `player_exp_for_level` (Level 20 bei 411 XP, Level 60 bei
   2431 XP). Gespeichert im Spielerprofil unter `modes.youtd.progress` (wie Maul-XP), im Profilfenster sichtbar.
 - **Baumeister** (Builder) werden mit dem Level freigeschaltet: 5 Anfänger (Level 0), 6 Fortgeschrittene (Level 5),
-  8 Spezialisten (Level 10), 2 Hardcore (Level 20). Jeder verändert die Regeln (z. B. mehr Gold, mehr Items).
+  8 Spezialisten (Level 10), 2 Hardcore (Level 20). Jeder verändert die Regeln (z. B. mehr Gold, mehr Items); seit
+  Etappe 3 mit ihren Skripten aus YouTD 2 (`scripts/youtd/builders/`), Wahl im Startfenster, Texte in `rules.json`.
 - **Weisheits-Boni**: alle 6 Level ein Punkt (bis 24 Boni), vor dem Spiel frei verteilbar: z. B. +8 % Grundschaden,
   +7 % Angriffstempo, +40 Bücher, +16 Food, +20 % Leben, +25 Reichweite, +2 maximale Elementstufe, +2 maximales
   Tower-Level.
@@ -118,7 +123,20 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 | | Noch nicht in Etappe 1: Spielstände (Speichern/Laden), Verbrauchsgegenstände (fallen noch nicht), Wellen-Eigenschaften ohne eigene Wirkung zählen nur mit ihrem Lebens-Faktor, Tower mit Skript schießen nur normal |
 | **2** | Alle 214 Tower-Skripte und alle 41 Wellen-Eigenschaften (Brut, Nekromant, Trächtig, Sprint usw.) aus YouTD 2 portiert, YouTD-2-Laufzeit für Werte, Buffs, Auren, Autocasts, Geschosse und Effekte; Zauber von Hand auf der Auswahlkarte; Test für alle 690 Tower |
 | | Noch offen nach Etappe 2: Spielstände (Speichern/Laden), Texte der Buff-Tooltips (im Original-Repo nicht enthalten), Effekte nur angenähert (Treffer-Effekte und Leuchtringe statt der YouTD-Grafiken) |
-| 3 | Item-Skripte, Horadrischer Würfel, Baumeister mit Sonderregeln, Koop |
+| **3** | Item-Skripte, Horadrischer Würfel, 21 Baumeister mit Sonderregeln, Buff-Texte (Auswahlkarte „Effekte“), Spielstände, Koop bis 4 Spieler (jeder sein Weg) |
+| | Noch offen nach Etappe 3: was Skripte nur in sich tragen (laufende Buffs, Abklingzeiten, Zähler) geht beim Speichern verloren; Mitspieler sehen Schüsse als Linien statt Geschosse und keine Effekte der Fähigkeiten |
+
+## Koop (Etappe 3)
+
+Wie YouTD 2: jeder Spieler hat **seinen eigenen Weg** mit eigenen Wellen, sein Gebiet, Gold, Bücher, Elemente, Lager,
+Items, Baumeister, Weisheit und Punkte (daraus seine Spieler-XP). **Gemeinsam** sind die Portal-Leben und der
+Wellen-Timer; „Nächste Welle“ startet sie auf allen Wegen. Die Lobby startet YouTD immer als Koop (`coop_only` in
+`data/modes.json`, bis 4 Spieler). Die Karte ist die Solo-Karte einmal je Spieler in zwei Spalten
+(`YoutdCoop.koop_map`, Bahnen mit eigenem Ziel `lanes[].goal` in map_data.gd, Gebiete über `zones`).
+Modus, Länge und Schwierigkeit wählt der Host; Weisheit und Baumeister jeder selbst („Bereit“ → Befehl `player_setup`).
+Der Host rechnet alles (coop_sync.gd); Mitspieler bekommen den YouTD-Stand über `coop_snapshot`, Erfahrung, Kills
+und Mana der Tower einmal pro Sekunde über `coop_stats`. Ihre Tower haben einen Kern fürs Infofenster, ihre YtWorld
+steht still.
 
 ## Technik
 
@@ -134,12 +152,16 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
   `core.body`). Der Kern rechnet Werte, Leben, Angriffe, Buffs, Auren und Autocasts; der Körper zeigt Modell und Weg und
   liefert die Position (`get_position_wc3` = `body.pos × 128`). `YtWorld` (Kind des Bretts) treibt Timer, Einheiten,
   Geschosse (`YtProjectileView`, MultiMesh) und Effekte (`YtEffect` wählt FxPlayer-Treffer nach Schlüsselwort, Dauer-
-  effekte als Leuchtring). Items gehen als ein Modifikator an den Kern (`core.set_item_mods`).
-- `tools/youtd/faehigkeiten.py` wandelt die Tower-Skripte nach `scripts/youtd/towers/` und die Wellen-Eigenschaften nach
-  `scripts/youtd/specials/` um (Feld `script` in towers.json/specials.json), mit kleinen Anpassungen je Datei (`PATCHES`,
+  effekte als Leuchtring). Items sind `YtItem` (Knoten unter YtWorld, Ort Lager/Tower, Befehle über die uid), ihr
+  Skript ein `YtItemBehavior`; Baumeister `YtBuilder`, je Spieler ein `YtPlayer` (Bücher, Food, Elemente, Lager).
+- Spielstand: `youtd_save.gd` (unter "mode" im Stand von save_game.gd: Seed und Zufallszustände, Spieler, Tower mit
+  Erfahrung, Items und Ölen, Gegner mit Leben und Strecke). Koop: `youtd_coop.gd`. Würfel: `youtd_cube.gd`.
+- `tools/youtd/faehigkeiten.py` wandelt die Tower-Skripte nach `scripts/youtd/towers/`, die Wellen-Eigenschaften nach
+  `scripts/youtd/specials/`, Items nach `scripts/youtd/items/` und Baumeister nach `scripts/youtd/builders/` um (Feld `script` in towers.json/specials.json), mit kleinen Anpassungen je Datei (`PATCHES`,
   `SPAWN_RULES`). Texte der YouTD-2-Übersetzungstabelle stehen deutsch in `data/youtd/texte.json` (`YtUtils.text`).
 - Karte `data/maps/youtd.json` (`game: "youtd"`), Weg fest über Wegpunkte, Bauflächen daneben.
-- Tests `tools/run_tests.sh youtd ytfaehig` (ytfaehig: alle 690 Tower am Weg, Schaden, Zauber von Hand, alle
-  Wellen-Eigenschaften, Aufwerten; etwa 2 Minuten), Bild `tools/screenshot.sh --map=youtd [--auswahl] [--einstellungen]`
+- Tests `tools/run_tests.sh youtd ytfaehig ytitems ytkoop` (ytfaehig: alle 690 Tower am Weg, Schaden, Zauber von Hand,
+  alle Wellen-Eigenschaften, Aufwerten; etwa 2 Minuten. ytitems: alle Items in Towern, Würfel, Baumeister. ytkoop:
+  Spielstand und Koop ohne Netz), Bild `tools/screenshot.sh --map=youtd [--auswahl] [--einstellungen]`
   (unter Xvfb langsam, etwa 3 Minuten).
 - Quellen und MIT-Lizenz: `data/youtd/QUELLEN.md`.
