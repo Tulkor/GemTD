@@ -58,6 +58,16 @@ func refresh() -> void:
 	_next.visible = waiting
 	if waiting:
 		_next.text = tr("Level %d starten · %d s") % [game.wave_index + 1, ceili(maxf(game.level_pause, 0.0))]
+		# Koop: wer schon bereit ist, wartet auf die anderen
+		if game.players.size() > 1:
+			var here: Array = range(game.players.size()).filter(func(i): return not game.players[i].away)
+			var ready: int = here.filter(func(i): return game.rp(i).ready).size()
+			_next.text += " · %d/%d %s" % [ready, here.size(), tr("bereit")]
+			_next.disabled = bool(st.ready)
+	elif not game.setup_done:
+		var missing: Array = range(game.players.size()).filter(func(i): return not game.players[i].away and not game.rp(i).chosen)
+		if not missing.is_empty():
+			_log.text = tr("Warte auf die Rassenwahl von: %s") % ", ".join(missing.map(func(i): return game.players[i].name))
 
 
 ## Ein Knopf je Tower der Rasse; neu gebaut nur, wenn sich Preis-Lage oder Auswahl ändern.

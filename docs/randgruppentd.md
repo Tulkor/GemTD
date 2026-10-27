@@ -296,8 +296,11 @@ Spiel; die Fernseh-Rasse wäre ein Kandidat für eine 12. Rasse mit eigenem Name
   wie im Original 500 der 550 Gold, man beginnt also mit 50 Gold.
 - **Bauen:** Tower der eigenen Rasse direkt aufs Feld in der eigenen Zone, der Weg darf nicht versperrt werden.
   Ausgewählter Tower: Verkaufen (75 %).
-- **Koop (geplant, noch nicht im ersten Stand):** bis 9 Spieler über die Lobby, jeder seine Zone, Leben gemeinsam,
-  Host rechnet (wie Maul-Koop). Die Befehle laufen schon mit Spielernummer über `submit()`.
+- **Koop:** bis 9 Spieler über die Lobby (wie Shopping Maul: `needs_map` false, alle Verbundenen spielen zusammen),
+  jeder in seiner Zone mit eigenem Gold, Holz und eigener Rasse, Leben gemeinsam, der Host rechnet
+  (`coop_sync.gd`). Jeder wählt seine Rasse, nur der Host die Schwierigkeit; los geht es, wenn alle gewählt haben.
+  Ein Level früher starten geht erst, wenn alle bereit sind, sonst nach Ablauf der Pause. Gegner kommen nur an
+  den Bahnen der besetzten Zonen.
 - **Aussehen:** Tower als Stadthäuser (CC0, `assets/models/city/`), höher je teurer (Einfärben in der Rassenfarbe
   folgt). Gegner vorerst die vorhandenen Monster-Modelle. Spielfeld vorerst im Neon-Look von GemTD.
 - **Oberflächenstil „Plakatwand“** (Lukas, 2026-10-26): Papierflächen, schwarzer 3-px-Rahmen, harter roter Schatten,

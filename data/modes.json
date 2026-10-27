@@ -36,10 +36,10 @@
 			"name": "Randgruppen TD",
 			"ready": true,
 			"min_players": 1,
-			"max_players": 1,
+			"max_players": 9,
 			"scene": "res://scenes/rg_game.tscn",
-			"hint": "Rasse wählen, Tower frei ins Labyrinth bauen, 35 Level gegen die Spießer",
-			"needs_map": true
+			"hint": "Rasse wählen, Tower frei in die eigene Zone bauen, 35 Level gegen die Spießer, Koop bis 9 Spieler",
+			"needs_map": false
 		}
 	]
 }

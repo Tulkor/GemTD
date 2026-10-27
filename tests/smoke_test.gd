@@ -82,7 +82,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 
 	# Spiel automatisch spielen
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	var game: Node = load(Session.GAME).instantiate()
 	add_child(game)
 	await get_tree().process_frame
@@ -660,7 +660,7 @@ func _ready() -> void:
 ## Spielstände: Zustand mitten in einer Welle sichern, in ein neues Spiel laden, gleich weiter;
 ## Datei ist verschlüsselt und eine geänderte Datei lädt nicht mehr.
 func _save_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -740,7 +740,7 @@ func _save_test() -> void:
 
 ## Punkte-Modus: späte Wellen zählen mehr, ein Durchbruch kostet die Hälfte, kein Leben geht verloren.
 func _score_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.score_mode = true
 	var g: Node = load(Session.GAME).instantiate()
@@ -787,7 +787,7 @@ func _score_test() -> void:
 
 ## Steine: per Rahmen bis zu 5 auswählen, direkt durch Gems ersetzen (nur so viele, wie die Runde noch hat), Rest entfernen.
 func _rock_select_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -832,7 +832,7 @@ func _rock_select_test() -> void:
 
 ## Strg+Klick: Steine einzeln zur Auswahl hinzufügen/abwählen. Gesetzte Gems zurücknehmen, ohne neu zu würfeln.
 func _take_back_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -921,7 +921,7 @@ func _gem_key(t: Tower) -> String:
 ## Endboss der letzten Welle: Schadenscheck ohne Lebensverlust, im Punkte-Modus Punkte nach Schaden; Aufschlüsselung.
 func _final_boss_test() -> void:
 	for mode in [false, true]:
-		Session.map_path = Database.list_maps()[0].path
+		Session.map_path = Database.first_map().path
 		Session.map_override = null
 		Session.score_mode = mode
 		var g: Node = load(Session.GAME).instantiate()
@@ -970,7 +970,7 @@ func _final_boss_test() -> void:
 
 ## Koop-Vorbereitung: Spieleraktionen als Befehle (reine Daten), auch nach einer Netz-Übertragung (var_to_bytes).
 func _command_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -1001,7 +1001,7 @@ func _command_test() -> void:
 ## wenn beide fertig sind. Fremde Tower lassen sich nicht wählen oder zurücknehmen, das Kopfgeld geht an
 ## den Besitzer des Towers, der zuletzt getroffen hat.
 func _coop_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -1062,7 +1062,7 @@ func _coop_test() -> void:
 ## Koop übers Netz, hier ohne Netz verbunden: der Host rechnet, der Mitspieler schickt Befehle und
 ## übernimmt den Stand (coop_sync.gd).
 func _coop_sync_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
 	var g: Node = load(Session.GAME).instantiate()
@@ -1139,7 +1139,7 @@ func _setup_test() -> void:
 	Session.skip_setup = false
 	Session.difficulty = 1
 	Session.score_mode = false
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
 	var g: Node = load(Session.GAME).instantiate()
@@ -1249,12 +1249,12 @@ func _maul_test() -> void:
 	for n in [k, h, g]:
 		n.queue_free()
 	await get_tree().process_frame
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 
 
 ## Außerhalb jeder Tower-Reichweite laufen Gegner idle_speed_factor (8×) so schnell, in Reichweite normal.
 func _idle_speed_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)

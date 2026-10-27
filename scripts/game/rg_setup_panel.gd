@@ -2,7 +2,7 @@ class_name RgSetupPanel
 extends Control
 ## Einstellungen vor dem ersten Level von Randgruppen TD: Rasse (11 Karten mit ihren 7 Towern) und Schwierigkeit
 ## (= Leben, data/randgruppen.json). „Los geht's“ schickt den Befehl setup an rg_game.gd; das Fenster schließt sich,
-## sobald game.setup_done gilt.
+## sobald die eigene Wahl beim Host angekommen ist (im Koop wählt jeder seine Rasse, nur der Host die Schwierigkeit).
 
 var game  # rg_game.gd
 var race_id := ""
@@ -64,6 +64,7 @@ func _ready() -> void:
 			difficulty = idx
 			_update_text())
 		b.custom_minimum_size.x = 140
+		b.disabled = game.local_player != 0
 	_diff_text = UiUtil.wrap_label("", v, 770)
 	_diff_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_update_text()
@@ -75,7 +76,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if game.setup_done:
+	if game.setup_done or game.rp(game.local_player).chosen:
 		queue_free()
 
 
@@ -85,6 +86,8 @@ func _update_text() -> void:
 	_race_text.text = tr(str(r.get("hint", ""))) + "\n" + tr("Tower: ") + ", ".join(names)
 	var d: Dictionary = game.rules.difficulties[difficulty]
 	_diff_text.text = tr("%d Leben für alle zusammen. Start mit %d Gold (550 minus 500 für den Baumeister).") % [int(d.lives), game.start_gold()]
+	if game.local_player != 0:
+		_diff_text.text = tr("Die Schwierigkeit wählt der Host.") + " " + _diff_text.text
 
 
 func _toggle(text: String, parent: Node, group: ButtonGroup, on: bool, pressed: Callable) -> Button:

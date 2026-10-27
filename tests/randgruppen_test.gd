@@ -1,6 +1,7 @@
 extends Node
 ## Lauf: einzeln
-## Randgruppen TD: Daten, Karte und ein kurzes Spiel (Rasse, bauen, Weg offen, Endtower gesperrt, Level 1, verkaufen).
+## Randgruppen TD: Daten, Karte, ein kurzes Spiel (Rasse, bauen, Weg offen, Endtower gesperrt, Level 1, verkaufen)
+## und Koop ohne Netz (Rasse je Spieler, Zonen, Bereitschaft, gespiegelte Gegner).
 ## Start: godot --headless --path . res://tests/randgruppen_test.tscn (oder tools/run_tests.sh randgruppen)
 
 var failures := 0
@@ -99,6 +100,82 @@ func _ready() -> void:
 	check(game.level_pause > 25.0, "30 s Pause nach dem Level")
 	game.queue_free()
 	await get_tree().process_frame
+	await _coop_tests(map)
 	print("FERTIG: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
 
+
+## Koop ohne Netz: Host und Mitspieler auf der einen Karte, jeder in seiner Zone, Befehle und Stand direkt
+## (wie über ENet als Bytes).
+func _coop_tests(map: MapData) -> void:
+	Session.map_path = ""
+	Session.map_override = null
+	Session.rg_choice = {}
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	var host: Node = load("res://scenes/rg_game.tscn").instantiate()
+	add_child(host)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client: Node = load("res://scenes/rg_game.tscn").instantiate()
+	add_child(client)
+	await get_tree().process_frame
+	check(host.coop != null and client.mirror and client.local_player == 1, "Koop: Host und Mitspieler angelegt")
+	check(host.map.game == "randgruppen" and client.map.game == "randgruppen", "Karte kommt vom Modus, nicht aus der Lobby")
+	client.coop.command_sink = func(cmd): host.coop.receive(1, _wire(cmd))
+	var pump := func():
+		client.coop.apply_state(_wire(host.coop.snapshot()))
+		client.coop.apply_enemies(_wire(host.coop.enemy_packet()))
+	check(host.players.size() == 2 and host.players[1].gold == 50, "jeder startet mit 50 Gold")
+	check(host.active_lanes().size() == 4, "zwei Spieler: Bahnen von Rot und Gelb (%d)" % host.active_lanes().size())
+	host.submit({"type": "setup", "race": "kleingarten", "difficulty": 1})
+	check(not host.setup_done, "Host gewählt, wartet auf die Rasse des Gasts")
+	client.submit({"type": "setup", "race": "zocker", "difficulty": 4})
+	pump.call()
+	check(host.setup_done and client.setup_done and host.difficulty == 1 and client.difficulty == 1 and host.lives == 35,
+		"beide gewählt: los geht's, Schwierigkeit vom Host (%d, Leben %d)" % [host.difficulty, host.lives])
+	check(str(host.rp(1).race) == "zocker" and str(client.rp(1).race) == "zocker" and str(client.rp(0).race) == "kleingarten",
+		"Rasse je Spieler")
+	# Gast baut in seiner Zone (Gelb), nicht in der des Hosts
+	var own: Rect2i = map.zones[1].rect
+	var tid: String = client.race_towers()[0]
+	var none := Vector2i(-99, -99)
+	var cell := none
+	for y in range(own.position.y + 4, own.end.y - 4, 2):
+		for x in range(own.position.x + 2, own.end.x - 2, 2):
+			if cell == none and client.can_build_tower(tid, Vector2i(x, y)):
+				cell = Vector2i(x, y)
+	check(cell != none, "freies Feld in der Zone des Gasts")
+	var cost := int(Database.towers[tid].rg.cost)
+	client.submit({"type": "build", "id": tid, "cell": cell})
+	pump.call()
+	var t: Tower = host.towers.get(cell)
+	check(t != null and t.owner_player == 1 and t.tower_id == tid, "Host baut den Tower für den Gast")
+	check(client.towers.has(cell) and host.players[1].gold == 50 - cost and host.players[0].gold == 50 and client.gold == 50 - cost,
+		"Gold je Spieler (Gast %d)" % client.gold)
+	var hz: Rect2i = map.zones[0].rect
+	client.submit({"type": "build", "id": tid, "cell": hz.position + Vector2i(6, 10)})
+	check(host.towers.size() == 1, "Gast baut nicht in der Zone des Hosts")
+	check(host.tower_options(t).is_empty(), "Host verkauft den Tower des Gasts nicht")
+	check(int(client.towers[cell].get_meta("spent", 0)) == cost, "Ausgegeben kommt beim Gast an")
+	# Level startet früher erst, wenn beide bereit sind
+	host.submit({"type": "start_level"})
+	await get_tree().process_frame
+	check(host.phase == host.Phase.BUILD and host.rp(0).ready, "Host bereit, Level wartet auf den Gast")
+	client.submit({"type": "start_level"})
+	for i in 3:
+		await get_tree().process_frame
+	pump.call()
+	check(host.phase == host.Phase.WAVE and client.phase == client.Phase.WAVE, "beide bereit: Level 1 läuft bei beiden")
+	var frames := 0
+	while host.enemies.is_empty() and frames < 600:
+		await get_tree().process_frame
+		frames += 1
+	pump.call()
+	check(client.enemies.size() == host.enemies.size() and client.enemies.size() > 0, "Gegner gespiegelt: %d" % client.enemies.size())
+	host.queue_free()
+	client.queue_free()
+	Session.coop = {}
+	await get_tree().process_frame
+
+
+func _wire(v):
+	return bytes_to_var(var_to_bytes(v))

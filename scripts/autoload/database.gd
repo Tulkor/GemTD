@@ -123,6 +123,14 @@ func list_maps() -> Array:
 	return list
 
 
+## Erste Map eines Modus (nach Namen), z. B. als Vorgabe; {} wenn es keine gibt.
+func first_map(game := "gemtd") -> Dictionary:
+	for m in list_maps():
+		if m.game == game:
+			return m
+	return {}
+
+
 # --- TD-Modi ---------------------------------------------------------------------
 
 func mode(id: String) -> Dictionary:

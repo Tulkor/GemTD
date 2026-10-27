@@ -1449,5 +1449,9 @@
 	"Die Randgruppen der Stadt verteidigen die Hochburg der Toleranz gegen die Spießer: %d Level, Tower frei in deine Zone bauen, die Gegner laufen hindurch.": "The city's fringe groups defend the Stronghold of Tolerance against the philistines: %d levels, build towers freely in your zone, the enemies walk through it.",
 	"Rasse": "Race",
 	"Tower: ": "Towers: ",
-	"%d Leben für alle zusammen. Start mit %d Gold (550 minus 500 für den Baumeister).": "%d lives shared by everyone. Start with %d gold (550 minus 500 for the builder)."
+	"%d Leben für alle zusammen. Start mit %d Gold (550 minus 500 für den Baumeister).": "%d lives shared by everyone. Start with %d gold (550 minus 500 for the builder).",
+	"bereit": "ready",
+	"Warte auf die Rassenwahl von: %s": "Waiting for the race choice of: %s",
+	"Die Schwierigkeit wählt der Host.": "The host chooses the difficulty.",
+	"Rasse wählen, Tower frei in die eigene Zone bauen, 35 Level gegen die Spießer, Koop bis 9 Spieler": "Pick a race, build towers freely in your own zone, 35 levels against the philistines, co-op up to 9 players"
 }

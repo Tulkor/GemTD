@@ -91,8 +91,17 @@ func rp(p := -1) -> Dictionary:
 	var i := maxi(0, acting if p < 0 else p)
 	while rg_players.size() <= i:
 		var races: Array = rules.get("races", [{}])
-		rg_players.append({"race": str(Session.rg_choice.get("race", races[0].get("id", ""))), "lumber": 0, "log": []})
+		rg_players.append({"race": str(Session.rg_choice.get("race", races[0].get("id", ""))), "lumber": 0, "log": [],
+			"chosen": false, "ready": false})
 	return rg_players[i]
+
+
+## Die Karte gehört zum Modus (needs_map false): immer data/maps/randgruppen.json, auch wenn die Lobby keine schickt.
+func _load_map() -> MapData:
+	var m := super._load_map()
+	if m == null or m.game != "randgruppen":
+		m = MapData.load_file(str(Database.first_map("randgruppen").get("path", "res://data/maps/randgruppen.json")))
+	return m
 
 
 func start_gold() -> int:
@@ -149,6 +158,17 @@ func _make_waves() -> Array:
 	return list
 
 
+## Vor den Einstellungen nimmt game.gd nur Befehle des Hosts an; hier wählt aber jeder seine Rasse selbst.
+func execute(cmd: Dictionary) -> bool:
+	var p := int(cmd.get("player", -1))
+	if setup_done or str(cmd.get("type", "")) != "setup" or p < 0 or p >= players.size():
+		return super.execute(cmd)
+	acting = p
+	var ok := _execute(cmd)
+	acting = local_player
+	return ok
+
+
 func _execute(cmd: Dictionary) -> bool:
 	match str(cmd.get("type", "")):
 		"setup":
@@ -160,7 +180,11 @@ func _execute(cmd: Dictionary) -> bool:
 		"start_level":
 			if phase != Phase.BUILD or not setup_done:
 				return false
-			level_pause = 0.0
+			# Im Koop startet das Level früher erst, wenn alle bereit sind (sonst nach Ablauf der Pause)
+			rp().ready = true
+			if _all_players(func(i): return rp(i).ready):
+				level_pause = 0.0
+			_refresh_hud()
 			return true
 		"option":
 			var t := tower_from_ref(cmd.get("tower", {}))
@@ -177,18 +201,42 @@ func _execute(cmd: Dictionary) -> bool:
 	return super._execute(cmd)
 
 
+## Jeder wählt seine Rasse, nur der Host (Spieler 0) die Schwierigkeit. Los geht es, wenn alle gewählt haben.
 func _apply_setup(race_id: String, diff: int) -> bool:
-	if race(race_id).is_empty():
+	if race(race_id).is_empty() or rp().chosen:
 		return false
 	rp().race = race_id
+	rp().chosen = true
 	if acting == 0:
 		difficulty = clampi(diff, 0, (rules.get("difficulties", []) as Array).size() - 1)
 		_apply_lives()
-	Session.rg_choice = {"race": race_id, "difficulty": difficulty}
-	level_pause = float(rules.get("first_pause", 60))
-	setup_done = true
+	if acting == local_player:
+		Session.rg_choice = {"race": race_id, "difficulty": difficulty}
+	_check_setup()
 	_refresh_hud()
 	return true
+
+
+## Alle Anwesenden haben ihre Rasse: Einstellungen fertig, die erste Pause läuft. Wer weg ist, hält nicht auf.
+func _check_setup() -> void:
+	if setup_done or not rp(0).chosen or not _all_players(func(i): return rp(i).chosen):
+		return
+	level_pause = float(rules.get("first_pause", 60))
+	setup_done = true
+
+
+## Gilt f für alle anwesenden Spieler?
+func _all_players(f: Callable) -> bool:
+	for i in players.size():
+		if not players[i].away and not f.call(i):
+			return false
+	return true
+
+
+func set_player_away(p: int, away: bool) -> void:
+	super.set_player_away(p, away)
+	if not mirror:
+		_check_setup()
 
 
 # --- Ablauf: Pause, Level, Pause … ------------------------------------------------------
@@ -209,6 +257,8 @@ func _enter_build() -> void:
 	for p in players:
 		p.stage = Phase.BUILD
 	var done := wave_index  # gerade beendetes Level (1-basiert), 0 vor dem ersten
+	for i in players.size():
+		rp(i).ready = false
 	if done > 0:
 		var lg: Dictionary = rules.get("level_gold", {})
 		var amount := int(lg.get("base", 10)) + int(lg.get("per_level", 2)) * done
@@ -528,8 +578,39 @@ func load_extra(d: Dictionary, made: Array) -> void:
 	level_pause = float(d.get("pause", level_pause))
 	rg_players = []
 	for ps in d.get("players", []):
-		rg_players.append({"race": str(ps.get("race", "")), "lumber": int(ps.get("lumber", 0)), "log": ps.get("log", [])})
+		rg_players.append({"race": str(ps.get("race", "")), "lumber": int(ps.get("lumber", 0)), "log": ps.get("log", []),
+			"chosen": bool(ps.get("chosen", true)), "ready": false})
 	var spent: Array = d.get("spent", [])
 	for i in mini(spent.size(), made.size()):
 		if made[i] != null:
 			made[i].set_meta("spent", int(spent[i]))
+
+
+# --- Koop (coop_sync.gd): alle auf der einen Karte, jeder in seiner Zone, der Host rechnet ----------------------
+
+## Befehle, die Mitspieler zusätzlich zu denen von GemTD schicken dürfen.
+func coop_commands() -> Array:
+	return ["setup", "build", "start_level"]
+
+
+## Was Randgruppen TD über den Stand von GemTD hinaus schickt. Die Pause in ganzen Sekunden, damit sich der Stand
+## nicht jedes Bild ändert.
+func coop_snapshot() -> Dictionary:
+	var spent := {}
+	for t in all_towers():
+		spent["%d,%d" % [t.cell.x, t.cell.y]] = int(t.get_meta("spent", 0))
+	return {"difficulty": difficulty, "pause": ceili(maxf(level_pause, 0.0)), "players": rg_players.duplicate(true),
+		"spent": spent}
+
+
+func apply_coop_snapshot(d: Dictionary) -> void:
+	difficulty = int(d.get("difficulty", difficulty))
+	level_pause = float(d.get("pause", level_pause))
+	var ps: Array = d.get("players", [])
+	if not ps.is_empty():
+		rg_players = ps
+	var spent: Dictionary = d.get("spent", {})
+	for t in all_towers():
+		t.set_meta("spent", int(spent.get("%d,%d" % [t.cell.x, t.cell.y], 0)))
+	if rg_panel != null:
+		rg_panel.refresh()
