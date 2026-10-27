@@ -6,6 +6,11 @@ Tower-, Item-, Wellen-Eigenschaften-, Baumeister- und Erfahrungsdaten (`towers.j
 Punkte, Portalschaden) sind aus dessen Quellcode nachgebaut. `rules.json` ist von Hand geschrieben, die Werte
 stammen ebenfalls aus YouTD 2.
 
+Seit Etappe 2 ist außerdem Code aus YouTD 2 übernommen: die Laufzeit in `scripts/youtd/rt/` (Einheiten, Buffs,
+Auren, Autocasts, Geschosse, Zauber; angepasst an dieses Spiel) und, umgewandelt von `tools/youtd/faehigkeiten.py`,
+die Tower-Skripte in `scripts/youtd/towers/` und die Wellen-Eigenschaften in `scripts/youtd/specials/`.
+`texte.json` sind eigene deutsche Texte für die Schlüssel der Übersetzungstabelle, die diese Skripte benutzen.
+
 YouTD 2 steht unter der MIT-Lizenz (Text unten). YouTD 2 baut auf **YouTD** auf, der Warcraft-III-Karte von geX
 und der YouTD-Community; Tower- und Item-Namen sowie die Autoren je Tower (Feld `author`) sind von dort übernommen.
 

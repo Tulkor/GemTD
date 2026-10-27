@@ -79,8 +79,9 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
   (2/3/4/6; Start-Food 55, max 300) und im Baumodus zusätzliche Wissensbuch-Kosten (0/4/10/25).
 - Werte aus der Tabelle: Angriffstyp, Reichweite, Abklingzeit, Schaden min–max, Mana, Kosten, Geschossgeschwindigkeit,
   Multishot, Splash, Abpraller, Ziel (Boden/Luft) und **Spezialwerte** (z. B. Krit-Chance je Level).
-- **Fähigkeiten**: 566 Tower haben ein eigenes Skript (214 Skripte, oft eines je Familie). Die werden in Etappen
-  portiert (siehe unten); bis dahin schießen sie nur mit Grundwerten und Spezialwerten.
+- **Fähigkeiten**: 566 Tower haben ein eigenes Skript (214 Skripte, oft eines je Familie), seit Etappe 2 alle
+  portiert: Auslöser bei Angriff, Treffer und Kill, Auren, Autocasts (automatisch oder von Hand über die Auswahlkarte),
+  Geschosse, Ketten- und Gabelblitze, Buffs auf Gegnern und Towern. Rechnen tut die YouTD-2-Laufzeit (siehe Technik).
 - **Würfeln** (Zufallsmodi): 6 Start-Tower, danach je Welle neue Tower ins Lager, Chance je Element nach Elementstufe,
   Seltenheit nach Elementstufe und Kostenobergrenze. Im Modus „Zufall mit Aufwertungen“ lässt sich ein Tower gegen
   Gold zur nächsten Stufe seiner Familie aufwerten.
@@ -113,9 +114,10 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 
 | Etappe | Inhalt |
 |---|---|
-| **1 (diese PR)** | Modus im Hub, Karte mit festem Weg, Startfenster, Wellen-Generator 1:1 inkl. Rüstungstypen, HP-Formel, Champions, Challenges und Specials (die mit reinen Werten: Speed, Rüstung, Ausweichen, Regeneration, Strong, Flock, Unsichtbar), alle 690 Tower mit Grundwerten, Elemente + Bücher, drei Spielmodi mit Würfeln, Food, Tower-XP, Spieler-XP + Level + Weisheits-Boni im Profil, Items mit reinen Werten + Öle, Druidenhain-Optik |
+| **1** | Modus im Hub, Karte mit festem Weg, Startfenster, Wellen-Generator 1:1 inkl. Rüstungstypen, HP-Formel, Champions, Challenges und Specials (die mit reinen Werten: Speed, Rüstung, Ausweichen, Regeneration, Strong, Flock, Unsichtbar), alle 690 Tower mit Grundwerten, Elemente + Bücher, drei Spielmodi mit Würfeln, Food, Tower-XP, Spieler-XP + Level + Weisheits-Boni im Profil, Items mit reinen Werten + Öle, Druidenhain-Optik |
 | | Noch nicht in Etappe 1: Spielstände (Speichern/Laden), Verbrauchsgegenstände (fallen noch nicht), Wellen-Eigenschaften ohne eigene Wirkung zählen nur mit ihrem Lebens-Faktor, Tower mit Skript schießen nur normal |
-| 2 | Tower-Fähigkeiten portieren, Familie für Familie (häufigste zuerst), restliche Gegner-Specials |
+| **2** | Alle 214 Tower-Skripte und alle 41 Wellen-Eigenschaften (Brut, Nekromant, Trächtig, Sprint usw.) aus YouTD 2 portiert, YouTD-2-Laufzeit für Werte, Buffs, Auren, Autocasts, Geschosse und Effekte; Zauber von Hand auf der Auswahlkarte; Test für alle 690 Tower |
+| | Noch offen nach Etappe 2: Spielstände (Speichern/Laden), Texte der Buff-Tooltips (im Original-Repo nicht enthalten), Effekte nur angenähert (Treffer-Effekte und Leuchtringe statt der YouTD-Grafiken) |
 | 3 | Item-Skripte, Horadrischer Würfel, Baumeister mit Sonderregeln, Koop |
 
 ## Technik
@@ -127,7 +129,17 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
   `item_put`, `next_wave`, `option`), `youtd_waves.gd` (Wellen-Generator), `youtd_roll.gd` (Tower würfeln, Item-Drops),
   `youtd_tower.gd`, `youtd_enemy.gd`, `youtd_data.gd` (Daten laden), `youtd_progress.gd` (Spieler-XP, Level, Weisheit im
   Profil unter `modes.youtd.progress`), `youtd_panel.gd` (Seitenleiste), `youtd_setup_panel.gd` (Startfenster).
+- **Laufzeit aus YouTD 2** in `scripts/youtd/rt/` (Klassen mit Präfix `Yt`, umbenannt von `tools/youtd/umbenennen.py`):
+  Jeder Tower und Gegner bekommt einen Kern (`YtTower`/`YtCreep`, Kind des Körpers `YoutdTower`/`YoutdEnemy`, Verweis
+  `core.body`). Der Kern rechnet Werte, Leben, Angriffe, Buffs, Auren und Autocasts; der Körper zeigt Modell und Weg und
+  liefert die Position (`get_position_wc3` = `body.pos × 128`). `YtWorld` (Kind des Bretts) treibt Timer, Einheiten,
+  Geschosse (`YtProjectileView`, MultiMesh) und Effekte (`YtEffect` wählt FxPlayer-Treffer nach Schlüsselwort, Dauer-
+  effekte als Leuchtring). Items gehen als ein Modifikator an den Kern (`core.set_item_mods`).
+- `tools/youtd/faehigkeiten.py` wandelt die Tower-Skripte nach `scripts/youtd/towers/` und die Wellen-Eigenschaften nach
+  `scripts/youtd/specials/` um (Feld `script` in towers.json/specials.json), mit kleinen Anpassungen je Datei (`PATCHES`,
+  `SPAWN_RULES`). Texte der YouTD-2-Übersetzungstabelle stehen deutsch in `data/youtd/texte.json` (`YtUtils.text`).
 - Karte `data/maps/youtd.json` (`game: "youtd"`), Weg fest über Wegpunkte, Bauflächen daneben.
-- Test `tools/run_tests.sh youtd`, Bild `tools/screenshot.sh --map=youtd [--auswahl] [--einstellungen]`
+- Tests `tools/run_tests.sh youtd ytfaehig` (ytfaehig: alle 690 Tower am Weg, Schaden, Zauber von Hand, alle
+  Wellen-Eigenschaften, Aufwerten; etwa 2 Minuten), Bild `tools/screenshot.sh --map=youtd [--auswahl] [--einstellungen]`
   (unter Xvfb langsam, etwa 3 Minuten).
 - Quellen und MIT-Lizenz: `data/youtd/QUELLEN.md`.
