@@ -33,6 +33,7 @@ extends Node
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
@@ -456,6 +457,8 @@ func _prepare_youtd(game: Node) -> void:
 	Engine.time_scale = 1.0
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
+	if opts.has("wuerfel") and game.youtd_panel != null:
+		game.youtd_panel.toggle_section("cube")
 	game._refresh_hud()
 	await _frames(3)
 

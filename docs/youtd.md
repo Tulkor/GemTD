@@ -124,7 +124,7 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 | **2** | Alle 214 Tower-Skripte und alle 41 Wellen-Eigenschaften (Brut, Nekromant, Trächtig, Sprint usw.) aus YouTD 2 portiert, YouTD-2-Laufzeit für Werte, Buffs, Auren, Autocasts, Geschosse und Effekte; Zauber von Hand auf der Auswahlkarte; Test für alle 690 Tower |
 | | Noch offen nach Etappe 2: Spielstände (Speichern/Laden), Texte der Buff-Tooltips (im Original-Repo nicht enthalten), Effekte nur angenähert (Treffer-Effekte und Leuchtringe statt der YouTD-Grafiken) |
 | **3** | Item-Skripte, Horadrischer Würfel, 21 Baumeister mit Sonderregeln, Buff-Texte (Auswahlkarte „Effekte“), Spielstände, Koop bis 4 Spieler (jeder sein Weg) |
-| | Noch offen nach Etappe 3: was Skripte nur in sich tragen (laufende Buffs, Abklingzeiten, Zähler) geht beim Speichern verloren; Mitspieler sehen Schüsse als Linien statt Geschosse und keine Effekte der Fähigkeiten |
+| | Noch offen nach Etappe 3: eigene Zähler in Tower-Skripten gehen beim Speichern verloren (Buffs mit Zeitlimit und Abklingzeiten bleiben); Mitspieler sehen Geschosse, aber keine Treffer-Effekte der Fähigkeiten |
 
 ## Koop (Etappe 3)
 
@@ -135,7 +135,8 @@ Wellen-Timer; „Nächste Welle“ startet sie auf allen Wegen. Die Lobby starte
 (`YoutdCoop.koop_map`, Bahnen mit eigenem Ziel `lanes[].goal` in map_data.gd, Gebiete über `zones`).
 Modus, Länge und Schwierigkeit wählt der Host; Weisheit und Baumeister jeder selbst („Bereit“ → Befehl `player_setup`).
 Der Host rechnet alles (coop_sync.gd); Mitspieler bekommen den YouTD-Stand über `coop_snapshot`, Erfahrung, Kills
-und Mana der Tower einmal pro Sekunde über `coop_stats`. Ihre Tower haben einen Kern fürs Infofenster, ihre YtWorld
+und Mana der Tower einmal pro Sekunde über `coop_stats`, die Geschosse 15 Mal pro Sekunde über `coop_fast` (sie
+fliegen beim Mitspieler dazwischen weiter, YtProjectileView.remote_step). Ihre Tower haben einen Kern fürs Infofenster, ihre YtWorld
 steht still.
 
 ## Technik

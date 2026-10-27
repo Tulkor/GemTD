@@ -77,6 +77,7 @@ var _tower_tier: int
 # "variable_name" arg. Examples: "poison_bt", "curse_bt".
 func _init(variable_name: String, time_base: float, time_level_add: float, friendly: bool, owner_node: Node):
 	owner_node.add_child(self)
+	add_to_group("yt_buff_types")   # Spielstand: Buffs finden ihren Typ über _unique_name wieder (youtd_save.gd)
 
 #	NOTE: add path of owner script to ensure uniqueness
 	var parent_script: Script = owner_node.get_script()

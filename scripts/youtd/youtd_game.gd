@@ -197,6 +197,16 @@ func apply_coop_stats(d: Dictionary) -> void:
 	YtWorld.use(prev)
 
 
+## Geschosse gehen mit den Gegnern an die Mitspieler (15 Mal pro Sekunde).
+func coop_fast() -> Dictionary:
+	return {"p": world.projectile_view.packet()} if world != null and world.projectile_view != null else {}
+
+
+func apply_coop_fast(d: Dictionary) -> void:
+	if world != null and world.projectile_view != null:
+		world.projectile_view.set_remote(d.get("p", []))
+
+
 ## Mitspieler zeigen Gegner vom Host an: Aussehen aus Größe und Rasse ("youtd_champion:orc").
 func enemy_def(id: String) -> Dictionary:
 	if not id.begins_with("youtd_"):
@@ -719,6 +729,8 @@ func _process(delta: float) -> void:
 	if phase < Phase.GAME_OVER:
 		play_time += delta / maxf(Engine.time_scale, 0.001)
 	_update_hover()
+	if mirror and world != null and world.projectile_view != null:
+		world.projectile_view.remote_step(delta)
 	if not setup_done or phase >= Phase.GAME_OVER or mirror:
 		return
 	# Timer läuft nur, wenn gerade keine Welle mehr kommt oder lebt (wie im Original nach dem Ende der Welle)

@@ -1981,5 +1981,10 @@
 	"Bereit": "Ready",
 	"Modus, Länge und Schwierigkeit wählt der Host.": "The host picks mode, length and difficulty.",
 	"Bereit. Warte auf den Host …": "Ready. Waiting for the host …",
-	"Elemente erforschen, Tower würfeln oder kaufen, Items sammeln, feste Wege. Koop bis 4 Spieler, jeder mit eigenem Weg. Spieler-XP bleibt über Partien.": "Research elements, roll or buy towers, collect items, fixed paths. Co-op up to 4 players, each with their own path. Player XP carries over between games."
+	"Elemente erforschen, Tower würfeln oder kaufen, Items sammeln, feste Wege. Koop bis 4 Spieler, jeder mit eigenem Weg. Spieler-XP bleibt über Partien.": "Research elements, roll or buy towers, collect items, fixed paths. Co-op up to 4 players, each with their own path. Player XP carries over between games.",
+	"Elemente erforschen und Tower würfeln": "Research elements and roll towers",
+	"Tower-Lager bzw. Baumenü und Items": "Tower stash or build menu, and items",
+	"Horadrischer Würfel: aus Items im Lager neue machen": "Horadric Cube: turn items from your stash into new ones",
+	"Lager": "Stash",
+	"Würfel": "Cube"
 }

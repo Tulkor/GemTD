@@ -11,7 +11,9 @@ extends Node
 ##   Andere Modi auf game.gd (eeveTD) hängen sich mit eigenen Methoden an, falls vorhanden:
 ##                coop_commands() weitere erlaubte Befehle, new_tower() Tower-Klasse für Mitspieler,
 ##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode"), coop_stats()/apply_coop_stats(d)
-##                was sich laufend ändert und nicht als neuer Stand zählt (unter "mstats", wie "tstats").
+##                was sich laufend ändert und nicht als neuer Stand zählt (unter "mstats", wie "tstats"),
+##                coop_fast()/apply_coop_fast(d) was mit den Gegnern 15 Mal pro Sekunde mitgeht (unter "m", z. B.
+##                Geschosse in YouTD).
 
 const STATE_INTERVAL := 1.0
 const CHECK_INTERVAL := 0.05
@@ -170,6 +172,8 @@ func enemy_packet() -> Dictionary:
 		if not e.dead:
 			list.append(e.net_state())
 	var p := {"e": list, "b": _beams, "q": game.spawn_queue.size(), "wl": game.wave_live, "now": Time.get_ticks_msec()}
+	if game.has_method("coop_fast"):
+		p.m = game.coop_fast()
 	_beams = []
 	return p
 
@@ -315,6 +319,8 @@ func _remove_tower(t: Tower) -> void:
 ## Gegner vom Host: wie beim Zuschauen anlegen, nachführen und entfernen.
 func apply_enemies(packet: Dictionary) -> void:
 	var g = game
+	if packet.has("m") and g.has_method("apply_coop_fast"):
+		g.apply_coop_fast(packet.m)
 	if g.phase != g.Phase.WAVE:
 		return
 	var age: float = paths.packet_age(packet)

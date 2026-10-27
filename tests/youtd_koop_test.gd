@@ -95,12 +95,39 @@ func _save_tests() -> void:
 	game.submit({"type": "next_wave"})
 	await _wait_for(func(): return game.enemies.size() >= 3)
 	game.portal = 77.0
+	# zweiter Tower mit eigenem Buff-Typ: Buff mit Zeitlimit auf Tower und Gegner, Zauber-Abklingzeit
+	var b: Vector2i = _anchor(game, 0, 1, true)
+	var bt: YtBuffType = null
+	var bt_tower: YoutdTower = null
+	for id in YoutdData.towers().keys():
+		if str(YoutdData.tower(id).get("script", "")) == "" or not game.debug_place(str(id), b):
+			continue
+		var tt: YoutdTower = game.towers.get(b)
+		for n in get_tree().get_nodes_in_group("yt_buff_types"):
+			if tt.is_ancestor_of(n) and not n._unique_name.contains("aura"):
+				bt = n
+		if bt != null and not tt.autocasts().is_empty():
+			bt_tower = tt
+			break
+		bt = null
+		game._unregister(tt)
+		tt.remove_core()
+		tt.queue_free()
+		await get_tree().process_frame
+	check(bt_tower != null, "Tower mit Buff-Typ und Zauber gefunden (%s)" % (bt_tower.yid if bt_tower != null else "-"))
+	var bname := ""
+	if bt_tower != null:
+		bname = bt._unique_name
+		bt.apply_custom_timed(bt_tower.core, t.core, 2, 40.0)
+		bt.apply_custom_timed(bt_tower.core, game.enemies[0].core, 1, 40.0)
+		bt_tower.autocasts()[0]._cooldown_timer.start(12.0)
+	var enemy_id: int = game.enemies[0].net_id
 	var st: Dictionary = SaveGame.capture(game)
 	var want := {"gold": game.gold, "tomes": game.tomes, "nature": int(game.elements.get("nature", 0)), "level": t.level,
 		"enemies": game.enemies.size(), "next_wave": game.next_wave, "hp5": float(game.waves[5].hp), "stash": game.stash.duplicate(),
 		"dmg": t.mod("MOD_DAMAGE_ADD_PERC"), "alive": game.alive.duplicate(), "food": game.food_cap,
 		"items": game.item_stash.size()}
-	check(not st.is_empty() and st.has("mode") and (st.mode.towers as Array).size() == 1, "Stand mit YouTD-Teil erfasst")
+	check(not st.is_empty() and st.has("mode") and (st.mode.towers as Array).size() == 2, "Stand mit YouTD-Teil erfasst")
 	game.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -125,11 +152,27 @@ func _save_tests() -> void:
 	check(g2.enemies.size() == want.enemies and g2.enemies.all(func(e): return e is YoutdEnemy and e.core != null),
 		"Gegner mit Kern zurück: %d" % g2.enemies.size())
 	check(g2.alive == want.alive, "Wellenstand je Bahn")
+	if bname != "":
+		check(t2 != null and _has_buff(t2.core, bname, 2, b), "Buff mit Restzeit, Stufe und Verursacher am Tower zurück")
+		var e2 = g2.enemies.filter(func(e): return e.net_id == enemy_id)
+		check(not e2.is_empty() and _has_buff(e2[0].core, bname, 1, b), "Buff am Gegner zurück")
+		var cd: float = g2.towers.get(b).autocasts()[0].get_remaining_cooldown()
+		check(cd > 9.0 and cd <= 12.0, "Zauber-Abklingzeit zurück (%.1f s)" % cd)
 	await _wait_for(func(): return g2.enemies.size() > want.enemies, 300)
 	check(g2.enemies.size() > want.enemies or g2.spawners.is_empty(), "Welle läuft nach dem Laden weiter")
 	g2.queue_free()
 	Session.map_override = null
 	await get_tree().process_frame
+
+
+## Buff bname mit Stufe lvl, 30–40 s Restzeit, verursacht vom Tower auf Feld cell?
+func _has_buff(u: YtUnit, bname: String, lvl: int, cell: Vector2i) -> bool:
+	for bf in u.get_buff_list():
+		var left: float = bf.get_remaining_duration()
+		if bf._buff_type_name == bname and bf._level == lvl and left > 30.0 and left <= 40.0 \
+				and bf._caster != null and bf._caster.body is YoutdTower and bf._caster.body.cell == cell:
+			return true
+	return false
 
 
 # --- Koop ------------------------------------------------------------------------------
@@ -204,6 +247,10 @@ func _coop_tests() -> void:
 	pump.call()
 	check(client.phase == client.Phase.WAVE and client.enemies.size() == host.enemies.size() and client.enemies.size() > 0,
 		"Gegner gespiegelt: %d" % client.enemies.size())
+	await _wait_for(func(): return not host.world.projectile_view.packet().is_empty(), 300)
+	var shots: Array = host.world.projectile_view.packet()
+	pump.call()
+	check(not shots.is_empty() and client.world.projectile_view.remote.size() == shots.size(), "Geschosse beim Mitspieler: %d" % shots.size())
 	host.modify_portal(-10.0)
 	host._note("Testmeldung", 1)
 	pump.call()

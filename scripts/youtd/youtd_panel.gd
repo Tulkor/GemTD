@@ -1,7 +1,8 @@
 class_name YoutdPanel
 extends PanelContainer
-## Seitenleiste von YouTD: Gold-unabhängige Vorräte (Wissensbücher, Food), die neun Elemente mit Forschen-Knopf,
-## Startwurf, Tower-Lager bzw. Baumenü, Item-Lager, nächste Welle und die letzten Meldungen.
+## Seitenleiste von YouTD: Gold-unabhängige Vorräte (Wissensbücher, Food), darunter drei Schalter zum Auf- und
+## Zuklappen: Elemente (Forschen, Startwurf), Lager (Tower-Lager bzw. Baumenü und Items) und Würfel (Horadrischer
+## Würfel, braucht das Lager offen). Unten immer nächste Welle und die letzten Meldungen.
 
 var game  # youtd_game.gd
 var _tomes: Label
@@ -22,6 +23,9 @@ var cube_open := false     ## Würfel offen: Item-Klick legt in den Würfel stat
 var cube: Array = []       ## Items im Würfel (YtItem, lokal)
 var _next: Button
 var _log: Label
+var _sections := {}        ## "elements"/"store"/"cube" -> {button, box}
+## Welche Bereiche offen sind (bleibt für die Sitzung, auch in der nächsten Partie)
+static var open_sections := {"elements": true, "store": true, "cube": false}
 
 
 func _ready() -> void:
@@ -39,13 +43,18 @@ func _ready() -> void:
 	_food = _value("Food", res, UiTheme.TEXT)
 	_food.get_parent().tooltip_text = tr("Jeder Tower braucht Food nach Seltenheit: gewöhnlich 2, ungewöhnlich 3, selten 4, einzigartig 6.")
 
-	var head := UiUtil.label("Elemente", v, 15)
-	UiTheme.heading(head)
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 4)
+	v.add_child(bar)
+	var el_box := _section("elements", "Elemente", bar, v, tr("Elemente erforschen und Tower würfeln"))
+	var store_box := _section("store", "Lager", bar, v, tr("Tower-Lager bzw. Baumenü und Items"))
+	var cube_box := _section("cube", "Würfel", bar, v, tr("Horadrischer Würfel: aus Items im Lager neue machen"))
+
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 4)
-	v.add_child(grid)
+	el_box.add_child(grid)
 	for el in YoutdData.elements():
 		var id := str(el)
 		var row := HBoxContainer.new()
@@ -71,31 +80,32 @@ func _ready() -> void:
 		plus.add_theme_font_size_override("font_size", 12)
 		_rows[id] = {"level": lvl, "plus": plus, "row": row}
 
-	_roll = UiUtil.button("Tower würfeln", v, func(): game.submit({"type": "roll"}))
+	_roll = UiUtil.button("Tower würfeln", el_box, func(): game.submit({"type": "roll"}))
 	_roll.focus_mode = Control.FOCUS_NONE
 	_roll.custom_minimum_size.y = 32
 	_roll.tooltip_text = tr("Sechs zufällige Tower der erforschten Elemente ins Lager. Bis der erste Tower steht, darfst du neu würfeln.")
 
-	_towers_head = UiUtil.label("", v, 15)
+	_towers_head = UiUtil.label("", store_box, 15)
 	UiTheme.heading(_towers_head)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.custom_minimum_size = Vector2(256, 150)
-	v.add_child(scroll)
+	store_box.add_child(scroll)
 	_towers = VBoxContainer.new()
 	_towers.add_theme_constant_override("separation", 3)
 	_towers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_towers)
 
-	_items_head = UiUtil.label("", v, 15)
+	_items_head = UiUtil.label("", store_box, 15)
 	UiTheme.heading(_items_head)
 	_items_head.tooltip_text = tr("Item anklicken, dann einen Tower: Items belegen einen Platz, Öle wirken dauerhaft und brauchen keinen.")
 	_items_head.mouse_filter = Control.MOUSE_FILTER_PASS
 	_items = HFlowContainer.new()
 	_items.add_theme_constant_override("h_separation", 3)
 	_items.add_theme_constant_override("v_separation", 3)
-	v.add_child(_items)
-	_build_cube(v)
+	store_box.add_child(_items)
+	_build_cube(cube_box)
+	_apply_sections()
 
 	_next = UiUtil.button("", v, func(): game.submit({"type": "next_wave"}))
 	_next.focus_mode = Control.FOCUS_NONE
@@ -106,6 +116,50 @@ func _ready() -> void:
 	_log.add_theme_font_size_override("font_size", 12)
 	_log.add_theme_color_override("font_color", UiTheme.MUTED)
 	refresh()
+
+
+## Schalter in der Leiste oben und der Bereich, den er auf- und zuklappt.
+func _section(id: String, text: String, bar: HBoxContainer, v: VBoxContainer, tip: String) -> VBoxContainer:
+	var b := UiUtil.button(text, bar, func(): toggle_section(id))
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size.y = 30
+	b.add_theme_font_size_override("font_size", 13)
+	b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	b.tooltip_text = tip
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	v.add_child(box)
+	_sections[id] = {"button": b, "box": box}
+	return box
+
+
+## Bereich id auf- oder zuklappen. Der Würfel braucht das Lager (dort legt man die Items hinein).
+func toggle_section(id: String) -> void:
+	open_sections[id] = not bool(open_sections.get(id, false))
+	if id == "cube" and open_sections.cube:
+		open_sections.store = true
+	elif id == "store" and not open_sections.store:
+		open_sections.cube = false
+	_apply_sections()
+
+
+func _apply_sections() -> void:
+	for id in _sections:
+		var sec: Dictionary = _sections[id]
+		var on := bool(open_sections.get(id, false))
+		(sec.button as Button).set_pressed_no_signal(on)
+		(sec.box as Control).visible = on
+	if cube_open != bool(open_sections.cube):
+		cube_open = bool(open_sections.cube)
+		cube.clear()
+		if game != null:
+			game.picked_item = -1
+		items_dirty()
+		if _tomes != null and game != null:
+			refresh()
 
 
 func _value(caption: String, parent: Node, color: Color) -> Label:
@@ -264,16 +318,8 @@ func _item_input(ev: InputEvent, it: YtItem) -> void:
 # --- Horadrischer Würfel -------------------------------------------------------------
 
 func _build_cube(v: VBoxContainer) -> void:
-	var open := UiUtil.button("Horadrischer Würfel", v, func():
-		cube_open = not cube_open
-		cube.clear()
-		game.picked_item = -1
-		items_dirty()
-		refresh())
-	open.focus_mode = Control.FOCUS_NONE
-	open.custom_minimum_size.y = 28
-	open.add_theme_font_size_override("font_size", 12)
-	open.tooltip_text = tr("Aus Items im Lager neue machen: Items in den Würfel legen, dann verwandeln.")
+	var head := UiUtil.label("Horadrischer Würfel", v, 15)
+	UiTheme.heading(head)
 	_cube_box = VBoxContainer.new()
 	_cube_box.add_theme_constant_override("separation", 4)
 	v.add_child(_cube_box)
@@ -286,8 +332,8 @@ func _build_cube(v: VBoxContainer) -> void:
 	_cube_go.focus_mode = Control.FOCUS_NONE
 	_cube_go.custom_minimum_size.y = 30
 	UiTheme.accent_button(_cube_go, UiTheme.GOLD, UiTheme.GOLD_DARK)
-	var head := UiUtil.label("Rezepte", _cube_box, 12)
-	head.add_theme_font_override("font", UiTheme.font(true))
+	var rhead := UiUtil.label("Rezepte", _cube_box, 12)
+	rhead.add_theme_font_override("font", UiTheme.font(true))
 	_cube_recipes = HFlowContainer.new()
 	_cube_recipes.add_theme_constant_override("h_separation", 3)
 	_cube_recipes.add_theme_constant_override("v_separation", 3)
