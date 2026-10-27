@@ -92,7 +92,7 @@ func necromancer_aura_bt_on_death(event: YtEvent):
 		return
 
 # 	NOTE: creep specials are not carried over on purpose
-	var raised_creep: YtCreep = YtWorld.game.spawn_yt_creep(creep_size, creep_armor_type, creep_race, creep_health, creep_armor, creep_level)
+	var raised_creep: YtCreep = YtWorld.game.spawn_yt_creep(creep_size, creep_armor_type, creep_race, creep_health, creep_armor, creep_level, player)
 	if raised_creep == null:
 		return
 

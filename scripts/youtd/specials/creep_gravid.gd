@@ -81,7 +81,7 @@ func on_death(event: YtEvent):
 	var child_portal_damage_multiplier: float = 1.0 / child_count / 2
 
 	for i in range(0, child_count):
-		var child_creep: YtCreep = YtWorld.game.spawn_yt_creep(adult_size, adult_armor_type, adult_race, child_health, adult_armor, adult_level)
+		var child_creep: YtCreep = YtWorld.game.spawn_yt_creep(adult_size, adult_armor_type, adult_race, child_health, adult_armor, adult_level, player)
 		if child_creep == null:
 			return
 

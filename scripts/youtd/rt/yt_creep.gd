@@ -95,14 +95,17 @@ func adjust_height(height: float, speed: float):
 
 
 # NOTE: creep.dropItem() in JASS
-func drop_item(caster: YtTower, _use_creep_player: bool):
+func drop_item(caster: YtTower, use_creep_player: bool):
 	if YtWorld.game != null:
-		YtWorld.game.drop_item(self, caster.get_item_quality_ratio() if YtUtils.unit_is_valid(caster) else 1.0)
+		var valid := YtUtils.unit_is_valid(caster)
+		var owner: YtPlayer = get_player() if use_creep_player or not valid else caster.get_player()
+		YtWorld.game.drop_item(self, caster.get_item_quality_ratio() if valid else 1.0, owner)
 
 
-func drop_item_by_id(_caster: YtTower, _use_creep_player: bool, item_id: int):
+func drop_item_by_id(caster: YtTower, use_creep_player: bool, item_id: int):
 	if YtWorld.game != null:
-		YtWorld.game.drop_item_id(self, str(item_id))
+		var owner: YtPlayer = get_player() if use_creep_player or not YtUtils.unit_is_valid(caster) else caster.get_player()
+		YtWorld.game.drop_item_id(self, str(item_id), owner)
 
 
 func _on_health_changed():

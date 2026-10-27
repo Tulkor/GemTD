@@ -24,39 +24,53 @@ var wave_seed := 0
 var wave_rng := RandomNumberGenerator.new()   ## Wellen und Gegnerabstände
 var roll_rng := RandomNumberGenerator.new()   ## Würfeln von Towern und Items
 
-## Spieler (Etappe 1: einer)
-var tomes := 0
-var food_cap := 0
-var elements := {}           ## Element -> Stufe
-var stash: Array = []        ## gewürfelte Tower-IDs, die noch gebaut werden können
-var item_stash: Array = []   ## Item-IDs im Lager
-var can_reroll := true       ## Startwurf wiederholen, bis der erste Tower steht
-var portal := 100.0          ## Leben des Portals in Prozent
+## Spieler: je einer in yt_players (YtPlayer, scripts/youtd/rt/yt_player.gd). Die Variablen hier meinen den
+## gerade handelnden Spieler (acting), wie gold in game.gd.
+var yt_players: Array = []
+var tomes: int:
+	get: return yp().tomes
+	set(v): yp().tomes = v
+var food_cap: int:
+	get: return yp().food_cap
+	set(v): yp().food_cap = v
+var elements: Dictionary:
+	get: return yp().elements
+	set(v): yp().elements = v
+var stash: Array:            ## gewürfelte Tower-IDs, die noch gebaut werden können
+	get: return yp().stash
+	set(v): yp().stash = v
+var item_stash: Array:       ## YtItem im Lager
+	get: return yp().item_stash
+	set(v): yp().item_stash = v
+var can_reroll: bool:        ## Startwurf wiederholen, bis der erste Tower steht
+	get: return yp().can_reroll
+	set(v): yp().can_reroll = v
+var wisdom: Array:
+	get: return yp().wisdom
+var range_bonus: float:
+	get: return yp().range_bonus
+var tower_exp_bonus: float:
+	get: return yp().tower_exp_bonus
+var income_rate: float:      ## Faktor aufs Welleneinkommen (Tower-Fähigkeiten ändern ihn)
+	get: return yp().income_rate
+	set(v): yp().income_rate = v
+var portal := 100.0          ## Leben des Portals in Prozent (gemeinsam)
 var youtd_score := 0.0
 var build_id := ""           ## Tower, der gerade gesetzt wird (lokal)
 var picked_item := -1        ## Index im Item-Lager, das gerade eingelegt wird (lokal)
 var log_lines: Array = []
-
-## Weisheits-Boni (vor dem Start gewählt) und was daraus folgt
-var wisdom: Array = []
-var wisdom_mods := {}
-var range_bonus := 0.0
-var tower_exp_bonus := 0.0
-var element_max_bonus := 0
-var tower_max_bonus := 0
 var player_level_at_start := 0
 
 ## Wellen: nächste Welle, Zeit bis dahin, laufende Spawner und lebende Gegner je Welle
 var next_wave := 1
 var next_wave_in := 0.0
-var spawners: Array = []     ## {wave, index, timer}
-var alive := {}              ## Welle -> noch lebende oder kommende Gegner
+var spawners: Array = []     ## {wave, index, timer, lane}
+var alive := {}              ## "Bahn:Welle" (alive_key) -> noch lebende oder kommende Gegner
 var waves_done := 0
 var xp_result := {}
 var youtd_panel: YoutdPanel
 var scenery: EeveScenery
 var world: YtWorld           ## Laufzeit von YouTD 2 (Takt, Geschosse, Effekte)
-var income_rate := 1.0       ## Faktor aufs Welleneinkommen (Tower-Fähigkeiten ändern ihn)
 
 
 func _ready() -> void:
@@ -149,7 +163,17 @@ func _execute(cmd: Dictionary) -> bool:
 		"build":
 			return build_tower(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
 		"item_put":
-			return put_item(tower_from_ref(cmd.get("tower", {})), int(cmd.get("index", -1)))
+			return put_item(tower_from_ref(cmd.get("tower", {})), stash_index(int(cmd.get("uid", -1))))
+		"item_use":
+			return consume_item(stash_index(int(cmd.get("uid", -1))))
+		"item_lock":
+			var i := stash_index(int(cmd.get("uid", -1)))
+			if i < 0:
+				return false
+			(item_stash[i] as YtItem).toggle_horadric_lock()
+			return true
+		"transmute":
+			return transmute(cmd.get("uids", []))
 		"next_wave":
 			if not setup_done or phase >= Phase.GAME_OVER or next_wave > max_wave():
 				return false
@@ -180,15 +204,16 @@ func _apply_setup(cmd: Dictionary) -> void:
 	wave_rng.seed = wave_seed
 	YtGlobals.synced_rng.seed = wave_seed * 17 + 3
 	roll_rng.seed = wave_seed * 31 + 7
-	Session.set_meta("youtd_choice", {"mode": mode_index, "length": length_index, "difficulty": difficulty})
-	_apply_wisdom(cmd.get("wisdom", []))
+	Session.set_meta("youtd_choice", {"mode": mode_index, "length": length_index, "difficulty": difficulty,
+			"builder": str(cmd.get("builder", ""))})
 	var st: Dictionary = rules.get("start", {})
-	gold = int(st.get("gold", 70))
-	tomes += int(st.get("tomes", 90))
-	food_cap = mini(food_cap + int(st.get("food", 55)), int(st.get("food_max", 300)))
-	portal += float(st.get("lives", 100)) - 100.0
-	for el in YoutdData.elements():
-		elements[el] = 0
+	portal = float(st.get("lives", 100))
+	_make_players()
+	# Einstellungen je Spieler: solo direkt im Befehl, im Koop unter "players" (Spielernummer -> Werte)
+	var per: Dictionary = cmd.get("players", {})
+	for p in yt_players:
+		var cfg: Dictionary = per.get(str(p.id), cmd if p.id == local_player or per.is_empty() and p.id == 0 else {})
+		_apply_player(p, cfg)
 	waves = []
 	for i in wave_count():
 		waves.append(_wave(i + 1))
@@ -207,50 +232,81 @@ func _wave(level: int) -> Dictionary:
 	return w
 
 
-## Weisheits-Boni anwenden. Stärke = 1 + Synergie + 0,1 % je nicht verteiltem Spielerlevel (Pfad des Aufstiegs).
-func _apply_wisdom(list: Array) -> void:
-	player_level_at_start = YoutdProgress.level()
-	var allowed := YoutdProgress.wisdom_points(player_level_at_start)
-	wisdom = list.slice(0, allowed)
+## Ein YtPlayer je Spieler (solo einer).
+func _make_players() -> void:
+	if yt_players.size() == players.size():
+		return
+	yt_players = []
+	for i in players.size():
+		yt_players.append(YtPlayer.new(i))
+
+
+## Der Spieler, dessen Befehl gerade läuft (sonst der lokale).
+func yp() -> YtPlayer:
+	if yt_players.is_empty():
+		_make_players()
+	return yt_players[clampi(acting, 0, yt_players.size() - 1)]
+
+
+## Startwerte eines Spielers: Gold, Bücher, Food, Baumeister, dann Weisheits-Boni (mit dem Faktor des Baumeisters).
+func _apply_player(p: YtPlayer, cfg: Dictionary) -> void:
+	var st: Dictionary = rules.get("start", {})
+	players[p.id].gold = int(st.get("gold", 70))
+	p.tomes = int(st.get("tomes", 90))
+	p.food_cap = int(st.get("food", 55))
+	p.interest_rate = float(rules.get("income", {}).get("interest", 0.05))
+	for el in YoutdData.elements():
+		p.elements[el] = 0
+	p.level_at_start = int(cfg.get("level", YoutdProgress.level()))
+	var bid := str(cfg.get("builder", ""))
+	if bid != "" and not YoutdProgress.builder_open(bid, p.level_at_start):
+		bid = ""
+	p.set_builder(bid)
+	_apply_wisdom(p, cfg.get("wisdom", []))
+
+
+## Weisheits-Boni anwenden. Stärke = Faktor des Baumeisters (1) + Synergie + 0,1 % je nicht verteiltem Spielerlevel
+## (Pfad des Aufstiegs).
+func _apply_wisdom(p: YtPlayer, list: Array) -> void:
+	var allowed := YoutdProgress.wisdom_points(p.level_at_start)
+	p.wisdom = list.slice(0, allowed)
 	var all: Array = rules.get("wisdom", [])
 	var by_id := {}
 	for w in all:
 		by_id[w.id] = w
-	var strength := 1.0
-	for id in wisdom:
+	var strength := p.builder_wisdom_multiplier
+	for id in p.wisdom:
 		var w: Dictionary = by_id.get(id, {})
 		strength += float(w.get("strength", 0.0))
 		if w.has("strength_per_free_level"):
-			var spent := wisdom.size() * int(rules.get("player", {}).get("levels_per_wisdom", 6))
-			strength += float(w.strength_per_free_level) * maxi(0, player_level_at_start - spent)
-	for id in wisdom:
+			var spent: int = p.wisdom.size() * int(rules.get("player", {}).get("levels_per_wisdom", 6))
+			strength += float(w.strength_per_free_level) * maxi(0, p.level_at_start - spent)
+	for id in p.wisdom:
 		var w: Dictionary = by_id.get(id, {})
 		for m in w.get("mods", []):
-			wisdom_mods[m[0]] = float(wisdom_mods.get(m[0], 0.0)) + float(m[1]) * strength
-		tomes += floori(float(w.get("tomes", 0)) * strength)
-		food_cap += floori(float(w.get("food", 0)) * strength)
-		portal += float(w.get("lives", 0)) * strength
-		tower_exp_bonus += float(w.get("tower_exp", 0)) * strength
-		range_bonus += float(w.get("range", 0)) * strength
-		element_max_bonus += int(w.get("element_max", 0))
-		tower_max_bonus += int(w.get("tower_max", 0))
+			p.wisdom_mods[m[0]] = float(p.wisdom_mods.get(m[0], 0.0)) + float(m[1]) * strength
+		p.add_tomes(floori(float(w.get("tomes", 0)) * strength))
+		p.modify_food_cap(floori(float(w.get("food", 0)) * strength))
+		modify_portal(float(w.get("lives", 0)) * strength)
+		p.tower_exp_bonus += float(w.get("tower_exp", 0)) * strength
+		p.range_bonus += float(w.get("range", 0)) * strength
+		p.element_max_bonus += int(w.get("element_max", 0))
+		p.tower_max_bonus += int(w.get("tower_max", 0))
 
 
-## Weisheits-Boni als Modifikator für jeden neuen Tower-Kern (YtPlayer.get_wisdom_modifier).
-func wisdom_modifier() -> YtModifier:
-	var m := YtModifier.new()
-	for k in wisdom_mods:
-		m.add_modification(YtModificationType.from_string(str(k)), float(wisdom_mods[k]), 0.0)
-	return m
+## Portal-Leben ändern (Prozentpunkte); bei 0 ist das Spiel verloren.
+func modify_portal(amount: float) -> void:
+	portal = maxf(0.0, portal + amount)
+	if portal <= 0.0 and setup_done and not Session.debug_immortal:
+		_finish(Phase.GAME_OVER)
 
 
 func max_element_level() -> int:
-	return int(rules.get("elements", {}).get("max_level", 15)) + element_max_bonus
+	return int(rules.get("elements", {}).get("max_level", 15)) + yp().element_max_bonus
 
 
 func max_tower_level() -> int:
-	var tl: Dictionary = rules.get("tower_levels", {})
-	return mini(int(tl.get("max", 25)) + tower_max_bonus, int(tl.get("max_bonus", 30)))
+	return yp().get_max_tower_level()
 
 
 func max_wave() -> int:
@@ -293,7 +349,7 @@ func roll_start() -> bool:
 func food_used() -> int:
 	var n := 0
 	for t in towers.values():
-		if t is YoutdTower:
+		if t is YoutdTower and t.owner_player == acting:
 			n += YoutdData.food_cost(t.yid)
 	return n
 
@@ -341,12 +397,26 @@ func can_build(a: Vector2i) -> bool:
 
 
 ## Tower stehen nur auf Bauflächen und versperren nichts (kein Mazing).
+## Kann Spieler pid bei Anker a bauen (YtBuildSpace, Item-Skripte)?
+func can_place_for(a: Vector2i, pid: int) -> bool:
+	var before := acting
+	acting = pid
+	var ok := can_place(a)
+	acting = before
+	return ok
+
+
 func can_place(a: Vector2i, any_zone := false) -> bool:
 	if not setup_done or phase >= Phase.GAME_OVER:
 		return false
 	for c in Board3D.footprint(a):
 		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or map.can_build_for(c, acting)):
 			return false
+	# Maverick: Tower dürfen nicht direkt nebeneinander stehen
+	if not yp().get_builder().get_allow_adjacent_towers():
+		for c in Board3D.footprint(a - Vector2i.ONE, 4):
+			if occupied.has(c):
+				return false
 	return true
 
 
@@ -400,51 +470,154 @@ func debug_place(id: String, a: Vector2i) -> bool:
 
 # --- Items -----------------------------------------------------------------------
 
-## Item i aus dem Lager in Tower t legen: Öle wirken sofort dauerhaft, normale Items belegen einen Platz.
+## Item i aus dem Lager in Tower t legen: Öle wirken sofort dauerhaft, normale Items belegen einen Platz,
+## Verbrauchsgegenstände lassen sich nicht einlegen (consume_item).
 func put_item(t: Tower, i: int) -> bool:
-	if not t is YoutdTower or i < 0 or i >= item_stash.size():
+	if not t is YoutdTower or i < 0 or i >= item_stash.size() or t.owner_player != acting:
 		return false
 	var yt := t as YoutdTower
-	var id := str(item_stash[i])
-	var it := YoutdData.item(id)
-	match str(it.get("type", "")):
-		"oil":
-			yt.oils.append(id)
-		"regular":
-			if yt.items.size() >= yt.slots():
-				return false
-			yt.items.append(id)
-		_:
-			return false
-	item_stash.remove_at(i)
-	yt.update_items()
+	var it: YtItem = item_stash[i]
+	if it.is_consumable() or yt.core == null:
+		return false
+	if not it.pickup(yt.core):
+		return false
 	if picked_item == i:
 		picked_item = -1
 	_refresh_hud()
 	return true
 
 
+## Item k aus Tower t zurück ins Lager.
 func take_item(t: YoutdTower, k: int) -> bool:
-	if t == null or k < 0 or k >= t.items.size() or item_stash.size() >= int(rules.get("items", {}).get("stash_max", 40)):
+	if t == null or k < 0 or k >= t.items.size():
 		return false
-	item_stash.append(t.items[k])
-	t.items.remove_at(k)
-	t.update_items()
+	var it: YtItem = t.items[k]
+	it.drop()
+	it.fly_to_stash(0.0)
 	_refresh_hud()
 	return true
 
 
+## Verbrauchsgegenstand i aus dem Lager benutzen (wirkt auf den Spieler, z. B. Food, Bücher, Leben).
+func consume_item(i: int) -> bool:
+	if i < 0 or i >= item_stash.size():
+		return false
+	var it: YtItem = item_stash[i]
+	if not it.is_consumable():
+		return false
+	stash_remove(it)
+	it.consume()
+	_note(tr("Benutzt: %s") % it.get_display_name())
+	it.queue_free()
+	if picked_item >= item_stash.size():
+		picked_item = -1
+	_refresh_hud()
+	return true
+
+
+## Horadrischer Würfel: Items uids aus dem Lager des handelnden Spielers nach dem passenden Rezept verwandeln.
+func transmute(uids: Array) -> bool:
+	var list := []
+	for uid in uids:
+		var i := stash_index(int(uid))
+		if i < 0 or list.has(item_stash[i]):
+			return false
+		list.append(item_stash[i])
+	var r := YoutdCube.current_recipe(yp(), list)
+	if r.is_empty():
+		return false
+	var res := YoutdCube.results(r, list, YtGlobals.synced_rng)
+	if (res.items as Array).is_empty():
+		return false
+	for it in list:
+		stash_remove(it)
+		it.queue_free()
+	var names := []
+	for id in res.items:
+		var it := YtItem.make(int(id), yp())
+		if it != null:
+			stash_add(it)
+			names.append(it.get_display_name())
+	var luck := int(res.luck)
+	var text := tr("Würfel: %s") % ", ".join(names)
+	if luck < 0:
+		text += " " + tr("(Pech: %d Level)") % luck
+	elif luck > 0:
+		text += " " + tr("(Glück: +%d Level)") % luck
+	if acting == local_player:
+		_note(text)
+	_refresh_hud()
+	return true
+
+
+## Sichtbare Buffs und Debuffs einer Einheit als Text (Buff-Hinweise aus data/youtd/texte.json), mit Stapeln.
+static func buff_lines(u: YtUnit) -> Array:
+	var out := []
+	if u == null or not is_instance_valid(u):
+		return out
+	for b in u.get_buff_list():
+		if b.is_hidden():
+			continue
+		var text := b.get_tooltip_text()
+		if text == "" or text == b.get_buff_type_name() or text.begins_with("DEBUG"):
+			continue
+		if b.get_displayed_stacks() > 1:
+			text += " ×%d" % b.get_displayed_stacks()
+		if not out.has(text):
+			out.append(text)
+	return out
+
+
+## Name eines Items mit Ladungen, z. B. „Strange Item (3)“.
+func item_label(it: YtItem) -> String:
+	return it.get_display_name() + (" (%d)" % it.get_charges() if it.uses_charges() else "")
+
+
+## Platz des Items uid im Lager des handelnden Spielers (-1 = nicht da).
+func stash_index(uid: int) -> int:
+	for i in item_stash.size():
+		if (item_stash[i] as YtItem).get_uid() == uid:
+			return i
+	return -1
+
+
+## Item ins Lager seines Spielers (YtItem.fly_to_stash).
+func stash_add(it: YtItem) -> void:
+	var p: YtPlayer = it.get_player()
+	if not p.item_stash.has(it):
+		p.item_stash.append(it)
+	it.place = YtItem.Place.STASH
+	if youtd_panel != null:
+		youtd_panel.items_dirty()
+
+
+func stash_remove(it: YtItem) -> void:
+	it.get_player().item_stash.erase(it)
+	it.place = YtItem.Place.NONE
+	if youtd_panel != null:
+		youtd_panel.items_dirty()
+
+
+func stash_full(p: YtPlayer) -> bool:
+	return p.item_stash.size() >= int(rules.get("items", {}).get("stash_max", 40))
+
+
 ## Itemfund (YtUnit._killed_by_unit hat die Chance schon gewürfelt): Item nach Welle und Qualität ins Lager.
-func drop_item(creep: YtCreep, quality: float) -> void:
-	drop_item_id(creep, YoutdRoll.item(self, creep.get_spawn_level(), maxf(0.0, quality)))
+func drop_item(creep: YtCreep, quality: float, owner: YtPlayer = null) -> void:
+	drop_item_id(creep, YoutdRoll.item(self, creep.get_spawn_level(), maxf(0.0, quality)), owner)
 
 
-func drop_item_id(_creep: YtCreep, id: String) -> void:
-	if id == "" or YoutdData.item(id).is_empty() or item_stash.size() >= int(rules.get("items", {}).get("stash_max", 40)):
+func drop_item_id(_creep: YtCreep, id: String, owner: YtPlayer = null) -> void:
+	if owner == null:
+		owner = YtPlayer.of(0)
+	if id == "" or YoutdData.item(id).is_empty() or stash_full(owner):
 		return
-	item_stash.append(id)
-	var it := YoutdData.item(id)
-	_note(tr("Item gefunden: %s (%s)") % [str(it.get("name", id)), YoutdData.rarity_name(str(it.get("rarity", "")))])
+	var it := YtItem.make(int(id), owner)
+	if it == null:
+		return
+	stash_add(it)
+	if owner.id == local_player:
+		_note(tr("Item gefunden: %s (%s)") % [it.get_display_name(), YoutdData.rarity_name(str(YoutdData.item(id).get("rarity", "")))])
 
 
 # --- Wellen ----------------------------------------------------------------------
@@ -478,13 +651,35 @@ func _process(delta: float) -> void:
 	_process_wave(delta)
 
 
+## Bahnen, auf denen Gegner kommen: solo eine, im Koop eine je Spieler (Bahn des Spielers aus der Karte).
+func wave_lanes() -> Array:
+	var out := []
+	for p in yt_players:
+		out.append(p.id)
+	return out
+
+
+## Index in lane_paths für Spieler pid (Bahn mit player == pid, sonst die erste).
+func lane_index(pid: int) -> int:
+	for i in map.lane_count():
+		if map.lane_player(i) == pid:
+			return i
+	return 0
+
+
+## Schlüssel in alive: Welle und Bahn (Spieler).
+static func alive_key(lane: int, level: int) -> String:
+	return "%d:%d" % [lane, level]
+
+
 func _start_next_wave() -> void:
 	if next_wave > max_wave():
 		return
 	var w: Dictionary = waves[next_wave - 1]
 	wave_index = next_wave - 1
-	spawners.append({"wave": w, "index": 0, "timer": 0.5})
-	alive[int(w.level)] = (w.creeps as Array).size()
+	for lane in wave_lanes():
+		spawners.append({"wave": w, "index": 0, "timer": 0.5, "lane": lane})
+		alive[alive_key(lane, int(w.level))] = (w.creeps as Array).size()
 	next_wave += 1
 	next_wave_in = float(rules.get("time", {}).get("between_waves", 15))
 	phase = Phase.WAVE
@@ -497,31 +692,33 @@ func _process_wave(delta: float) -> void:
 	for s in spawners.duplicate():
 		s.timer -= delta
 		while s.timer <= 0.0 and s.index < (s.wave.creeps as Array).size():
-			_spawn_youtd(s.wave, str(s.wave.creeps[s.index]))
+			_spawn_youtd(s.wave, str(s.wave.creeps[s.index]), int(s.get("lane", 0)))
 			s.index += 1
 			s.timer += YoutdWaves.creep_delay(str(s.wave.size), wave_rng)
 		if s.index >= (s.wave.creeps as Array).size():
 			spawners.erase(s)
 
 
-func _spawn_youtd(w: Dictionary, size_id: String) -> void:
+func _spawn_youtd(w: Dictionary, size_id: String, lane := 0) -> void:
 	var e := YoutdEnemy.new()
 	e.net_id = _next_enemy_id
 	_next_enemy_id += 1
 	board.add_child(e)
-	var lp: Dictionary = lane_paths[0]
-	e.setup_youtd(self, w, size_id, lp.air if size_id == "air" else lp.ground, 1.0)
+	var lp: Dictionary = lane_paths[lane_index(lane)]
+	e.setup_youtd(self, w, size_id, lp.air if size_id == "air" else lp.ground, 1.0, -1.0, lane)
 	e.final_boss = int(w.level) == max_wave() and size_id.contains("boss")
 	enemies.append(e)
 	if e.boss:
 		Sfx.play("boss")
 
 
-## Gegner aus einer Eigenschaft (Brut, Nekromant, Trächtig): gehört zur Welle level, die Stelle setzt das Skript.
+## Gegner aus einer Eigenschaft (Brut, Nekromant, Trächtig): gehört zur Welle level und zur Bahn des Spielers,
+## die Stelle setzt das Skript.
 func spawn_yt_creep(size: YtCreepSize.enm, armor_type: YtArmorType.enm, race: YtCreepCategory.enm, health: float, armor: float,
-		level: int) -> YtCreep:
+		level: int, player: YtPlayer = null) -> YtCreep:
 	if phase >= Phase.GAME_OVER:
 		return null
+	var lane: int = player.id if player != null else 0
 	var size_id := YtCreepSize.convert_to_string(size).replace(" ", "_")
 	var w := {"level": level, "race": YtCreepCategory.convert_to_string(race), "armor": armor,
 			"armor_type": YtArmorType.convert_to_string(armor_type), "hp": health, "specials": []}
@@ -529,10 +726,11 @@ func spawn_yt_creep(size: YtCreepSize.enm, armor_type: YtArmorType.enm, race: Yt
 	e.net_id = _next_enemy_id
 	_next_enemy_id += 1
 	board.add_child(e)
-	var lp: Dictionary = lane_paths[0]
-	e.setup_youtd(self, w, size_id, lp.air if size_id == "air" else lp.ground, 1.0, health)
+	var lp: Dictionary = lane_paths[lane_index(lane)]
+	e.setup_youtd(self, w, size_id, lp.air if size_id == "air" else lp.ground, 1.0, health, lane)
 	enemies.append(e)
-	alive[level] = int(alive.get(level, 0)) + 1
+	var k := alive_key(lane, level)
+	alive[k] = int(alive.get(k, 0)) + 1
 	return e.core
 
 
@@ -587,42 +785,56 @@ func on_enemy_leaked(e: Enemy) -> void:
 		youtd_score += creep_score(ye)
 		leaks_per_wave[ye.level - 1] = int(leaks_per_wave.get(ye.level - 1, 0)) + 1
 		if dmg > 0.0:
-			portal -= dmg
 			_note(tr("%s durchgelaufen: −%s %% Leben") % [ye.display_name(), TowerStats.num(dmg)])
 			Sfx.play("leak")
 		_creep_gone(ye)
-	_remove_enemy(e)
-	if portal <= 0.0 and not Session.debug_immortal:
-		portal = 0.0
-		_finish(Phase.GAME_OVER)
+		_remove_enemy(e)
+		modify_portal(-dmg)
+	else:
+		_remove_enemy(e)
 	_refresh_hud()
 
 
-## Ein Gegner der Welle ist weg; ist die Welle leer: Einkommen, Bücher, neue Tower (Zufallsmodi).
+## Ein Gegner der Welle ist weg; ist die Welle auf seiner Bahn leer: Einkommen, Bücher, neue Tower für den Spieler.
 func _creep_gone(e: YoutdEnemy) -> void:
-	var lvl := e.level
-	if not alive.has(lvl):
+	var k := alive_key(e.lane, e.level)
+	if not alive.has(k):
 		return
-	alive[lvl] = int(alive[lvl]) - 1
-	if int(alive[lvl]) > 0:
+	alive[k] = int(alive[k]) - 1
+	if int(alive[k]) > 0:
 		return
-	alive.erase(lvl)
-	_wave_finished(lvl)
+	alive.erase(k)
+	_wave_finished(e.level, e.lane)
 
 
-func _wave_finished(lvl: int) -> void:
-	waves_done = maxi(waves_done, lvl)
+func _wave_finished(lvl: int, lane := 0) -> void:
+	var before := acting
+	acting = clampi(lane, 0, yt_players.size() - 1)
+	var p := yp()
 	var inc: Dictionary = rules.get("income", {})
-	var upkeep := floori((int(inc.get("base", 20)) + lvl * int(inc.get("per_level", 2))) * income_rate)
-	var interest := floori(minf(gold * float(inc.get("interest", 0.05)), float(inc.get("interest_max", 1000))))
+	var upkeep := floori((int(inc.get("base", 20)) + lvl * int(inc.get("per_level", 2))) * p.income_rate)
+	var interest := floori(minf(gold * p.interest_rate, float(inc.get("interest_max", 1000))))
 	gold += upkeep + interest
-	tomes += int(inc.get("tomes", 8))
-	_note(tr("Welle %d geschafft: +%d Gold, +%d Zinsen, +%d Bücher") % [lvl, upkeep, interest, int(inc.get("tomes", 8))])
+	p.add_tomes(int(inc.get("tomes", 8)))
+	p.get_builder().apply_wave_finished_effect(p)
+	if acting == local_player:
+		_note(tr("Welle %d geschafft: +%d Gold, +%d Zinsen, +%d Bücher") % [lvl, upkeep, interest, int(inc.get("tomes", 8))])
 	if not is_build_mode():
 		var rolled := YoutdRoll.per_wave(self)
 		stash.append_array(rolled)
-		if not rolled.is_empty():
+		if not rolled.is_empty() and acting == local_player:
 			_note(tr("Neue Tower: %s") % ", ".join(rolled.map(func(id): return YoutdData.tower(id).get("name", id))))
+	acting = before
+	# Welle geschafft, wenn sie auf keiner Bahn mehr läuft
+	for k in alive:
+		if str(k).ends_with(":%d" % lvl):
+			_refresh_hud()
+			return
+	for sp in spawners:
+		if int(sp.wave.level) == lvl:
+			_refresh_hud()
+			return
+	waves_done = maxi(waves_done, lvl)
 	run_stats.wave_done(all_towers(), lvl, int(leaks_per_wave.get(lvl - 1, 0)), 0)
 	if lvl >= max_wave() and alive.is_empty() and spawners.is_empty():
 		_finish(Phase.VICTORY)
@@ -630,6 +842,7 @@ func _wave_finished(lvl: int) -> void:
 	if alive.is_empty() and spawners.is_empty():
 		phase = Phase.BUILD
 		next_wave_in = float(rules.get("time", {}).get("between_waves", 15))
+	_refresh_hud()
 
 
 func _remove_enemy(e: Enemy) -> void:
@@ -714,7 +927,7 @@ func tower_options(t: Tower) -> Array:
 			opts.append({"label": tr("Aufwerten: %s") % str(YoutdData.tower(up).get("name", up)), "action": "upgrade", "id": up, "tier": 0,
 					"cost": cost, "reason": build_reason(up, yt)})
 	if yt.core != null:
-		var list := yt.core.get_autocast_list()
+		var list := yt.autocasts()
 		for k in list.size():
 			var ac: YtAutocast = list[k]
 			if ac.can_use_auto_mode():
@@ -727,8 +940,8 @@ func tower_options(t: Tower) -> Array:
 			opts.append({"label": tr("Zauber: %s") % ac.get_autocast_name(), "action": "cast", "id": str(ac.get_id()), "tier": k,
 					"cost": 0, "reason": why})
 	for k in yt.items.size():
-		var it := YoutdData.item(str(yt.items[k]))
-		opts.append({"label": tr("Herausnehmen: %s") % str(it.get("name", "")), "action": "take_item", "id": str(yt.items[k]), "tier": k,
+		var it: YtItem = yt.items[k]
+		opts.append({"label": tr("Herausnehmen: %s") % it.get_display_name(), "action": "take_item", "id": str(it.get_id()), "tier": k,
 				"cost": 0, "reason": ""})
 	opts.append({"label": tr("Verkaufen"), "action": "sell", "id": yt.yid, "tier": 0, "cost": 0, "reason": ""})
 	return opts
@@ -746,8 +959,12 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	match str(o.action):
 		"sell":
 			gold += sell_value(yt)
-			for id in yt.items:
-				item_stash.append(id)
+			for it in yt.items.duplicate():
+				it.drop()
+				it.fly_to_stash(0.0)
+			for it in yt.oils.duplicate():
+				it.drop()
+				it.queue_free()
 			run_stats.flush(yt)
 			_unregister(yt)
 			if yt == selected:
@@ -759,7 +976,7 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 		"take_item":
 			return take_item(yt, int(o.tier))
 		"cast":
-			var list := yt.core.get_autocast_list() if yt.core != null else []
+			var list := yt.autocasts() if yt.core != null else []
 			var k := int(o.tier)
 			if k < 0 or k >= list.size():
 				return false
@@ -804,8 +1021,11 @@ func choose_build(id: String) -> void:
 
 ## Item aus dem Lager wählen: mit ausgewähltem Tower sofort einlegen, sonst danach einen Tower anklicken.
 func pick_item(i: int) -> void:
+	if i >= 0 and i < item_stash.size() and (item_stash[i] as YtItem).is_consumable():
+		submit({"type": "item_use", "uid": (item_stash[i] as YtItem).get_uid()})
+		return
 	if selected is YoutdTower:
-		submit({"type": "item_put", "tower": tower_ref(selected), "index": i})
+		submit({"type": "item_put", "tower": tower_ref(selected), "uid": (item_stash[i] as YtItem).get_uid()})
 		return
 	picked_item = -1 if picked_item == i else i
 	build_id = ""
@@ -827,7 +1047,7 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if towers.has(a):
 		if picked_item >= 0:
-			submit({"type": "item_put", "tower": tower_ref(towers[a]), "index": picked_item})
+			submit({"type": "item_put", "tower": tower_ref(towers[a]), "uid": (item_stash[picked_item] as YtItem).get_uid()})
 			picked_item = -1
 			return
 		_select(towers[a])
@@ -878,7 +1098,7 @@ func _refresh_hud_local() -> void:
 		var t := YoutdData.tower(build_id)
 		hud.set_phase(str(t.get("name", "")), tr("Baufläche anklicken · Esc oder Rechtsklick = abbrechen"))
 	elif picked_item >= 0 and picked_item < item_stash.size():
-		hud.set_phase(str(YoutdData.item(str(item_stash[picked_item])).get("name", "")), tr("Tower anklicken, um das Item einzulegen · Esc = abbrechen"))
+		hud.set_phase((item_stash[picked_item] as YtItem).get_display_name(), tr("Tower anklicken, um das Item einzulegen · Esc = abbrechen"))
 	else:
 		match phase:
 			Phase.BUILD:
@@ -906,10 +1126,13 @@ func _refresh_selection() -> void:
 	if yt.level + 1 < table.size() and yt.level < max_tower_level():
 		body += tr(" (nächstes Level bei %d)") % int(table[yt.level + 1])
 	body += "\n" + tr("Items: %d / %d") % [yt.items.size(), yt.slots()]
-	for id in yt.items:
-		body += "\n  · " + str(YoutdData.item(str(id)).get("name", id))
+	for it in yt.items:
+		body += "\n  · " + item_label(it)
 	if not yt.oils.is_empty():
-		body += "\n" + tr("Öle: %s") % ", ".join(yt.oils.map(func(id): return YoutdData.item(str(id)).get("name", id)))
+		body += "\n" + tr("Öle: %s") % ", ".join(yt.oils.map(func(it): return it.get_display_name()))
+	var effects := buff_lines(yt.core)
+	if not effects.is_empty():
+		body += "\n" + tr("Effekte:") + "\n  · " + "\n  · ".join(effects)
 	body += "\n" + tr("Verkaufswert: %d Gold") % sell_value(yt)
 	hud.set_selection({"title": yt.label(), "color": yt.color, "body": body, "used_in": null, "stats": yt.view()})
 	hud.set_options(tower_options(yt).map(func(o): return _option_view(yt, o)))
@@ -941,7 +1164,7 @@ func _upcoming_waves(count: int) -> Array:
 
 
 func _wave_state(lvl: int) -> String:
-	if alive.has(lvl):
+	if alive.keys().any(func(k): return str(k).ends_with(":%d" % lvl)):
 		return tr("läuft")
 	if lvl == next_wave and alive.is_empty():
 		return tr("in %d s") % ceili(maxf(next_wave_in, 0.0))

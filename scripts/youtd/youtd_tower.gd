@@ -24,8 +24,8 @@ const LOOKS := {
 var yid := ""              ## Tower-ID aus YouTD 2
 var yt: Dictionary = {}    ## Werte aus towers.json
 var core: YtTower = null   ## Werte, Angriff und Fähigkeiten (YouTD-2-Laufzeit)
-var items: Array = []      ## eingelegte Item-IDs (höchstens slots())
-var oils: Array = []       ## verbrauchte Öle (wirken dauerhaft)
+var items: Array = []      ## eingelegte Items (YtItem, höchstens slots())
+var oils: Array = []       ## verbrauchte Öle (YtItem, wirken dauerhaft)
 var spent := 0             ## Gold, das in diesen Tower geflossen ist (Verkaufswert)
 
 var xp: float:
@@ -45,12 +45,24 @@ func set_youtd(id: String) -> void:
 	yt = YoutdData.tower(id)
 	set_tower(PREFIX + id, maxi(int(yt.get("tier", 1)) - 1, 0))
 	var old := core
-	core = YtTower.make(int(id), YtPlayer.local(), old)
+	# Items und Öle gehen vom alten Kern auf den neuen über (wie YtTower._ready mit Vorgänger in YouTD 2)
+	var carried: Array = oils + items
+	for it in carried:
+		it._remove_from_tower()
+	var player := YtPlayer.of(owner_player)
+	core = YtTower.make(int(id), player, old)
 	core.body = self
 	add_child(core)
 	if old != null:
 		old.remove_from_game()
-	update_items()
+	items = []
+	oils = []
+	for it in carried:
+		if it.is_oil() or items.size() < slots():
+			it.add_to_tower(core)
+		else:
+			it.place = YtItem.Place.GROUND
+			it.fly_to_stash(0.0)
 
 
 func set_tower(id: String, t: int) -> void:
@@ -101,14 +113,22 @@ func label() -> String:
 
 # --- Werte (aus dem Kern) ---------------------------------------------------------
 
-## Items und Öle neu an den Kern geben (nach Einlegen, Herausnehmen, Aufwerten).
-func update_items() -> void:
+## Items wurden eingelegt oder herausgenommen (YtItem): Auswahlkarte neu zeichnen.
+func items_changed() -> void:
+	if game != null and game.selected == self:
+		game._refresh_hud()
+
+
+## Zauber des Towers und seiner Items (Autocasts), in dieser Reihenfolge.
+func autocasts() -> Array:
 	if core == null:
-		return
-	var list := []
-	for id in items + oils:
-		list.append_array(YoutdData.item(str(id)).get("mods", []))
-	core.set_item_mods(list)
+		return []
+	var list: Array = core.get_autocast_list().duplicate()
+	for it in items:
+		var ac: YtAutocast = it.get_autocast()
+		if ac != null and ac.get_caster() == core:
+			list.append(ac)
+	return list
 
 
 ## Modifikator k als Abweichung vom Grundwert (0 = keiner), z. B. 0.25 für +25 % Schaden.
@@ -176,7 +196,7 @@ func add_exp(amount: float) -> void:
 
 ## Item-Plätze dieses Towers.
 func slots() -> int:
-	return YoutdData.item_slots(yid)
+	return core.get_inventory_capacity() if core != null else YoutdData.item_slots(yid)
 
 
 # --- Kampf läuft im Kern -------------------------------------------------------------
@@ -292,3 +312,8 @@ func ability_lines() -> Array:
 				if board.get_key(i) != "":
 					out.append("%s: %s" % [board.get_key(i), board.get_value(i)])
 	return out
+
+
+## Der Kern hat den Tower versetzt (Chrono Jumper): Modell mitnehmen.
+func yt_moved() -> void:
+	position = Board3D.to_3d(pos)

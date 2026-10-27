@@ -39,6 +39,16 @@ func _ready() -> void:
 	add_child(projectile_view)
 
 
+## Knoten, unter dem alle Items (YtItem) hängen, egal ob im Lager, am Boden oder im Tower.
+func item_holder() -> Node:
+	var h := get_node_or_null("items")
+	if h == null:
+		h = Node.new()
+		h.name = "items"
+		add_child(h)
+	return h
+
+
 static func next_uid() -> int:
 	if node == null:
 		return 0
@@ -172,8 +182,15 @@ func _effect_ring(e: Dictionary) -> MeshInstance3D:
 # --- Schwebende Texte ------------------------------------------------------------------
 
 func floating_text(text: String, unit, col: Color) -> void:
-	if DisplayServer.get_name() == "headless" or floating.size() > 40 or not YtUtils.unit_is_valid(unit):
+	if YtUtils.unit_is_valid(unit):
+		floating_text_at(text, unit.get_position_wc3(), col)
+
+
+## Schwebender Text an einer WC3-Position (Vector2 oder Vector3).
+func floating_text_at(text: String, pos, col: Color) -> void:
+	if DisplayServer.get_name() == "headless" or floating.size() > 40:
 		return
+	var p3: Vector3 = pos if pos is Vector3 else Vector3(pos.x, pos.y, 0.0)
 	var l := Label3D.new()
 	l.text = text
 	l.modulate = col
@@ -182,7 +199,7 @@ func floating_text(text: String, unit, col: Color) -> void:
 	l.pixel_size = 0.006
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	l.no_depth_test = true
-	l.position = to_3d(unit.get_position_wc3()) + Vector3(0, 1.0, 0)
+	l.position = to_3d(p3) + Vector3(0, 1.0, 0)
 	add_child(l)
 	floating.append({"label": l, "t": 1.2})
 

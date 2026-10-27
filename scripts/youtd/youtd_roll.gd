@@ -131,33 +131,8 @@ static func _tower_for_element(game, el: String, chance: float) -> String:
 	return str(YoutdWaves.weighted(gw, rng))
 
 
-## Item beim Kill (ItemDropCalc): Seltenheit nach Gewichten × Qualität, 40 % Öl, sonst reguläres Item bis zur Welle.
-## Verbrauchsgegenstände (alle mit eigenem Skript) kommen erst in Etappe 3 dazu. "" = nichts passendes.
+## Item beim Kill (YtItemDropCalc): Seltenheit nach Gewichten × Qualität, 40 % Öl oder Verbrauchsgegenstand, sonst
+## reguläres Item bis zur Welle. "" = nichts passendes.
 static func item(game, level: int, quality: float) -> String:
-	var rng: RandomNumberGenerator = game.roll_rng
-	var ir: Dictionary = game.rules.get("items", {})
-	var probs: Array = ir.get("rarity_weights", [1000.0, 0.25, 0.06, 0.02])
-	var rarity := 3
-	var c := rng.randf()
-	while true:
-		c -= float(probs[rarity]) * quality
-		if c < 0.0 or rarity == 0:
-			break
-		rarity -= 1
-	var all := YoutdData.items()
-	if rng.randf() < float(ir.get("oil_chance", 0.4)):
-		var th: Array = ir.get("oil_quality_wave", [0, 6, 18, 36])
-		while rarity > 0 and level < int(th[rarity]):
-			rarity -= 1
-		var oils := all.keys().filter(func(id): return all[id].type == "oil" and all[id].rarity == RARITIES[rarity])
-		return str(oils[rng.randi_range(0, oils.size() - 1)]) if not oils.is_empty() else ""
-	for ri in [rarity, rarity - 1]:
-		if ri < 0:
-			break
-		var list := []
-		for id in all:
-			if all[id].type == "regular" and all[id].rarity == RARITIES[ri] and int(all[id].get("level", 0)) <= level:
-				list.append(id)
-		if not list.is_empty():
-			return str(list[rng.randi_range(0, list.size() - 1)])
-	return ""
+	var id := YtItemDropCalc.calculate_item_drop(level, quality, game.roll_rng)
+	return str(id) if id != 0 else ""

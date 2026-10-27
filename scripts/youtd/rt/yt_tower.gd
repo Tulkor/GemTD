@@ -56,7 +56,6 @@ var _current_crit_count: int = 0
 var _current_crit_damage: float = 0
 var _transform_is_allowed: bool = true
 var _is_in_combat: bool = false
-var _item_modifier: YtModifier = null
 ## Ablage für 2D-Anzeigen der Skripte (Ladebalken in YouTD 2); hier ohne Bild, nur damit die Skripte laufen.
 var _visual: Node = Node.new()
 
@@ -233,16 +232,6 @@ func remove_from_game():
 		_tower_behavior.on_destruct()
 
 	super()
-
-
-## Items und Öle des Körpers als ein Modifikator (Werte + Zuwachs je Level wie bei Towern).
-func set_item_mods(mods: Array):
-	if _item_modifier != null:
-		remove_modifier(_item_modifier)
-	_item_modifier = YtModifier.new()
-	for m in mods:
-		_item_modifier.add_modification(YtModificationType.from_string(str(m[0])), float(m[1]), float(m[2]))
-	add_modifier(_item_modifier)
 
 
 func force_attack_target(forced_target: YtCreep):
@@ -760,20 +749,41 @@ func have_item_space() -> bool:
 
 
 func get_oils() -> Array:
-	return []
+	return body.oils.duplicate() if body != null else []
 
 
-func get_items() -> Array:
-	return []
+func get_items() -> Array[YtItem]:
+	var out: Array[YtItem] = []
+	if body != null:
+		out.assign(body.items)
+	return out
 
 
 func get_item_count() -> int:
 	return body.items.size() if body != null and "items" in body else 0
 
 
-# NOTE: items carry no scripts yet (Etappe 3)
-func get_held_item(_slot_number: int):
+# NOTE: tower.getHeldItem() in JASS, slot_number starts at 1
+func get_held_item(slot_number: int) -> YtItem:
+	var i: int = slot_number - 1
+	if body == null or i < 0 or i >= body.items.size():
+		return null
+	return body.items[i]
+
+
+func get_item_container():
 	return null
+
+
+func get_item_tower_details() -> Array:
+	var out: Array = []
+	if body == null:
+		return out
+	for item in body.items:
+		var board: YtMultiboardValues = item.on_tower_details()
+		if board != null:
+			out.append(board)
+	return out
 
 
 func get_log_name() -> String:
@@ -1000,7 +1010,8 @@ func get_gold_cost() -> int:
 	return int(_p.get("cost", 0))
 
 func get_inventory_capacity() -> int:
-	return clampi(YoutdData.item_slots(str(_id)), 1, YtConstants.INVENTORY_CAPACITY_MAX)
+	var bonus: int = get_player().get_builder().get_item_slots_bonus() if get_player() != null else 0
+	return clampi(YoutdData.item_slots(str(_id)), 1, YtConstants.INVENTORY_CAPACITY_MAX) + bonus
 
 func get_attack_enabled() -> bool:
 	return bool(_p.get("attack", true))

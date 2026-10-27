@@ -13,8 +13,9 @@ var core: YtCreep = null
 
 
 ## w: Welle aus YoutdWaves, size: Größe dieses Gegners. hp: eigene Leben (Kinder aus Eigenschaften), sonst aus der Welle.
-func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_factor: float, hp_override := -1.0) -> void:
+func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_factor: float, hp_override := -1.0, lane_id := 0) -> void:
 	level = int(w.level)
+	lane = lane_id
 	creep_size = size_id
 	race = str(w.race)
 	var rules := YoutdData.rules()
@@ -44,7 +45,7 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 	setup(g, def, {}, p)
 	core = YtCreep.new()
 	core.body = self
-	core.set_properties(YtPlayer.local(), YtCreepSize.from_string(size_id.replace("_", " ")), YtArmorType.from_string(armor_type),
+	core.set_properties(YtPlayer.of(lane), YtCreepSize.from_string(size_id.replace("_", " ")), YtArmorType.from_string(armor_type),
 			YtCreepCategory.from_string(race), hp_value, armor, level)
 	add_child(core)
 	YtWaveSpecial.apply_to_creep(specials, core)

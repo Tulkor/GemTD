@@ -226,6 +226,9 @@ func _ready():
 	add_child(regen_timer)
 	regen_timer.start()
 
+	var builder: YtBuilder = get_player().get_builder()
+	builder.apply_effects(self)
+
 
 #########################
 ###       Public      ###
@@ -975,7 +978,7 @@ func _killed_by_unit(caster: YtUnit):
 		var quality: float = caster.get_item_quality_ratio() * get_item_quality_ratio_on_death()
 		for i in range(0, item_drop_roll_count):
 			if YtUtils.rand_chance(YtGlobals.synced_rng, item_chance):
-				YtWorld.game.drop_item(creep, quality)
+				YtWorld.game.drop_item(creep, quality, caster.get_player())
 
 	remove_from_game()
 

@@ -144,17 +144,23 @@ func _game() -> void:
 	check(t.yid == "439" and game.gold == 890 and is_equal_approx(t.xp, xp_before), "Shrub steht, Erfahrung bleibt")
 
 	# Items: normales Item belegt einen Platz, Öl nicht
-	game.item_stash = ["2", "1001"]
+	var claws := YtItem.make(2, game.yp())
+	var oil := YtItem.make(1001, game.yp())
+	game.stash_add(claws)
+	game.stash_add(oil)
 	var dmg_before: Array = t.base_damage_range()
-	check(game.submit({"type": "item_put", "tower": game.tower_ref(t), "index": 0}) and t.items == ["2"], "Claws of Attack einlegen")
+	check(game.submit({"type": "item_put", "tower": game.tower_ref(t), "uid": claws.get_uid()}) and t.items == [claws], "Claws of Attack einlegen")
 	check(t.mod("MOD_DAMAGE_ADD_PERC") >= 0.25, "Item gibt +25 % Schaden")
-	check(game.submit({"type": "item_put", "tower": game.tower_ref(t), "index": 0}) and t.oils == ["1001"] and t.items.size() == 1, "Öl wirkt ohne Platz")
+	check(game.submit({"type": "item_put", "tower": game.tower_ref(t), "uid": oil.get_uid()}) and t.oils == [oil] and t.items.size() == 1, "Öl wirkt ohne Platz")
+	check(game.submit({"type": "option", "tower": game.tower_ref(t), "index": game.tower_options(t).map(func(o): return o.action).find("take_item"),
+			"action": "take_item", "id": "2"}) and game.item_stash.has(claws) and t.mod("MOD_DAMAGE_ADD_PERC") < 0.25, "herausnehmen: Wert weg, Item im Lager")
+	game.submit({"type": "item_put", "tower": game.tower_ref(t), "uid": claws.get_uid()})
 	var sell: int = game.sell_value(t)
 	opts = game.tower_options(t)
 	var si: int = opts.map(func(o): return o.action).find("sell")
 	var g2: int = game.gold
 	check(game.submit({"type": "option", "tower": game.tower_ref(t), "index": si, "action": "sell", "id": "439"}) and game.gold == g2 + sell
-		and game.item_stash == ["2"], "verkaufen: Gold zurück, Item ins Lager")
+		and game.item_stash.has(claws), "verkaufen: Gold zurück, Item ins Lager")
 	check(dmg_before.size() == 2, "Schadensspanne")
 
 	# Ende: Punkte werden zu Spieler-XP im Profil

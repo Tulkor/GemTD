@@ -1,6 +1,6 @@
 class_name YoutdSetupPanel
 extends Control
-## Einstellungen vor der ersten Welle von YouTD: Spielmodus, Länge, Schwierigkeit und Weisheits-Boni
+## Einstellungen vor der ersten Welle von YouTD: Spielmodus, Länge, Schwierigkeit, Weisheits-Boni und Baumeister
 ## (je 6 Spielerlevel ein Punkt, die Wahl bleibt im Profil). Oben Spielerlevel und Erfahrung.
 ## „Los geht's“ schickt den Befehl setup an youtd_game.gd; das Fenster schließt sich, sobald game.setup_done gilt.
 
@@ -9,7 +9,9 @@ var mode := 0
 var length := 1
 var difficulty := 2
 var wisdom: Array = []
+var builder := ""
 var _mode_text: Label
+var _builder_text: Label
 var _diff_text: Label
 var _wisdom_head: Label
 var _wisdom_buttons := {}
@@ -24,6 +26,7 @@ func _ready() -> void:
 	length = int(last.get("length", game.length_index))
 	difficulty = int(last.get("difficulty", game.difficulty))
 	wisdom = YoutdProgress.wisdom()
+	builder = YoutdProgress.last_builder() if YoutdProgress.builder_open(YoutdProgress.last_builder()) else ""
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -50,7 +53,7 @@ func _ready() -> void:
 	var info := UiUtil.wrap_label(who, v, 700)
 	info.add_theme_color_override("font_color", UiTheme.COIN)
 	var open := YoutdProgress.builders().filter(func(b): return b.open).size()
-	var hint := UiUtil.wrap_label(tr("Punkte am Ende einer Partie werden zu Spieler-XP. Je 6 Level gibt es einen Weisheits-Punkt. Baumeister: %d von %d freigeschaltet (wählbar ab einer späteren Etappe).") % [open, YoutdData.builders().size()], v, 700)
+	var hint := UiUtil.wrap_label(tr("Punkte am Ende einer Partie werden zu Spieler-XP. Je 6 Level gibt es einen Weisheits-Punkt. Baumeister: %d von %d freigeschaltet.") % [open, YoutdData.builders().size()], v, 700)
 	hint.add_theme_color_override("font_color", UiTheme.MUTED)
 
 	UiTheme.caption("Spielmodus", v)
@@ -113,6 +116,30 @@ func _ready() -> void:
 		b.tooltip_text = str(w.name) + "\n" + tr(str(w.get("text", "")))
 		b.set_pressed_no_signal(wisdom.has(id))
 		_wisdom_buttons[id] = b
+
+	UiTheme.caption("Baumeister", v)
+	var bgrid := GridContainer.new()
+	bgrid.columns = 3
+	bgrid.add_theme_constant_override("h_separation", 6)
+	bgrid.add_theme_constant_override("v_separation", 6)
+	v.add_child(bgrid)
+	var bgroup := ButtonGroup.new()
+	var none := _toggle(tr("Keiner"), bgrid, bgroup, builder == "", func():
+		builder = ""
+		_update_text())
+	none.custom_minimum_size = Vector2(228, 34)
+	for b in YoutdProgress.builders():
+		var id := str(b.id)
+		var bb := _toggle(str(b.name), bgrid, bgroup, builder == id, func():
+			builder = id
+			_update_text())
+		bb.custom_minimum_size = Vector2(228, 34)
+		bb.clip_text = true
+		bb.add_theme_font_size_override("font_size", 13)
+		bb.disabled = not bool(b.open)
+		bb.tooltip_text = str(b.name) + "\n" + builder_text(id) + ("" if b.open else "\n" + tr("Ab Spielerlevel %d") % int(b.level))
+	_builder_text = UiUtil.wrap_label("", v, 700)
+	_builder_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_update_text()
 
 	var go := UiUtil.button("Los geht's", v, _start)
@@ -123,7 +150,9 @@ func _ready() -> void:
 
 func _start() -> void:
 	YoutdProgress.set_wisdom(wisdom)
-	game.submit({"type": "setup", "mode": mode, "length": length, "difficulty": difficulty, "seed": randi(), "wisdom": wisdom.duplicate()})
+	YoutdProgress.set_last_builder(builder)
+	game.submit({"type": "setup", "mode": mode, "length": length, "difficulty": difficulty, "seed": randi(), "wisdom": wisdom.duplicate(),
+			"builder": builder, "level": YoutdProgress.level()})
 
 
 func _toggle_wisdom(id: String) -> void:
@@ -150,6 +179,12 @@ func _update_text() -> void:
 		var b: Button = _wisdom_buttons[id]
 		b.set_pressed_no_signal(wisdom.has(id))
 		b.disabled = not wisdom.has(id) and wisdom.size() >= points
+	_builder_text.text = (tr("Ohne Baumeister: keine Sonderregeln.") if builder == "" else builder_text(builder))
+
+
+## Beschreibung eines Baumeisters (rules.json → builders).
+func builder_text(id: String) -> String:
+	return tr(str(game.rules.get("builders", {}).get(id, {}).get("text", "")))
 
 
 func _toggle(text: String, parent: Node, group: ButtonGroup, on: bool, pressed: Callable) -> Button:

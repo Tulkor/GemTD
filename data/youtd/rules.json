@@ -841,6 +841,29 @@
 			"fixed": true
 		}
 	],
+	"builders": {
+		"blademaster": {"text": "Tower: +8 % Krit-Chance, +40 % Krit-Schaden, ein Mehrfach-Krit mehr."},
+		"queen": {"text": "Tower: +10 % Angriffstempo, +30 % Schaden gegen Flieger (+2 % je Level). Flieger sind 60 langsamer."},
+		"adventurer": {"text": "Tower: +15 % Item-Chance und +20 % Item-Qualität bei Kills."},
+		"iron_maiden": {"text": "Portal +50 % Leben. Nach jeder Welle heilt das Portal 1 % (unter 50 %) bzw. 2 % (unter 10 %)."},
+		"farseer": {"text": "Tower: +75 Reichweite, +10 % Zauberschaden."},
+		"elementalist": {"text": "+65 Wissensbücher und +20 Food zu Beginn, +2 Bücher je Welle. Tower: mehr Schaden gegen Orks (+25 %) und Untote (+20 %), weniger gegen Natur (−20 %) und Humanoide (−5 %)."},
+		"veteran_pilot": {"text": "Tower: +20 % Angriffstempo (+2 % je Level). Gegner laufen 50 schneller."},
+		"royal_assassin": {"text": "Tower: +15 % Schaden gegen Bosse (+1 % je Level), +25 % gegen Champions, +2 % Item-Qualität je Level; −8 % gegen Normale, −12 % gegen Masse."},
+		"benevolent_witch": {"text": "Tower: +10 Mana, doppeltes Mana, +50 % Manaregeneration (+2 % je Level), aber −25 % Zauberschaden."},
+		"spirit_warden": {"text": "Tower: Buffs halten 80 % länger, Debuffs auf Towern 30 % kürzer, +10 % Schaden gegen Masse, −10 % gegen Bosse."},
+		"master": {"text": "Tower starten 5 Level höher und bekommen +60 % Erfahrung (+1 % je Level), aber −15 % Grundschaden."},
+		"fender": {"text": "Weisheit wirkt 25 % stärker. −20 % Einkommen, −45 Wissensbücher. Tower: +50 % gegen Untote und Masse, +30 % gegen Orks, −30 % gegen Magische."},
+		"realist": {"text": "Tower: +15 % Grund- und Zauberschaden (+1,5 % je Level), +150 % Manaregeneration; −50 % Auslöse-Chancen, −20 % Krit-Chance."},
+		"arch_sorceress": {"text": "Tower: +50 % Zauberschaden, +20 % Zauber-Krit-Chance, +50 % Zauber-Krit-Schaden (+2 % je Level), +1 % gegen Magische je Level; −10 % Grundschaden."},
+		"barbarian": {"text": "Tower: +35 % Grundschaden, +10 % Angriffstempo, zwei Mehrfach-Krits mehr, Krit wächst mit dem Level; kaum Mana und kein Zauberschaden."},
+		"panda": {"text": "Tower: +25 % Angriffstempo, +15 % Grundschaden und +20 % Zauberschaden (beides wächst mit dem Level); viel weniger Items (−60 % Chance)."},
+		"naga": {"text": "Tower: +40 % Auslöse-Chancen, +30 % Angriffstempo, aber −25 % Grund- und Zauberschaden."},
+		"goblin": {"text": "+15 % Einkommen, +2 % Zinsen. Tower: +20 % Kopfgeld, +35 % Item-Qualität; Buffs 35 % kürzer, Debuffs 25 % länger, −15 % Angriffstempo."},
+		"backpacker": {"text": "Zwei Item-Plätze mehr je Tower und drei zusätzliche Würfel-Rezepte, +40 % Item-Qualität. Tower tragen nur Items ihrer Seltenheit oder einzigartige."},
+		"maverick": {"text": "Tower dürfen nicht nebeneinander stehen, −20 Food, Weisheit wirkt schwächer (62,5 %). Tower: +50 % gegen Bosse, +25 % gegen Champions, Schaden wächst stark mit dem Level."},
+		"antagonizer": {"text": "Tower: +10 % Grundschaden (+4 % je Level), +10 % Angriffstempo, +25 % Zauberschaden; −60 % Erfahrung, −16 % Auslöse-Chancen."}
+	},
 	"special_names": {
 		"Speed": "Schnell",
 		"Greater Speed": "Sehr schnell",

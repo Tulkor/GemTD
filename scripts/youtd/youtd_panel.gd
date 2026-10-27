@@ -14,6 +14,12 @@ var _towers_key := ""
 var _items_head: Label
 var _items: HFlowContainer
 var _items_key := ""
+var _cube_box: VBoxContainer
+var _cube_info: Label
+var _cube_go: Button
+var _cube_recipes: HFlowContainer
+var cube_open := false     ## Würfel offen: Item-Klick legt in den Würfel statt in einen Tower
+var cube: Array = []       ## Items im Würfel (YtItem, lokal)
 var _next: Button
 var _log: Label
 
@@ -89,6 +95,7 @@ func _ready() -> void:
 	_items.add_theme_constant_override("h_separation", 3)
 	_items.add_theme_constant_override("v_separation", 3)
 	v.add_child(_items)
+	_build_cube(v)
 
 	_next = UiUtil.button("", v, func(): game.submit({"type": "next_wave"}))
 	_next.focus_mode = Control.FOCUS_NONE
@@ -193,8 +200,15 @@ func _refresh_towers() -> void:
 			b.modulate.a = 0.55
 
 
+## Lager neu zeichnen (Item gefunden, eingelegt, verwandelt).
+func items_dirty() -> void:
+	_items_key = ""
+
+
 func _refresh_items() -> void:
-	var key: String = str(game.item_stash) + str(game.picked_item)
+	cube = cube.filter(func(it): return is_instance_valid(it) and game.item_stash.has(it))
+	var key: String = str(game.item_stash.map(func(it): return [it.get_uid(), game.item_label(it), it.horadric_lock])) + str(game.picked_item) \
+			+ str(cube.map(func(it): return it.get_uid())) + str(cube_open)
 	if key == _items_key:
 		return
 	_items_key = key
@@ -202,25 +216,154 @@ func _refresh_items() -> void:
 	for c in _items.get_children():
 		_items.remove_child(c)
 		c.queue_free()
+	_refresh_cube()
 	if game.item_stash.is_empty():
 		var hint := UiUtil.wrap_label(tr("Getötete Gegner lassen manchmal Items fallen."), _items, 250)
 		hint.add_theme_font_size_override("font_size", 12)
 		hint.add_theme_color_override("font_color", UiTheme.MUTED)
 		return
 	for i in game.item_stash.size():
-		var id := str(game.item_stash[i])
-		var it := YoutdData.item(id)
-		var short := str(it.get("name", id))
-		var b := UiUtil.button(short.left(10), _items, func(): game.pick_item(i))
+		var it: YtItem = game.item_stash[i]
+		var rarity := str(YoutdData.item(str(it.get_id())).get("rarity", "common"))
+		var text: String = game.item_label(it)
+		if it.horadric_lock:
+			text = "# " + text
+		var b := UiUtil.button(text.left(11), _items, func(): _item_clicked(i))
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(80, 26)
 		b.clip_text = true
 		b.add_theme_font_size_override("font_size", 11)
-		b.add_theme_color_override("font_color", YoutdData.rarity_color(str(it.get("rarity", "common"))))
-		b.tooltip_text = item_tip(id)
-		if game.picked_item == i:
+		b.add_theme_color_override("font_color", YoutdData.rarity_color(rarity))
+		b.tooltip_text = item_tip_for(it) + "\n" + (tr("Rechtsklick: für den Würfel sperren/freigeben") if cube_open
+				else (tr("Klick: benutzen") if it.is_consumable() else tr("Klick, dann Tower anklicken: einlegen")))
+		b.gui_input.connect(func(ev): _item_input(ev, it))
+		if game.picked_item == i or cube.has(it):
 			b.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN))
 			b.add_theme_color_override("font_color", UiTheme.BG)
+
+
+func _item_clicked(i: int) -> void:
+	if not cube_open:
+		game.pick_item(i)
+		return
+	var it: YtItem = game.item_stash[i]
+	if cube.has(it):
+		cube.erase(it)
+	elif cube.size() < 6:
+		cube.append(it)
+	items_dirty()
+	_refresh_items()
+
+
+func _item_input(ev: InputEvent, it: YtItem) -> void:
+	if cube_open and ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_RIGHT:
+		game.submit({"type": "item_lock", "uid": it.get_uid()})
+		items_dirty()
+
+
+# --- Horadrischer Würfel -------------------------------------------------------------
+
+func _build_cube(v: VBoxContainer) -> void:
+	var open := UiUtil.button("Horadrischer Würfel", v, func():
+		cube_open = not cube_open
+		cube.clear()
+		game.picked_item = -1
+		items_dirty()
+		refresh())
+	open.focus_mode = Control.FOCUS_NONE
+	open.custom_minimum_size.y = 28
+	open.add_theme_font_size_override("font_size", 12)
+	open.tooltip_text = tr("Aus Items im Lager neue machen: Items in den Würfel legen, dann verwandeln.")
+	_cube_box = VBoxContainer.new()
+	_cube_box.add_theme_constant_override("separation", 4)
+	v.add_child(_cube_box)
+	_cube_info = UiUtil.wrap_label("", _cube_box, 256)
+	_cube_info.add_theme_font_size_override("font_size", 12)
+	_cube_go = UiUtil.button("Verwandeln", _cube_box, func():
+		game.submit({"type": "transmute", "uids": cube.map(func(it): return it.get_uid())})
+		cube.clear()
+		items_dirty())
+	_cube_go.focus_mode = Control.FOCUS_NONE
+	_cube_go.custom_minimum_size.y = 30
+	UiTheme.accent_button(_cube_go, UiTheme.GOLD, UiTheme.GOLD_DARK)
+	var head := UiUtil.label("Rezepte", _cube_box, 12)
+	head.add_theme_font_override("font", UiTheme.font(true))
+	_cube_recipes = HFlowContainer.new()
+	_cube_recipes.add_theme_constant_override("h_separation", 3)
+	_cube_recipes.add_theme_constant_override("v_separation", 3)
+	_cube_box.add_child(_cube_recipes)
+
+
+func _refresh_cube() -> void:
+	_cube_box.visible = cube_open
+	if not cube_open:
+		return
+	var p: YtPlayer = game.yp()
+	var r := YoutdCube.current_recipe(p, cube)
+	if cube.is_empty():
+		_cube_info.text = tr("Items anklicken, um sie in den Würfel zu legen, oder unten ein Rezept wählen.")
+	elif r.is_empty():
+		_cube_info.text = tr("Im Würfel: %d Items · kein passendes Rezept") % cube.size()
+	else:
+		_cube_info.text = tr("Rezept: %s\n%s") % [recipe_name(r), recipe_text(r)]
+	_cube_go.disabled = r.is_empty()
+	for c in _cube_recipes.get_children():
+		_cube_recipes.remove_child(c)
+		c.queue_free()
+	for rec in YoutdCube.recipes():
+		if not YoutdCube.unlocked(rec, p):
+			continue
+		var fill := YoutdCube.autofill(rec, game.item_stash)
+		var b := UiUtil.button(recipe_name(rec), _cube_recipes, func():
+			cube = YoutdCube.autofill(rec, game.item_stash)
+			items_dirty()
+			_refresh_items())
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(80, 24)
+		b.add_theme_font_size_override("font_size", 11)
+		b.disabled = fill.is_empty()
+		b.tooltip_text = recipe_text(rec) + ("\n" + tr("Zu wenige passende Items im Lager.") if fill.is_empty() else "")
+
+
+## Name eines Rezepts.
+func recipe_name(r: Dictionary) -> String:
+	match str(r.get("id", "")):
+		"rebrew":
+			return tr("Neu brauen")
+		"distill":
+			return tr("Destillieren")
+		"reassemble":
+			return tr("Umbauen")
+		"perfect":
+			return tr("Vervollkommnen")
+		"liquefy":
+			return tr("Verflüssigen")
+		"precipitate":
+			return tr("Ausfällen")
+		"imbue":
+			return tr("Durchtränken")
+	return str(r.get("name", ""))
+
+
+## „3 Items gleicher Seltenheit → 1 Item, Level +5 bis +25“.
+func recipe_text(r: Dictionary) -> String:
+	var parts := []
+	if int(r.get("permanent", 0)) > 0:
+		parts.append(tr("%d Items") % int(r.permanent))
+	if int(r.get("usable", 0)) > 0:
+		parts.append(tr("%d Öle/Verbrauch") % int(r.usable))
+	var res := tr("Öl/Verbrauch") if str(r.get("result", "")) == "usable" else tr("Item")
+	var text := tr("%s gleicher Seltenheit → %d× %s") % [" + ".join(parts), int(r.get("count", 1)), res]
+	var change := int(r.get("rarity_change", 0))
+	if change > 0:
+		text += ", " + tr("%d Seltenheit höher") % change
+	elif change < 0:
+		text += ", " + tr("%d Seltenheit niedriger") % -change
+	if str(r.get("id", "")) == "precipitate":
+		text += ", " + tr("beliebiges Level")
+	elif int(r.get("level_max", 0)) > 0:
+		text += ", " + tr("Level +%d bis +%d") % [int(r.level_min), int(r.level_max)]
+	return text
 
 
 static func _t(text: String) -> String:
@@ -236,8 +379,8 @@ static func tower_tip(id: String) -> String:
 			TowerStats.num(float(t.get("cooldown", 1.0)), 2), int(t.get("range", 0))])
 	lines.append(_t("Kosten %d Gold · Food %d · Stufe %d") % [int(t.get("cost", 0)), YoutdData.food_cost(id), int(t.get("tier", 1))])
 	lines.append_array(mod_lines(t.get("mods", [])))
-	if t.has("script"):
-		lines.append(_t("Eigene Fähigkeit folgt in Etappe 2."))
+	for a in ability_names(t):
+		lines.append(a)
 	return "\n".join(lines)
 
 
@@ -245,10 +388,38 @@ static func item_tip(id: String) -> String:
 	var it := YoutdData.item(id)
 	var type_name := str(TranslationServer.translate(str(YoutdData.rules().get("items", {}).get("type_names", {}).get(str(it.get("type", "")), ""))))
 	var lines := [str(it.get("name", id)) + " · " + YoutdData.rarity_name(str(it.get("rarity", ""))) + " · " + type_name]
+	lines.append(_t("Ab Welle %d") % int(it.get("level", 0)) if int(it.get("level", 0)) > 0 else "")
 	lines.append_array(mod_lines(it.get("mods", [])))
-	if it.has("script"):
-		lines.append(_t("Eigene Wirkung folgt in Etappe 3."))
-	return "\n".join(lines)
+	lines.append_array(ability_names(it))
+	return "\n".join(lines.filter(func(l): return l != ""))
+
+
+## Tooltip eines Items im Lager: wie item_tip, dazu Ladungen und Werte des Skripts.
+static func item_tip_for(it: YtItem) -> String:
+	var text := item_tip(str(it.get_id()))
+	if it.uses_charges():
+		text += "\n" + _t("Ladungen: %d") % it.get_charges()
+	if it.horadric_lock:
+		text += "\n" + _t("Für den Würfel gesperrt")
+	return text
+
+
+## Fähigkeiten, Auren und Zauber eines Towers oder Items (Namen aus YouTD 2, englisch).
+static func ability_names(d: Dictionary) -> Array:
+	var out := []
+	for id in d.get("abilities", []):
+		var a := YtAbilityData.ability(int(id))
+		if not a.is_empty():
+			out.append(_t("Fähigkeit: %s") % str(a.get("name", "")))
+	for id in d.get("auras", []):
+		var a := YtAbilityData.aura(int(id))
+		if not a.is_empty() and not bool(a.get("hidden", false)) and str(a.get("name", "")) != "":
+			out.append(_t("Aura: %s") % str(a.name))
+	for id in d.get("autocasts", []):
+		var a := YtAbilityData.autocast(int(id))
+		if not a.is_empty():
+			out.append(_t("Zauber: %s") % str(a.get("name", "")))
+	return out
 
 
 ## "+25 % Schaden" usw. aus [[MOD, Wert, je Level]].

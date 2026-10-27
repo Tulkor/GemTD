@@ -26,3 +26,7 @@ static func log_experience(_unit, _amount) -> void:
 
 static func log_kill(_caster, _target) -> void:
 	pass
+
+
+static func log_item_ability(_item, _target, _ability: String) -> void:
+	pass

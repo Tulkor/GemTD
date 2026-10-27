@@ -68,7 +68,7 @@ func on_autocast(event: YtEvent):
 		var hatchling_health = caster_health * LESSER_HATCHLING_HEALTH
 
 		for i in range(0, LESSER_HATCHLING_COUNT):
-			var hatchling: YtCreep = YtWorld.game.spawn_yt_creep(caster_size, caster_armor_type, caster_race, hatchling_health, caster_armor, caster_level)
+			var hatchling: YtCreep = YtWorld.game.spawn_yt_creep(caster_size, caster_armor_type, caster_race, hatchling_health, caster_armor, caster_level, player)
 			if hatchling == null:
 				return
 
@@ -82,7 +82,7 @@ func on_autocast(event: YtEvent):
 	else:
 		var hatchling_health = caster_health * GREATER_HATCHLING_HEALTH
 
-		var hatchling: YtCreep = YtWorld.game.spawn_yt_creep(caster_size, caster_armor_type, caster_race, hatchling_health, caster_armor, caster_level)
+		var hatchling: YtCreep = YtWorld.game.spawn_yt_creep(caster_size, caster_armor_type, caster_race, hatchling_health, caster_armor, caster_level, player)
 		if hatchling == null:
 			return
 

@@ -177,7 +177,7 @@ pick_changed() {
       data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul youtd " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
-      scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig " ;;
+      scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig ytitems " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
       scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
       scripts/game/rogue*|data/roguelike.json) t+="roguelike smoke " ;;

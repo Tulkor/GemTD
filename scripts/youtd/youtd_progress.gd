@@ -74,3 +74,25 @@ static func builders() -> Array:
 	var l := level()
 	return YoutdData.builders().map(func(b): return {"id": b.id, "name": b.name, "tier": b.tier, "level": int(b.level),
 			"open": l >= int(b.level)})
+
+
+## Ist Baumeister id bei Spielerlevel lvl frei? ("" = keiner, immer)
+static func builder_open(id: String, lvl := -1) -> bool:
+	if id == "":
+		return true
+	if lvl < 0:
+		lvl = level()
+	for b in YoutdData.builders():
+		if str(b.id) == id:
+			return lvl >= int(b.level)
+	return false
+
+
+## Zuletzt gewählter Baumeister (für das Startfenster).
+static func last_builder() -> String:
+	return str(prog().get("builder", ""))
+
+
+static func set_last_builder(id: String) -> void:
+	prog()["builder"] = id
+	Profile.save()

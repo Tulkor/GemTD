@@ -4,6 +4,8 @@
 
 - src/towers/tower_behaviors/*.gd   -> scripts/youtd/towers/<name>.gd    (Tower-Skripte, Feld "script" in towers.json)
 - src/creeps/special_buffs/*.gd     -> scripts/youtd/specials/<name>.gd  (Wellen-Eigenschaften, "script" in specials.json)
+- src/items/item_behaviors/*.gd     -> scripts/youtd/items/<name>.gd     (Item-Skripte, "script" in items.json)
+- src/builders/instances/*.gd       -> scripts/youtd/builders/<name>.gd  (Baumeister, "script" in builders.json)
 
 Was gemacht wird: Klassen bekommen das Präfix Yt (umbenennen.py), Texte der Übersetzungstabelle (tr("AB12"), nicht im
 Quelltext von YouTD 2) kommen aus data/youtd/texte.json über YtUtils.text(), dazu kleine Änderungen je Datei in
@@ -31,17 +33,22 @@ SPAWN_RULES = [
     (r"^\s*var \w+: PackedScene = load\(\w+\)\n", ""),
     (r"^\s*\w+\._current_path_index = \w+\n", ""),
     (r"^\s*YtUtils\.add_object_to_world\(\w+\)\n", ""),
-    (r"var (\w+): YtCreep = \w+\.instantiate\(\)\n(\s*)\1\.set_properties\(\w+, \w+, (\w+), (\w+), (\w+), (\w+), (\w+), (\w+)\)",
-     r"var \1: YtCreep = YtWorld.game.spawn_yt_creep(\3, \4, \5, \6, \7, \8)\n\2if \1 == null:\n\2\treturn"),
+    (r"var (\w+): YtCreep = \w+\.instantiate\(\)\n(\s*)\1\.set_properties\(\w+, (\w+), (\w+), (\w+), (\w+), (\w+), (\w+), (\w+)\)",
+     r"var \1: YtCreep = YtWorld.game.spawn_yt_creep(\4, \5, \6, \7, \8, \9, \3)\n\2if \1 == null:\n\2\treturn"),
 ]
 
 # Kleine Änderungen je Datei: [alt, neu]
 PATCHES = {
     "ruined_wind_tower": [("var itm: YtItem", "var itm")],
     "creep_meaty": [("YtItemProperties.CONSUMABLE_CHICKEN_ID", "2003")],
+    # isometrischer Versatz aus YouTD 2, hier sind Bild- und WC3-Positionen gleich
+    "chrono_jumper": [("\tdest_pos_canvas.y += YtConstants.TILE_SIZE.y\n", "")],
 }
 # Klassen aus YouTD 2, die es hier anders gibt
 REPLACE = [("YtTowerDetails.int_format(", "YtUtils.int_format("),
+           # Bauflächen (Chrono Jumper, Distorted Idol): YtBuildSpace statt der Szene aus YouTD 2
+           ('\tvar game_scene: GameScene = get_tree().get_root().get_node("GameScene")\n', ""),
+           ("var build_space: BuildSpace = game_scene.get_build_space()", "var build_space := YtBuildSpace.new()"),
            # Weg als Punktliste (PackedVector2Array) statt Path2D
            (": Path2D = ", " = ")]
 
@@ -99,7 +106,8 @@ def file_name(name: str) -> str:
 def main():
     files = reader()
     out_n = 0
-    folders = (("src/towers/tower_behaviors", "scripts/youtd/towers"), ("src/creeps/special_buffs", "scripts/youtd/specials"))
+    folders = (("src/towers/tower_behaviors", "scripts/youtd/towers"), ("src/creeps/special_buffs", "scripts/youtd/specials"),
+               ("src/items/item_behaviors", "scripts/youtd/items"), ("src/builders/instances", "scripts/youtd/builders"))
     classes = {}
     for folder, target in folders:
         for name, text in files(folder):

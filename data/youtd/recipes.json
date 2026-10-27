@@ -1,0 +1,9 @@
+[
+	{"id":"rebrew","name":"Rebrew","permanent":0,"usable":2,"result":"usable","count":1,"rarity_change":0,"level_min":0,"level_max":0,"backpacker":false},
+	{"id":"distill","name":"Distill","permanent":0,"usable":4,"result":"usable","count":1,"rarity_change":1,"level_min":0,"level_max":0,"backpacker":false},
+	{"id":"reassemble","name":"Reassemble","permanent":3,"usable":0,"result":"permanent","count":1,"rarity_change":0,"level_min":5,"level_max":25,"backpacker":false},
+	{"id":"perfect","name":"Perfect","permanent":5,"usable":0,"result":"permanent","count":1,"rarity_change":1,"level_min":0,"level_max":20,"backpacker":false},
+	{"id":"liquefy","name":"Liquefy","permanent":2,"usable":0,"result":"usable","count":3,"rarity_change":-2,"level_min":0,"level_max":0,"backpacker":true},
+	{"id":"precipitate","name":"Precipitate","permanent":0,"usable":6,"result":"permanent","count":1,"rarity_change":2,"level_min":0,"level_max":0,"backpacker":true},
+	{"id":"imbue","name":"Imbue","permanent":1,"usable":4,"result":"permanent","count":1,"rarity_change":1,"level_min":15,"level_max":30,"backpacker":true}
+]

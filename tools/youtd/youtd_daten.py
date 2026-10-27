@@ -172,6 +172,10 @@ def items():
         s = script_name(r["script path"])
         if s:
             it["script"] = s
+        for col, key in (("ability list", "abilities"), ("aura list", "auras"), ("autocast list", "autocasts")):
+            ids = [int(x) for x in r[col].split(",") if x.strip()]
+            if ids:
+                it[key] = ids
         out[r["id"]] = it
     return out
 
@@ -211,7 +215,21 @@ def builders():
     for r in read("builder_properties.csv"):
         if r["id"] == "0":
             continue
-        out.append({"id": r["short name"], "name": r["name english"], "tier": r["tier"], "level": int(num(r["req level"]))})
+        out.append({"id": r["short name"], "name": r["name english"], "tier": r["tier"], "level": int(num(r["req level"])),
+                    "script": script_name(r["script path"])})
+    return out
+
+
+def recipes():
+    """Rezepte des Horadrischen Würfels (recipe_properties.csv)."""
+    out = []
+    for r in read("recipe_properties.csv"):
+        if r["id"] == "0":
+            continue
+        out.append({"id": r["name english"].lower(), "name": r["name english"], "permanent": int(num(r["permanent count"])),
+                    "usable": int(num(r["usable count"])), "result": r["result item type"], "count": int(num(r["result count"])),
+                    "rarity_change": int(num(r["rarity change"])), "level_min": int(num(r["lvl bonus min"])),
+                    "level_max": int(num(r["lvl bonus max"])), "backpacker": r["unlocked by backpacker"].upper() == "TRUE"})
     return out
 
 
@@ -241,4 +259,5 @@ write("items.json", items())
 write("specials.json", specials())
 write("xp.json", xp())
 write("builders.json", builders())
+write("recipes.json", recipes())
 write("abilities.json", abilities())

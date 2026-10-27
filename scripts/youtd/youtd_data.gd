@@ -37,6 +37,12 @@ static func builders() -> Array:
 	return b if typeof(b) == TYPE_ARRAY else []
 
 
+## Rezepte des Horadrischen Würfels (youtd_cube.gd).
+static func recipes() -> Array:
+	var r = _file("recipes")
+	return r if r is Array else []
+
+
 static func tower(id: String) -> Dictionary:
 	return towers().get(id, {})
 

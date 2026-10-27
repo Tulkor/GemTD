@@ -11,3 +11,9 @@ func get_level() -> int:
 
 func get_lives_percent() -> float:
 	return float(YtWorld.game.portal) if YtWorld.game != null else 100.0
+
+
+## Portal-Leben ändern (in Prozentpunkten, Iron Maiden, Verbrauchsgegenstände).
+func modify_lives(amount: float) -> void:
+	if YtWorld.game != null:
+		YtWorld.game.modify_portal(amount)
