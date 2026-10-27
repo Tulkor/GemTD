@@ -242,6 +242,33 @@ func do_cast(target: YtUnit):
 		YtEffect.create_simple_at_unit(target_art, target)
 
 
+## Zauber von Hand auslösen (Knopf im Tower-Menü). Das Ziel sucht sich der Zauber selbst: Gegner = aktuelles
+## Angriffsziel oder der nächste in Reichweite, Tower = der nächste andere Tower, Punkt = Stelle dieses Gegners.
+## false, wenn er gerade nicht geht (Abklingzeit, Mana, kein Ziel).
+func manual_cast() -> bool:
+	if not can_cast():
+		return false
+	if type_is_immediate():
+		do_cast(null)
+		return true
+	var tt: YtTargetType = YtTargetType.new(YtTargetType.CREEPS) if type_is_point() else _target_type
+	var units: Array = YtUtils.get_units_in_range(_caster, tt, _caster.get_position_wc3_2d(), get_cast_range())
+	if not get_target_self():
+		units.erase(_caster)
+	var current: YtUnit = _caster.get_current_target()
+	var target: YtUnit = current if current != null and units.has(current) else null
+	if target == null and not units.is_empty():
+		YtUtils.sort_unit_list_by_distance(units, _caster.get_position_wc3_2d())
+		target = units[0]
+	if target == null:
+		return false
+	if type_is_point():
+		do_cast_at_pos(target.get_position_wc3_2d())
+	else:
+		do_cast(target)
+	return true
+
+
 func check_target_for_unit_autocast(target: YtUnit) -> bool:
 	if target == null:
 		return false

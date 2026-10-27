@@ -30,7 +30,7 @@ func _ready():
 	_draw()
 
 
-func _pos(unit: YtUnit, last: Vector3) -> Vector3:
+func _pos(unit, last: Vector3) -> Vector3:
 	if is_instance_valid(unit):
 		return unit.get_position_wc3() + YtProjectile.UNIT_Z_OFFSET
 	return last

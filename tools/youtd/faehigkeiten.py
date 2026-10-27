@@ -26,7 +26,7 @@ HEADER = "## Portiert aus YouTD 2 (MIT, github.com/Praytic/youtd2) von tools/you
 # erzeugt youtd_game.gd sie (spawn_yt_creep) gleich auf dem Feld; die Stelle setzt das Skript danach wie gewohnt.
 SPAWN_RULES = [
     (r"^\s*var \w+: String = \w+\.get_scene_file_path\(\)\n", ""),
-    (r"^\s*var \w+: Path2D = \w+\.get_move_path\(\)\n", ""),
+    (r"^\s*var \w+(: Path2D)? = \w+\.get_move_path\(\)\n", ""),
     (r"^\s*var \w+: int = \w+\._current_path_index\n", ""),
     (r"^\s*var \w+: PackedScene = load\(\w+\)\n", ""),
     (r"^\s*\w+\._current_path_index = \w+\n", ""),
@@ -41,7 +41,9 @@ PATCHES = {
     "creep_meaty": [("YtItemProperties.CONSUMABLE_CHICKEN_ID", "2003")],
 }
 # Klassen aus YouTD 2, die es hier anders gibt
-REPLACE = [("YtTowerDetails.int_format(", "YtUtils.int_format(")]
+REPLACE = [("YtTowerDetails.int_format(", "YtUtils.int_format("),
+           # Weg als Punktliste (PackedVector2Array) statt Path2D
+           (": Path2D = ", " = ")]
 
 
 def reader():

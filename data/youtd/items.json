@@ -165,7 +165,7 @@
 	"164": {"name":"Tooth Trophy","type":"regular","rarity":"common","cost":623,"level":45,"author":"drol","mods":[["MOD_DPS_ADD",450,0]]},
 	"165": {"name":"Basics of Calculus","type":"regular","rarity":"rare","cost":425,"level":14,"author":"drol","script":"basics_of_calculus"},
 	"166": {"name":"Wand of Mana Zap","type":"regular","rarity":"rare","cost":700,"level":27,"author":"drol","script":"wand_of_mana_zap"},
-	"167": {"name":"Never-ending Keg","type":"regular","rarity":"rare","cost":1177,"level":48,"author":"cedi","mods":[["MOD_ATK_CRIT_DAMAGE",0.65,0],["MOD_MULTICRIT_COUNT",1,0]],"script":"never-ending_keg"},
+	"167": {"name":"Never-ending Keg","type":"regular","rarity":"rare","cost":1177,"level":48,"author":"cedi","mods":[["MOD_ATK_CRIT_DAMAGE",0.65,0],["MOD_MULTICRIT_COUNT",1,0]],"script":"never_ending_keg"},
 	"168": {"name":"Scarab Amulet","type":"regular","rarity":"common","cost":210,"level":12,"author":"drol","mods":[["MOD_DAMAGE_ADD_PERC",0.12,0]]},
 	"169": {"name":"Tree Branch","type":"regular","rarity":"common","cost":36,"level":0,"author":"Boekie","mods":[["MOD_DMG_TO_ORC",0.15,0]]},
 	"170": {"name":"Crystallized Scales","type":"regular","rarity":"uncommon","cost":386,"level":19,"author":"drol","mods":[["MOD_EXP_RECEIVED",0.24,0],["MOD_BOUNTY_RECEIVED",0.18,0]]},

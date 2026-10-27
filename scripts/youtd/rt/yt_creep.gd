@@ -16,11 +16,19 @@ var _special_list: Array[int] = []
 var _target_height: float = 0.0
 var _height_change_speed: float = 0.0
 var _portal_damage_multiplier: float = 1.0
+## Nächster Wegpunkt des Körpers (Zeitgewölbe, Sprint); set_position_wc3 rechnet ihn ohnehin neu.
+var _current_path_index: int:
+	get:
+		return body.path_index if body != null and is_instance_valid(body) else 0
+	set(v):
+		if body != null and is_instance_valid(body):
+			body.path_index = clampi(v, 1, maxi(1, body.path.size() - 1))
 
 
 func _ready():
 	super()
 
+	add_to_group("yt_creeps")
 	YtGroupManager.add("creeps", self, get_uid())
 	health_changed.connect(_on_health_changed)
 

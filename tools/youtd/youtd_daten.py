@@ -69,7 +69,7 @@ def mods(text):
 
 def script_name(path):
     name = Path(path or "").stem
-    return "" if name.startswith("empty_") else name
+    return "" if name.startswith("empty_") else name.replace("+", "_plus").replace("-", "_")
 
 
 def towers():

@@ -42,7 +42,7 @@ func on_damaged(event: YtEvent):
 
 	var creep_pos: Vector2 = creep.get_position_wc3_2d()
 
-	var path: Path2D = creep.get_move_path()
+	var path = creep.get_move_path()
 	var path_index: int = creep._current_path_index
 	var path_point: Vector2 = YtUtils.get_path_point_wc3(path, path_index)
 	var distance_to_path_point_squared: float = creep_pos.distance_squared_to(path_point)

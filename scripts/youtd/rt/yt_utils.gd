@@ -228,8 +228,8 @@ static func is_point_on_creep_path(point_wc3: Vector2, _player = null) -> bool:
 
 
 ## i-ter Punkt des Gegnerwegs (Boden) in WC3-Einheiten.
-static func get_path_point_wc3(_path, index: int) -> Vector2:
-	var path: PackedVector2Array = YtWorld.game.lane_paths[0].ground
+static func get_path_point_wc3(move_path, index: int) -> Vector2:
+	var path: PackedVector2Array = move_path if move_path is PackedVector2Array else YtWorld.game.lane_paths[0].ground
 	return path[clampi(index, 0, path.size() - 1)] * YtWorld.WC3
 
 

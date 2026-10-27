@@ -11,6 +11,8 @@ var _headless := false
 
 func _ready() -> void:
 	_headless = DisplayServer.get_name() == "headless"
+	if _headless:
+		return
 	var mesh := SphereMesh.new()
 	mesh.radius = RADIUS
 	mesh.height = RADIUS * 2.0

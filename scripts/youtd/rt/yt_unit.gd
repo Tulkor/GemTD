@@ -957,8 +957,11 @@ func _killed_by_unit(caster: YtUnit):
 	var death_event: YtEvent = YtEvent.new(caster)
 	death.emit(death_event)
 
-	if caster != null:
-		caster._accept_kill(self)
+	if caster == null:
+		remove_from_game()
+		return
+
+	caster._accept_kill(self)
 
 	var caster_item_chance: float = caster.get_item_drop_ratio()
 	var target_item_chance: float = get_item_drop_ratio_on_death()

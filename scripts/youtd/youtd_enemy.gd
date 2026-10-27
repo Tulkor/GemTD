@@ -1,27 +1,19 @@
 class_name YoutdEnemy
 extends Enemy
-## Gegner in YouTD: Größe (Masse, Normal, Luft, Champion, Boss, Challenge), Rasse, Rüstungstyp (Hel, Myt, Lua, Sol,
-## Sif, Zod) und Eigenschaften der Welle (youtd_waves.gd). Schaden nach der Tabelle Angriffstyp gegen Rüstungstyp
-## (rules.json → damage_table), Rüstung wie in WC3. damage_done zählt, wie viel Prozent er schon verloren hat:
-## davon hängen Portalschaden und Punkte ab, wenn er durchkommt.
+## Gegner in YouTD: Modell, Weg und Lebensbalken. Leben, Rüstung, Tempo und Buffs rechnet der Kern (YtCreep aus
+## scripts/youtd/rt/, portiert aus YouTD 2): Größe (Masse, Normal, Luft, Champion, Boss, Challenge), Rasse,
+## Rüstungstyp (Hel, Myt, Lua, Sol, Sif, Zod) und die Eigenschaften der Welle als Buffs (scripts/youtd/specials/).
+## Leben spiegelt der Kern in hp/max_hp; stirbt er, legt yt_died() die Leiche ab und meldet den Kill.
 
 var level := 1               ## Welle, aus der er stammt
 var creep_size := "normal"
 var race := "orc"
 var specials: Array = []     ## Eigenschaften, die für ihn gelten
-var evasion := 0.0           ## Anteil der Angriffe, die ins Leere gehen (Zauber treffen immer)
-var immune := false          ## Magieimmun: keine Zauber, kein Arkan-Schaden
-var regen := 0.0             ## Anteil der Höchstleben pro Sekunde
-var exp_factor := 1.0        ## Faktor auf die Erfahrung für den Tower, der ihn tötet
-var bounty_factor := 1.0
-var item_chance := 1.0
-var item_quality := 1.0
-var spell_received := 1.0
-var last_tower = null       ## Tower, der zuletzt getroffen hat (bekommt Erfahrung, Kopfgeld und Items)
+var core: YtCreep = null
 
 
-## w: Welle aus YoutdWaves, size: Größe dieses Gegners.
-func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_factor: float) -> void:
+## w: Welle aus YoutdWaves, size: Größe dieses Gegners. hp: eigene Leben (Kinder aus Eigenschaften), sonst aus der Welle.
+func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_factor: float, hp_override := -1.0) -> void:
 	level = int(w.level)
 	creep_size = size_id
 	race = str(w.race)
@@ -31,35 +23,16 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 		if YoutdWaves.special_applies(id, size_id):
 			specials.append(id)
 	var hp_value := float(w.hp) * float(sz.get("hp", 1.0)) * (1.0 + YoutdWaves.hp_modifier(specials)) * hp_factor
-	var base_speed := float(rules.get("units", {}).get("move_speed", 222))
-	var speed_mod := 0.0
-	var armor_add := 0.0
-	var armor_perc := 0.0
-	for id in specials:
-		var fx := YoutdData.special_effect(id)
-		speed_mod += float(fx.get("speed", 0.0))
-		armor_add += float(fx.get("armor", 0.0))
-		armor_perc += float(fx.get("armor_perc", 0.0))
-		evasion = maxf(evasion, float(fx.get("evasion", 0.0)))
-		immune = immune or bool(fx.get("immune", false))
-		spell_received += float(fx.get("spell", 0.0))
-		exp_factor += float(fx.get("exp", 0.0))
-		bounty_factor += float(fx.get("bounty", 0.0))
-		item_chance += float(fx.get("item_chance", 0.0))
-		item_quality += float(fx.get("item_quality", 0.0))
-		var r = fx.get("regen", {})
-		if r is Dictionary:
-			regen = maxf(regen, float(r.get(size_id, 0.0)))
-	var u: Dictionary = rules.get("units", {})
-	var wc3_speed := clampf(base_speed * (1.0 + speed_mod), float(u.get("move_speed_min", 100)), float(u.get("move_speed_max", 522)))
+	if hp_override > 0.0:
+		hp_value = hp_override
 	var boss_like := size_id == "boss" or size_id == "challenge_boss"
 	var def := {
 		"id": "youtd_" + size_id,
 		"hp": hp_value,
-		"speed": YoutdData.units(wc3_speed),
-		"armor": float(w.armor) * (1.0 + armor_perc) + armor_add,
+		"speed": YoutdData.units(YtConstants.DEFAULT_MOVE_SPEED),
+		"armor": float(w.armor),
 		"armor_type": str(w.armor_type),
-		"bounty": float(sz.get("gold", 1)) * (int(level / 8) + 1),
+		"bounty": 0,
 		"damage": 0,
 		"flying": size_id == "air",
 		"boss": boss_like,
@@ -69,8 +42,13 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 	if size_id == "mass" or size_id == "challenge_mass":
 		def["shape"] = "pyramid"
 	setup(g, def, {}, p)
-	bounty *= maxf(bounty_factor, 0.0)
-	spell_factor = maxf(spell_received, 0.0) * (0.0 if immune else 1.0)
+	core = YtCreep.new()
+	core.body = self
+	core.set_properties(YtPlayer.local(), YtCreepSize.from_string(size_id.replace("_", " ")), YtArmorType.from_string(armor_type),
+			YtCreepCategory.from_string(race), hp_value, armor, level)
+	add_child(core)
+	YtWaveSpecial.apply_to_creep(specials, core)
+	core.set_health(core.get_overall_health())
 
 
 static func _visual_size(size_id: String) -> float:
@@ -105,34 +83,67 @@ static func _race_color(r: String) -> String:
 	return "#cccccc"
 
 
-## Anteil der Leben, die er schon verloren hat (0..1).
+## Anteil der Leben, die er schon verloren hat (0..1, niedrigster Stand wie in YouTD 2).
 func damage_done() -> float:
+	if core != null and is_instance_valid(core):
+		return clampf(core.get_damage_done(), 0.0, 1.0)
 	return clampf(1.0 - hp / max_hp, 0.0, 1.0) if max_hp > 0.0 else 0.0
 
 
-## Angriff (attack_type aus rules.damage_table) oder Zauber ("spells"): Ausweichen nur bei Angriffen.
-func take_damage(amount: float, damage_type := "") -> float:
-	if damage_type == "spells":
-		var f := float(YoutdData.rules().get("combat", {}).get("spell_damage_sif" if armor_type == "sif" else "spell_damage", 0.9))
-		return take_raw_damage(amount * f * spell_factor)
-	if evasion > 0.0 and randf() < evasion:
-		return 0.0
-	if damage_type == "arcane" and immune:
-		return 0.0
-	var factor := YoutdData.damage_factor(damage_type, armor_type)
-	var a := effective_armor()
-	var k := float(YoutdData.rules().get("combat", {}).get("armor_factor", 0.06))
-	if a > 0.0:
-		factor *= 1.0 - k * a / (1.0 + k * a)
-	elif a < 0.0:
-		factor *= 2.0 - pow(1.0 - k, -a)
-	return take_raw_damage(amount * factor)
+## Schaden von außerhalb der YouTD-Laufzeit (z. B. Debug): als Zauberschaden ohne Verursacher.
+func take_damage(amount: float, _damage_type := "") -> float:
+	return take_raw_damage(amount)
 
 
+func take_raw_damage(amount: float) -> float:
+	if dead or core == null:
+		return 0.0
+	var before := core.get_health()
+	core.set_health(before - amount)
+	if core.get_health() <= 0.0:
+		core._killed_by_unit(null)
+	return before - core.get_health()
+
+
+## Tempo und Betäubung kommen jedes Bild aus dem Kern (Verlangsamung, Schnell usw. sind Modifikatoren).
 func _process(delta: float) -> void:
-	if regen > 0.0 and not dead and not remote:
-		hp = minf(max_hp, hp + max_hp * regen * delta)
+	if core != null and is_instance_valid(core) and not dead:
+		speed = YoutdData.units(core.get_current_movespeed())
+		if core.is_stunned():
+			stun_time = maxf(stun_time, delta)
 	super._process(delta)
+
+
+## Der Kern ist gestorben (YtCreep._on_death): Leiche ablegen, Kill melden.
+func yt_died() -> void:
+	if dead:
+		return
+	dead = true
+	hp = 0.0
+	_leave_corpse()
+	game.on_enemy_killed(self)
+
+
+## Ein Skript hat den Gegner versetzt (pos ist schon neu): Weg ab dem nächsten Punkt, Strecke neu.
+func yt_moved() -> void:
+	if path.size() < 2:
+		return
+	var best := INF
+	var best_i := 1
+	var best_p := pos
+	for i in range(1, path.size()):
+		var q := Geometry2D.get_closest_point_to_segment(pos, path[i - 1], path[i])
+		var d := q.distance_squared_to(pos)
+		if d < best:
+			best = d
+			best_i = i
+			best_p = q
+	path_index = best_i
+	traveled = 0.0
+	for i in range(1, best_i):
+		traveled += path[i - 1].distance_to(path[i])
+	traveled += path[best_i - 1].distance_to(best_p)
+	_sync_position()
 
 
 ## Lebensbalken: Bosse und Champions immer, Masse nie, die anderen auf dem letzten Stück wie in GemTD.

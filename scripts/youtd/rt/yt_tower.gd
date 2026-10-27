@@ -57,6 +57,8 @@ var _current_crit_damage: float = 0
 var _transform_is_allowed: bool = true
 var _is_in_combat: bool = false
 var _item_modifier: YtModifier = null
+## Ablage für 2D-Anzeigen der Skripte (Ladebalken in YouTD 2); hier ohne Bild, nur damit die Skripte laufen.
+var _visual: Node = Node.new()
 
 
 #########################
@@ -64,6 +66,7 @@ var _item_modifier: YtModifier = null
 #########################
 
 func _ready():
+	add_child(_visual)
 	super()
 
 	add_to_group("yt_towers")
