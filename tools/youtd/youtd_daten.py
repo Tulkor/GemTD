@@ -10,6 +10,7 @@ Schreibt nach data/youtd/:
   specials.json  41 Wellen-Eigenschaften mit HP-Faktor, Mindestwelle, Häufigkeit und Gruppen
   xp.json        Erfahrungstabellen für Tower (Level 0–30) und Spieler (Level 0–300)
   builders.json  Baumeister mit Stufe und nötigem Spielerlevel
+  abilities.json Fähigkeiten (Name, Reichweite), Auren und Autocasts der Tower
 Regeln und Formeln (Wellen, Würfeln, Weisheits-Boni) stehen von Hand in data/youtd/rules.json.
 """
 import csv
@@ -105,6 +106,8 @@ def towers():
             "targets": targets,
             "author": r["author"],
         }
+        if tt and tt != "CREEPS":
+            t["target_type"] = tt
         if r["multishot"]:
             t["multishot"] = int(num(r["multishot"]))
         if splash:
@@ -117,7 +120,38 @@ def towers():
         s = script_name(r["script path"])
         if s:
             t["script"] = s
+        for col, key in (("ability list", "abilities"), ("aura list", "auras"), ("autocast list", "autocasts")):
+            ids = [int(x) for x in r[col].split(",") if x.strip()]
+            if ids:
+                t[key] = ids
         out[r["id"]] = t
+    return out
+
+
+def abilities():
+    """Fähigkeiten der Tower (Namen, Reichweiten), Auren und Autocasts aus YouTD 2. Texte fehlen im Original-Repo."""
+    out = {"abilities": {}, "auras": {}, "autocasts": {}}
+    for r in read("ability_properties.csv"):
+        a = {"name": r["name_english"], "range": tidy(num(r["range"]))}
+        if r["target_type"]:
+            a["target_type"] = r["target_type"]
+        out["abilities"][r["id"]] = a
+    for r in read("aura_properties.csv"):
+        out["auras"][r["id"]] = {
+            "name": r["name_english"], "buff": r["aura_bt"], "target_self": r["target_self"].upper() == "TRUE",
+            "range": tidy(num(r["range"])), "target_type": r["target_type"], "hidden": r["is_hidden"].upper() == "TRUE",
+            "level": int(num(r["level"])), "level_add": int(num(r["level_add"])),
+        }
+    for r in read("autocast_properties.csv"):
+        a = {
+            "name": r["name_english"], "handler": r["handler_function"], "type": r["autocast_type"],
+            "cooldown": tidy(num(r["cooldown"])), "mana": int(num(r["mana_cost"])), "cast_range": tidy(num(r["cast_range"])),
+            "auto_range": tidy(num(r["auto_range"])), "target_self": r["target_self"].upper() == "TRUE",
+        }
+        for col, key in (("buff_type", "buff"), ("buff_target_type", "buff_target_type"), ("caster_art", "caster_art"), ("target_art", "target_art")):
+            if r[col]:
+                a[key] = r[col]
+        out["autocasts"][r["id"]] = a
     return out
 
 
@@ -156,8 +190,14 @@ def specials():
             "mana": r["uses mana"].upper() == "TRUE",
             "color": r["color"],
             "enabled": r["enabled"].upper() == "TRUE",
+            "script": special_script(r["script path"]),
         }
     return out
+
+
+def special_script(path):
+    """Dateiname des Eigenschafts-Skripts unter scripts/youtd/specials/ (faehigkeiten.py), ohne + und -."""
+    return path.rsplit("/", 1)[-1].removesuffix(".gd").replace("+", "_plus").replace("-", "_")
 
 
 def xp():
@@ -180,7 +220,14 @@ def write(name, data):
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / name
     dump = lambda v: json.dumps(v, ensure_ascii=False, separators=(",", ":"))
-    if isinstance(data, dict):
+    if isinstance(data, dict) and all(isinstance(v, dict) and all(isinstance(x, dict) for x in v.values()) for v in data.values()):
+        # zwei Ebenen (abilities.json): eine Zeile je innerem Eintrag
+        parts = []
+        for k, v in data.items():
+            inner = ",\n".join("\t\t%s: %s" % (dump(a), dump(b)) for a, b in v.items())
+            parts.append("\t%s: {\n%s\n\t}" % (dump(k), inner))
+        text = "{\n" + ",\n".join(parts) + "\n}\n"
+    elif isinstance(data, dict):
         body = ",\n".join("\t%s: %s" % (dump(k), dump(v)) for k, v in data.items())
         text = "{\n" + body + "\n}\n"
     else:
@@ -194,3 +241,4 @@ write("items.json", items())
 write("specials.json", specials())
 write("xp.json", xp())
 write("builders.json", builders())
+write("abilities.json", abilities())

@@ -1,0 +1,1668 @@
+class_name YtUnit
+extends Node
+## Portiert aus YouTD 2 (MIT, github.com/Praytic/youtd2), siehe data/youtd/QUELLEN.md.
+## Gemeinsamer Teil von Tower und Gegner (YtTower, YtCreep). Hängt als Kind an unserem Tower- bzw.
+## Gegnerknoten (body); Position, Darstellung und Weg kommen von dort.
+
+# YtUnit is a base class for Towers and Creeps. Keeps track of
+# buffs and modifications. Emits signals for events which are used by buffs.
+
+# NOTE: can't use static typing for YtBuff because of cyclic
+# dependency
+
+# NOTE: see comments in buff_type.gd for detailed info about
+# unit events. For example, add_event_on_level_changed()
+# function.
+# 
+# NOTE: if a tower is created at level greater than 0, this
+# level_changed() signal will NOT be emitted. If your tower
+# script needs to scale some values with tower level, then
+# you should add such logic to BOTH on_level_changed() and
+# YtTowerBehavior.on_create().
+signal level_changed(level_increased: bool)
+signal attack(event)
+signal attacked(event)
+signal dealt_damage(event)
+signal damaged(event)
+signal kill(event)
+signal death(event)
+signal health_changed()
+signal mana_changed()
+signal spell_casted(event: YtEvent)
+signal spell_targeted(event: YtEvent)
+signal buff_list_changed()
+signal buff_group_changed()
+signal selected_changed()
+signal hovered_changed()
+
+
+enum DamageSource {
+	Attack,
+	Spell
+}
+
+enum BodyPart {
+	OVERHEAD,
+	HEAD,
+	CHEST,
+	ORIGIN
+}
+
+
+const REGEN_PERIOD: float = 1.0
+
+# NOTE: need to have "_unit_" prefix in names to avoid
+# conflicts with variables in subclasses
+## Unser Knoten im Spielfeld (YoutdTower oder YoutdEnemy)
+var body: Node3D = null
+var _sprite_dimensions: Vector2 = Vector2(100, 100)
+
+# NOTE: userInt/userInt2/... in JASS
+var user_int: int = 0
+var user_int2: int = 0
+var user_int3: int = 0
+var user_real: float = 0.0
+var user_real2: float = 0.0
+var user_real3: float = 0.0
+
+# NOTE: crit bonus in terms of number of crits. The logic is
+# different for attack vs spell. For attack crits, the bonus
+# is applied only to normal tower attacks. Bonus is not
+# applied to do_attack_damage() called from other scripts.
+# This is because it would be confusing for an item like
+# "every 5th attack is critical" to produce no visible
+# change because tower is consuming crit bonus via some
+# other attack damage which is not visible to the player.
+# For spells, the bonus is applied to all instances of spell
+# damage, which includes calls to do_spell_damage(), spells
+# casted using Cast class, etc.
+var _bonus_crit_count_for_next_attack: int = 0
+var _bonus_crit_ratio_for_next_attack: float = 0.0
+var _bonus_crit_count_for_next_spell: int = 0
+
+var _level: int = 0
+var _buff_map: Dictionary
+var _buff_list: Array[YtBuff] = []
+var _direct_modifier_list: Array
+var _base_health: float = 100.0
+var _health: float = 0.0
+var _lowest_health: float = 0.0
+var _base_health_regen: float = 0.0
+var _immune: bool = false
+# NOTE: experience is stored as centiunits (multiply by 100)
+# to preserve fractional values while avoiding float precision
+# issues in multiplayer. For example, 1.5 exp is stored as 150.
+var _experience_centi: int = 0
+var _mana: float = 0.0
+var _base_mana: float = 0.0
+var _base_mana_regen: float = 0.0
+var _base_armor: float = 0.0
+var _kill_count: int = 0
+var _best_hit: float = 0.0
+var _attack_damage_dealt: float = 0.0
+var _spell_damage_dealt: float = 0.0
+var _damage_dealt_total: float = 0.0
+var _damage_dealt_to_wave_map: Dictionary = {}
+var _attack_damage_dealt_to_wave_map: Dictionary = {}
+var _spell_damage_dealt_to_wave_map: Dictionary = {}
+var _ethereal_count: int = 0
+var _silence_count: int = 0
+var _stun_count: int = 0
+var _stun_effect_id: int = -1
+var _autocast_list: Array[YtAutocast] = []
+var _aura_list: Array[YtAura] = []
+var _target_bitmask: int = 0x0
+var _buff_groups: Dictionary = {}
+var _player: YtPlayer = null
+var _uid: int = 0
+# NOTE: up axis is positive z, down axis is negative z.
+var _position_wc3: Vector3
+var _total_stun_duration: float = 0.0
+
+
+
+# NOTE: logic for default values is the following. If
+# property is multiplied, then it's default is 1.0 so that
+# by default it doesn't change anything. If property is
+# added, then default is 0.0 so that by default it doesn't
+# change anything.
+#
+# Execeptions are MOD_ATK_CRIT_DAMAGE, MOD_SPELL_CRIT_DAMAGE
+# which start at 1.5 because by default crits increase
+# damage by 50%. MOD_ATK_CRIT_CHANCE and
+# MOD_SPELL_CRIT_CHANCE start at 0.01 because by default
+# crit chance is 1%.
+var _mod_value_map: Dictionary = {
+	YtModificationType.enm.MOD_ATK_CRIT_CHANCE: YtConstants.INNATE_MOD_ATK_CRIT_CHANCE,
+	YtModificationType.enm.MOD_ATK_CRIT_DAMAGE: YtConstants.INNATE_MOD_ATK_CRIT_DAMAGE,
+	YtModificationType.enm.MOD_TRIGGER_CHANCES: 1.0,
+	YtModificationType.enm.MOD_SPELL_DAMAGE_DEALT: 1.0,
+	YtModificationType.enm.MOD_SPELL_DAMAGE_RECEIVED: 1.0,
+	YtModificationType.enm.MOD_SPELL_CRIT_DAMAGE: YtConstants.INNATE_MOD_SPELL_CRIT_DAMAGE,
+	YtModificationType.enm.MOD_SPELL_CRIT_CHANCE: YtConstants.INNATE_MOD_SPELL_CRIT_CHANCE,
+	YtModificationType.enm.MOD_BOUNTY_GRANTED: 1.0,
+	YtModificationType.enm.MOD_BOUNTY_RECEIVED: 1.0,
+	YtModificationType.enm.MOD_EXP_GRANTED: 1.0,
+	YtModificationType.enm.MOD_EXP_RECEIVED: 1.0,
+	YtModificationType.enm.MOD_BUFF_DURATION: 1.0,
+	YtModificationType.enm.MOD_DEBUFF_DURATION: 1.0,
+	YtModificationType.enm.MOD_MOVESPEED: 1.0,
+	YtModificationType.enm.MOD_MOVESPEED_ABSOLUTE: 0.0,
+	YtModificationType.enm.MOD_MULTICRIT_COUNT: 1.0,
+	YtModificationType.enm.MOD_ATK_DAMAGE_RECEIVED: 1.0,
+	YtModificationType.enm.MOD_ATTACKSPEED: 1.0,
+	YtModificationType.enm.MOD_DPS_ADD: 0.0,
+
+	YtModificationType.enm.MOD_ITEM_CHANCE_ON_KILL: 1.0,
+	YtModificationType.enm.MOD_ITEM_QUALITY_ON_KILL: 1.0,
+	YtModificationType.enm.MOD_ITEM_CHANCE_ON_DEATH: 1.0,
+	YtModificationType.enm.MOD_ITEM_QUALITY_ON_DEATH: 1.0,
+
+	YtModificationType.enm.MOD_ARMOR: 0.0,
+	YtModificationType.enm.MOD_ARMOR_PERC: 1.0,
+
+	YtModificationType.enm.MOD_DAMAGE_BASE: 0.0,
+	YtModificationType.enm.MOD_DAMAGE_BASE_PERC: 1.0,
+	YtModificationType.enm.MOD_DAMAGE_ADD: 0.0,
+	YtModificationType.enm.MOD_DAMAGE_ADD_PERC: 1.0,
+
+	YtModificationType.enm.MOD_MANA: 0.0,
+	YtModificationType.enm.MOD_MANA_PERC: 1.0,
+	YtModificationType.enm.MOD_MANA_REGEN: 0.0,
+	YtModificationType.enm.MOD_MANA_REGEN_PERC: 1.0,
+	YtModificationType.enm.MOD_HP: 0.0,
+	YtModificationType.enm.MOD_HP_PERC: 1.0,
+	YtModificationType.enm.MOD_HP_REGEN: 0.0,
+	YtModificationType.enm.MOD_HP_REGEN_PERC: 1.0,
+
+	YtModificationType.enm.MOD_DMG_TO_MASS: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_NORMAL: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_CHAMPION: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_BOSS: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_AIR: 1.0,
+
+	YtModificationType.enm.MOD_DMG_TO_UNDEAD: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_MAGIC: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_NATURE: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_ORC: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_HUMANOID: 1.0,
+	YtModificationType.enm.MOD_DMG_TO_CHALLENGE: 1.0,
+
+	YtModificationType.enm.MOD_DMG_FROM_ASTRAL: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_DARKNESS: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_NATURE: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_FIRE: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_ICE: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_STORM: 1.0,
+	YtModificationType.enm.MOD_DMG_FROM_IRON: 1.0,
+	
+	YtModificationType.enm.MOD_DMG_TOTAL_MULTIPLIER: 1.0,
+}
+
+
+#########################
+###     Built-in      ###
+#########################
+
+func _init():
+	for mod_type in YtModificationType.enm.values():
+		if !_mod_value_map.has(mod_type):
+			push_error("No default value defined for modification type: ", mod_type)
+
+	for buff_group in range(1, YtConstants.BUFFGROUP_COUNT + 1):
+		_buff_groups[buff_group] = YtBuffGroupMode.enm.NONE
+
+
+func _ready():
+	if _player == null:
+		set_player(YtPlayer.local())
+	add_to_group("yt_units")
+	_target_bitmask = YtTargetType.make_unit_bitmask(self)
+
+	var regen_timer: YtManualTimer = YtManualTimer.new()
+	regen_timer.one_shot = false
+	regen_timer.wait_time = REGEN_PERIOD
+	regen_timer.timeout.connect(_on_regen_timer_timeout)
+	add_child(regen_timer)
+	regen_timer.start()
+
+
+#########################
+###       Public      ###
+#########################
+
+func get_buff_list() -> Array[YtBuff]:
+	return _buff_list
+
+
+func update(delta: float):
+	if is_stunned():
+		_total_stun_duration += delta
+
+
+func get_uid() -> int:
+	return _uid
+
+
+# NOTE: you must call this instead of queue_free(), so that
+# tree_exited() signal is emitted immediately
+func remove_from_game():
+	var parent: Node = get_parent()
+
+	if parent != null && is_inside_tree():
+		parent.remove_child(self)
+
+	queue_free()
+
+
+var _unit_scale: float = 1.0
+
+
+## Größe des Modells (Körper), z. B. Tower, die mit jedem Level wachsen.
+func set_unit_scale(value: float):
+	_unit_scale = value
+	if body != null and is_instance_valid(body):
+		body.scale = Vector3.ONE * value
+
+
+func get_unit_scale() -> float:
+	return _unit_scale
+
+
+func get_visual_position() -> Vector2:
+	return get_position_wc3_2d()
+
+
+func set_player(player: YtPlayer):
+	_player = player
+
+#	NOTE: assign UID here instead of in _ready() to ensure
+#	deterministic assignment based on spawn order. UIDs must
+#	be the same on all clients for multiplayer sync.
+#	The _ready() function can be called in different order
+#	on different clients, causing UID mismatches.
+	if _uid == 0:
+		_uid = YtWorld.next_uid()
+
+
+# Removes the most recent buff. Returns true if there was a
+# buff to remove and false otherwise.
+# NOTE: unit.purgeBuff() in JASS
+func purge_buff(friendly: bool) -> bool:
+	var target_buff: YtBuff = null
+
+	for buff in _buff_list:
+		var friendly_match: bool = buff.is_friendly() == friendly
+
+		if buff.is_purgable() && friendly_match:
+			target_buff = buff
+
+			break
+
+	if target_buff != null:
+		target_buff.purge_buff()
+
+		return true
+	else:
+		return false
+
+
+# Triggers REFRESH event for all buffs applied by auras of
+# this unit.
+# NOTE: YtUnit.refreshAuras() in JASS
+func refresh_auras():
+	for aura in _aura_list:
+		aura.refresh()
+
+
+# NOTE: this f-n and add_modified_attack_crit() affect only
+# the tower's regular attack. They have no effect on calls
+# to do_attack_damage() in tower scripts.
+# NOTE: unit.addAttackCrit() in JASS
+func add_attack_crit():
+	_bonus_crit_count_for_next_attack = _bonus_crit_count_for_next_attack + 1
+	_bonus_crit_ratio_for_next_attack += get_prop_atk_crit_damage() - 1.0
+
+
+# NOTE: unit.addCustomAttackCrit() in JASS
+func add_custom_attack_crit(custom_crit_ratio: float):
+	_bonus_crit_count_for_next_attack = _bonus_crit_count_for_next_attack + 1
+	_bonus_crit_ratio_for_next_attack = custom_crit_ratio
+
+
+# NOTE: unit.addModifiedAttackCrit() in JASS
+func add_modified_attack_crit(crit_damage_add: float, crit_damage_multiply: float):
+	_bonus_crit_count_for_next_attack = _bonus_crit_count_for_next_attack + 1
+	_bonus_crit_ratio_for_next_attack = (get_prop_atk_crit_damage() - 1.0) * crit_damage_multiply + crit_damage_add
+
+
+# NOTE: this f-n affects all instances of spell damage,
+# including calls to do_spell_damage() in tower scripts.
+# NOTE: unit.addSpellCrit() in JASS
+func add_spell_crit():
+	_bonus_crit_count_for_next_spell += 1
+
+
+# NOTE: unit.addManaPerc() in JASS
+func add_mana_perc(ratio: float):
+	var overall_mana: float = get_overall_mana()
+	var mana_added: float = ratio * overall_mana
+	add_mana(mana_added)
+
+
+# NOTE: unit.addMana() in JASS
+func add_mana(mana_added: float):
+	var new_mana: float = _mana + mana_added
+	set_mana(new_mana)
+
+
+func add_autocast(autocast: YtAutocast):
+	autocast.set_caster(self)
+	_autocast_list.append(autocast)
+	add_child(autocast)
+
+
+func add_aura(aura_id: int, object_with_buff_var: Object):
+	var aura: YtAura = YtAura.make(aura_id, object_with_buff_var, self)
+	_aura_list.append(aura)
+	add_child(aura)
+
+
+# Unaffected by tower exp ratios. Levels up unit if added
+# exp pushes the unit past the level up threshold.
+# NOTE: unit.addExpFlat() in JASS
+func add_exp_flat(amount: float):
+	_change_experience(amount)
+
+
+# Affected by tower exp ratios.
+# NOTE: unit.addExp() in JASS
+func add_exp(amount_no_bonus: float):
+	var received_mod: float = get_prop_exp_received()
+	var amount: float = amount_no_bonus * received_mod
+	_change_experience(amount)
+
+
+# Unaffected by tower exp ratios. Returns how much
+# experience was actually removed. How much was actually
+# removed may be less than requested if the unit has less
+# mana than should be removed. In that case unit's mana gets
+# set to 0.
+# NOTE: unit.removeExpFlat() in JASS
+func remove_exp_flat(amount: float) -> float:
+	var actual_change: float = _change_experience(-amount)
+	var actual_removed: float = abs(actual_change)
+
+	return actual_removed
+
+
+# Affected by "exp received" modification.
+# NOTE: unit.removeExp() in JASS
+func remove_exp(amount_no_bonus: float) -> float:
+	var received_mod: float = get_prop_exp_received()
+	var amount: float = YtUtils.divide_safe(amount_no_bonus, received_mod)
+	var actual_change: float = _change_experience(-amount)
+	var actual_removed: float = abs(actual_change)
+
+	return actual_removed
+
+
+# NOTE: unit.calcChance() in JASS
+func calc_chance(chance_base: float) -> bool:
+	var mod_trigger_chances: float = get_prop_trigger_chances()
+	var chance: float = chance_base * mod_trigger_chances
+	var success: bool = YtUtils.rand_chance(YtGlobals.synced_rng, chance)
+
+	return success
+
+
+# "Bad" chance is for events that decrease tower's
+# perfomance, for example missing attack. Higher value of
+# MOD_TRIGGER_CHANCES decreases the chance of bad things
+# happening.
+# NOTE: unit.calcBadChance() in JASS
+func calc_bad_chance(chance: float) -> bool:
+	var mod_trigger_chances: float = get_prop_trigger_chances()
+	var final_chance: float = YtUtils.divide_safe(chance, mod_trigger_chances)
+	var success: bool = YtUtils.rand_chance(YtGlobals.synced_rng, final_chance)
+
+	return success
+
+
+# NOTE: normally spells can't multicrit but if both normal
+# crit and extra crit from add_spell_crit() happen at the
+# same time, then that's effectively a multicrit.
+# NOTE: unit.calcSpellCrit() in JASS
+func calc_spell_crit(bonus_chance: float, bonus_damage: float) -> float:
+	var crit_chance: float = get_spell_crit_chance() + bonus_chance
+	var crit_damage: float = get_spell_crit_damage() + bonus_damage
+
+	var crit_count: int = 0
+
+	var crit_success: bool = YtUtils.rand_chance(YtGlobals.synced_rng, crit_chance)
+	if crit_success:
+		crit_count += 1
+
+	crit_count += _bonus_crit_count_for_next_spell
+	_bonus_crit_count_for_next_spell = 0
+
+	var crit_ratio: float = 1.0
+
+	for i in range(0, crit_count):
+		crit_ratio += crit_damage - 1.0
+
+	return crit_ratio
+
+
+# NOTE: unit.calcSpellCritNoBonus() in JASS
+func calc_spell_crit_no_bonus() -> float:
+	var result: float = calc_spell_crit(0.0, 0.0)
+
+	return result
+
+
+# Returns a randomly calculate crit bonus, no multicrit,
+# either crit or not crit.
+# NOTE: unit.calcAttackCrit() in JASS
+func calc_attack_crit(bonus_chance: float, bonus_damage: float) -> float:
+	var crit_chance: float = get_prop_atk_crit_chance() + bonus_chance
+	var crit_damage: float = get_prop_atk_crit_damage() + bonus_damage
+
+	var crit_success: bool = YtUtils.rand_chance(YtGlobals.synced_rng, crit_chance)
+
+	if crit_success:
+		return crit_damage
+	else:
+		return 1.0
+
+
+# NOTE: unit.calcAttackCritNoBonus() in JASS
+func calc_attack_crit_no_bonus() -> float:
+	var result: float = calc_attack_crit(0.0, 0.0)
+
+	return result
+
+
+# Returns a randomly calculated crit bonus (starts at 1.0),
+# taking into account multicrit.
+# 0 crits, 150% crit damage = 1.0
+# 1 crit, 150% crit damage = 1.5
+# 3 crits, 150% crit damage = 1.0 + 0.5 + 0.5 + 0.5 = 2.5
+# NOTE: unit.calcAttackMulticrit() in JASS
+func calc_attack_multicrit(bonus_multicrit: float, bonus_chance: float, bonus_damage: float) -> float:
+	var crit_count: int = _generate_crit_count(bonus_multicrit, bonus_chance)
+	var crit_damage: float = _calc_attack_multicrit_from_crit_count(crit_count, bonus_damage)
+
+	return crit_damage
+
+
+# NOTE: no such function in JASS. Added for convenience
+# because calc_attack_multicrit(0, 0, 0) is called very
+# often.
+func calc_attack_multicrit_no_bonus() -> float:
+	return calc_attack_multicrit(0, 0, 0)
+
+
+# NOTE: unit.doSpellDamage() in JASS
+func do_spell_damage(target: YtUnit, damage: float, crit_ratio: float) -> bool:
+	var caster: YtUnit = self
+	var dealt_mod: float = caster.get_prop_spell_damage_dealt()
+	var received_mod: float = target.get_prop_spell_damage_received()
+	var damage_total: float = damage * dealt_mod * received_mod
+	var is_main_target: bool = false
+	var emit_damage_event: bool = false
+
+	var killed_unit: bool = _do_damage(target, damage_total, crit_ratio, DamageSource.Spell, is_main_target, emit_damage_event)
+
+	return killed_unit
+
+
+# NOTE: unit.doAttackDamage() in JASS
+func do_attack_damage(target: YtUnit, damage_base: float, crit_ratio: float, crit_count: int = -1, is_main_target: bool = false, emit_damage_event: bool = false):
+	var attack_type: YtAttackType.enm = get_attack_type()
+	do_custom_attack_damage(target, damage_base, crit_ratio, attack_type, crit_count, is_main_target, emit_damage_event)
+
+
+# NOTE: unit.doCustomAttackDamage() in JASS
+func do_custom_attack_damage(target: YtUnit, damage_base: float, crit_ratio: float, attack_type: YtAttackType.enm, crit_count: int = -1, is_main_target: bool = false, emit_damage_event: bool = false):
+	var armor_mod: float = 1.0 - target.get_current_armor_damage_reduction()
+	var received_mod: float = target.get_prop_atk_damage_received()
+
+	var damage: float = damage_base * armor_mod * received_mod
+
+	var deals_no_damage_to_immune: bool = YtAttackType.deals_no_damage_to_immune(attack_type)
+
+	if target.is_immune() && deals_no_damage_to_immune:
+		damage = 0
+
+	_do_damage(target, damage, crit_ratio, DamageSource.Attack, is_main_target, emit_damage_event, attack_type, crit_count)
+
+
+# NOTE: sides_ratio parameter specifies how much less damage
+# is dealt to units that are on the "sides" of the aoe
+# circle. For example, if sides_ratio is set to 0.3 then
+# units on the sides will receive 30% less damage than those
+# in the center.
+# 
+# NOTE: unit.doAttackDamageAoEUnit() in JASS
+func do_attack_damage_aoe_unit(target: YtUnit, radius: float, damage: float, crit_ratio: float, sides_ratio: float):
+	var aoe_center: Vector2 = target.get_position_wc3_2d()
+	var creep_list: Array = YtUtils.get_units_in_range(self, YtTargetType.new(YtTargetType.CREEPS), aoe_center, radius)
+
+	for creep in creep_list:
+		var damage_for_creep: float = YtUtils.get_aoe_damage(aoe_center, creep, radius, damage, sides_ratio)
+		do_attack_damage(creep, damage_for_creep, crit_ratio)
+
+
+# NOTE: unit.doSpellDamageAoEUnit() in JASS
+func do_spell_damage_aoe_unit(target: YtUnit, radius: float, damage: float, crit_ratio: float, sides_ratio: float):
+	do_spell_damage_aoe(Vector2(target.get_x(), target.get_y()), radius, damage, crit_ratio, sides_ratio)
+
+
+# NOTE: unit.doSpellDamageAoE() in JASS
+func do_spell_damage_aoe(aoe_center: Vector2, radius: float, damage: float, crit_ratio: float, sides_ratio: float):
+	var creep_list: Array = YtUtils.get_units_in_range(self, YtTargetType.new(YtTargetType.CREEPS), aoe_center, radius)
+
+	for creep in creep_list:
+		var damage_for_creep: float = YtUtils.get_aoe_damage(aoe_center, creep, radius, damage, sides_ratio)
+		do_spell_damage(creep, damage_for_creep, crit_ratio)
+
+
+# Deals aoe damage from the position of the unit
+# NOTE: unit.doSpellDamagePBAoE() in JASS
+func do_spell_damage_pb_aoe(radius: float, damage: float, crit_ratio: float, sides_ratio: float):
+	do_spell_damage_aoe(Vector2(get_x(), get_y()), radius, damage, crit_ratio, sides_ratio)
+
+
+# NOTE: unit.killInstantly() in JASS
+func kill_instantly(target: YtUnit):
+	YtCombatLog.log_ability(self, target, "Instant Kill")
+	target._killed_by_unit(self)
+
+
+# NOTE: unit.modifyProperty() in JASS
+func modify_property(mod_type: YtModificationType.enm, value: float):
+	_modify_property_internal(mod_type, value, 1)
+
+
+# Adds modifier directly to unit. YtModifier will
+# automatically scale with this unit's level.
+func add_modifier(modifier: YtModifier):
+	_apply_modifier(modifier, _level, 1)
+	_direct_modifier_list.append(modifier)
+
+
+func remove_modifier(modifier: YtModifier):
+	if _direct_modifier_list.has(modifier):
+		_apply_modifier(modifier, _level, -1)
+		_direct_modifier_list.erase(modifier)
+
+
+func change_modifier_level(modifier: YtModifier, old_level: int, new_level: int):
+	_apply_modifier(modifier, old_level, -1)
+	_apply_modifier(modifier, new_level, 1)
+
+
+func add_silence():
+	_silence_count += 1
+
+
+func remove_silence():
+	_silence_count -= 1
+
+
+func add_stun():
+	var stun_started: bool = _stun_count == 0
+
+	_stun_count += 1
+
+	if stun_started:
+		_stun_effect_id = YtEffect.create_simple_at_unit_attached("res://src/effects/stun_visual.tscn", self, YtUnit.BodyPart.OVERHEAD)
+		YtEffect.set_auto_destroy_enabled(_stun_effect_id, false)
+
+
+func remove_stun():
+	_stun_count -= 1
+
+	var stun_ended: bool = _stun_count == 0
+	
+	if stun_ended:
+		YtEffect.destroy_effect(_stun_effect_id)
+		_stun_effect_id = -1
+
+
+func add_ethereal():
+	_ethereal_count += 1
+
+
+func remove_ethereal():
+	_ethereal_count -= 1
+
+
+# Returns the amount of mana that was actually subtracted.
+# NOTE: unit.subtractMana() in JASS
+func subtract_mana(amount: float, subtract_if_not_enough: bool) -> float:
+	var enough_mana: bool = _mana >= amount 
+
+	if enough_mana:
+		var new_mana: float = clampf(_mana - amount, 0.0, _mana)
+		set_mana(new_mana)
+
+		return amount
+	else:
+		if subtract_if_not_enough:
+			set_mana(0)
+		else:
+			return 0
+	
+	return 0
+
+
+func _modify_property_internal(mod_type: YtModificationType.enm, value: float, direction: int):
+	var health_ratio: float = get_health_ratio()
+	var mana_ratio: float = get_mana_ratio()
+
+	var current_value: float = _mod_value_map[mod_type]
+	var new_value: float = current_value + direction * value
+	_mod_value_map[mod_type] = new_value
+
+#	NOTE: restore original health and mana ratios. For
+#	example, if original mana was 50/100 and mana was
+#	increased by 50, then final values will be 75/150 to
+#	preserve the 50% ratio.
+	var new_health_max: float = get_overall_health()
+	_health = health_ratio * new_health_max
+	var new_mana_max: float = get_overall_mana()
+	_mana = mana_ratio * new_mana_max
+
+
+# Changes experience of unit. Change can be positive or
+# negative. Level will also be changed accordingly. Note
+# that level downs are possible.
+func _change_experience(amount: float) -> float:
+#	NOTE: store experience as centiunits (multiply by 100) to
+#	preserve fractional values while using integer arithmetic
+#	for multiplayer determinism.
+	var old_exp_centi: int = _experience_centi
+	var amount_centi: int = roundi(amount * 100.0)
+	var new_exp_centi: int = maxi(0, _experience_centi + amount_centi)
+	var actual_change_centi: int = new_exp_centi - old_exp_centi
+	var actual_change: float = actual_change_centi / 100.0
+
+	if actual_change_centi == 0:
+		return actual_change
+
+	var old_level: int = _level
+	var new_exp_float: float = new_exp_centi / 100.0
+	var new_level: int = YtExperience.get_level_at_exp(new_exp_float, get_player())
+
+	_experience_centi = new_exp_centi
+
+	var level_has_changed: bool = new_level != old_level
+	var level_increased: bool = new_level > old_level
+	
+	if level_has_changed:
+		set_level(new_level)
+		
+#		NOTE: it is important to emit level_changed() signal
+#		multiple times if level has changed by more than 1.
+#		Some tower logic depend on this behavior.
+		var level_change_amount: int = absi(new_level - old_level)
+		for i in range(0, level_change_amount):
+			level_changed.emit(level_increased)
+
+	if level_increased:
+		YtEffect.create_simple_at_unit("res://src/effects/level_up.tscn", self)
+		get_player().display_floating_text("Level %d" % _level, self, Color.GOLD)
+
+	return actual_change
+
+
+func _add_floating_text_for_damage(damage: float, crit_count: int, damage_source: DamageSource, is_main_target: bool, target: YtUnit):
+	var damage_color: Color
+	var damage_text: String = str(floori(damage))
+
+#	NOTE: do not show crits for 0 damage, because it shows
+#	up as "0!" and looks weird. Do show "0" for spell damage
+#	because it indicates helpful info about certain
+#	abilities.
+	if crit_count > 0 && roundi(damage) == 0:
+		return
+	
+	match damage_source:
+		DamageSource.Attack: 
+			damage_color = Color.RED
+		DamageSource.Spell:
+			damage_color = Color.SKY_BLUE
+	
+	var is_critical: bool = crit_count > 0
+
+	for i in range(0, crit_count):
+		damage_text += "!"
+
+	var text_origin_unit: YtUnit
+	if is_critical && damage_source == DamageSource.Attack:
+		text_origin_unit = self
+	else:
+		text_origin_unit = target
+
+#	NOTE: confusing logic for this boolean but this is how
+#	it worked in original youtd
+	var floating_text_should_be_shown: bool = (damage_source == DamageSource.Attack && is_critical && is_main_target) || (damage_source == DamageSource.Spell && is_critical)
+	if !floating_text_should_be_shown:
+		return
+	
+	get_player().display_floating_text(damage_text, text_origin_unit, damage_color)
+
+
+# Example:
+# If crits deal 125% of normal damage and crit ratio is 1.50
+# Then crit count = (1.50 - 1.0) / (1.25 - 1.0) = 0.50 / 0.25 = 2
+func _derive_crit_count_from_crit_ratio(crit_ratio: float, damage_source: DamageSource) -> int:
+	var crit_damage_mod: float
+	match damage_source:
+		DamageSource.Attack:
+			crit_damage_mod	= get_prop_atk_crit_damage()
+		DamageSource.Spell:
+			crit_damage_mod	= get_spell_crit_damage()
+
+	var crit_count: int = roundi(YtUtils.divide_safe((crit_ratio - 1.0), (crit_damage_mod - 1.0)))
+
+	return crit_count
+
+
+# Generates a random crit count for attack damage
+func _generate_crit_count(bonus_multicrit: float, bonus_chance: float) -> int:
+	var multicrit_count_max: int = get_prop_multicrit_count() + int(bonus_multicrit)
+	var current_crit_chance: float = get_prop_atk_crit_chance() + bonus_chance
+
+	var crit_count: int = 0
+	
+	for _i in range(multicrit_count_max):
+		var capped_crit_chance: float = min(current_crit_chance, YtConstants.ATK_CRIT_CHANCE_CAP)
+		var is_critical: bool = YtUtils.rand_chance(YtGlobals.synced_rng, capped_crit_chance)
+
+		if is_critical:
+			crit_count += 1
+
+#			Decrease chance of each subsequent multicrit to
+#			implement diminishing returns.
+			current_crit_chance *= YtConstants.ATK_MULTICRIT_DIMISHING
+		else:
+			break
+
+	return crit_count
+
+
+# Same as calc_attack_multicrit(), but accepts an already
+# calculated crit count. Used by YtTower.
+func _calc_attack_multicrit_from_crit_count(crit_count: int, bonus_damage: float) -> float:
+	var crit_damage: float = get_prop_atk_crit_damage() + bonus_damage
+
+# 	NOTE: subtract 1.0 from crit_damage, so we do
+#	1.0 + 0.5 + 0.5 + 0.5...
+# 	not
+#	1.0 + 1.5 + 1.5 + 1.5...
+	var total_crit_damage: float = 1.0 + (crit_damage - 1.0) * crit_count
+
+	total_crit_damage = max(0.0, total_crit_damage)
+
+	return total_crit_damage
+
+
+func _do_damage(target: YtUnit, damage_base: float, crit_ratio: float, damage_source: DamageSource, is_main_target: bool, emit_damage_event: bool = false, attack_type: YtAttackType.enm = get_attack_type(), crit_count: int = -1) -> bool:
+	if !target is YtCreep:
+		push_error("Attempted to deal damage to a unit which is not a creep: %s. Can deal damage only to creeps." % target)
+
+		return false
+
+#	NOTE: if crit_count is -1, then _do_damage() was called
+#	from f-n like do_attack_damage(), where we only have
+#	access to crit_ratio. In that case derive crit count
+#	from crit ratio. The only case where we have access to
+#	crit_ratio is for regular tower attacks.
+	if crit_count == -1:
+		crit_count = _derive_crit_count_from_crit_ratio(crit_ratio, damage_source)
+
+	var target_size: YtCreepSize.enm = target.get_size()
+	var size_mod: float = get_damage_to_size(target_size)
+	var creep_category: YtCreepCategory.enm = target.get_category()
+	var category_mod: float = get_damage_to_category(creep_category)
+	var armor_type: YtArmorType.enm = target.get_armor_type()
+	var armor_type_mod: float = YtAttackType.get_damage_against(attack_type, armor_type)
+	var spell_damage_multiplier: float = YtArmorType.get_spell_damage_taken(armor_type)
+
+	var damage: float = damage_base * size_mod * category_mod
+	
+	if self is YtTower:
+		var tower: YtTower = self as YtTower
+		var element: YtElement.enm = tower.get_element()
+		var element_mod: float = target.get_damage_from_element(element)
+		damage *= element_mod
+
+	match damage_source:
+		DamageSource.Attack: damage *= armor_type_mod
+		DamageSource.Spell: damage *= spell_damage_multiplier
+
+# 	Immune creeps take 0 damage from spells
+	if damage_source == DamageSource.Spell && target.is_immune():
+		damage = 0
+
+	var damage_before_damage_event: float = damage
+
+#	NOTE: emit_damage_event arg is true only for tower
+#	attacks, false for all other calls to this function
+	if emit_damage_event:
+		var damage_event: YtEvent = YtEvent.new(target)
+		damage_event.damage = damage
+		damage_event._is_main_target = is_main_target
+		damage_event._number_of_crits = crit_count
+		dealt_damage.emit(damage_event)
+# 		NOTE: update damage value because it could've been
+# 		altered by DAMAGE callbacks
+		damage = damage_event.damage
+
+#	NOTE: crit damage bonus must be applied after "damage"
+#	event. This is according to this comment in the original
+#	script for Burrow tower.
+#	Comment: "The engine calculates critical strike extra
+#	damage ***AFTER*** the onDamage event, so there is no
+#	need to care about it in this trigger."
+	damage *= crit_ratio
+	
+	var total_damage_multiplier: float = get_total_damage_multiplier()
+	damage *= total_damage_multiplier
+
+	var damage_before_damaged_event: float = damage
+
+	var attacker: YtUnit = self
+
+	if attacker is YtTower:
+		var damaged_event: YtEvent = YtEvent.new(attacker)
+		damaged_event.damage = damage
+		damaged_event._is_main_target = is_main_target
+		damaged_event._is_spell_damage = damage_source == DamageSource.Spell
+		damaged_event._number_of_crits = crit_count
+		target.damaged.emit(damaged_event)
+
+# 		NOTE: update damage value because it could've been
+# 		altered by event handlers of target's "damaged" event
+		damage = damaged_event.damage
+
+	var damage_is_in_bounds: bool = YtConstants.DAMAGE_MIN <= damage && damage <= YtConstants.DAMAGE_MAX
+
+	if !damage_is_in_bounds:
+		push_error("Damage out of bounds. Damage base = %f, damage before DAMAGE event = %f, damage before DAMAGED event = %f, damage final = %f" % [damage_base, damage_before_damage_event, damage_before_damaged_event, damage])
+
+		if attacker is YtTower:
+			push_error("Tower id = %d" % attacker.get_id())
+
+		damage = clampf(damage, YtConstants.DAMAGE_MIN, YtConstants.DAMAGE_MAX)
+	
+	_damage_dealt_total += damage
+	
+	var wave_level: int = target.get_spawn_level()
+	
+	# initialize all maps at once on first damage instance to wave_level
+	if !_damage_dealt_to_wave_map.has(wave_level):
+		_damage_dealt_to_wave_map[wave_level] = 0
+		_spell_damage_dealt_to_wave_map[wave_level] = 0
+		_attack_damage_dealt_to_wave_map[wave_level] = 0
+		
+		
+	_damage_dealt_to_wave_map[wave_level] += damage
+	
+	if damage_source == DamageSource.Spell:
+		# re-init as safety fallback
+		if !_spell_damage_dealt_to_wave_map.has(wave_level):
+			_spell_damage_dealt_to_wave_map[wave_level] = 0
+		
+		_spell_damage_dealt += damage
+		_spell_damage_dealt_to_wave_map[wave_level] += damage
+		
+	if damage_source == DamageSource.Attack:
+		# re-init as safety fallback
+		if !_attack_damage_dealt_to_wave_map.has(wave_level):
+			_attack_damage_dealt_to_wave_map[wave_level] = 0
+			
+		_attack_damage_dealt += damage
+		_attack_damage_dealt_to_wave_map[wave_level] += damage
+
+	if damage > _best_hit:
+		_best_hit = damage
+
+	var health_before_damage: float = target.get_health()
+	target.set_health(health_before_damage - damage)
+
+	YtCombatLog.log_damage(self, target, damage_source, damage, crit_count)
+
+#	NOTE: round damage to avoid floating point precision
+#	desyncs in multiplayer
+	var rounded_damage: float = floor(damage)
+	get_player().add_to_total_damage(rounded_damage)
+
+	_add_floating_text_for_damage(damage, crit_count, damage_source, is_main_target, target)
+
+	var health_after_damage: float = target.get_health()
+	var damage_killed_unit: bool = health_before_damage > 0 && health_after_damage <= 0
+
+	if damage_killed_unit:
+		target._killed_by_unit(self)
+
+	return damage_killed_unit
+
+
+# Called when unit killed by caster unit
+func _killed_by_unit(caster: YtUnit):
+	var death_event: YtEvent = YtEvent.new(caster)
+	death.emit(death_event)
+
+	if caster != null:
+		caster._accept_kill(self)
+
+	var caster_item_chance: float = caster.get_item_drop_ratio()
+	var target_item_chance: float = get_item_drop_ratio_on_death()
+	var item_chance: float = YtConstants.BASE_ITEM_DROP_CHANCE * caster_item_chance * target_item_chance
+
+	var creep: YtCreep = self as YtCreep
+
+	if creep != null and YtWorld.game != null:
+		var creep_size: YtCreepSize.enm = creep.get_size_including_challenge_sizes()
+		var item_drop_roll_count: int = YtCreepSize.get_item_drop_roll_count(creep_size)
+		var quality: float = caster.get_item_quality_ratio() * get_item_quality_ratio_on_death()
+		for i in range(0, item_drop_roll_count):
+			if YtUtils.rand_chance(YtGlobals.synced_rng, item_chance):
+				YtWorld.game.drop_item(creep, quality)
+
+	remove_from_game()
+
+
+# Called when unit kills target unit
+func _accept_kill(target: YtUnit):
+	YtCombatLog.log_kill(self, target)
+	
+	var experience_gained: float = _get_experience_for_target(target)
+	_change_experience(experience_gained)
+
+	var target_owner: YtPlayer = target.get_player()
+
+	var bounty_gained: int = _get_bounty_for_target(target)
+	if bounty_gained > 0:
+		target_owner.give_gold(bounty_gained, target, false, true)
+
+	_kill_count += 1
+
+	var kill_event: YtEvent = YtEvent.new(target)
+	kill.emit(kill_event)
+
+
+# This is for internal use in buff.gd only. For external
+# use, call YtBuffType.apply().
+func _add_buff_internal(buff: YtBuff):
+	var buff_type_name: String = buff.get_buff_type_name()
+	_buff_map[buff_type_name] = buff
+
+	_buff_list.append(buff)
+	var buff_modifier: YtModifier = buff.get_modifier()
+	_apply_modifier(buff_modifier, buff.get_level(), 1)
+	
+	buff_list_changed.emit()
+
+
+func _apply_modifier(modifier: YtModifier, level: int, modify_direction: int):
+	var modification_list: Array = modifier.get_modification_list()
+
+	for modification in modification_list:
+		var value: float = modification.value_base + modification.level_add * level
+
+		_modify_property_internal(modification.type, value, modify_direction)
+
+
+func _remove_buff_internal(buff: YtBuff):
+	var buff_modifier: YtModifier = buff.get_modifier()
+	_apply_modifier(buff_modifier, buff.get_level(), -1)
+
+	var buff_type_name: String = buff.get_buff_type_name()
+	_buff_map.erase(buff_type_name)
+
+	_buff_list.erase(buff)
+	buff_list_changed.emit()
+
+
+# Set node which will be used to determine the visual
+# position of the unit.
+func _get_bounty_for_target(target: YtUnit) -> int:
+	if !target is YtCreep:
+		return 0
+
+	var tower: YtUnit = self
+	var creep: YtCreep = target as YtCreep
+	var bounty_base: float = creep.get_base_bounty_value()
+	var granted_mod: float = creep.get_prop_bounty_granted()
+	var received_mod: float = tower.get_prop_bounty_received()
+	var bounty: int = floori(bounty_base * granted_mod * received_mod)
+
+	return bounty
+
+
+func _get_experience_for_target(target: YtUnit) -> float:
+	if !target is YtCreep:
+		return 0
+
+	var tower: YtUnit = self
+	var creep: YtCreep = target as YtCreep
+	var creep_size: YtCreepSize.enm = creep.get_size_including_challenge_sizes()
+	var experience_base: float = YtCreepSize.get_experience(creep_size)
+	var granted_mod: float = creep.get_prop_exp_granted()
+	var received_mod: float = tower.get_prop_exp_received()
+	var experience: float = experience_base * granted_mod * received_mod
+
+	return experience
+
+
+# Returns a prop value after applying diminishing returns to
+# it. Diminishing returns reduce effectiveness of mods as
+# the prop value gets further away from [0.6, 1.7] range.
+func _get_prop_with_diminishing_returns(type: YtModificationType.enm) -> float:
+	var value: float = max(0, _mod_value_map[type])
+
+	if value > 1.7:
+		return 1.7 + (value - 1.7) / pow(1.0 + value - 1.7, 0.66)
+	elif value < 0.6:
+		return 0.6 / pow(1.0 + 0.6 - value, 1.6)
+	else:
+		return value
+
+
+#########################
+###     Callbacks     ###
+#########################
+
+func _on_regen_timer_timeout():
+	var mana_regen: float = get_overall_mana_regen()
+	set_mana(_mana + mana_regen)
+
+	var health_regen: float = get_overall_health_regen()
+	set_health(_health + health_regen)
+
+
+#########################
+### Setters / Getters ###
+#########################
+
+func get_target_bitmask() -> int:
+	return _target_bitmask
+
+
+# Returns name used in the combat log
+func get_aura_list() -> Array[YtAura]:
+	return _aura_list
+
+
+func get_autocast_list() -> Array[YtAutocast]:
+	return _autocast_list
+
+
+# NOTE: for now just returning the one single player
+# instance since multiplayer isn't implemented. Also, the
+# name isn't "get_player()" because that is already a
+# function of Node class.
+# 
+# NOTE: unit.getOwner() in JASS
+# Node.get_owner() is a built-in godot f-n
+func get_player() -> YtPlayer:
+	return _player
+
+
+func set_animation_by_index(_unit: YtUnit, _index: int):
+	pass
+
+
+# Sets sprite's base color. Sprite will have this color
+# forever and it will be mixed with the color passed to
+# set_sprite_color(). This is intended to be called once
+# when creeps are created to apply color based on wave
+# specials.
+func set_sprite_color(_value: Color):
+	pass
+
+
+# NOTE: overriden in YtTower to return non-null value
+func get_current_target() -> YtUnit:
+	return null
+
+
+# NOTE: unit.isImmune() in JASS
+func is_immune() -> bool:
+	return _immune
+
+
+func set_immune(immune: bool):
+	_immune = immune
+
+
+func set_level(new_level: int):
+	var old_level: int = _level
+	_level = new_level
+
+#	NOTE: apply level change to modifiers
+	for modifier in _direct_modifier_list:
+		change_modifier_level(modifier, old_level, new_level)
+
+
+# NOTE: Node2D.position and Node2D.get_position() return
+# position of node on the canvas, which is not the same as
+# the 3d position! Use get_position_canvas() instead of
+# get_position() to make the difference explicity.
+## Position kommt vom Körper (pos in Towerbreiten), die Höhe bleibt hier.
+func get_position_wc3_2d() -> Vector2:
+	if body != null and is_instance_valid(body):
+		return body.pos * YtWorld.WC3
+	return Vector2(_position_wc3.x, _position_wc3.y)
+
+
+func get_position_wc3() -> Vector3:
+	var p: Vector2 = get_position_wc3_2d()
+	return Vector3(p.x, p.y, _position_wc3.z)
+
+
+## Versetzt auch den Körper (Gegner: Weg ab der nächsten Stelle, siehe YoutdEnemy.yt_moved).
+func set_position_wc3(value: Vector3):
+	_position_wc3 = value
+	if body != null and is_instance_valid(body):
+		var p := Vector2(value.x, value.y) / YtWorld.WC3
+		if body.pos != p:
+			body.pos = p
+			if body.has_method("yt_moved"):
+				body.yt_moved()
+
+
+func set_position_wc3_2d(value: Vector2):
+	set_position_wc3(Vector3(value.x, value.y, get_z()))
+
+
+func set_z(z: float):
+	_position_wc3.z = z
+
+
+# Returns approximate position of the body part of unit on
+# the canvas coordinate space (not 3d wc3).
+# NOTE: body parts were used in original API based on
+# coordinates of body parts of 3D models. Approximate this
+# feature for 2d tiles by defining body part positions as:
+# ORIGIN = bottom of sprite
+# CHEST = middle of sprite
+# HEAD = top of sprite
+# Note that "sprite" here means the occupied part of the
+# texture. Some sprites occupy only a small portion of the
+# total texture so using texture center/dimensions would
+# cause incorrect results.
+func get_body_part_position(body_part: YtUnit.BodyPart) -> Vector3:
+	var origin_pos: Vector3 = get_position_wc3()
+	var height: float = _sprite_dimensions.y
+	match body_part:
+		BodyPart.OVERHEAD: return origin_pos + Vector3(0, 0, height)
+		BodyPart.HEAD: return origin_pos + Vector3(0, 0, height * 0.75)
+		BodyPart.CHEST: return origin_pos + Vector3(0, 0, height * 0.5)
+	return origin_pos
+
+
+# NOTE: returns position in canvas coords
+func get_x() -> float:
+	return get_position_wc3_2d().x
+
+
+# NOTE: unit.getY() in JASS
+func get_y() -> float:
+	return get_position_wc3_2d().y
+
+
+# NOTE: unit.getZ() in JASS
+func get_z() -> float:
+	return _position_wc3.z
+
+
+func get_prop_buff_duration() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_BUFF_DURATION)
+
+# NOTE: "getProp_DebuffDuration()" in JASS
+func get_prop_debuff_duration() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_DEBUFF_DURATION)
+
+# NOTE: "getProp_AtkCritChance()" in JASS
+func get_prop_atk_crit_chance() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_ATK_CRIT_CHANCE])
+
+# NOTE: "getProp_AtkCritDamage()" in JASS
+func get_prop_atk_crit_damage() -> float:
+	return max(1.0, _mod_value_map[YtModificationType.enm.MOD_ATK_CRIT_DAMAGE])
+
+# NOTE: "getProp_BountyReceived()" in JASS
+func get_prop_bounty_received() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_BOUNTY_RECEIVED)
+
+# NOTE: "getProp_BountyGranted()" in JASS
+func get_prop_bounty_granted() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_BOUNTY_GRANTED])
+
+# NOTE: "getProp_ExpReceived()" in JASS
+func get_prop_exp_received() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_EXP_RECEIVED)
+
+# NOTE: "getProp_ExpGranted()" in JASS
+func get_prop_exp_granted() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_EXP_GRANTED])
+
+func get_damage_to_air() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_AIR])
+
+func get_damage_to_boss() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_BOSS])
+
+func get_damage_to_mass() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_MASS])
+
+func get_damage_to_normal() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_NORMAL])
+
+func get_damage_to_champion() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_CHAMPION])
+
+func get_damage_to_undead() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_UNDEAD])
+
+func get_damage_to_humanoid() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_HUMANOID])
+
+func get_damage_to_challenge() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_CHALLENGE])
+
+func get_damage_to_nature() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_NATURE])
+
+func get_damage_to_magic() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_MAGIC])
+
+func get_damage_to_orc() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TO_ORC])
+
+func get_item_drop_ratio() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_ITEM_CHANCE_ON_KILL)
+
+func get_item_quality_ratio() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_ITEM_QUALITY_ON_KILL)
+
+func get_item_drop_ratio_on_death() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_ITEM_CHANCE_ON_DEATH])
+
+func get_item_quality_ratio_on_death() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_ITEM_QUALITY_ON_DEATH])
+
+# NOTE: "getProp_TriggerChances()" in JASS
+func get_prop_trigger_chances() -> float:
+	return _get_prop_with_diminishing_returns(YtModificationType.enm.MOD_TRIGGER_CHANCES)
+
+func get_prop_multicrit_count() -> int:
+	return int(max(0, _mod_value_map[YtModificationType.enm.MOD_MULTICRIT_COUNT]))
+
+# NOTE: "getProp_SpellDmgDealt()" in JASS
+func get_prop_spell_damage_dealt() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_SPELL_DAMAGE_DEALT])
+
+# NOTE: "getProp_SpellDmgReceived()" in JASS
+func get_prop_spell_damage_received() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_SPELL_DAMAGE_RECEIVED])
+
+# NOTE: "getProp_SpellCritChance()" in JASS
+func get_spell_crit_chance() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_SPELL_CRIT_CHANCE])
+
+# NOTE: "getProp_SpellCritDamage()" in JASS
+func get_spell_crit_damage() -> float:
+	return max(1.0, _mod_value_map[YtModificationType.enm.MOD_SPELL_CRIT_DAMAGE])
+
+
+# NOTE: [ORIGINAL_GAME_DEVIATION] in original game,
+# attack speed mod is not clamped when displayed, only when
+# used. So if attack speed is -50% it would show as "-50%"
+# in tower details but would actually by clamped to the min
+# value (20%).
+# 
+# Changed it so that both displayed and actually used values
+# are clamped.
+# 
+# NOTE: in original youtd, this f-n returns a value which
+# starts from 0%. In youtd2, this f-n returns a value which
+# starts from 100%. Keep this in mind when
+# translating/comparing original JASS tower scripts.
+# 
+# NOTE: "getProp_Attackspeed()" in JASS
+func get_attack_speed_modifier() -> float:
+	var attack_speed_mod: float = _mod_value_map[YtModificationType.enm.MOD_ATTACKSPEED]
+	attack_speed_mod = clampf(attack_speed_mod, YtConstants.MOD_ATTACKSPEED_MIN, YtConstants.MOD_ATTACKSPEED_MAX)
+
+	return attack_speed_mod
+
+
+func get_level() -> int:
+	return _level
+
+func is_silenced() -> bool:
+	return _silence_count > 0
+
+func is_stunned() -> bool:
+	return _stun_count > 0
+
+# Returns the total amount of time that this unit was
+# stunned for during it's lifetime.
+func get_total_stun_duration() -> float:
+	return _total_stun_duration
+
+# NOTE: unit.isBanished() in JASS
+func is_ethereal() -> bool:
+	return _ethereal_count > 0
+
+# NOTE: overriden in YtTower and YtCreep subclasses
+func is_in_combat() -> bool:
+	return false
+
+# NOTE: unit.getBuffOfType() in JASS
+func get_buff_of_type(buff_type: YtBuffType) -> YtBuff:
+	var buff_type_name: String = buff_type.get_unique_name()
+	var buff: YtBuff = _buff_map.get(buff_type_name, null)
+
+	return buff
+
+
+# NOTE: this f-n is not implemented, see comment for
+# YtBuffType.set_stacking_group() for reason.
+# 
+# NOTE: unit.getBuffOfGroup() in JASS
+# func get_buff_of_group(stacking_group: String) -> YtBuff:
+#	return null
+
+
+# NOTE: analog of SetUnitState(unit, UNIT_STATE_MANA) in JASS
+func set_mana(new_mana: float):
+	var overall_mana: float = get_overall_mana()
+	_mana = clampf(new_mana, 0.0, overall_mana)
+	mana_changed.emit()
+
+
+func set_base_mana(base_mana: float):
+	_base_mana = base_mana
+
+
+func get_base_mana() -> float:
+	return _base_mana
+
+func get_base_mana_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_MANA]
+
+func get_base_mana_bonus_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_MANA_PERC])
+
+# NOTE: "GetUnitState(unit, UNIT_STATE_MAX_MANA)" in JASS
+func get_overall_mana() -> float:
+	return max(0, (get_base_mana() + get_base_mana_bonus()) * get_base_mana_bonus_percent())
+
+# Returns current percentage of mana
+func get_mana_ratio() -> float:
+	var overall_mana: float = get_overall_mana()
+	var ratio: float = YtUtils.divide_safe(_mana, overall_mana)
+
+	return ratio
+
+
+func set_base_mana_regen(base_mana_regen: float):
+	_base_mana_regen = base_mana_regen
+
+func get_base_mana_regen() -> float:
+	return _base_mana_regen
+
+# NOTE: "getProp_ManaRegBonus()" in JASS
+func get_base_mana_regen_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_MANA_REGEN]
+
+# NOTE: "getProp_ManaRegPercBonus()" in JASS
+func get_base_mana_regen_bonus_percent() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_MANA_REGEN_PERC]
+
+# NOTE: regen values can be negative - this is on purpose.
+# If regen is negative, then unit will start losing mana.
+# This is how it works in original game.
+func get_overall_mana_regen() -> float:
+	return (get_base_mana_regen() + get_base_mana_regen_bonus()) * get_base_mana_regen_bonus_percent()
+
+
+# Returns damage done, in percentage.
+# Example: current health = 30/100 => damage done = 0.7 (70%)
+func get_damage_done() -> float:
+	var overall_health: float = get_overall_health()
+	var lowest_health_ratio: float = YtUtils.divide_safe(_lowest_health, overall_health)
+	var damage_done: float = 1.0 - lowest_health_ratio
+	
+	return damage_done
+
+
+# NOTE: analog of SetUnitState(unit, UNIT_STATE_LIFE) in JASS
+func set_health(new_health: float):
+	var overall_health: float = get_overall_health()
+	_health = clampf(new_health, 0.0, overall_health)
+	if _health < _lowest_health:
+		_lowest_health = _health
+	health_changed.emit()
+
+
+# NOTE: need this function for "Second Chance" special where
+# creep health needs to be set over max health.
+func set_health_over_max(new_health: float):
+	_health = max(new_health, 0.0)
+	health_changed.emit()
+
+
+# NOTE: analog of GetUnitState(unit, UNIT_STATE_LIFE) in JASS
+func get_health() -> float:
+	return _health
+
+func get_base_health() -> float:
+	return _base_health
+
+func set_base_health(value: float):
+	_base_health = value
+	_lowest_health = value
+
+func get_base_health_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_HP]
+
+func get_base_health_bonus_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_HP_PERC])
+
+# NOTE: do not allow max hp to go below 1 because that
+# doesn't make sense and the combat system won't work
+# correctly if a unit has max hp of 0
+# NOTE: analog of GetUnitState(unit, UNIT_STATE_MAX_LIFE) in JASS
+func get_overall_health() -> float:
+	return max(1, (get_base_health() + get_base_health_bonus()) * get_base_health_bonus_percent())
+
+# Returns current percentage of health
+# NOTE: unit.getLifePercent() in JASS
+func get_health_ratio() -> float:
+	var overall_health: float = get_overall_health()
+	var ratio: float = YtUtils.divide_safe(_health, overall_health)
+
+	return ratio
+
+func get_base_health_regen() -> float:
+	return _base_health_regen
+
+func get_base_health_regen_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_HP_REGEN]
+
+func get_base_health_regen_bonus_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_HP_REGEN_PERC])
+
+# NOTE: regen values can be negative - this is on purpose.
+# If regen is negative, then unit will start losing health.
+# This is how it works in original game.
+func get_overall_health_regen() -> float:
+	return (get_base_health_regen() + get_base_health_regen_bonus()) * get_base_health_regen_bonus_percent()
+
+func get_prop_move_speed() -> float:
+	var base_value: float = _mod_value_map[YtModificationType.enm.MOD_MOVESPEED]
+	var value: float
+
+	if base_value > 1.0:
+		value = base_value
+	else:
+		value = pow(3.0, base_value - 1.0)
+
+	return value
+
+
+func get_prop_move_speed_absolute() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_MOVESPEED_ABSOLUTE]
+
+func get_base_movespeed() -> float:
+	return YtConstants.DEFAULT_MOVE_SPEED
+
+func get_prop_atk_damage_received() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_ATK_DAMAGE_RECEIVED])
+
+func get_display_name() -> String:
+	return "Generic Unit"
+
+
+func get_base_damage_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_DAMAGE_BASE]
+
+func get_base_damage_bonus_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DAMAGE_BASE_PERC])
+
+func get_damage_add() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DAMAGE_ADD])
+
+func get_damage_add_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DAMAGE_ADD_PERC])
+
+func get_current_armor_damage_reduction() -> float:
+	var armor: float = get_overall_armor()
+
+	var reduction: float
+	if armor >= 0:
+		reduction = armor / (armor + 25)
+	else:
+		reduction = 0.0
+#		NOTE: JASS code has the formula below, not sure why.
+#		This would mean that if armor is reduced below 0
+#		then reduction would be negative - meaning that
+#		creep would get healed??? Probably somewhere else in
+#		JASS code this value would be forced to 0 anyway.
+		# reduction = pow(0.94, -armor) - 1.0
+
+	return reduction
+
+# NOTE: analog of GetUnitState(unit, UNIT_STATE_MANA) in JASS
+func get_mana() -> float:
+	return _mana
+
+func set_base_armor(value: float):
+	_base_armor = value
+
+func get_base_armor() -> float:
+	return _base_armor
+
+func get_base_armor_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_ARMOR]
+
+func get_base_armor_bonus_percent() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_ARMOR_PERC])
+
+func get_overall_armor() -> float:
+	return max(0, (get_base_armor() + get_base_armor_bonus()) * get_base_armor_bonus_percent())
+
+func get_overall_armor_bonus() -> float:
+	return (get_base_armor() + get_base_armor_bonus()) * get_base_armor_bonus_percent() - get_base_armor()
+
+func get_dps_bonus() -> float:
+	return _mod_value_map[YtModificationType.enm.MOD_DPS_ADD]
+
+
+func get_damage_from_element(element: YtElement.enm) -> float:
+	var mod_type: YtModificationType.enm = YtElement.convert_to_dmg_from_element_mod(element)
+	var damage_mod: float = max(0, _mod_value_map[mod_type])
+
+	return damage_mod
+
+
+# NOTE: unit.getDamageToCategory() in JASS
+func get_damage_to_category(category: YtCreepCategory.enm) -> float:
+	var mod_type: YtModificationType.enm = YtCreepCategory.convert_to_mod_dmg_type(category)
+	var damage_mod: float = max(0, _mod_value_map[mod_type])
+
+	return damage_mod
+
+
+# NOTE: unit.getDamageToSize() in JASS
+func get_damage_to_size(creep_size: YtCreepSize.enm) -> float:
+	var mod_type: YtModificationType.enm = YtCreepSize.convert_to_mod_dmg_type(creep_size)
+	var damage_mod: float = max(0, _mod_value_map[mod_type])
+
+	return damage_mod
+
+func get_total_damage_multiplier() -> float:
+	return max(0, _mod_value_map[YtModificationType.enm.MOD_DMG_TOTAL_MULTIPLIER])
+
+func get_attack_type() -> YtAttackType.enm:
+	return YtAttackType.enm.PHYSICAL
+
+func get_exp() -> float:
+	return _experience_centi / 100.0
+
+
+func reached_max_level() -> bool:
+	var max_level: int = get_max_level()
+	var is_max_level: bool = _level == max_level
+
+	return is_max_level
+
+
+func get_max_level() -> int:
+	var max_level: int
+
+	var player: YtPlayer = get_player()
+	if player != null:
+		max_level = player.get_max_tower_level()
+	else:
+		max_level = YtConstants.TOWER_MAX_LEVEL_BASE
+
+	return max_level
+
+
+func get_buff_groups(mode_list: Array) -> Array[int]:
+	var result: Array[int] = []
+
+# 	NOTE: need ordered iteration for determinism
+	for buff_group in range(1, YtConstants.BUFFGROUP_COUNT + 1):
+		var this_mode: YtBuffGroupMode.enm = _buff_groups[buff_group]
+		if mode_list.has(this_mode):
+			result.append(buff_group)
+
+	return result
+
+
+func set_buff_group_mode(buff_group: int, mode: YtBuffGroupMode.enm):
+	if !_buff_groups.has(buff_group):
+		push_error("Invalid buff group: ", buff_group)
+
+		return
+
+	_buff_groups[buff_group] = mode
+
+	buff_group_changed.emit()
+
+
+func get_buff_group_mode(buff_group: int) -> YtBuffGroupMode.enm:
+	var mode: YtBuffGroupMode.enm = _buff_groups[buff_group]
+
+	return mode
