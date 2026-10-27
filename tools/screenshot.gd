@@ -440,7 +440,14 @@ func _prepare_youtd(game: Node) -> void:
 			x += 4
 	game.debug_used = false
 	game.stash = YoutdRoll.with_count(game, 5)
-	game.item_stash = ["2", "3", "1001", "11", "12"]
+	for id in [2, 3, 1001, 11, 12, 9]:
+		var it := YtItem.make(id, game.yp())
+		if it != null:
+			game.stash_add(it)
+	# ein Item im ausgewählten Tower, damit Auswahlkarte Items und Effekte zeigt
+	var sel = game.towers.get(Vector2i(12, 12))
+	if sel != null and not game.item_stash.is_empty():
+		game.put_item(sel, game.item_stash.size() - 1)
 	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
 	game.submit({"type": "next_wave"})
 	Engine.time_scale = 8.0
