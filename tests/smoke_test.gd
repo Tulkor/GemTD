@@ -651,6 +651,7 @@ func _ready() -> void:
 	await _score_test()
 	await _rock_select_test()
 	await _take_back_test()
+	await _extra_chance_test()
 	await _final_boss_test()
 	await _command_test()
 	await _coop_test()
@@ -851,6 +852,36 @@ func _rock_select_test() -> void:
 
 
 ## Strg+Klick: Steine einzeln zur Auswahl hinzufügen/abwählen. Gesetzte Gems zurücknehmen, ohne neu zu würfeln.
+## Extra Chance: Gem-Sorte kaufen, Gems der Runde werden mit chance zum Perfekten dieser Sorte, einmal pro Runde.
+func _extra_chance_test() -> void:
+	Session.game_kind = "gemtd"
+	Session.map_path = Database.list_maps()[0].path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	var cfg: Dictionary = Database.balance.get("extra_chance", {})
+	check(int(cfg.get("cost", 0)) == 175, "Extra Chance kostet 175 Gold")
+	var saved: Dictionary = cfg.duplicate()
+	cfg["chance"] = 1.0
+	g.gold = 0
+	check(not g.can_buy_extra_chance(), "Ohne Gold keine Extra Chance")
+	g.gold = 500
+	check(g.submit({"type": "extra_chance", "id": "ruby"}) and g.gold == 325 and g.pl().extra_chance == "ruby", "Extra Chance Rubin gekauft")
+	check(not g.submit({"type": "extra_chance", "id": "topaz"}), "Nur einmal pro Runde")
+	var t: Tower = null
+	for y in range(10, 60, 4):
+		if g.can_place(Vector2i(14, y)):
+			t = g.place_gem(Vector2i(14, y))
+			break
+	check(t != null and t.tower_id == "ruby" and t.tier == 4, "Gem wird zum Perfekten Rubin: %s" % (t.label() if t != null else "keiner"))
+	g._enter_build()
+	check(g.pl().extra_chance == "", "Neue Runde: Extra Chance wieder frei")
+	Database.balance["extra_chance"] = saved
+	g.queue_free()
+	await get_tree().process_frame
+
+
 func _take_back_test() -> void:
 	Session.map_path = Database.list_maps()[0].path
 	Session.map_override = null

@@ -1329,5 +1329,9 @@
 	"Level %d/%d": "Level %d/%d",
 	"Tauschen": "Swap",
 	"%s tauschen": "Swap %s",
-	"Eigenen Gem oder Stein anklicken, der Opal tauscht mit ihm den Platz (%d Gold).\nRechtsklick oder Esc bricht ab.": "Click one of your gems or a rock, the opal swaps places with it (%d gold).\nRight-click or Esc cancels."
+	"Eigenen Gem oder Stein anklicken, der Opal tauscht mit ihm den Platz (%d Gold).\nRechtsklick oder Esc bricht ab.": "Click one of your gems or a rock, the opal swaps places with it (%d gold).\nRight-click or Esc cancels.",
+	"Eine Gem-Sorte wählen: jeder Gem dieser Runde wird mit erhöhter Chance zu ihrem Perfekten.": "Pick a gem type: every gem this round has a higher chance to become its Perfect version.",
+	"Extra: %s": "Extra: %s",
+	"Extra Chance": "Extra Chance",
+	"Jeder Gem, den du in dieser Runde noch setzt, wird mit %s %% Chance zum gewählten Gem. Kostet %d Gold, einmal pro Runde.": "Every gem you still place this round becomes the chosen gem with %s %% chance. Costs %d gold, once per round."
 }

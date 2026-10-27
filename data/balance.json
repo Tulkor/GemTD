@@ -1,6 +1,7 @@
 {
 	"gems_per_round": 5,
 	"rock_remove_cost": 0,
+	"extra_chance": {"cost": 175, "chance": 0.0595, "tier": 4, "_info": "WC3: Perfekte Sorte wählen, jeder gesetzte Gem der Runde wird mit chance zu ihr (sonst etwa 1,25 %)"},
 	"overflow_tower": "stone_of_bryvx",
 	"kill_rank": {
 		"kills_per_rank": 10,

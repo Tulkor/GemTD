@@ -63,7 +63,8 @@ static func capture(game) -> Dictionary:
 		"enemies": es,
 		# pro Spieler; gold, round und undo_gems oben sind die von Spieler 0 (ältere Spielstände)
 		"players": game.players.map(func(p): return {"name": p.name, "gold": p.gold, "gold_frac": p.gold_frac,
-			"stage": p.stage, "round": p.round_towers.map(func(t): return list.find(t)), "undo_gems": p.undo_gems.duplicate(true)}),
+			"stage": p.stage, "round": p.round_towers.map(func(t): return list.find(t)), "undo_gems": p.undo_gems.duplicate(true),
+			"extra_chance": p.extra_chance}),
 		"next_enemy_id": game._next_enemy_id,
 		"rng_seed": game.rng.seed,
 		"rng_state": game.rng.state,
@@ -139,6 +140,7 @@ static func apply(game, s: Dictionary) -> void:
 		var ps := PlayerState.new(i, str(pd.get("name", "")))
 		ps.gold = int(pd.get("gold", 0))
 		ps.gold_frac = float(pd.get("gold_frac", 0.0))
+		ps.extra_chance = str(pd.get("extra_chance", ""))
 		for ug in pd.get("undo_gems", []):
 			if ug is Array and ug.size() == 2 and Database.towers.has(str(ug[0])):
 				ps.undo_gems.append([str(ug[0]), int(ug[1])])

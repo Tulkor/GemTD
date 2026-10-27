@@ -165,6 +165,8 @@ func _ready() -> void:
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
+	hud.extra_chance_requested.connect(func(): hud.extra_chance_panel.open(extra_chance_cfg(), gold, pl(local_player).extra_chance))
+	hud.extra_chance_panel.chosen.connect(func(id): submit({"type": "extra_chance", "id": id}))
 	hud.speed_selected.connect(func(f): submit({"type": "speed", "factor": f}))
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
@@ -694,6 +696,27 @@ func debug_jump_to_wave(number: int) -> void:
 	_refresh_hud()
 
 
+## Extra Chance (data/balance.json → extra_chance): nur GemTD, leer = aus.
+func extra_chance_cfg() -> Dictionary:
+	return Database.balance.get("extra_chance", {}) if Session.game_kind == "gemtd" else {}
+
+
+## In der eigenen Bauphase einmal pro Runde eine Gem-Sorte kaufen (Befehl "extra_chance").
+func can_buy_extra_chance() -> bool:
+	var ec := extra_chance_cfg()
+	return not ec.is_empty() and stage() == Phase.BUILD and gems_left() > 0 and pl().extra_chance == "" \
+		and gold >= int(ec.get("cost", 175)) and phase < Phase.GAME_OVER
+
+
+func buy_extra_chance(id: String) -> bool:
+	if not can_buy_extra_chance() or not Database.gem_ids().has(id):
+		return false
+	gold -= int(extra_chance_cfg().get("cost", 175))
+	pl().extra_chance = id
+	_refresh_hud()
+	return true
+
+
 func rock_remove_cost() -> int:
 	return int(Database.balance.get("rock_remove_cost", 0))
 
@@ -705,6 +728,7 @@ func _enter_build() -> void:
 		p.stage = Phase.BUILD
 		p.round_towers.clear()
 		p.undo_gems.clear()
+		p.extra_chance = ""
 	round_path_start = path_length
 	if rogue != null:
 		rogue.on_build()
@@ -739,6 +763,10 @@ func place_gem(c: Vector2i) -> Tower:
 		var roll := Database.roll_gem(chance_level + (rogue.luck(acting) if rogue != null else 0), rng)
 		id = roll[0]
 		tier = roll[1]
+		var ec := extra_chance_cfg()
+		if pl().extra_chance != "" and rng.randf() < float(ec.get("chance", 0.0)):
+			id = pl().extra_chance
+			tier = mini(int(ec.get("tier", 4)), Database.tier_count(id) - 1)
 	if not Database.towers.has(id):
 		push_error("Unbekannter Tower: " + id)
 		return null
@@ -1191,6 +1219,8 @@ func _execute(cmd: Dictionary) -> bool:
 			return take_back(tower_from_ref(cmd.get("tower", {})))
 		"move_trap":
 			return move_trap(tower_from_ref(cmd.get("tower", {})), cmd.get("to", NO_CELL))
+		"extra_chance":
+			return buy_extra_chance(str(cmd.get("id", "")))
 		"swap":
 			return swap_tower(tower_from_ref(cmd.get("tower", {})), cmd.get("with", NO_CELL))
 		"setup":
@@ -1827,6 +1857,7 @@ func _refresh_hud_local() -> void:
 	else:
 		_set_phase_banner(my_stage, shot_text)
 	hud.set_chance(chance_level, next_chance_wave())
+	hud.set_extra_chance(not extra_chance_cfg().is_empty(), can_buy_extra_chance(), pl(local_player).extra_chance)
 	if rogue != null:
 		var every := int(Rogue.rules().get("every", 10))
 		var next := (floori(wave_index / float(every)) + 1) * every if every > 0 else -1

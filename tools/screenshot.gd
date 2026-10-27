@@ -19,6 +19,7 @@ extends Node
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
 ##   --welle=N               nächste Welle ist Welle N (Debug-Sprung)
 ##   --phase=bau|wahl|welle  Stand für das Bild (Standard bau); welle startet die Welle
+##   --extra                 Fenster Extra Chance offen (Bauphase)
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
 ##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
@@ -116,6 +117,8 @@ func _ready() -> void:
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
+	if opts.has("extra") and scene == "spiel":
+		node.hud.extra_chance_requested.emit()
 	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
 		if scene == "maul":
 			node.hud.toggle_debug()

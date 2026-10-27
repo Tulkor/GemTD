@@ -7,6 +7,7 @@ signal option_chosen(index: int)
 ## Hover über eine Aktion mit neuer Reichweite (Upgrade, Kombinieren …); 0 = Vorschau aus
 signal preview_range_requested(radius: float)
 signal round_gem_selected(index: int)
+signal extra_chance_requested
 signal speed_selected(factor: float)
 signal menu_requested
 ## Rückfrage beim Verlassen: speichern und verlassen / ohne Speichern verlassen (quit: Fenster schließen)
@@ -52,6 +53,8 @@ var game_over_boss: Label        ## Endboss-Schadenscheck
 var game_over_table: GridContainer  ## Punkte-Modus: Punkte nach Wellentyp
 var editor_button: Button
 var chance_value: Label
+var extra_chance_button: Button
+var extra_chance_panel: ExtraChancePanel
 var _boons_value: Label = null  ## Roguelike: Anzahl Boni (set_boons)
 var title_label: Label
 var recipes_button: Button
@@ -177,6 +180,8 @@ func _ready() -> void:
 
 	recipe_book = RecipeBook.new()
 	root.add_child(recipe_book)
+	extra_chance_panel = ExtraChancePanel.new()
+	root.add_child(extra_chance_panel)
 	_build_game_over()
 	_build_leave_confirm()
 	recipe_book.pins_changed.connect(_refresh_pinned)
@@ -210,6 +215,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_ESCAPE:
 			if recipe_book.visible:
 				recipe_book.close()
+			elif extra_chance_panel.visible:
+				extra_chance_panel.hide()
 			elif help_panel.visible:
 				help_panel.hide()
 			else:
@@ -301,6 +308,8 @@ func _build_top_bar() -> void:
 	path_value = _chip("Weg", h)
 	path_value.get_parent().get_parent().tooltip_text = "Länge des Laufwegs der Bodengegner in Feldern (ein Tower ist 2 Felder breit).\nIn Klammern: wie viel länger der Weg in dieser Bauphase geworden ist."
 	chance_value = _chip("Chance", h)
+	extra_chance_button = _button("Extra Chance", h, func(): extra_chance_requested.emit())
+	extra_chance_button.tooltip_text = "Eine Gem-Sorte wählen: jeder Gem dieser Runde wird mit erhöhter Chance zu ihrem Perfekten."
 	var fill := Control.new()
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(fill)
@@ -685,6 +694,15 @@ func set_chance(level: int, next_wave: int) -> void:
 	var host: TooltipHost = chance_value.get_parent().get_parent()
 	host.tooltip_text = tip
 	host.make = _chance_tooltip.bind(level, next_wave)
+
+
+## Knopf Extra Chance in der Leiste oben: shown = Modus hat sie, can_buy = jetzt kaufbar, active = gewählte Sorte.
+func set_extra_chance(shown: bool, can_buy: bool, active: String) -> void:
+	extra_chance_button.visible = shown
+	extra_chance_button.disabled = not can_buy and active == ""
+	extra_chance_button.text = tr("Extra: %s") % tr(str(Database.towers[active].get("name", active))) if active != "" else tr("Extra Chance")
+	if active == "" and not can_buy and extra_chance_panel.visible:
+		extra_chance_panel.hide()
 
 
 ## Verzierter Tooltip der Chance-Stufe: Prozent pro Qualität als Balken, darunter die nächste Stufe.

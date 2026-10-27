@@ -143,6 +143,9 @@ Zauber wie Frostnova, Blitz oder Messerfächer sind als „nova“ (Flächenscha
 das Teleportieren der Platten (im Original einmal bis 2000 Einheiten weit) ist „Verschieben“: jede Platte darf zweimal
 an einen beliebigen begehbaren Platz (`trap_moves` in `data/balance.json`); „Tauschen“ des Schwarzen Opals kostet 200 Gold
 (`swap_cost` in der Tower-Datei) und tauscht den Platz mit einem eigenen fertigen Gem oder einem Stein;
+„Extra Chance“ (Knopf oben neben der Chance-Stufe, 175 Gold, einmal pro Runde in der Bauphase): eine Gem-Sorte wählen,
+jeder Gem, der in dieser Runde noch gesetzt wird, wird mit 5,95 % Chance zu ihrem Perfekten (`extra_chance` in
+`data/balance.json`; die Platten-Variante des Originals entfällt, weil Platten hier aus Gems kombiniert werden);
 Ein Tower ist 128 WC3-Einheiten breit und belegt 2×2 Felder; ein Feld sind 64 WC3-Einheiten.
 
 ## Datenformate
