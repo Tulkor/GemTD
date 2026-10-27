@@ -185,6 +185,9 @@ func _prepare(game: Node) -> void:
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
 		return
+	if game.has_method("roll_start"):
+		await _prepare_youtd(game)
+		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
 		game._select(game.round_towers[0])
@@ -414,6 +417,42 @@ func _prepare_eeve(game: Node) -> void:
 	while t < wait:
 		await get_tree().process_frame
 		t += get_process_delta_time()
+
+
+## YouTD: Elemente erforschen, entlang der ersten Bahnen verschiedene Tower setzen, Items ins Lager, Welle 1 läuft.
+## Mit --einstellungen bleibt das Einstellungsfenster offen.
+func _prepare_youtd(game: Node) -> void:
+	if not game.setup_done:
+		return
+	for el in ["nature", "fire", "ice", "astral", "darkness", "iron", "storm"]:
+		game.elements[el] = 4
+	game.gold = 5000
+	game.tomes = 120
+	var ids := ["1", "41", "439", "474", "498", "673"]
+	for el in ["fire", "ice", "astral", "darkness", "iron", "storm"]:
+		var list: Array = YoutdRoll._group(true, el, "common")
+		ids.append_array(list.slice(0, 2))
+	var x := 8
+	for i in ids.size():
+		var cell := Vector2i(x, 12 if i % 2 == 0 else 22)
+		game.debug_place(str(ids[i]), cell)
+		if i % 2 == 1:
+			x += 4
+	game.debug_used = false
+	game.stash = YoutdRoll.with_count(game, 5)
+	game.item_stash = ["2", "3", "1001", "11", "12"]
+	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
+	print("YOUTD vorbereitet ", Time.get_ticks_msec())
+	game.submit({"type": "next_wave"})
+	Engine.time_scale = 8.0
+	for i in 40:
+		await get_tree().process_frame
+	Engine.time_scale = 1.0
+	print("YOUTD Welle ", Time.get_ticks_msec())
+	if opts.has("auswahl"):
+		game._select(game.towers.get(Vector2i(12, 12)))
+	game._refresh_hud()
+	await _frames(3)
 
 
 ## --treffer: warten, bis ein Treffer leuchtet. Die Spielzeit läuft dabei langsam (Xvfb rendert nur wenige

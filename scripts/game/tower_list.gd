@@ -157,7 +157,8 @@ func refresh() -> void:
 ## Spezial-Tower, die t zusammen mit anderen fertigen Towern auf dem Feld ergeben würde (Namen).
 ## Kombinieren geht nur während der Welle, markiert wird aber immer, damit man es planen kann.
 func combos(t, field: Array = []) -> Array:
-	if game == null or not is_instance_valid(t) or t.is_new or str(t.def.get("category", "gem")) == "eeve":
+	if game == null or not is_instance_valid(t) or t.is_new or str(t.def.get("category", "gem")) == "eeve" \
+			or t.tower_id.begins_with("youtd_"):
 		return []
 	if field.is_empty():
 		field = towers()

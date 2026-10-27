@@ -1,0 +1,23 @@
+[
+	{"id":"blademaster","name":"Blademaster","tier":"beginner","level":0},
+	{"id":"queen","name":"Queen of the Seven Skies","tier":"beginner","level":0},
+	{"id":"adventurer","name":"Adventurer","tier":"beginner","level":0},
+	{"id":"iron_maiden","name":"Iron Maiden","tier":"beginner","level":0},
+	{"id":"farseer","name":"Farseer","tier":"beginner","level":0},
+	{"id":"elementalist","name":"Elementalist","tier":"advanced","level":5},
+	{"id":"veteran_pilot","name":"Veteran Pilot","tier":"advanced","level":5},
+	{"id":"royal_assassin","name":"Royal Assassin","tier":"advanced","level":5},
+	{"id":"benevolent_witch","name":"Benevolent Witch","tier":"advanced","level":5},
+	{"id":"spirit_warden","name":"Spirit Warden","tier":"advanced","level":5},
+	{"id":"master","name":"Master of Encyclopedic Wisdom","tier":"advanced","level":5},
+	{"id":"fender","name":"Feeble Fender","tier":"specialist","level":10},
+	{"id":"realist","name":"Realist","tier":"specialist","level":10},
+	{"id":"arch_sorceress","name":"Arch Sorceress","tier":"specialist","level":10},
+	{"id":"barbarian","name":"Barbarian Warlord","tier":"specialist","level":10},
+	{"id":"panda","name":"Panda Monk","tier":"specialist","level":10},
+	{"id":"naga","name":"Naga Time Twister","tier":"specialist","level":10},
+	{"id":"goblin","name":"Goblin Alchemist","tier":"specialist","level":10},
+	{"id":"backpacker","name":"Backpacker","tier":"specialist","level":10},
+	{"id":"maverick","name":"Maverick","tier":"hardcore","level":20},
+	{"id":"antagonizer","name":"Antagonizer","tier":"hardcore","level":20}
+]

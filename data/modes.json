@@ -30,6 +30,16 @@
 			"scene": "res://scenes/maul_game.tscn",
 			"hint": "Filiale eröffnen, Tower kaufen und aufwerten, Profi-Filialen ab 25 XP, Koop bis 8 Spieler",
 			"needs_map": false
+		},
+		{
+			"id": "youtd",
+			"name": "YouTD",
+			"ready": true,
+			"min_players": 1,
+			"max_players": 1,
+			"scene": "res://scenes/youtd_game.tscn",
+			"hint": "Elemente erforschen, Tower würfeln oder kaufen, Items sammeln, feste Wege. Spieler-XP bleibt über Partien.",
+			"needs_map": true
 		}
 	]
 }

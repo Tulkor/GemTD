@@ -83,6 +83,8 @@ static func for_tower(tower_id: String, tier: int = 0) -> Dictionary:
 	var def: Dictionary = Database.towers.get(tower_id, {})
 	if def.is_empty():
 		def = MaulData.tower(tower_id)  # Shopping-Maul-Tower stehen nicht in Database.towers
+	if def.is_empty() and tower_id.begins_with(YoutdTower.PREFIX):
+		def = YoutdTower.fx_def(tower_id)
 	var col := Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
 	var types := _ability_types(def, tier)
 	var out := {}
