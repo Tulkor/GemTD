@@ -1,0 +1,41 @@
+{
+	"id": "rg_die_hausbesetzung",
+	"name": "Die Hausbesetzung",
+	"category": "randgruppen",
+	"color": "#9bff2a",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"punks"
+		],
+		"place": 6,
+		"cost": 800,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_nietenjacke",
+			"rg_dosenwerfer",
+			"rg_pogo_taenzer",
+			"rg_sicherheitsnadel",
+			"rg_iro_kommando",
+			"rg_garagenband"
+		],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				851.0,
+				950.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

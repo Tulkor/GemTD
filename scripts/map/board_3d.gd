@@ -136,8 +136,10 @@ func _ready() -> void:
 	_ground = MeshInstance3D.new()
 	_ground_mat = ShaderMaterial.new()
 	_ground_mat.shader = load(GROUND_SHADER)
-	for key in GROUND_TEXTURES:
-		_ground_mat.set_shader_parameter(key, load(GROUND_TEXTURES[key]))
+	var textures: Dictionary = GROUND_TEXTURES.duplicate()
+	textures.merge(style.get("ground_textures", {}), true)
+	for key in textures:
+		_ground_mat.set_shader_parameter(key, load(textures[key]))
 	_ground_mat.set_shader_parameter("cell", CELL)
 	_ground_mat.set_shader_parameter("ground_alpha", ground_alpha)
 	for key in style.get("ground", {}):

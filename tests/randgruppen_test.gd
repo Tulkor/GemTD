@@ -22,7 +22,7 @@ func _ready() -> void:
 	var rules: Dictionary = Database.randgruppen
 	check(not rules.is_empty(), "data/randgruppen.json geladen")
 	var races: Array = rules.get("races", [])
-	check(races.size() == 11, "11 Rassen: %d" % races.size())
+	check(races.size() == 13, "13 Rassen (11 aus der Karte + Punks und Emos): %d" % races.size())
 	var broken := []
 	for r in races:
 		var list: Array = r.towers
@@ -35,6 +35,21 @@ func _ready() -> void:
 		if not ult.get("ultimate", false) or int(ult.get("lumber", 0)) != 1 or (ult.get("requires", []) as Array).size() != 6:
 			broken.append("Endtower von %s" % r.id)
 	check(broken.is_empty(), "jede Rasse hat 7 vorhandene Tower, der letzte ist der Endtower (1 Holz, braucht 6) %s" % [broken])
+	var looks := {}
+	for r in races:
+		looks[r.id] = str(r.get("look", {}).get("style", ""))
+	check(looks.get("punks") == "punk" and looks.get("emos") == "emo" and looks.get("hiphop") == "graffiti" and looks.get("ritter") == "clean",
+		"Look je Rasse: %s" % [looks])
+	# bunte Schrift bekommt eine schwarze Kontur, schwarze nicht
+	var box := VBoxContainer.new()
+	add_child(box)
+	var red := UiUtil.label("rot", box, 12)
+	red.add_theme_color_override("font_color", Color("e8372a"))
+	var ink := UiUtil.label("schwarz", box, 12)
+	ink.add_theme_color_override("font_color", Color("151515"))
+	PosterTheme.outline_colored(box)
+	check(red.get_theme_constant("outline_size") == 3 and ink.get_theme_constant("outline_size") == 0, "Kontur nur um bunte Schrift")
+	box.queue_free()
 	var levels: Array = rules.get("levels", [])
 	check(levels.size() == 35, "35 Level")
 	check(levels.all(func(lv): return Database.enemies.has(str(lv.enemy))), "alle Gegner der Level vorhanden")

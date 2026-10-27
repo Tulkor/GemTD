@@ -51,7 +51,11 @@
 				"rg_ramschhaendler",
 				"rg_schlussverkauf_stuermer",
 				"rg_mister_sonderpreis"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "spaetkauf",
@@ -67,7 +71,11 @@
 				"rg_energydrink",
 				"rg_dreifach_espresso",
 				"rg_der_kioskkoenig"
-			]
+			],
+			"look": {
+				"style": "graffiti",
+				"vandal": 1
+			}
 		},
 		{
 			"id": "kleingarten",
@@ -83,7 +91,11 @@
 				"rg_vereinswart",
 				"rg_rasensprenger",
 				"rg_der_obmann"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "theater",
@@ -99,7 +111,11 @@
 				"rg_buehnennebel",
 				"rg_der_regisseur",
 				"rg_der_star"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "senioren",
@@ -115,7 +131,11 @@
 				"rg_bingo_runde",
 				"rg_kurschatten",
 				"rg_der_stammtisch_praesident"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "zocker",
@@ -131,7 +151,11 @@
 				"rg_ruhestoerer",
 				"rg_hack_and_slay_fan",
 				"rg_der_clanchef"
-			]
+			],
+			"look": {
+				"style": "graffiti",
+				"vandal": 1
+			}
 		},
 		{
 			"id": "buero",
@@ -147,7 +171,11 @@
 				"rg_boersenhai",
 				"rg_alleinunterhalter",
 				"rg_der_aufsichtsrat"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "ritter",
@@ -163,7 +191,11 @@
 				"rg_burgtor",
 				"rg_der_burgherr",
 				"rg_der_ritterkoenig"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
 		},
 		{
 			"id": "hiphop",
@@ -179,7 +211,11 @@
 				"rg_die_cypher",
 				"rg_bassbox",
 				"rg_das_label"
-			]
+			],
+			"look": {
+				"style": "graffiti",
+				"vandal": 3
+			}
 		},
 		{
 			"id": "wg",
@@ -195,7 +231,11 @@
 				"rg_ruhestoerer",
 				"rg_die_professorin",
 				"rg_die_abschlussfeier"
-			]
+			],
+			"look": {
+				"style": "graffiti",
+				"vandal": 1
+			}
 		},
 		{
 			"id": "zirkus",
@@ -211,7 +251,51 @@
 				"rg_eislaeuferin",
 				"rg_dompteur",
 				"rg_der_zirkusdirektor"
-			]
+			],
+			"look": {
+				"style": "clean",
+				"vandal": 0
+			}
+		},
+		{
+			"id": "punks",
+			"name": "Punks",
+			"color": "#9bff2a",
+			"hint": "Laut, dreckig, Flächenschaden: Dosen, Pogo und eine Garagenband, die alles verlangsamt.",
+			"wc3": "",
+			"towers": [
+				"rg_nietenjacke",
+				"rg_dosenwerfer",
+				"rg_pogo_taenzer",
+				"rg_sicherheitsnadel",
+				"rg_iro_kommando",
+				"rg_garagenband",
+				"rg_die_hausbesetzung"
+			],
+			"look": {
+				"style": "punk",
+				"vandal": 3
+			}
+		},
+		{
+			"id": "emos",
+			"name": "Emos",
+			"color": "#c03aa0",
+			"hint": "Große Reichweite, viel Gift und Verlangsamung: der Weltschmerz zermürbt jeden Gegner.",
+			"wc3": "",
+			"towers": [
+				"rg_ponyfranse",
+				"rg_tagebuchschreiber",
+				"rg_eyeliner_profi",
+				"rg_mixtape",
+				"rg_regenwolke",
+				"rg_weltschmerz",
+				"rg_das_konzert_in_schwarz"
+			],
+			"look": {
+				"style": "emo",
+				"vandal": 3
+			}
 		}
 	],
 	"levels": [

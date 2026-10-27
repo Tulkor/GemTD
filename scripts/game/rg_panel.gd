@@ -65,7 +65,7 @@ func refresh() -> void:
 			_next.text += " · %d/%d %s" % [ready, here.size(), tr("bereit")]
 			_next.disabled = bool(st.ready)
 	elif not game.setup_done:
-		var missing: Array = range(game.players.size()).filter(func(i): return not game.players[i].away and not game.rp(i).chosen)
+		var missing: Array = [] if game.players.size() < 2 else range(game.players.size()).filter(func(i): return not game.players[i].away and not game.rp(i).chosen)
 		if not missing.is_empty():
 			_log.text = tr("Warte auf die Rassenwahl von: %s") % ", ".join(missing.map(func(i): return game.players[i].name))
 

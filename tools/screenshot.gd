@@ -62,6 +62,8 @@ func _ready() -> void:
 	RunHistory.path = "user://screenshot_run_history.json"
 	Profile.dir = "user://screenshot_profile"
 	Session.skip_setup = not opts.has("einstellungen")
+	if opts.has("rasse"):
+		Session.rg_choice = {"race": str(opts.rasse)}
 	FieldStyle.night = opts.has("nacht")
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false

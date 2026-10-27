@@ -234,6 +234,39 @@ Flächenschaden fast überall, eine Eisläuferin, die verlangsamt (aus dem Ultra
 | 7 | Der Zirkusdirektor | 900 | 1001–1100 | 0.3 | 3501 | 78.12 | Chaos | 1 Holz, braucht die anderen 6 |
 
 
+### Eigene Rassen: Punks und Emos (ohne Vorbild in der Karte)
+
+Wunsch von Lukas (2026-10-27). Werte an der Preiskurve der anderen Rassen ausgerichtet, stehen in
+`OWN_RACES` in `tools/wc3/randgruppen/rg_daten.py`.
+
+| Punks | Preis | Schaden | Abkl. | Reichw. | Art | Besonderes |
+|---|---|---|---|---|---|---|
+| Nietenjacke | 12 | 15–19 | 0,8 | 6,25 | pierce | |
+| Dosenwerfer | 40 | 30–42 | 1,0 | 6,25 | siege | Fläche |
+| Pogo-Tänzer | 95 | 70–90 | 0,45 | 3,5 | normal | Fläche |
+| Sicherheitsnadel | 140 | 90–120 | 0,6 | 7,4 | pierce | Gift 6/s |
+| Iro-Kommando | 220 | 140–170 | 0,5 | 6,25 | chaos | |
+| Garagenband | 420 | 260–300 | 0,6 | 7,8 | magic | Fläche, verlangsamt |
+| Die Hausbesetzung (Endtower) | 800 + 1 Holz | 851–950 | 0,3 | 23,4 | chaos | |
+
+| Emos | Preis | Schaden | Abkl. | Reichw. | Art | Besonderes |
+|---|---|---|---|---|---|---|
+| Ponyfranse | 10 | 14–18 | 0,9 | 7,8 | magic | |
+| Tagebuchschreiber | 45 | 24–30 | 1,0 | 10,9 | normal | verlangsamt |
+| Eyeliner-Profi | 90 | 70–95 | 0,8 | 9,4 | pierce | Gift 5/s |
+| Mixtape | 140 | 95–120 | 0,7 | 7,4 | spells | Fläche |
+| Regenwolke | 230 | 150–190 | 0,7 | 8,6 | magic | Fläche, verlangsamt |
+| Weltschmerz | 380 | 280–330 | 0,55 | 9,4 | chaos | Gift 8/s |
+| Das Konzert in Schwarz (Endtower) | 780 + 1 Holz | 851–950 | 0,3 | 23,4 | chaos | |
+
+### Look je Rasse
+
+Die Plakatwand wird bei passenden Rassen „vandalisiert“ (`races[].look` in `data/randgruppen.json`, gezeichnet von
+`scripts/ui/rg_vandal.gd`): Graffiti-Tags mit Farbnasen (Hip-Hop-Crew stark; WG, Zocker, Spätkauf leicht), Punks mit
+Klebeband, Stickern und Parolen in tropfender Schrift, Emos mit Herzen, Sternen und Kritzeleien. Das Startfenster
+nimmt den Look der gewählten Rasse an. Schriften: Sedgwick Ave Display, Rubik Wet Paint, Pirata One (SIL OFL).
+Bunte Schrift hat überall eine dünne schwarze Kontur (`PosterTheme.outline_colored`).
+
 ## Level
 
 „Je Spawn“: Anzahl an jedem oberen Spawn / an den zwei Mitte-Spawns / an den zwei unteren Spawns. Bei einem
@@ -302,7 +335,9 @@ Spiel; die Fernseh-Rasse wäre ein Kandidat für eine 12. Rasse mit eigenem Name
   Ein Level früher starten geht erst, wenn alle bereit sind, sonst nach Ablauf der Pause. Gegner kommen nur an
   den Bahnen der besetzten Zonen.
 - **Aussehen:** Tower als Stadthäuser (CC0, `assets/models/city/`), höher je teurer (Einfärben in der Rassenfarbe
-  folgt). Gegner vorerst die vorhandenen Monster-Modelle. Spielfeld vorerst im Neon-Look von GemTD.
+  folgt). Gegner vorerst die vorhandenen Monster-Modelle. Spielfeld (FieldStyle POSTER): hellgrauer Beton mit ein
+  paar Steinen, Splitt auf den Wegen (selbst erzeugt, `tools/rg_texturen.py`), die Wände sind Häuserblocks und
+  Parkbäume (`scripts/map/rg_scenery.gd`).
 - **Oberflächenstil „Plakatwand“** (Lukas, 2026-10-26): Papierflächen, schwarzer 3-px-Rahmen, harter roter Schatten,
   Signalrot für die Hauptaktion, Textmarker-Gelb für Auswahl. Titel Bowlby One, Text Courier Prime (beide SIL OFL,
   `assets/fonts/`). Umgesetzt als Skin `UiTheme.POSTER` (`scripts/ui/poster_theme.gd`).

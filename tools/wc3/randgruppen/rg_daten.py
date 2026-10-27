@@ -50,6 +50,39 @@ RACES = [
     ("u00B", "wg", "Studenten-WG", "#7ad0a0", "Große Reichweite, Gift und eine Professorin mit Flächenschaden."),
     ("n016", "zirkus", "Wanderzirkus", "#ffd060", "Flächenschaden fast überall, eine Eisläuferin, die verlangsamt (aus dem UltraMods-Zusatz)."),
 ]
+# Eigene Rassen ohne Vorbild in der Karte (Wunsch von Lukas, 2026-10-27), Werte an der Preiskurve der anderen
+# ausgerichtet: (id, Name, Farbe, Kurzbeschreibung, [(Name, Preis, Schaden von, bis, Abklingzeit, Reichweite in
+# Towerbreiten, Schadensart, Fähigkeiten), …]; der letzte ist der Endtower (1 Holz).
+SPLASH = lambda r, f=0.5: {"type": "splash", "radius": r, "factor": f}
+SLOW = lambda f, d: {"type": "slow", "factor": f, "duration": d}
+POISON = lambda dps, d=4.0: {"type": "poison", "dps": dps, "duration": d}
+OWN_RACES = [
+    ("punks", "Punks", "#9bff2a", "Laut, dreckig, Flächenschaden: Dosen, Pogo und eine Garagenband, die alles verlangsamt.", [
+        ("Nietenjacke", 12, 15, 19, 0.8, 6.25, "pierce", []),
+        ("Dosenwerfer", 40, 30, 42, 1.0, 6.25, "siege", [SPLASH(0.94)]),
+        ("Pogo-Tänzer", 95, 70, 90, 0.45, 3.5, "normal", [SPLASH(0.8)]),
+        ("Sicherheitsnadel", 140, 90, 120, 0.6, 7.4, "pierce", [POISON(6.0)]),
+        ("Iro-Kommando", 220, 140, 170, 0.5, 6.25, "chaos", []),
+        ("Garagenband", 420, 260, 300, 0.6, 7.8, "magic", [SPLASH(1.5, 0.6), SLOW(0.25, 3.0)]),
+        ("Die Hausbesetzung", 800, 851, 950, 0.3, 23.438, "chaos", []),
+    ]),
+    ("emos", "Emos", "#c03aa0", "Große Reichweite, viel Gift und Verlangsamung: der Weltschmerz zermürbt jeden Gegner.", [
+        ("Ponyfranse", 10, 14, 18, 0.9, 7.8, "magic", []),
+        ("Tagebuchschreiber", 45, 24, 30, 1.0, 10.9, "normal", [SLOW(0.25, 4.0)]),
+        ("Eyeliner-Profi", 90, 70, 95, 0.8, 9.4, "pierce", [POISON(5.0)]),
+        ("Mixtape", 140, 95, 120, 0.7, 7.4, "spells", [SPLASH(0.94)]),
+        ("Regenwolke", 230, 150, 190, 0.7, 8.6, "magic", [SPLASH(1.2), SLOW(0.35, 3.0)]),
+        ("Weltschmerz", 380, 280, 330, 0.55, 9.4, "chaos", [POISON(8.0)]),
+        ("Das Konzert in Schwarz", 780, 851, 950, 0.3, 23.438, "chaos", []),
+    ]),
+]
+# Wie verschmiert die Oberfläche bei welcher Rasse aussieht (RgVandal): Stil und Stärke 0–3.
+LOOKS = {
+    "hiphop": {"style": "graffiti", "vandal": 3}, "punks": {"style": "punk", "vandal": 3},
+    "emos": {"style": "emo", "vandal": 3}, "wg": {"style": "graffiti", "vandal": 1},
+    "zocker": {"style": "graffiti", "vandal": 1}, "spaetkauf": {"style": "graffiti", "vandal": 1},
+}
+
 # Tower: WC3-ID -> Name
 NAMES = {
     "o001": "Wühltisch-Kunde", "o01K": "Coupon-Sammler", "o002": "Sperrmüll-Sammler", "o01M": "Flohmarkt-Profi",
@@ -331,6 +364,23 @@ def main():
                 continue
             req = [TOWER_ID[i] for i in rest] if uid == ult else []
             towers[uid] = tower_json(uid, [(builder, rid, name, color)], place, uid == ult, req)
+    for rid, name, color, hint, tlist in OWN_RACES:
+        ids = []
+        for place, (tname, cost, lo, hi, cd, rng, dtype, abil) in enumerate(tlist):
+            ult = place == len(tlist) - 1
+            tid = slug(tname)
+            ids.append(tid)
+            towers[tid] = {
+                "id": tid, "name": tname, "category": "randgruppen", "color": color,
+                "model": "res://assets/models/city/%s.glb" % MODELS[place], "model_tint": False, "model_solid": True,
+                "model_scale": 0.42 + 0.03 * place, "damage_type": dtype, "targets": "both",
+                "rg": {"races": [rid], "place": place, "cost": cost, "lumber": 1 if ult else 0, "ultimate": ult,
+                       "requires": ids[:-1] if ult else [], "wc3": ""},
+                "tiers": [{"damage": [float(lo), float(hi)], "range": rng, "cooldown": cd, "abilities": abil}],
+            }
+        races.append({"id": rid, "name": name, "color": color, "hint": hint, "wc3": "", "towers": ids})
+    for race in races:
+        race["look"] = LOOKS.get(race["id"], {"style": "clean", "vandal": 0})
     lv = levels()
     enemies = {}
     for x in lv:

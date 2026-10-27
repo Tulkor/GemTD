@@ -133,3 +133,23 @@ static func accent_button(b: Button, bg: Color, fg: Color) -> void:
 	var c := Color(COLORS.PANEL) if fg == COLORS.GOLD_DARK and bg.get_luminance() < 0.45 else fg
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		b.add_theme_color_override(k, c)
+
+
+## Bunte Schrift bekommt eine dünne schwarze Kontur, damit sie auf dem Papier lesbar bleibt (Wunsch von Lukas).
+## Prüft alle Labels und Knöpfe unter root nach ihrer aktuellen Schriftfarbe; schwarze und graue Schrift bleibt ohne.
+static func outline_colored(root: Node) -> void:
+	for n in root.find_children("*", "Control", true, false):
+		var c := n as Control
+		if not (c is Label or c is Button) or not c.is_visible_in_tree():
+			continue
+		var col: Color = c.get_theme_color("font_color")
+		var colored := col.s > 0.3 and col.v > 0.35
+		var has := c.has_theme_constant_override("outline_size") and c.has_meta("poster_outline")
+		if colored and not has:
+			c.set_meta("poster_outline", true)
+			c.add_theme_constant_override("outline_size", 3)
+			c.add_theme_color_override("font_outline_color", Color(0.08, 0.08, 0.08, 0.85))
+		elif not colored and has:
+			c.remove_meta("poster_outline")
+			c.remove_theme_constant_override("outline_size")
+			c.remove_theme_color_override("font_outline_color")

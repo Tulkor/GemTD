@@ -24,6 +24,8 @@ var lumber: int:
 	set(v):
 		rp().lumber = v
 var rg_panel: RgPanel
+var _outline_timer := 0.0
+var _vandal_race := ""   ## Rasse, für die die Verschmierungen zuletzt gezeichnet wurden
 
 
 func _ready() -> void:
@@ -40,6 +42,7 @@ func _ready() -> void:
 		for p in players:
 			p.gold = start_gold()
 		level_pause = float(rules.get("first_pause", 60))
+	RgScenery.add_to(self)
 	_focus_own_zone()
 	_style_hud()
 	_refresh_hud()
@@ -85,6 +88,27 @@ func _setup_debug() -> void:
 	hud.debug_wave_hint.text = tr("Läuft gerade ein Level, wird es abgebrochen und das gewählte startet sofort. In der Pause kommt es als nächstes.")
 	hud.debug_pick_caption.hide()
 	hud.debug_option.hide()
+
+
+## Alle Panels des HUD im Look der eigenen Rasse verschmieren (Graffiti, Punk, Emo oder sauber).
+func apply_vandal() -> void:
+	_vandal_race = str(rp(local_player).race)
+	var look: Dictionary = race(_vandal_race).get("look", {})
+	var i := 0
+	for n in hud.find_children("*", "PanelContainer", true, false):
+		if n.has_meta("own_vandal") or _inside_panel(n):
+			continue  # nur äußere Fenster, keine Kästchen darin
+		i += 1
+		RgVandal.apply(n, look, i)
+
+
+func _inside_panel(n: Node) -> bool:
+	var p := n.get_parent()
+	while p != null and p != hud:
+		if p is PanelContainer:
+			return true
+		p = p.get_parent()
+	return false
 
 
 func rp(p := -1) -> Dictionary:
@@ -243,6 +267,13 @@ func set_player_away(p: int, away: bool) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	# bunte Schrift mit Kontur, Verschmierungen passend zur eigenen Rasse (beides nur Anzeige)
+	_outline_timer -= delta / maxf(Engine.time_scale, 0.01)
+	if _outline_timer <= 0.0 and hud != null:
+		_outline_timer = 0.4
+		PosterTheme.outline_colored(hud)
+		if str(rp(local_player).race) != _vandal_race:
+			apply_vandal()
 	if phase == Phase.BUILD and setup_done and not mirror:
 		level_pause -= delta
 		if level_pause <= 0.0:
