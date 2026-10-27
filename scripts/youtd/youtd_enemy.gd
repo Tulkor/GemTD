@@ -9,6 +9,8 @@ var level := 1               ## Welle, aus der er stammt
 var creep_size := "normal"
 var race := "orc"
 var specials: Array = []     ## Eigenschaften, die für ihn gelten
+var base_hp := 0.0           ## Grundleben vor den Eigenschaften (Spielstand)
+var base_armor := 0.0
 var core: YtCreep = null
 
 
@@ -26,23 +28,9 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 	var hp_value := float(w.hp) * float(sz.get("hp", 1.0)) * (1.0 + YoutdWaves.hp_modifier(specials)) * hp_factor
 	if hp_override > 0.0:
 		hp_value = hp_override
-	var boss_like := size_id == "boss" or size_id == "challenge_boss"
-	var def := {
-		"id": "youtd_" + size_id,
-		"hp": hp_value,
-		"speed": YoutdData.units(YtConstants.DEFAULT_MOVE_SPEED),
-		"armor": float(w.armor),
-		"armor_type": str(w.armor_type),
-		"bounty": 0,
-		"damage": 0,
-		"flying": size_id == "air",
-		"boss": boss_like,
-		"color": _race_color(race),
-		"size": _visual_size(size_id),
-	}
-	if size_id == "mass" or size_id == "challenge_mass":
-		def["shape"] = "pyramid"
-	setup(g, def, {}, p)
+	base_hp = hp_value
+	base_armor = float(w.armor)
+	setup(g, def_for(size_id, race, hp_value, float(w.armor), str(w.armor_type)), {}, p)
 	core = YtCreep.new()
 	core.body = self
 	core.set_properties(YtPlayer.of(lane), YtCreepSize.from_string(size_id.replace("_", " ")), YtArmorType.from_string(armor_type),
@@ -50,6 +38,26 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 	add_child(core)
 	YtWaveSpecial.apply_to_creep(specials, core)
 	core.set_health(core.get_overall_health())
+
+
+## Werte für Enemy.setup; Mitspieler im Koop legen ihre Anzeige-Gegner damit an (youtd_game.gd → enemy_def).
+static func def_for(size_id: String, race_id: String, hp_value: float, armor_value: float, armor_type_id: String) -> Dictionary:
+	var d := {
+		"id": "youtd_%s:%s" % [size_id, race_id],
+		"hp": hp_value,
+		"speed": YoutdData.units(YtConstants.DEFAULT_MOVE_SPEED),
+		"armor": armor_value,
+		"armor_type": armor_type_id,
+		"bounty": 0,
+		"damage": 0,
+		"flying": size_id == "air",
+		"boss": size_id == "boss" or size_id == "challenge_boss",
+		"color": _race_color(race_id),
+		"size": _visual_size(size_id),
+	}
+	if size_id == "mass" or size_id == "challenge_mass":
+		d["shape"] = "pyramid"
+	return d
 
 
 static func _visual_size(size_id: String) -> float:

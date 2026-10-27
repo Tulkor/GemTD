@@ -71,6 +71,7 @@ var xp_result := {}
 var youtd_panel: YoutdPanel
 var scenery: EeveScenery
 var world: YtWorld           ## Laufzeit von YouTD 2 (Takt, Geschosse, Effekte)
+var _pending_load := {}      ## YouTD-Teil eines Spielstands, bis YtWorld steht
 
 
 func _ready() -> void:
@@ -87,7 +88,10 @@ func _ready() -> void:
 	YtWorld.game = self
 	world.add_child(YtWaveSpecial.new())
 	_style_hud()
-	if setup_done and waves.is_empty():
+	if not _pending_load.is_empty():
+		YoutdSave.restore(self, _pending_load)
+		_pending_load = {}
+	elif setup_done and waves.is_empty():
 		# ohne Einstellungsfenster (Session.skip_setup, Screenshots): Standardwerte
 		setup_done = false
 		_apply_setup({"mode": mode_index, "length": length_index, "difficulty": difficulty, "wisdom": YoutdProgress.wisdom()})
@@ -146,7 +150,18 @@ func _apply_variance() -> void:
 
 
 func save_mode() -> String:
-	return "none"
+	return super.save_mode() if setup_done else "none"
+
+
+# --- Spielstand (save_game.gd, youtd_save.gd) ----------------------------------------
+
+func save_extra() -> Dictionary:
+	return YoutdSave.capture(self)
+
+
+## SaveGame.apply läuft vor dem Aufbau von YtWorld: den YouTD-Teil erst danach übernehmen (_ready).
+func load_extra(d: Dictionary, _made: Array) -> void:
+	_pending_load = d
 
 
 func _execute(cmd: Dictionary) -> bool:
