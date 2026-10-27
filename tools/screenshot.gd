@@ -442,13 +442,11 @@ func _prepare_youtd(game: Node) -> void:
 	game.stash = YoutdRoll.with_count(game, 5)
 	game.item_stash = ["2", "3", "1001", "11", "12"]
 	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
-	print("YOUTD vorbereitet ", Time.get_ticks_msec())
 	game.submit({"type": "next_wave"})
 	Engine.time_scale = 8.0
 	for i in 40:
 		await get_tree().process_frame
 	Engine.time_scale = 1.0
-	print("YOUTD Welle ", Time.get_ticks_msec())
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
 	game._refresh_hud()

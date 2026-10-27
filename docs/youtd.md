@@ -114,6 +114,7 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 | Etappe | Inhalt |
 |---|---|
 | **1 (diese PR)** | Modus im Hub, Karte mit festem Weg, Startfenster, Wellen-Generator 1:1 inkl. Rüstungstypen, HP-Formel, Champions, Challenges und Specials (die mit reinen Werten: Speed, Rüstung, Ausweichen, Regeneration, Strong, Flock, Unsichtbar), alle 690 Tower mit Grundwerten, Elemente + Bücher, drei Spielmodi mit Würfeln, Food, Tower-XP, Spieler-XP + Level + Weisheits-Boni im Profil, Items mit reinen Werten + Öle, Druidenhain-Optik |
+| | Noch nicht in Etappe 1: Spielstände (Speichern/Laden), Verbrauchsgegenstände (fallen noch nicht), Wellen-Eigenschaften ohne eigene Wirkung zählen nur mit ihrem Lebens-Faktor, Tower mit Skript schießen nur normal |
 | 2 | Tower-Fähigkeiten portieren, Familie für Familie (häufigste zuerst), restliche Gegner-Specials |
 | 3 | Item-Skripte, Horadrischer Würfel, Baumeister mit Sonderregeln, Koop |
 
@@ -122,7 +123,11 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 - `data/modes.json`: Eintrag `youtd` mit eigener Szene `scenes/youtd_game.tscn`.
 - `tools/youtd/youtd_daten.py` erzeugt aus den CSV-Dateien `data/youtd/towers.json`, `items.json`, `specials.json`,
   `xp.json`; Regeln von Hand in `data/youtd/rules.json`.
-- `scripts/youtd/`: `youtd_game.gd` (erweitert game.gd wie eeveTD), `youtd_waves.gd` (Wellen-Generator),
-  `youtd_tower.gd`, `youtd_items.gd`, `youtd_profile.gd` (XP, Level, Weisheit), Oberfläche im Druidenhain-Stil.
+- `scripts/youtd/`: `youtd_game.gd` (erweitert game.gd wie eeveTD, Befehle `setup`, `research`, `roll`, `build`,
+  `item_put`, `next_wave`, `option`), `youtd_waves.gd` (Wellen-Generator), `youtd_roll.gd` (Tower würfeln, Item-Drops),
+  `youtd_tower.gd`, `youtd_enemy.gd`, `youtd_data.gd` (Daten laden), `youtd_progress.gd` (Spieler-XP, Level, Weisheit im
+  Profil unter `modes.youtd.progress`), `youtd_panel.gd` (Seitenleiste), `youtd_setup_panel.gd` (Startfenster).
 - Karte `data/maps/youtd.json` (`game: "youtd"`), Weg fest über Wegpunkte, Bauflächen daneben.
-- Test `tests/youtd_test.gd`, Bild `tools/screenshot.sh --map=youtd`.
+- Test `tools/run_tests.sh youtd`, Bild `tools/screenshot.sh --map=youtd [--auswahl] [--einstellungen]`
+  (unter Xvfb langsam, etwa 3 Minuten).
+- Quellen und MIT-Lizenz: `data/youtd/QUELLEN.md`.
