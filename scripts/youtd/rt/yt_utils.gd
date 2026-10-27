@@ -38,6 +38,8 @@ static func create_manual_timer(duration: float, parent: Node) -> YtManualTimer:
 		parent.tree_exiting.connect(timer.expire, CONNECT_ONE_SHOT)
 		timer.start(duration)
 	else:
+		# Besitzer schon weg (Schleife nach dem Ablaufen oben): gleich danach ablaufen, damit die Schleife endet
+		timer.timeout.emit.call_deferred()
 		timer.queue_free()
 	return timer
 
