@@ -33,6 +33,9 @@ static func create_manual_timer(duration: float, parent: Node) -> YtManualTimer:
 		host.add_child(timer)
 		timer.one_shot = true
 		timer.timeout.connect(timer.queue_free)
+		# Verlässt der Besitzer das Feld, läuft der Timer sofort ab: die wartende Funktion endet noch, solange es sie
+		# gibt (die Skripte prüfen danach unit_is_valid). Sonst bliebe sie samt Event als Speicherleck übrig.
+		parent.tree_exiting.connect(timer.expire, CONNECT_ONE_SHOT)
 		timer.start(duration)
 	else:
 		timer.queue_free()

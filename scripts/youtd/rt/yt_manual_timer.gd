@@ -52,6 +52,13 @@ func update(delta: float) -> void:
 		timeout.emit()
 
 
+## Sofort ablaufen lassen (Besitzer verlässt das Feld, siehe YtUtils.create_manual_timer).
+func expire() -> void:
+	if not is_queued_for_deletion() and not is_stopped():
+		stop()
+		timeout.emit()
+
+
 func is_stopped() -> bool:
 	return _stopped
 
