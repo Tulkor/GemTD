@@ -1326,5 +1326,8 @@
 	"Bringt %d Gold alle %d s aus dem Laden, noch %s von %s Gold.": "Brings %d gold every %d s from the shop, %s of %s gold left.",
 	"Ein Altenheim wirbt eine Stammkundin an, die laufend Gold aus dem Laden holt.": "A Nursing Home hires a regular customer who keeps bringing gold from the shop.",
 	"Mitten im Level wird der Stand vom Levelbeginn gespeichert.": "During a level, the state from the start of that level is saved.",
-	"Level %d/%d": "Level %d/%d"
+	"Level %d/%d": "Level %d/%d",
+	"Tauschen": "Swap",
+	"%s tauschen": "Swap %s",
+	"Eigenen Gem oder Stein anklicken, der Opal tauscht mit ihm den Platz (%d Gold).\nRechtsklick oder Esc bricht ab.": "Click one of your gems or a rock, the opal swaps places with it (%d gold).\nRight-click or Esc cancels."
 }

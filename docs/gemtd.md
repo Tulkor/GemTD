@@ -140,7 +140,9 @@ gegen einfaches Ändern schon.
 
 Vereinfachungen gegenüber WC3 (stehen auch in den Tower-Dateien als Fähigkeiten):
 Zauber wie Frostnova, Blitz oder Messerfächer sind als „nova“ (Flächenschaden mit Chance) umgesetzt;
-die Teleport-Fähigkeit der Platten, das „Swap“ des Schwarzen Opals und Extra Chance fehlen noch;
+das Teleportieren der Platten (im Original einmal bis 2000 Einheiten weit) ist „Verschieben“: jede Platte darf zweimal
+an einen beliebigen begehbaren Platz (`trap_moves` in `data/balance.json`); „Tauschen“ des Schwarzen Opals kostet 200 Gold
+(`swap_cost` in der Tower-Datei) und tauscht den Platz mit einem eigenen fertigen Gem oder einem Stein;
 Ein Tower ist 128 WC3-Einheiten breit und belegt 2×2 Felder; ein Feld sind 64 WC3-Einheiten.
 
 ## Datenformate
