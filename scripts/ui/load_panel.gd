@@ -98,8 +98,9 @@ func _row(s: Dictionary) -> void:
 	UiUtil.label(tr(str(m.get("map", "?"))), top, 17)
 
 	var diff: Dictionary = Session.DIFFICULTIES[clampi(int(m.get("difficulty", 1)), 0, Session.DIFFICULTIES.size() - 1)]
-	var line := [tr("Welle %d/%d") % [int(m.get("wave", 1)), int(m.get("waves", 0))], tr("Punkte %d") % int(m.get("score", 0)) if m.get("score_mode", false) else tr("Leben %d") % int(m.get("lives", 0)),
-		tr(str(diff.name)), _date(int(m.get("time", 0)))]
+	# Shopping Maul (maul_save.gd) zählt Level und hat eigene Schwierigkeitsnamen
+	var line := [tr(str(m.get("wave_label", "Welle %d/%d"))) % [int(m.get("wave", 1)), int(m.get("waves", 0))], tr("Punkte %d") % int(m.get("score", 0)) if m.get("score_mode", false) else tr("Leben %d") % int(m.get("lives", 0)),
+		tr(str(m.get("difficulty_name", diff.name))), _date(int(m.get("time", 0)))]
 	var info := UiUtil.label(" · ".join(line), texts, 15)
 	info.add_theme_color_override("font_color", DecoTheme.MUTED)
 	if multi:

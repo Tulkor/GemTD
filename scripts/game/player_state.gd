@@ -11,6 +11,7 @@ var round_towers: Array = []  ## in dieser Runde gesetzte Gems
 var undo_gems: Array = []     ## zurückgenommene Gems [id, tier], kommen beim nächsten Setzen wieder
 var stage := 0                ## eigener Rundenstand: Game.Phase.BUILD, CHOOSE oder WAVE (fertig, wartet auf die anderen)
 var away := false             ## Koop: nicht verbunden, hält die Runde nicht auf
+var extra_chance := ""        ## Extra Chance dieser Runde: gewählte Gem-Sorte ("" = keine), siehe game.gd
 
 
 func _init(player_id := 0, player_name := "") -> void:

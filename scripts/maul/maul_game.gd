@@ -34,6 +34,12 @@ class Player:
 	var xp_pot := 0.0
 	var research := {}        ## TOI: Forschung → Stufe
 	var aok_lives := 0        ## AOX: in diesem Level zurückgeholte Leben
+	var account := 0          ## Konto (maul_bank.gd)
+	var auto_deposit := false ## am Levelende alles Gold aufs Konto
+	var bank_level := 0       ## Bank-Upgrade im Hauptgebäude (0–3)
+	var withdraw_in := 0.0    ## laufende Überweisung: Sekunden bis zur Auszahlung (0 = keine)
+	var emma_mined := 0       ## Tante Emma: von der Stammkundin geholtes Gold
+	var emma_timer := 0.0
 	var away := false
 
 var rules: Dictionary
@@ -66,6 +72,7 @@ var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
+var level_save := {}        ## Einzelspiel: Stand vom Beginn des laufenden Levels (maul_save.gd)
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -172,6 +179,12 @@ func _ready() -> void:
 	_refresh_paths()
 	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
+	var saved: Dictionary = Session.load_state
+	Session.load_state = {}
+	if coop_info.is_empty() and not saved.is_empty():
+		MaulSave.apply(self, saved)
+	elif coop_info.is_empty():
+		Session.save_id = ""
 	if not coop_info.is_empty():
 		sync = MaulSync.new()
 		sync.game = self
@@ -266,6 +279,8 @@ func _process(delta: float) -> void:
 			Phase.WAVE:
 				_process_wave(delta)
 		_water(delta)
+		if phase < Phase.GAME_OVER and MaulBank.process(self, delta):
+			_refresh_hud()
 	elif phase == Phase.COUNTDOWN:
 		countdown = maxf(countdown - delta, 0.0)
 	_hud_timer -= delta / maxf(Engine.time_scale, 0.001)
@@ -329,6 +344,8 @@ func _start_level(n: int) -> void:
 	if n > levels.size():
 		_finish(Phase.VICTORY)
 		return
+	if sync == null:
+		level_save = MaulSave.state(self)
 	level = n
 	var lv := level_def(n)
 	level_kind = str(lv.get("kind", "ground"))
@@ -530,6 +547,7 @@ func _end_level() -> void:
 		if shop_of(t.owner_player) == "obi":
 			t.value = floori(t.value * 0.99)
 	_fitness_upkeep()
+	var bank_text := MaulBank.end_level(self)
 	run_stats.wave_done(_my_towers(), n, level_lost)
 	if n >= levels.size():
 		_finish(Phase.VICTORY)
@@ -540,12 +558,16 @@ func _end_level() -> void:
 		show_message(tr(str(rules.get("level_40_text", ""))), 8.0)
 	else:
 		countdown = float(rules.level_delay)
-		show_message(tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)], 4.0)
+		var done_text: String = tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
+		show_message(done_text + ("\n" + bank_text if bank_text != "" else ""), 4.0)
 	_refresh_hud()
 
 
 func _finish(p: Phase) -> void:
 	phase = p
+	if sync == null and Session.save_id != "":
+		SaveGame.remove(Session.save_id)
+		Session.save_id = ""
 	Engine.time_scale = 1.0
 	build_id = ""
 	_record_profile(p == Phase.VICTORY)
@@ -1146,6 +1168,8 @@ func _execute(cmd: Dictionary) -> bool:
 			me.reveal_until = game_time + float(rules.reveal.duration)
 			me.reveal_ready = game_time + float(rules.reveal.cooldown)
 			return true
+		"deposit", "withdraw", "auto_deposit", "bank_upgrade":
+			return MaulBank.execute(self, p, str(cmd.type))
 		"bonus":
 			var me: Player = players[p]
 			var kind := str(MaulData.shop(me.shop).get("bonus", ""))

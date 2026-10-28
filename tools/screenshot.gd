@@ -2,7 +2,7 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
-##   --seite=single|history|profile|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --seite=single|history|profile|credits|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
@@ -19,6 +19,7 @@ extends Node
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
 ##   --welle=N               nächste Welle ist Welle N (Debug-Sprung)
 ##   --phase=bau|wahl|welle  Stand für das Bild (Standard bau); welle startet die Welle
+##   --extra                 Fenster Extra Chance offen (Bauphase)
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
 ##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
@@ -120,6 +121,8 @@ func _ready() -> void:
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
+	if opts.has("extra") and scene == "spiel":
+		node.hud.extra_chance_requested.emit()
 	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
 		if scene == "maul":
 			node.hud.toggle_debug()

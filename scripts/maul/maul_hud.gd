@@ -46,6 +46,7 @@ var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
+var _save_button: Button
 var settings_panel: SettingsPanel
 var _debug: MaulDebug
 var _debug_button: Button
@@ -168,7 +169,12 @@ func _build_menu() -> void:
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
 	UiUtil.button("Einstellungen", box, func(): settings_panel.open())
 	if game.sync == null:
-		UiUtil.button("Neu starten", box, func(): Session.goto(Session.MAUL))
+		var save := UiUtil.button("Speichern und verlassen", box, _save_and_leave)
+		save.tooltip_text = "Mitten im Level wird der Stand vom Levelbeginn gespeichert."
+		_save_button = save
+		UiUtil.button("Neu starten", box, func():
+			Session.save_id = ""
+			Session.goto(Session.MAUL))
 	UiUtil.button("Hauptmenü", box, func(): Session.goto(Session.MAIN_MENU))
 	_menu = panel
 	settings_panel = SettingsPanel.new(false, true)
@@ -181,6 +187,17 @@ func toggle_menu() -> void:
 		settings_panel.close()
 	else:
 		_menu.visible = not _menu.visible
+		if _save_button != null:
+			_save_button.text = tr("Speichern und verlassen")
+			_save_button.disabled = MaulSave.capture(game).is_empty()
+
+
+## Einzelspiel speichern (maul_save.gd) und zurück ins Hauptmenü.
+func _save_and_leave() -> void:
+	if MaulSave.save(game):
+		Session.goto(Session.MAIN_MENU)
+	else:
+		_save_button.text = tr("Speichern fehlgeschlagen")
 
 
 # --- Laden rechts -----------------------------------------------------------------
@@ -297,6 +314,45 @@ func _refresh_xpert() -> void:
 		cost.add_theme_font_size_override("font_size", 11 if why != "" else 13)
 
 
+## Konto im Hauptgebäude (maul_bank.gd): Einzahlen, Abheben, Auto-Einzahlen, Bank-Upgrade.
+## Die Deutsche Bank hat kein Konto und sieht stattdessen ihren Anteil; Tante Emma sieht die Stammkundin.
+func _build_bank(me: MaulGame.Player) -> void:
+	UiTheme.caption("Konto", _main_box)
+	var width := SHOP_WIDTH - 24
+	if me.shop == MaulBank.OWNER:
+		var l := UiUtil.wrap_label(tr("Kein eigenes Konto. Am Levelende 5 %% aller Konten: jetzt %s Gold (alle Konten %s Gold).") % [MaulHud.big(MaulBank.owner_income(game)), MaulHud.big(MaulBank.total(game))], _main_box, width)
+		l.add_theme_font_size_override("font_size", 13)
+	else:
+		var info := UiUtil.wrap_label(tr("Kontostand %s Gold, %d %% Zinsen am Levelende (höchstens auf %s Gold).") % [MaulHud.big(me.account), roundi(MaulBank.rate(me) * 100.0), MaulHud.big(int(MaulBank.cfg().get("cap", 5000)))], _main_box, width)
+		info.add_theme_font_size_override("font_size", 13)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_main_box.add_child(row)
+		var dep := UiUtil.button(tr("Einzahlen"), row, func(): game.submit({"type": "deposit"}))
+		dep.disabled = me.gold <= 0
+		dep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var wd := UiUtil.button(tr("Überweisung läuft") if me.withdraw_in > 0.0 else tr("Abheben (%d s)") % roundi(MaulBank.withdraw_delay(me)), row, func(): game.submit({"type": "withdraw"}))
+		wd.disabled = me.account <= 0 or me.withdraw_in > 0.0
+		wd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var auto := CheckBox.new()
+		auto.text = "Am Levelende alles einzahlen"
+		auto.button_pressed = me.auto_deposit
+		auto.toggled.connect(func(_on): game.submit({"type": "auto_deposit"}))
+		_main_box.add_child(auto)
+		var cost := MaulBank.upgrade_cost(me)
+		if cost > 0:
+			var up := UiUtil.button(tr("Bank-Upgrade %d: %s Gold") % [me.bank_level + 1, MaulHud.big(cost)], _main_box, func(): game.submit({"type": "bank_upgrade"}))
+			up.tooltip_text = tr("+2 % Zinsen, 5 s schneller abheben")
+			up.disabled = cost > me.gold
+	if me.shop == MaulBank.EMMA:
+		UiTheme.caption("Stammkundin", _main_box)
+		var e := MaulBank.emma_cfg()
+		var text := tr("Bringt %d Gold alle %d s aus dem Laden, noch %s von %s Gold.") % [int(e.get("gold_per_trip", 10)), roundi(float(e.get("trip", 10.0))), MaulHud.big(int(e.get("mine", 15000)) - me.emma_mined), MaulHud.big(int(e.get("mine", 15000)))] if MaulBank.has_customer(game, game.local_player) else tr("Ein Altenheim wirbt eine Stammkundin an, die laufend Gold aus dem Laden holt.")
+		var l := UiUtil.wrap_label(text, _main_box, width)
+		l.add_theme_font_size_override("font_size", 13)
+		l.add_theme_color_override("font_color", UiTheme.COIN)
+
+
 ## Reiter Zentrale (Hauptgebäude): Bonus-Upgrade (+5 % Schaden je Stufe) oder Rabatt (5 % zurück),
 ## beim TOI die Forschung, dazu die eigene Erfahrung.
 func _build_main() -> void:
@@ -321,6 +377,7 @@ func _build_main() -> void:
 			b.disabled = cost > me.gold
 	else:
 		UiUtil.wrap_label("Diese Filiale hat kein Bonus-Upgrade.", _main_box, SHOP_WIDTH - 24).add_theme_color_override("font_color", UiTheme.MUTED)
+	_build_bank(me)
 	if me.shop == "tui":
 		UiTheme.caption("Forschung", _main_box)
 		for id in ["range", "damage", "advanced"]:

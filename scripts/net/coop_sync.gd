@@ -20,7 +20,8 @@ const CHECK_INTERVAL := 0.05
 const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 64
 ## Befehle, die ein Mitspieler schicken darf (siehe game.gd → execute)
-const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed", "rogue_pick"]
+const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed", "rogue_pick",
+	"swap", "extra_chance"]
 
 var game  # game.gd
 var host := true
@@ -128,7 +129,7 @@ func snapshot() -> Dictionary:
 		rs.append(c.y)
 	var ps := []
 	for p in game.players:
-		ps.append({"name": p.name, "gold": p.gold, "stage": p.stage, "away": p.away,
+		ps.append({"name": p.name, "gold": p.gold, "stage": p.stage, "away": p.away, "extra_chance": p.extra_chance,
 			"round": p.round_towers.map(func(t): return game.tower_ref(t))})
 	var s := {
 		"phase": game.phase,
@@ -249,6 +250,7 @@ func apply_state(s: Dictionary) -> void:
 		p.gold = int(pd.get("gold", 0))
 		p.stage = int(pd.get("stage", 0))
 		p.away = bool(pd.get("away", false))
+		p.extra_chance = str(pd.get("extra_chance", ""))
 		p.round_towers = pd.get("round", []).map(func(r): return g.tower_from_ref(r)).filter(func(t): return t != null)
 	# Gemeinsames
 	g.wave_index = int(s.get("wave", 0))
