@@ -154,6 +154,16 @@ func _gui_input(ev: InputEvent) -> void:
 		accept_event()
 
 
+## Lange Texte (Fähigkeiten aus YouTD 2) umbrechen statt den Tooltip über den Bildschirm zu ziehen.
+func _make_custom_tooltip(for_text: String) -> Object:
+	var l := Label.new()
+	l.text = for_text
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 420.0 if for_text.length() > 60 else 0.0
+	l.add_theme_font_size_override("font_size", 13)
+	return l
+
+
 func _get_drag_data(_at: Vector2) -> Variant:
 	if drag_data == null:
 		return null

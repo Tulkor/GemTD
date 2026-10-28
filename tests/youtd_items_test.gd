@@ -288,6 +288,9 @@ func _store() -> void:
 	var all := YoutdData.items()
 	check(all.keys().all(func(id): return YoutdData.item_icon(str(id)) != null), "jedes Item hat ein Icon")
 	check(YoutdData.towers().keys().all(func(id): return YoutdData.tower_icon(str(id)) != null), "jeder Tower hat ein Icon")
+	var with_ab: Array = YoutdData.towers().keys().filter(func(id): return not (YoutdData.tower(id).get("abilities", []) as Array).is_empty())
+	check(with_ab.all(func(id): return YoutdData.description("abilities", str(YoutdData.tower(id).abilities[0])) != ""),
+			"jede Tower-Fähigkeit hat eine Beschreibung")
 	# 9 gewöhnliche Öle: 2× destillieren (8 → 2 ungewöhnliche), 1 bleibt
 	var oils: Array = all.keys().filter(func(id): return all[id].type == "oil" and all[id].rarity == "common")
 	for i in 9:

@@ -51,6 +51,12 @@ static func item(id: String) -> Dictionary:
 	return items().get(id, {})
 
 
+## Englische Beschreibung aus YouTD 2 (data/youtd/beschreibungen.json, tools/youtd/texte_holen.py):
+## kind = "abilities", "auras", "autocasts", "items" oder "towers". "" = keine.
+static func description(kind: String, id: String) -> String:
+	return str((_file("beschreibungen") as Dictionary).get(kind, {}).get(id, ""))
+
+
 # --- Icons (gerendert von tools/youtd/icons.py) -----------------------------------
 
 static var _icons := {}

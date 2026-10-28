@@ -187,6 +187,9 @@ static func tower_tip(id: String) -> String:
 	lines.append_array(mod_lines(t.get("mods", [])))
 	for a in ability_names(t):
 		lines.append(a)
+	var flavor := YoutdData.description("towers", id)
+	if flavor != "":
+		lines.append(flavor)
 	return "\n".join(lines)
 
 
@@ -195,8 +198,9 @@ static func item_tip(id: String) -> String:
 	var type_name := str(TranslationServer.translate(str(YoutdData.rules().get("items", {}).get("type_names", {}).get(str(it.get("type", "")), ""))))
 	var lines := [str(it.get("name", id)) + " · " + YoutdData.rarity_name(str(it.get("rarity", ""))) + " · " + type_name]
 	lines.append(_t("Ab Welle %d") % int(it.get("level", 0)) if int(it.get("level", 0)) > 0 else "")
+	lines.append(YoutdData.description("items", id))
 	lines.append_array(mod_lines(it.get("mods", [])))
-	lines.append_array(ability_names(it))
+	lines.append_array(ability_names(it, true))
 	return "\n".join(lines.filter(func(l): return l != ""))
 
 
@@ -211,20 +215,24 @@ static func item_tip_for(it: YtItem) -> String:
 
 
 ## Fähigkeiten, Auren und Zauber eines Towers oder Items (Namen aus YouTD 2, englisch).
-static func ability_names(d: Dictionary) -> Array:
+## texts: Beschreibung aus YouTD 2 dazu (Items; bei Towern zeigt sie die Auswahlkarte).
+static func ability_names(d: Dictionary, texts := false) -> Array:
 	var out := []
+	var add := func(line: String, kind: String, id) -> void:
+		var text := YoutdData.description(kind, str(id)) if texts else ""
+		out.append(line + ("\n" + text if text != "" else ""))
 	for id in d.get("abilities", []):
 		var a := YtAbilityData.ability(int(id))
 		if not a.is_empty():
-			out.append(_t("Fähigkeit: %s") % str(a.get("name", "")))
+			add.call(_t("Fähigkeit: %s") % str(a.get("name", "")), "abilities", id)
 	for id in d.get("auras", []):
 		var a := YtAbilityData.aura(int(id))
 		if not a.is_empty() and not bool(a.get("hidden", false)) and str(a.get("name", "")) != "":
-			out.append(_t("Aura: %s") % str(a.name))
+			add.call(_t("Aura: %s") % str(a.name), "auras", id)
 	for id in d.get("autocasts", []):
 		var a := YtAbilityData.autocast(int(id))
 		if not a.is_empty():
-			out.append(_t("Zauber: %s") % str(a.get("name", "")))
+			add.call(_t("Zauber: %s") % str(a.get("name", "")), "autocasts", id)
 	return out
 
 
