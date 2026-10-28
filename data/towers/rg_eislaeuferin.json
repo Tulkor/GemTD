@@ -3,10 +3,9 @@
 	"name": "Eisläuferin",
 	"category": "randgruppen",
 	"color": "#ffd060",
-	"model": "res://assets/models/city/3story_balcony.glb",
+	"model": "res://assets/models/towers/kk_gemischt/rollerskate_a.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.54,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

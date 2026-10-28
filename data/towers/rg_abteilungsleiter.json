@@ -3,10 +3,9 @@
 	"name": "Abteilungsleiter",
 	"category": "randgruppen",
 	"color": "#8ca0c0",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/q_modular_maenner/suit.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

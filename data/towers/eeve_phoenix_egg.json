@@ -4,7 +4,7 @@
 	"name_original": "Phoenix Egg",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/towers/k_essen/egg.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,9 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": true,
+	"model_solid": false,
+	"flame": 0.35,
+	"flame_height": 0.8
 }

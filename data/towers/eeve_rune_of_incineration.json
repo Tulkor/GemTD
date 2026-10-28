@@ -4,7 +4,7 @@
 	"name_original": "Rune of Incineration",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/kk_halloween/plaque.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": true,
+	"model_solid": false
 }

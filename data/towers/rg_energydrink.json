@@ -3,10 +3,9 @@
 	"name": "Energydrink",
 	"category": "randgruppen",
 	"color": "#ff8a3d",
-	"model": "res://assets/models/city/3story_balcony.glb",
+	"model": "res://assets/models/towers/k_essen/soda_can.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.54,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

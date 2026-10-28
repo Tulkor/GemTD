@@ -3,10 +3,9 @@
 	"name": "Gehstock-Schwinger",
 	"category": "randgruppen",
 	"color": "#c8b8a0",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/q_figuren/old_classy_female.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

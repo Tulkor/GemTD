@@ -123,3 +123,10 @@ steht in `pakete/<id>/LISTE.txt`. Alle Pakete stehen unter CC0 1.0 (Public Domai
 
 Animierte Figuren und Tiere behalten Skelett und Animationen (auch die FBX-Pakete, die über Godot laufen). Kenney
 Animated Characters 3 hat Animationen nur als eigene Dateien, die nicht mit umgewandelt sind.
+
+## Tower-Modelle `towers/` (CC0, 2026-10-28)
+
+Kopien einzelner Modelle aus der Bibliothek `pakete/` (gleicher Unterordner = gleiches Paket, Quelle und Lizenz
+wie oben), geholt mit `tools/modelle/tower_modelle.py` nach der Zuordnung in `data/tower_models.json`.
+Nur die Ruhe-Animation bleibt; bei `q_figuren` ist die Hautfarbe, bei `q_feldfruechte` die Helligkeit korrigiert,
+bei `q_fantasy_props` sind die Vertex-Farben entfernt.

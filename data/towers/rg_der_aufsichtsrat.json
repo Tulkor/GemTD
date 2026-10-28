@@ -3,10 +3,9 @@
 	"name": "Der Aufsichtsrat",
 	"category": "randgruppen",
 	"color": "#8ca0c0",
-	"model": "res://assets/models/city/6story_stack.glb",
+	"model": "res://assets/models/towers/q_figuren/old_classy_male.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.6,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

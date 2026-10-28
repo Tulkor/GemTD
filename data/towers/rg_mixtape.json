@@ -3,10 +3,9 @@
 	"name": "Mixtape",
 	"category": "randgruppen",
 	"color": "#c03aa0",
-	"model": "res://assets/models/city/2story_balcony.glb",
+	"model": "res://assets/models/towers/k_moebel/radio.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.51,
 	"damage_type": "spells",
 	"targets": "both",
 	"rg": {

@@ -3,10 +3,9 @@
 	"name": "Bassbox",
 	"category": "randgruppen",
 	"color": "#ff5aa0",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/oga_lautsprecher/speaker.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

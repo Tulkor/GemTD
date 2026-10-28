@@ -47,6 +47,7 @@ var game  # game.gd
 var cell := Vector2i.ZERO
 var pos := Vector2.ZERO
 var tower_id := ""
+var _spin := true  ## Modell dreht sich langsam (nicht bei Figuren und Gegenständen)
 var tier := 0
 var def: Dictionary = {}
 var stats: Dictionary = {}
@@ -624,6 +625,8 @@ func _build_visual() -> void:
 	var category := str(def.get("category", "gem"))
 	_gem = null
 	var model_path := str(stats.get("model", def.get("model", "")))
+	# Figuren und Gegenstände aus assets/models/towers/ stehen still (Gems und Steine drehen sich)
+	_spin = not model_path.contains("/models/towers/")
 	if is_trap():
 		var plate := MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
@@ -1009,7 +1012,7 @@ func _ring(radius: float, thickness: float, col: Color) -> MeshInstance3D:
 
 func _animate(delta: float) -> void:
 	_time += delta
-	if _gem:
+	if _gem and _spin:
 		_gem.rotation.y += delta * (SPIN_NEW if is_new else SPIN_FIXED)
 	if _new_ring:
 		_new_ring.visible = is_new

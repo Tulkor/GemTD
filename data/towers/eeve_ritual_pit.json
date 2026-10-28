@@ -4,7 +4,7 @@
 	"name_original": "Ritual Pit",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/kk_halloween/shrine_candles.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {
@@ -33,5 +33,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

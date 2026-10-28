@@ -145,10 +145,47 @@ def compact(js, blob, keep_uv):
     return out
 
 
-def pack_gltf(src, dst, tex_max, shared=None):
+def quantize_weights(js, blob):
+    """Skin-Gewichte als normierte Bytes statt float (glTF erlaubt das), spart bei Figuren ein Viertel."""
+    acc = js.get("accessors", [])
+    done = {}
+    for m in js.get("meshes", []):
+        for p in m["primitives"]:
+            i = p["attributes"].get("WEIGHTS_0")
+            if i is None or acc[i]["componentType"] != 5126:
+                continue
+            if i not in done:
+                a, v = acc[i], js["bufferViews"][acc[i]["bufferView"]]
+                stride = v.get("byteStride", 16)
+                start = v.get("byteOffset", 0) + a.get("byteOffset", 0)
+                out = bytearray()
+                for k in range(a["count"]):
+                    w = struct.unpack_from("<4f", blob, start + k * stride)
+                    q = [round(x * 255) for x in w]
+                    q[q.index(max(q))] += 255 - sum(q)  # Summe bleibt genau 1
+                    out += bytes(q)
+                blob += b"\0" * (-len(blob) % 4)
+                js["bufferViews"].append({"buffer": 0, "byteOffset": len(blob), "byteLength": len(out)})
+                blob += out
+                acc.append({"bufferView": len(js["bufferViews"]) - 1, "componentType": 5121, "normalized": True,
+                            "count": a["count"], "type": "VEC4"})
+                done[i] = len(acc) - 1
+            p["attributes"]["WEIGHTS_0"] = done[i]
+
+
+def pack_gltf(src, dst, tex_max, shared=None, anim=None, fix=None):
     """shared = Ordner: Texturen dort als <hash>.png ablegen und per URI verweisen statt einbetten
-    (Paket-Bibliothek, gleiche Atlanten nur einmal)."""
+    (Paket-Bibliothek, gleiche Atlanten nur einmal). anim = nur Animationen behalten, deren Name so endet
+    (Figuren als Tower brauchen nur "idle"), None = alle. fix(js) ändert das glTF vor dem Packen."""
     js, blob, base = read_gltf(src)
+    if fix:
+        fix(js)  # Korrekturen je Paket (z. B. Farben), siehe tower_modelle.py
+    if anim is not None:
+        keep = [a for a in js.get("animations", []) if a.get("name", "").lower().endswith(anim.lower())]
+        if keep:
+            js["animations"] = keep
+        else:
+            js.pop("animations", None)
     blob = bytearray(blob)
     # Nur Grundfarbe behalten
     for m in js.get("materials", []):
@@ -209,6 +246,8 @@ def pack_gltf(src, dst, tex_max, shared=None):
             js.pop(k, None)
     if not textures:
         js.pop("samplers", None)
+    if anim is not None:
+        quantize_weights(js, blob)
     blob = compact(js, blob, keep_uv=bool(textures))
     js["buffers"] = [{"byteLength": len(blob)}]
     head = json.dumps(js, separators=(",", ":")).encode()
@@ -244,7 +283,9 @@ def main():
         if e["paket"] not in pakete:
             skipped += 1
             continue
-        src = find(pakete[e["paket"]], e["datei"])
+        # "<paket-id>/<name>.glb" zeigt direkt in die Bibliothek (gleiche Namen in mehreren Paketen)
+        direkt = os.path.join(pakete[e["paket"]], e["datei"])
+        src = direkt if "/" in e["datei"] and os.path.exists(direkt) else find(pakete[e["paket"]], e["datei"])
         if not src:
             print("FEHLT", e["paket"], e["datei"])
             continue
@@ -256,7 +297,7 @@ def main():
                 item["textur"] = find(pakete[e["paket"]], e["textur"])
             fbx.append(item)
         else:
-            pack_gltf(src, dst, tex)
+            pack_gltf(src, dst, tex, anim=e.get("anim"))
             print("OK", ziel, os.path.getsize(dst) // 1024, "KB")
             done += 1
     if fbx:

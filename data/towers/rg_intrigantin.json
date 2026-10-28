@@ -3,10 +3,9 @@
 	"name": "Intrigantin",
 	"category": "randgruppen",
 	"color": "#d070ff",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/q_figuren/witch.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

@@ -3,10 +3,9 @@
 	"name": "Weltschmerz",
 	"category": "randgruppen",
 	"color": "#c03aa0",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/kk_halloween/tree_dead_large.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

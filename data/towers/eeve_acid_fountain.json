@@ -4,7 +4,7 @@
 	"name_original": "Acid Fountain",
 	"category": "eeve",
 	"color": "#3acca4",
-	"model": "res://assets/models/crystals/crystal_08.glb",
+	"model": "res://assets/models/towers/k_fantasy_stadt/fountain_round.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -40,5 +40,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

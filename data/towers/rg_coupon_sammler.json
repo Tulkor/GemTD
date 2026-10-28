@@ -3,10 +3,9 @@
 	"name": "Coupon-Sammler",
 	"category": "randgruppen",
 	"color": "#e8c440",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/q_fantasy_props/scroll_1.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

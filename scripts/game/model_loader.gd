@@ -46,7 +46,21 @@ static func instantiate(path: String, size := 1.0, tint: Material = null) -> Nod
 		model.position = -Vector3(box.get_center().x, box.position.y, box.get_center().z) * s
 	if tint != null:
 		_apply_material(model, tint)
+	_play_idle(model)
 	return holder
+
+
+## Figuren (Quaternius, KayKit) stehen sonst in T-Pose: Ruhe-Animation in Schleife abspielen, falls vorhanden.
+static func _play_idle(model: Node) -> void:
+	var players := model.find_children("*", "AnimationPlayer", true, false)
+	if players.is_empty():
+		return
+	var ap: AnimationPlayer = players[0]
+	for a in ap.get_animation_list():
+		if str(a).to_lower().ends_with("idle"):
+			ap.get_animation(a).loop_mode = Animation.LOOP_LINEAR
+			ap.play(a)
+			return
 
 
 ## Wie instantiate, aber auf eine Grundfläche skaliert: breiteste waagrechte Kante = width,

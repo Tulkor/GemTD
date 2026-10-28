@@ -3,10 +3,9 @@
 	"name": "Bibliotheksratte",
 	"category": "randgruppen",
 	"color": "#7ad0a0",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/q_fantasy_props/bookcase_2.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

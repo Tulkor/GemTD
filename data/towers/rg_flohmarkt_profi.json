@@ -3,10 +3,9 @@
 	"name": "Flohmarkt-Profi",
 	"category": "randgruppen",
 	"color": "#e8c440",
-	"model": "res://assets/models/city/2story_balcony.glb",
+	"model": "res://assets/models/towers/k_fantasy_stadt/stall_red.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.51,
 	"damage_type": "spells",
 	"targets": "both",
 	"rg": {

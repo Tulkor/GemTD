@@ -3,10 +3,9 @@
 	"name": "Der Clanchef",
 	"category": "randgruppen",
 	"color": "#40d0ff",
-	"model": "res://assets/models/city/6story_stack.glb",
+	"model": "res://assets/models/towers/q_figuren/viking_male.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.6,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

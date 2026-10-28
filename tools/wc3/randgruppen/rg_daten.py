@@ -21,6 +21,9 @@ import sys
 from collections import deque
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "modelle"))
+from tower_look import look  # noqa: E402  Modelle aus data/tower_models.json
+
 ROOT = Path(__file__).resolve().parents[3]
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/mnt/project-files/konzepte/recherche-stand/randgruppen")
 U = 128.0  # WC3-Einheiten pro Towerbreite
@@ -142,7 +145,7 @@ ABIL = {
     "Aven": [{"type": "poison", "dps": 4.0, "duration": 4.0}],      # vergiftete Speere
     "ACvs": [{"type": "poison", "dps": 5.0, "duration": 4.0}],      # vergiftete Waffen
 }
-# Stadthäuser aus assets/models/city/ (CC0) nach Platz in der Rasse, eingefärbt in der Rassenfarbe
+# Stadthäuser aus assets/models/city/ (CC0) nach Platz in der Rasse, wenn data/tower_models.json nichts Passendes hat
 MODELS = ["1story", "1story_sign", "2story", "2story_balcony", "3story_balcony", "4story_center", "6story_stack"]
 
 
@@ -412,6 +415,11 @@ def main():
     for old in (out / "enemies").glob("rg_*.json"):
         old.unlink()
     for t in towers.values():
+        # Passendes Modell aus data/tower_models.json statt Stadthaus (sonst bleibt das Haus)
+        m = look("randgruppen", t["id"][3:])
+        if m:
+            t.update(m)
+            t.pop("model_scale", None)
         (out / "towers" / (t["id"] + ".json")).write_text(json.dumps(t, ensure_ascii=False, indent="\t") + "\n")
     for e in enemies.values():
         (out / "enemies" / (e["id"] + ".json")).write_text(json.dumps(e, ensure_ascii=False, indent="\t") + "\n")

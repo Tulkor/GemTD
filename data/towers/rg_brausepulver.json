@@ -3,10 +3,9 @@
 	"name": "Brausepulver",
 	"category": "randgruppen",
 	"color": "#ff8a3d",
-	"model": "res://assets/models/city/1story.glb",
+	"model": "res://assets/models/towers/k_essen/candy_bar.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.42,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

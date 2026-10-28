@@ -3,10 +3,9 @@
 	"name": "Der Star",
 	"category": "randgruppen",
 	"color": "#d070ff",
-	"model": "res://assets/models/city/6story_stack.glb",
+	"model": "res://assets/models/towers/q_figuren/kimono_female.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.6,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

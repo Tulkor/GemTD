@@ -3,10 +3,9 @@
 	"name": "Pogo-Tänzer",
 	"category": "randgruppen",
 	"color": "#9bff2a",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/q_modular_maenner/punk.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

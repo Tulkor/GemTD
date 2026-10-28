@@ -4,7 +4,7 @@
 	"name_original": "Xtreme Lightning \"This is madness\" Ultra Q_Q Tower",
 	"category": "eeve",
 	"color": "#7fb2ff",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/towers/q_geschuetze/laser_doble.glb",
 	"damage_type": "electric",
 	"targets": "both",
 	"eeve": {
@@ -35,5 +35,7 @@
 			]
 		}
 	],
-	"hit_fx": "kb_shock_ring"
+	"hit_fx": "kb_shock_ring",
+	"model_tint": false,
+	"model_solid": true
 }

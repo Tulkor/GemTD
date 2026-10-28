@@ -87,6 +87,10 @@ func set_tower(id: String, t: int) -> void:
 
 
 func _look() -> Dictionary:
+	# Passendes Modell je Familie aus data/tower_models.json, sonst Element-Modell (Kristall bleibt Element-Kristall)
+	var own := TowerModels.look("youtd", str(int(yt.get("family", 0))))
+	if not own.is_empty() and own.model != TowerModels.CRYSTAL:
+		return own
 	var list: Array = LOOKS.get(str(yt.get("element", "")), [])
 	if list.is_empty():
 		return {}

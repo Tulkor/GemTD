@@ -3,10 +3,9 @@
 	"name": "Frührentner",
 	"category": "randgruppen",
 	"color": "#c8b8a0",
-	"model": "res://assets/models/city/1story.glb",
+	"model": "res://assets/models/towers/q_modular_maenner/beach.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.42,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

@@ -3,10 +3,9 @@
 	"name": "Der Kioskkönig",
 	"category": "randgruppen",
 	"color": "#ff8a3d",
-	"model": "res://assets/models/city/6story_stack.glb",
+	"model": "res://assets/models/towers/k_supermarkt/cash_register.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.6,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

@@ -4,7 +4,7 @@
 	"name_original": "Arcane Lightning Generator",
 	"category": "eeve",
 	"color": "#a18eff",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/q_geschuetze/teleporter3.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

@@ -3,10 +3,9 @@
 	"name": "Praktikant",
 	"category": "randgruppen",
 	"color": "#8ca0c0",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/q_figuren/casual_male.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

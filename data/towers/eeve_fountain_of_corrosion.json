@@ -4,7 +4,7 @@
 	"name_original": "Fountain of Corrosion",
 	"category": "eeve",
 	"color": "#2fc8e8",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/towers/k_fantasy_stadt/fountain_square.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

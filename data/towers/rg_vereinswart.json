@@ -3,10 +3,9 @@
 	"name": "Vereinswart",
 	"category": "randgruppen",
 	"color": "#5cc85c",
-	"model": "res://assets/models/city/3story_balcony.glb",
+	"model": "res://assets/models/towers/q_figuren/worker_female.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.54,
 	"damage_type": "magic",
 	"targets": "both",
 	"rg": {

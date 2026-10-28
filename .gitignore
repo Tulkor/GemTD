@@ -8,4 +8,5 @@ assets/models/nature/*.png
 assets/models/city/*.png
 assets/models/scenery/*.png
 assets/models/enemies/*.png
+assets/models/towers/**/*.png
 __pycache__/

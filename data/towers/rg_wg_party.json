@@ -3,10 +3,9 @@
 	"name": "WG-Party",
 	"category": "randgruppen",
 	"color": "#7ad0a0",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/kk_dungeon/keg_decorated_gltf.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

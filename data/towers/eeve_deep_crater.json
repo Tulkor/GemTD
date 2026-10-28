@@ -4,7 +4,7 @@
 	"name_original": "Deep Crater",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/k_weltraum/crater_large.glb",
 	"damage_type": "physical",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

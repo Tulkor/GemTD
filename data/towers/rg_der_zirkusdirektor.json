@@ -3,10 +3,9 @@
 	"name": "Der Zirkusdirektor",
 	"category": "randgruppen",
 	"color": "#ffd060",
-	"model": "res://assets/models/city/6story_stack.glb",
+	"model": "res://assets/models/towers/kk_gemischt/circus_tent.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.6,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

@@ -28,3 +28,12 @@ Pakete, Quellordner und Formatwahl stehen in `pakete.json`; Texturen werden je P
 `LISTE.txt` zählt die Modelle auf. Ansehen: `tools/modelle/vorschau.sh bogen.png assets/models/pakete/kk_wald/*.glb`.
 Ein Modell ins Spiel holen: in `auswahl.json` eintragen und `umwandeln.py --paket=pakete=assets/models/pakete` aufrufen
 (bettet die geteilte Textur wieder ein). Lizenzen: `assets/models/CREDITS.md` und `assets/models/licenses/pakete/`.
+
+Tower-Modelle aller Modi (eeveTD, Shopping Maul, Randgruppen TD, YouTD): Zuordnung von Hand in `data/tower_models.json`
+(Werte `"<paket>/<name>"` aus der Bibliothek, `res://…`, `kristall`, `haus`, `{m, tint, flame, flame_height, hit_fx, not}`
+oder `{fehlt: Grund}`). `python3 -I tools/modelle/tower_modelle.py [--bericht=/mnt/project-files/modelle/tower_ohne_modell.md]`
+holt die Modelle nach `assets/models/towers/<paket>/` (nur Ruhe-Animation, Skin-Gewichte als Bytes, Farbkorrekturen
+je Paket in `fix_for`), entfernt nicht mehr gebrauchte und listet die Tower ohne passendes Modell. Danach
+`eeve_daten.py` und `rg_daten.py` neu laufen lassen; Maul (`maul_tower.gd`) und YouTD (`youtd_tower.gd`) lesen
+die Datei über `TowerModels.look()` zur Laufzeit. Figuren spielen ihre Ruhe-Animation (`ModelLoader._play_idle`),
+Modelle aus `assets/models/towers/` drehen sich nicht.

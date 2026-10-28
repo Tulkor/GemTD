@@ -3,10 +3,9 @@
 	"name": "Alleinunterhalter",
 	"category": "randgruppen",
 	"color": "#8ca0c0",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/q_figuren/casual3_male.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

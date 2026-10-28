@@ -3,10 +3,9 @@
 	"name": "Die Professorin",
 	"category": "randgruppen",
 	"color": "#7ad0a0",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/q_figuren/doctor_female_old.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

@@ -3,10 +3,9 @@
 	"name": "Der Burgherr",
 	"category": "randgruppen",
 	"color": "#c06040",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/q_modular_maenner/king.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "magic",
 	"targets": "both",
 	"rg": {

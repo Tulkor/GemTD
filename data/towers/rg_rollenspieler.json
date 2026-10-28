@@ -3,10 +3,9 @@
 	"name": "Rollenspieler",
 	"category": "randgruppen",
 	"color": "#40d0ff",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/kk_brettspiel/d20_red.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "magic",
 	"targets": "both",
 	"rg": {

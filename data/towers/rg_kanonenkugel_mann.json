@@ -3,10 +3,9 @@
 	"name": "Kanonenkugel-Mann",
 	"category": "randgruppen",
 	"color": "#ffd060",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/k_piraten/cannon.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "siege",
 	"targets": "ground",
 	"rg": {

@@ -4,7 +4,7 @@
 	"name_original": "Permafrost Blaster",
 	"category": "eeve",
 	"color": "#2fc8e8",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/towers/k_piraten/cannon_mobile.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -39,5 +39,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": true,
+	"model_solid": false
 }

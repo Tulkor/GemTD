@@ -3,10 +3,9 @@
 	"name": "Shooter-Profi",
 	"category": "randgruppen",
 	"color": "#40d0ff",
-	"model": "res://assets/models/city/2story_balcony.glb",
+	"model": "res://assets/models/towers/q_zombie/characters_shaun.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.51,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

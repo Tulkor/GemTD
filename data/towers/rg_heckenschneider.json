@@ -3,10 +3,9 @@
 	"name": "Heckenschneider",
 	"category": "randgruppen",
 	"color": "#5cc85c",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/k_fantasy_stadt/hedge.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

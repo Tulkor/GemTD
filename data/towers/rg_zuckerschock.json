@@ -3,10 +3,9 @@
 	"name": "Zuckerschock",
 	"category": "randgruppen",
 	"color": "#ff8a3d",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/k_essen/donut_sprinkles.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "magic",
 	"targets": "both",
 	"rg": {

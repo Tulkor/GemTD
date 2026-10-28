@@ -3,10 +3,9 @@
 	"name": "Gralsritter",
 	"category": "randgruppen",
 	"color": "#c06040",
-	"model": "res://assets/models/city/2story_balcony.glb",
+	"model": "res://assets/models/towers/kk_abenteurer/knight.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.51,
 	"damage_type": "chaos",
 	"targets": "both",
 	"rg": {

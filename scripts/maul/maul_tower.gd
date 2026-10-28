@@ -301,6 +301,7 @@ func _build_visual() -> void:
 	var cost := maxf(float(def.get("value", def.get("cost", 10))), 5.0)
 	var h := clampf(0.15 + log(cost) / log(10.0) * 0.36, 0.3, 1.6)
 	var look := _look(cost)
+	_spin = look.is_empty() or not str(look.path).contains("/models/towers/")
 	if not look.is_empty():
 		_gem = ModelLoader.instantiate_fit(look.path, 0.84, h + 0.5)
 		if _gem:
@@ -407,8 +408,12 @@ func _deco_trim(box: AABB) -> void:
 		_visual.add_child(mi)
 
 
-## Modell nach data/maul/models.json: {"path", "tint" (Materialname zum Einfärben oder "")} oder leer.
+## Modell: passendes aus data/tower_models.json (TowerModels), sonst Gebäude nach data/maul/models.json.
+## {"path", "tint" (Materialname zum Einfärben oder "")} oder leer.
 func _look(cost: float) -> Dictionary:
+	var own := TowerModels.look("maul", tower_id)
+	if not own.is_empty():
+		return {"path": own.model, "tint": ""}
 	var cfg := MaulData.models()
 	if cfg.is_empty():
 		return {}

@@ -3,10 +3,9 @@
 	"name": "Raufbold",
 	"category": "randgruppen",
 	"color": "#c06040",
-	"model": "res://assets/models/city/2story.glb",
+	"model": "res://assets/models/towers/kk_abenteurer/barbarian.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.48,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

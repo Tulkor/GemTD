@@ -3,10 +3,9 @@
 	"name": "Schlussverkauf-Stürmer",
 	"category": "randgruppen",
 	"color": "#e8c440",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/k_supermarkt/shopping_cart.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {

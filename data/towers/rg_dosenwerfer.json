@@ -3,10 +3,9 @@
 	"name": "Dosenwerfer",
 	"category": "randgruppen",
 	"color": "#9bff2a",
-	"model": "res://assets/models/city/1story_sign.glb",
+	"model": "res://assets/models/towers/q_modular_maenner/punk.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.44999999999999996,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

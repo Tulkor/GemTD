@@ -3,10 +3,9 @@
 	"name": "Die Cypher",
 	"category": "randgruppen",
 	"color": "#ff5aa0",
-	"model": "res://assets/models/city/3story_balcony.glb",
+	"model": "res://assets/models/towers/q_figuren/casual3_female.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.54,
 	"damage_type": "spells",
 	"targets": "both",
 	"rg": {

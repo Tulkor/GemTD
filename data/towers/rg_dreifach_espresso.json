@@ -3,10 +3,9 @@
 	"name": "Dreifach-Espresso",
 	"category": "randgruppen",
 	"color": "#ff8a3d",
-	"model": "res://assets/models/city/4story_center.glb",
+	"model": "res://assets/models/towers/k_essen/cup_coffee.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.57,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {

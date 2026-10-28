@@ -345,6 +345,8 @@ func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
 			"eeve_greater_bird_launcher", "eeve_gold_mine", "eeve_altar_of_magic", "eeve_itching_thorns_tower", "eeve_searing_totem",
 			"eeve_sacred_orb_of_power", "eeve_ornate_obelisk", "eeve_nonhazardous_shroom_field", "eeve_hell_brazier",
 			"eeve_greater_rock_launcher", "eeve_ruinous_obelisk", "eeve_xtreme_bird_launcher"]
+	if opts.has("tower"):  # --vitrine --tower=hydro_cannon,…: genau diese Tower (ohne eeve_)
+		targets = Array(str(opts.tower).split(",", false)).map(func(t): return "eeve_" + t)
 	var plan := {}
 	var i := 0
 	for id in targets:
@@ -466,6 +468,8 @@ func _prepare_youtd(game: Node) -> void:
 	for el in ["fire", "ice", "astral", "darkness", "iron", "storm"]:
 		var list: Array = YoutdRoll._group(true, el, "common")
 		ids.append_array(list.slice(0, 2))
+	if opts.has("tower"):  # --tower=1,41,…: genau diese YouTD-Tower (IDs aus data/youtd/towers.json)
+		ids = Array(str(opts.tower).split(",", false))
 	var x := 8
 	for i in ids.size():
 		var cell := Vector2i(x, 12 if i % 2 == 0 else 22)
