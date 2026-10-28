@@ -855,7 +855,7 @@ func _rock_select_test() -> void:
 ## Extra Chance: Gem-Sorte kaufen, Gems der Runde werden mit chance zum Perfekten dieser Sorte, einmal pro Runde.
 func _extra_chance_test() -> void:
 	Session.game_kind = "gemtd"
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
