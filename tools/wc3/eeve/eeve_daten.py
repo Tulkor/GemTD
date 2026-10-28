@@ -472,6 +472,7 @@ def enemy_json(name, kind, stage):
         "armor": float(m.get("udef") or 0),
         "armor_type": ARMOR.get(m.get("udty")),
         "bounty": int(m.get("ubba") or 0) + int(m.get("ubdi") or 0),
+        "points": int(m.get("upoi") or 0),
         "damage": {"ground": 4, "ground_mass": 1, "air": 4, "air_mass": 1, "boss": 40, "challenge": 0}[kind],
         "flying": m.get("umvt") == "fly",
         "color": ENEMY_COLORS[(stage - 1) % len(ENEMY_COLORS)] if stage else "#e8c840",

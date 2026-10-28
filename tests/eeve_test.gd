@@ -130,6 +130,8 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	check(game.phase == game.Phase.BUILD and game.wave_index == 1, "Level 1 vorbei, Pause vor Level 2")
 	check(game.enemies_killed + (50 - game.lives) / 4 >= 10, "alle 10 Gegner getötet oder durch (Kills %d, Leben %d)" % [game.enemies_killed, game.lives])
+	check(game.enemies_killed == 0 or game.eeve_score.creeps >= game.enemies_killed * game.score_factor(),
+		"Punkte je Kill × Punktefaktor (%s bei %d Kills)" % [game.eeve_score.creeps, game.enemies_killed])
 	check(game.food_cap == 42, "Food nach Level 1: %d (erwartet 42)" % game.food_cap)
 
 	# Fallen: ab Elementstufe 4, 900 Gold + 1 Holz, liegen auf dem Weg und versperren ihn nicht
@@ -232,6 +234,7 @@ func _ready() -> void:
 	await _debug_tests()
 	await _coop_tests()
 	await _save_tests()
+	await _bonus_tests()
 	print("eeve: %d Fehler" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -310,6 +313,7 @@ func _coop_tests() -> void:
 	pump.call()
 	check(client.setup_done and client.difficulty == 3 and client.wave_seed == host.wave_seed, "Mitspieler übernimmt Einstellungen und Wellen")
 	check(is_equal_approx(float(client.waves[5].groups[0].hp), float(host.waves[5].groups[0].hp)), "gleiche Wellen bei Host und Mitspieler")
+	check(client.bonus_tiles == host.bonus_tiles and host.bonus_tiles.size() == 45, "Mitspieler sieht dieselben Bonusfelder")
 	check(is_equal_approx(host.coop_hp_factor(), 1.75), "Gegner mit 2 Spielern +75 %% Leben: %s" % host.coop_hp_factor())
 	# Mitspieler baut und setzt einen Elementpunkt, beides für sich
 	var cell := Vector2i(30, 60)
@@ -361,7 +365,7 @@ func _save_tests() -> void:
 	await get_tree().process_frame
 	game.submit({"type": "setup", "difficulty": 4, "field": 1})
 	var cell := Vector2i(30, 60)
-	while not game.can_build(cell) and cell.x < 80:
+	while (not game.can_build(cell) or game.bonus_tiles.has(cell)) and cell.x < 80:
 		cell.x += 2
 	game.submit({"type": "build", "cell": cell})
 	game.submit({"type": "element", "element": "water"})
@@ -372,9 +376,11 @@ func _save_tests() -> void:
 	game.lumber = 3
 	game.food_cap = 47
 	game.level_pause = 12.5
+	game.eeve_score.challenges = 1234.0
 	var st := SaveGame.capture(game)
 	var waves_before: Array = game.waves.map(func(w): return [w.type, w.groups[0].enemy, w.groups[0].hp])
 	var rocks: int = game.rocks.size()
+	var tiles: Dictionary = game.bonus_tiles.duplicate()
 	var gold: int = game.gold
 	var spent := int(t.get_meta("spent", 0))
 	game.queue_free()
@@ -391,6 +397,8 @@ func _save_tests() -> void:
 	check(lt is EeveTower and lt.tower_id == "eeve_water_base_tower" and int(lt.get_meta("spent", 0)) == spent if lt != null else false,
 		"Spielstand: Wasser-Grundturm als EeveTower mit ausgegebenem Gold")
 	check(is_equal_approx(lt.damage_bonus, 0.1) if lt != null else false, "Spielstand: Elementbonus wieder da")
+	check(loaded.bonus_tiles == tiles and tiles.size() == 45, "Spielstand: dieselben Bonusfelder (%d)" % tiles.size())
+	check(is_equal_approx(loaded.eeve_score.challenges, 1234.0), "Spielstand: Challenge-Punkte")
 	loaded.queue_free()
 	await get_tree().process_frame
 
@@ -398,3 +406,68 @@ func _save_tests() -> void:
 ## Wie über das Netz: als Bytes und zurück, damit nichts geteilt wird.
 func _wire(v):
 	return bytes_to_var(var_to_bytes(v))
+
+
+## Bonusfelder (Lava, Eis, Marmor) und die Wertung am Ende.
+func _bonus_tests() -> void:
+	Session.skip_setup = false
+	var game: Node = load(Session.EEVE_GAME).instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.submit({"type": "setup", "difficulty": 3, "field": 2})
+	var per_kind := {}
+	for a in game.bonus_tiles:
+		per_kind[game.bonus_tiles[a]] = per_kind.get(game.bonus_tiles[a], 0) + 1
+	check(per_kind == {"lava": 18, "ice": 18, "marble": 18}, "WTF-Feld: je 18 Bonusfelder: %s" % [per_kind])
+	check(game.rocks.keys().all(func(r): return not game._on_bonus_tile(r)), "keine Felsen auf Bonusfeldern")
+	check(game.bonus_view.get_child_count() == 3, "Bonusfelder werden gezeichnet")
+	# Tower genau auf Lava, Eis und Marmor
+	game.bonus_tiles = {}
+	var cells := []
+	var c := Vector2i(20, 20)
+	while cells.size() < 4 and c.x < 80:
+		if game.can_build(c):
+			cells.append(c)
+		c.x += 3
+	var kinds := ["lava", "ice", "marble"]
+	for i in 3:
+		game.bonus_tiles[cells[i]] = kinds[i]
+	game.points = 3
+	game.submit({"type": "element", "element": "fire"})
+	var made := []
+	for cell in cells:
+		game.submit({"type": "build", "cell": cell})
+		var t: Tower = game.towers[cell]
+		var opts: Array = game.tower_options(t)
+		var i: int = opts.map(func(o): return o.id).find("eeve_fire_base_tower")
+		game.submit({"type": "option", "tower": game.tower_ref(t), "index": i, "action": "eeve_upgrade", "id": "eeve_fire_base_tower"})
+		made.append(game.towers[cell])
+	check(is_equal_approx(made[0].damage_bonus, 0.5) and made[0].damage_source.contains("Lava"), "Lava: +40 %% Schaden (%s)" % made[0].damage_bonus)
+	check(is_equal_approx(made[1].speed_bonus, 0.35) and is_equal_approx(made[1].damage_bonus, 0.1), "Eis: +35 %% Angriffstempo")
+	made[2].kills = 10
+	made[3].kills = 10
+	check(made[2].kill_bonus() > made[3].kill_bonus() and is_equal_approx(made[2].xp_factor, 2.0), "Marmor: doppelte Erfahrung für Kill-Ränge")
+	check(is_equal_approx(made[3].damage_bonus, 0.1) and made[3].speed_bonus == 0.0, "daneben kein Bonus")
+	check(made[0].base_tint == Color("#ff6a1a") and made[3].base_tint.a == 0.0, "Sockel in der Farbe des Bonusfelds")
+	# Challenge: 64 % Schaden an einem Golem mit 3000 Punkten auf Schwer (× 2)
+	var golem := Enemy.new()
+	golem.max_hp = 100.0
+	golem.hp = 36.0
+	golem.set_meta("challenge_score", 3000.0)
+	game._score_challenge(golem, false)
+	golem.free()
+	check(is_equal_approx(game.eeve_score.challenges, 3840.0), "Challenge: 64 %% von 3000 × 2 = 3840 (%s)" % game.eeve_score.challenges)
+	check(int(game.waves[54].groups[0].challenge_score) == 500 and int(game.waves[10].groups[0].challenge_score) == 3000,
+		"Massen-Challenge: 20000 / 40 je Gegner, Lehmgolem 3000")
+	# Ende: Leben × 100, Gold × 0,5, WTF-Feld 5000, alles × 2
+	game.eeve_score.creeps = 1000.0
+	game.lives = 40
+	game.players[0].gold = 1000
+	var parts: Dictionary = game.score_parts(true)
+	check(is_equal_approx(parts.lives, 8000.0) and is_equal_approx(parts.gold, 1000.0) and is_equal_approx(parts.field, 10000.0),
+		"Sieg: Leben 8000, Gold 1000, Feldbonus 10000: %s" % [parts])
+	check(game.score_total(true) == 1000 + 3840 + 8000 + 1000 + 10000 and game.score_total(false) == 4840, "Gesamtpunkte, verloren ohne Bonus")
+	game._finish(game.Phase.VICTORY)
+	check(game.hud.game_over_table.visible and game.hud.game_over_stats.text.contains("23840"), "Endbildschirm zeigt die Wertung")
+	game.queue_free()
+	await get_tree().process_frame

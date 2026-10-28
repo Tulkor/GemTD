@@ -1271,6 +1271,16 @@ func _fill_summary(summary: Dictionary) -> void:
 	for c in game_over_table.get_children():
 		game_over_table.remove_child(c)
 		c.queue_free()
+	var rows: Array = summary.get("rows", [])
+	if not rows.is_empty():
+		# fertige Zeilen (eeveTD-Wertung): [Text, Mitte, Punkte]
+		game_over_boss.hide()
+		game_over_table.show()
+		for h in summary.get("headers", ["", "", ""]):
+			UiTheme.caption(str(h), game_over_table)
+		for r in rows:
+			_summary_row(str(r[0]), str(r[1]), str(r[2]))
+		return
 	var fb: Dictionary = summary.get("final_boss", {})
 	game_over_boss.visible = not fb.is_empty()
 	if not fb.is_empty():

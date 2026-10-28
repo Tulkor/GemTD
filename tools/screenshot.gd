@@ -39,6 +39,8 @@ extends Node
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
+##   --bonusfelder           eeveTD: Bonusfelder (Lava, Eis, Marmor) auslegen, drei davon unter Towern des Plans
+##   --ende                  eeveTD: Endbildschirm mit Wertung (Sieg)
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
@@ -407,6 +409,17 @@ func _prepare_eeve(game: Node) -> void:
 		points += ["fire", "fire"]
 	for el in points:
 		game.add_element_point(el)
+	if opts.has("bonusfelder"):
+		game.rng.seed = 5
+		game._place_bonus_tiles(15)
+		for c in [Vector2i(44, 76), Vector2i(50, 76), Vector2i(40, 68), Vector2i(48, 68), Vector2i(54, 68), Vector2i(36, 76)]:
+			game.bonus_tiles.erase(c)
+		game.bonus_tiles[Vector2i(44, 76)] = "lava"
+		game.bonus_tiles[Vector2i(50, 76)] = "ice"
+		game.bonus_tiles[Vector2i(40, 68)] = "marble"
+		if opts.has("bonusreihe"):   # je eine Sorte nebeneinander zwischen den Mauern (Aussehen prüfen)
+			game.bonus_tiles = {Vector2i(40, 72): "lava", Vector2i(44, 72): "ice", Vector2i(48, 72): "marble"}
+		game.bonus_view.show_tiles(game.bonus_tiles)
 	# Zwei versetzte Mauern vor dem Eingang (unten Mitte), Gegner laufen im Bogen herum
 	var walls := []
 	for x in range(30, 58, 2):
@@ -448,6 +461,11 @@ func _prepare_eeve(game: Node) -> void:
 				break
 	game.gold = 412
 	game.log_lines = []
+	game.eeve_score = {"creeps": 4180.0, "challenges": 23560.0}
+	if opts.has("ende"):
+		game.wave_index = 56
+		game.lives = 37
+		game._finish(game.Phase.VICTORY)
 	if opts.get("phase", "bau") == "welle":
 		game.submit({"type": "start_level"})
 	if opts.has("auswahl"):

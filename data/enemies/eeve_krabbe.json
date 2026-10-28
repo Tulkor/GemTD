@@ -8,6 +8,7 @@
 	"armor": 0.0,
 	"armor_type": "eeve_medium",
 	"bounty": 2,
+	"points": 2,
 	"damage": 1,
 	"flying": false,
 	"color": "#e07050",
