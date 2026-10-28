@@ -65,3 +65,61 @@ Von Lukas hochgeladen, Lizenztexte in `licenses/`. Verwendet in `scripts/map/eev
   - Von Lukas hochgeladen (2026-10-20). Geändert: Skelett und Animationen `walk`, `idle`, `hit`, `death` ergänzt, Arme aus der T-Pose nach unten gelegt,
     Füße auf den Ursprung gesetzt (`tools/modelle/boss_rig.py`, Blender). Wird für alle Gegner mit `"boss": true`
     ohne eigenes Modell verwendet (`scripts/game/enemy.gd`, `BOSS_MODEL`).
+
+## Modell-Bibliothek `pakete/` (CC0, 2026-10-28)
+
+Ganze Pakete, von Lukas heruntergeladen, umgewandelt mit `tools/modelle/pakete_umwandeln.py` (Liste in
+`tools/modelle/pakete.json`). Eine .glb je Modell, Texturen auf 256 px verkleinert und je Paket in `texturen/`
+geteilt. Der Ordner hat eine `.gdignore`: Godot importiert ihn nicht, er landet nicht im Build. Wer ein Modell im
+Spiel braucht, holt es wie bisher über `auswahl.json` (Paket `pakete=assets/models/pakete`). Welche Modelle es gibt,
+steht in `pakete/<id>/LISTE.txt`. Alle Pakete stehen unter CC0 1.0 (Public Domain), Lizenztexte in `licenses/pakete/`
+(Quaternius-Pakete ohne eigenen Text im Zip: `licenses/pakete/quaternius_cc0.txt`).
+
+- `pakete/q_downtown/` (153): "Downtown City MegaKit (Standard)" von Quaternius, CC0, https://quaternius.com/packs/downtowncitymegakit.html (`licenses/pakete/q_downtown.txt`)
+- `pakete/q_medieval/` (176): "Medieval Village MegaKit (Standard)" von Quaternius, CC0, https://quaternius.com/packs/medievalvillagemegakit.html (`licenses/pakete/q_medieval.txt`)
+- `pakete/q_basis_figuren/` (10): "Universal Base Characters (Standard)" von Quaternius, CC0, https://quaternius.com/packs/universalbasecharacters.html (`licenses/pakete/q_basis_figuren.txt`)
+- `pakete/q_fantasy_outfits/` (24): "Modular Character Outfits - Fantasy (Standard)" von Quaternius, CC0, https://quaternius.com/packs/modularcharacteroutfitsfantasy.html (`licenses/pakete/q_fantasy_outfits.txt`)
+- `pakete/q_fantasy_props/` (94): "Fantasy Props MegaKit (Standard)" von Quaternius, CC0, https://quaternius.com/packs/fantasypropsmegakit.html (`licenses/pakete/q_fantasy_props.txt`)
+- `pakete/q_figuren/` (52): "Ultimate Animated Character Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimatedanimatedcharacter.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_modular_maenner/` (11): "Ultimate Modular Men Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimatemodularcharacters.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_wohnung/` (123): "Ultimate House Interior Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimatehomeinterior.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_feldfruechte/` (102): "Ultimate Crops Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimatecrops.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_tiere/` (12): "Ultimate Animated Animal Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimateanimatedanimals.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_zombie/` (64): "Zombie Apocalypse Kit" von Quaternius, CC0, https://quaternius.com/packs/zombieapocalypsekit.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_monster/` (50): "Ultimate Monsters" von Quaternius, CC0, https://quaternius.com/packs/ultimatemonsters.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_suesse_monster/` (21): "Cute Animated Monsters Pack" von Quaternius, CC0, https://quaternius.com/packs/cutemonsters.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_cyberpunk/` (71): "Cyberpunk Game Kit" von Quaternius, CC0, https://quaternius.com/packs/cyberpunkgamekit.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_geschuetze/` (37): "Steampunk Turret Pack" von Quaternius, CC0, https://quaternius.com/packs/turretpack.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_ruinen/` (92): "Ultimate Modular Ruins Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimatemodularruins.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_bauernhof/` (7): "Farm Animal Pack" von Quaternius, CC0, https://quaternius.com/packs/farmanimal.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_schiffe/` (6): "Ships Pack" von Quaternius, CC0, https://quaternius.com/packs/ships.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_zug/` (14): "Modular Train Pack" von Quaternius, CC0, https://quaternius.com/packs/modulartrain.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_roboter/` (1): "Animated Robot Pack" von Quaternius, CC0, https://quaternius.com/packs/animatedrobot.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/q_waffen/` (55): "Ultimate Guns Pack" von Quaternius, CC0, https://quaternius.com/packs/ultimategun.html (`licenses/pakete/quaternius_cc0.txt`)
+- `pakete/kk_abenteurer/` (39): "KayKit Character Pack: Adventurers 2.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/kaykit-adventurers (`licenses/pakete/kk_abenteurer.txt`)
+- `pakete/kk_brettspiel/` (162): "KayKit Board Game Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/board-game-bits (`licenses/pakete/kk_brettspiel.txt`)
+- `pakete/kk_stadt/` (41): "KayKit City Builder Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/city-builder-bits (`licenses/pakete/kk_stadt.txt`)
+- `pakete/kk_wald/` (105): "KayKit Forest Nature Pack 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/kaykit-forest (`licenses/pakete/kk_wald.txt`)
+- `pakete/kk_moebel/` (53): "KayKit Furniture Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/furniture-bits (`licenses/pakete/kk_moebel.txt`)
+- `pakete/kk_halloween/` (63): "KayKit Halloween Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/halloween-bits (`licenses/pakete/kk_halloween.txt`)
+- `pakete/kk_feiertage/` (98): "KayKit Holiday Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/holiday-bits (`licenses/pakete/kk_feiertage.txt`)
+- `pakete/kk_gemischt/` (41): "KayKit Mixed Bag 1 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/mixed-bag-1 (`licenses/pakete/kk_gemischt.txt`)
+- `pakete/kk_restaurant/` (144): "KayKit Restaurant Bits 1.0 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/restaurant-bits (`licenses/pakete/kk_restaurant.txt`)
+- `pakete/kk_skelette/` (19): "KayKit Character Pack: Skeletons 1.1 (Free)" von Kay Lousberg, CC0, https://kaylousberg.itch.io/kaykit-skeletons (`licenses/pakete/kk_skelette.txt`)
+- `pakete/kk_dungeon/` (203): "KayKit Dungeon Remastered 1.0" von Kay Lousberg, CC0, https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0 (`licenses/pakete/kk_dungeon.txt`)
+- `pakete/k_figuren3/` (4): "Animated Characters 3" von Kenney, CC0, https://kenney.nl/assets/animated-characters-3 (`licenses/pakete/k_figuren3.txt`)
+- `pakete/k_blaster/` (40): "Blaster Kit 2.1" von Kenney, CC0, https://kenney.nl/assets/blaster-kit (`licenses/pakete/k_blaster.txt`)
+- `pakete/k_autos/` (45): "Car Kit" von Kenney, CC0, https://kenney.nl/assets/car-kit (`licenses/pakete/k_autos.txt`)
+- `pakete/k_industrie/` (37): "City Kit (Industrial) 2.0" von Kenney, CC0, https://kenney.nl/assets/city-kit-industrial (`licenses/pakete/k_industrie.txt`)
+- `pakete/k_fantasy_stadt/` (167): "Fantasy Town Kit 2.0" von Kenney, CC0, https://kenney.nl/assets/fantasy-town-kit (`licenses/pakete/k_fantasy_stadt.txt`)
+- `pakete/k_essen/` (200): "Food Kit" von Kenney, CC0, https://kenney.nl/assets/food-kit (`licenses/pakete/k_essen.txt`)
+- `pakete/k_moebel/` (120): "Furniture Kit" von Kenney, CC0, https://kenney.nl/assets/furniture-kit (`licenses/pakete/k_moebel.txt`)
+- `pakete/k_spielhalle/` (20): "Mini Arcade" von Kenney, CC0, https://kenney.nl/assets/mini-arcade (`licenses/pakete/k_spielhalle.txt`)
+- `pakete/k_mini_figuren/` (26): "Mini Characters" von Kenney, CC0, https://kenney.nl/assets/mini-characters (`licenses/pakete/k_mini_figuren.txt`)
+- `pakete/k_supermarkt/` (20): "Mini Market" von Kenney, CC0, https://kenney.nl/assets/mini-market (`licenses/pakete/k_supermarkt.txt`)
+- `pakete/k_piraten/` (72): "Pirate Kit" von Kenney, CC0, https://kenney.nl/assets/pirate-kit (`licenses/pakete/k_piraten.txt`)
+- `pakete/k_weltraum/` (153): "Space Kit" von Kenney, CC0, https://kenney.nl/assets/space-kit (`licenses/pakete/k_weltraum.txt`)
+- `pakete/oga_lautsprecher/` (1): "Low Poly Speaker" von cosmac (OpenGameArt), CC0, https://opengameart.org/content/low-poly-speaker (`licenses/pakete/oga_lautsprecher.txt`)
+
+Animierte Figuren und Tiere behalten Skelett und Animationen (auch die FBX-Pakete, die über Godot laufen). Kenney
+Animated Characters 3 hat Animationen nur als eigene Dateien, die nicht mit umgewandelt sind.

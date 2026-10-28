@@ -1,0 +1,6 @@
+boat
+boat_wsail
+cruise_ship
+lifeboat
+sail_ship
+viking_boat

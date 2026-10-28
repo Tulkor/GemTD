@@ -21,3 +21,10 @@ aus dem "Animated Monster Pack" mit denselben Animationsnamen wie beim Boss um:
 `<python mit bpy> -I tools/modelle/monster_umwandeln.py -- "<Paket>/FBX" assets/models/enemies`.
 
 Bergwerk (eeveTD): `<python mit bpy> -I tools/modelle/mine_umwandeln.py -- <mine_parts.blend> /tmp/mine`, danach die gebrauchten `mine_*.glb` mit `pack_gltf` verkleinert nach `assets/models/scenery/`. Kirche: `tools/modelle/kirche_umwandeln.py`.
+
+Ganze Pakete als Bibliothek (`assets/models/pakete/<id>/`, mit `.gdignore`, kommt nicht in den Build):
+`python3 -I tools/modelle/pakete_umwandeln.py --quelle=<Ordner mit den entpackten Zips> [--nur=q_monster,kk_wald] [--ziel=/tmp/x]`.
+Pakete, Quellordner und Formatwahl stehen in `pakete.json`; Texturen werden je Paket in `texturen/` geteilt,
+`LISTE.txt` zählt die Modelle auf. Ansehen: `tools/modelle/vorschau.sh bogen.png assets/models/pakete/kk_wald/*.glb`.
+Ein Modell ins Spiel holen: in `auswahl.json` eintragen und `umwandeln.py --paket=pakete=assets/models/pakete` aufrufen
+(bettet die geteilte Textur wieder ein). Lizenzen: `assets/models/CREDITS.md` und `assets/models/licenses/pakete/`.

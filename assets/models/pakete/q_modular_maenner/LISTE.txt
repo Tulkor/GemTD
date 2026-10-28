@@ -1,0 +1,11 @@
+adventurer
+beach
+casual_2
+casual_hoodie
+farmer
+king
+punk
+spacesuit
+suit
+swat
+worker

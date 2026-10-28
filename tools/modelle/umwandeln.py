@@ -13,6 +13,8 @@ glTF/GLB rechnet das Skript selbst (Texturen einbetten, auf höchstens "tex" Pix
 Normal- und Zusatzkarten weglassen). FBX geht über Godot (tools/modelle/umwandeln.gd).
 Fehlt ein Paket, werden seine Modelle übersprungen (bestehende Dateien bleiben).
 """
+import base64
+import hashlib
 import io
 import json
 import os
@@ -20,6 +22,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 
 from PIL import Image
 
@@ -39,6 +42,13 @@ def find(root, name):
     return hits[0] if hits else None
 
 
+def load_uri(base, uri):
+    """Inhalt einer glTF-URI: eingebettet (data:…;base64,…) oder Datei neben dem Modell."""
+    if uri.startswith("data:"):
+        return base64.b64decode(uri.split(",", 1)[1])
+    return open(os.path.join(base, urllib.parse.unquote(uri)), "rb").read()
+
+
 def read_gltf(path):
     """Gibt (json, binärpuffer) zurück; externe .bin werden zu einem Puffer zusammengefasst."""
     data = open(path, "rb").read()
@@ -55,7 +65,7 @@ def read_gltf(path):
     js = json.loads(data)
     blob = b""
     for i, b in enumerate(js.get("buffers", [])):
-        raw = open(os.path.join(base, b["uri"]), "rb").read()
+        raw = load_uri(base, b["uri"])
         shift = len(blob)
         blob += raw + b"\0" * (-len(raw) % 4)
         for v in js.get("bufferViews", []):
@@ -135,7 +145,9 @@ def compact(js, blob, keep_uv):
     return out
 
 
-def pack_gltf(src, dst, tex_max):
+def pack_gltf(src, dst, tex_max, shared=None):
+    """shared = Ordner: Texturen dort als <hash>.png ablegen und per URI verweisen statt einbetten
+    (Paket-Bibliothek, gleiche Atlanten nur einmal)."""
     js, blob, base = read_gltf(src)
     blob = bytearray(blob)
     # Nur Grundfarbe behalten
@@ -155,7 +167,7 @@ def pack_gltf(src, dst, tex_max):
         if i not in used:
             continue
         if "uri" in im:
-            raw = open(os.path.join(base, im["uri"]), "rb").read()
+            raw = load_uri(base, im["uri"])
         else:
             v = js["bufferViews"][im["bufferView"]]
             raw = bytes(blob[v.get("byteOffset", 0):v.get("byteOffset", 0) + v["byteLength"]])
@@ -167,10 +179,18 @@ def pack_gltf(src, dst, tex_max):
         out = io.BytesIO()
         pic.save(out, "PNG", optimize=True)
         png = out.getvalue()
+        remap[i] = len(new_images)
+        if shared:
+            name = hashlib.sha1(png).hexdigest()[:12] + ".png"
+            os.makedirs(shared, exist_ok=True)
+            if not os.path.exists(os.path.join(shared, name)):
+                open(os.path.join(shared, name), "wb").write(png)
+            rel = os.path.relpath(os.path.join(shared, name), os.path.dirname(dst)).replace(os.sep, "/")
+            new_images.append({"uri": rel, "mimeType": "image/png", "name": im.get("name", "")})
+            continue
         blob += b"\0" * (-len(blob) % 4)
         js.setdefault("bufferViews", []).append({"buffer": 0, "byteOffset": len(blob), "byteLength": len(png)})
         blob += png
-        remap[i] = len(new_images)
         new_images.append({"bufferView": len(js["bufferViews"]) - 1, "mimeType": "image/png", "name": im.get("name", "")})
     textures = []
     tex_remap = {}

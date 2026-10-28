@@ -1,0 +1,5 @@
+KayKit Holiday Bits 1.0 (Free) von Kay Lousberg, https://kaylousberg.itch.io/holiday-bits
+
+Das Zip enthält keinen eigenen Lizenztext. Die Seite des Pakets und alle übrigen
+KayKit-Free-Pakete stehen unter CC0 1.0 Universal (Public Domain),
+https://creativecommons.org/publicdomain/zero/1.0/ (Wortlaut wie in kk_wald.txt).

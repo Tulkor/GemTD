@@ -2,3 +2,5 @@
 *.png binary
 *.bat text eol=crlf
 data/i18n/*.json merge=json_schluessel
+assets/models/pakete/** binary
+assets/models/pakete/**/LISTE.txt text
