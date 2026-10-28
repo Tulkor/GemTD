@@ -32,6 +32,8 @@ const ENV_DEFAULT := {
 	"contrast": 1.0, "saturation": 1.0, "tint": Color.WHITE,
 	# leichte Kontur um alles Deckende (CameraRig, screen_outline.gdshader), 0 = aus
 	"outline": 0.4, "outline_color": Color(0.03, 0.02, 0.06),
+	# Ränder abdunkeln und leicht tönen (CameraRig, screen_post.gdshader), 0 = aus
+	"vignette": 0.45, "vignette_color": Color(0.12, 0.04, 0.22),
 }
 
 ## Plakatwand: Bodentexturen statt Gras und Erde (selbst erzeugt, tools/rg_texturen.py).
@@ -96,6 +98,7 @@ const STYLES := {
 			"fog": Color("1c2038"), "fog_density": 0.014,
 			"glow_threshold": 0.85, "glow_intensity": 1.3,
 			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.2, "white": 1.0, "contrast": 1.12, "saturation": 1.0,
+			"vignette": 0.55, "vignette_color": Color(0.04, 0.04, 0.12),
 		},
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),
@@ -110,6 +113,7 @@ const STYLES := {
 			"glow_threshold": 1.2, "glow_intensity": 0.8,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.88, "white": 6.0,
 			"contrast": 1.06, "saturation": 0.95,
+			"vignette": 0.3, "vignette_color": Color(0.2, 0.22, 0.12),
 		},
 	},
 	DECO: {
@@ -148,6 +152,7 @@ const STYLES := {
 			"fill": Color("5fb0b0"), "fill_energy": 0.3, "fill_pitch": -25.0,
 			"glow_threshold": 1.0, "glow_intensity": 0.9,
 			"exposure": 0.85, "contrast": 1.05,
+			"vignette": 0.4, "vignette_color": Color(0.02, 0.1, 0.11),
 		},
 		# Nacht: schwaches, kühles Mondlicht von oben, die Bodenleuchten tragen das Licht
 		"env_night": {
@@ -198,6 +203,7 @@ const STYLES := {
 			"glow_threshold": 1.2, "glow_intensity": 0.6,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
 			"contrast": 1.04, "saturation": 0.95,
+			"vignette": 0.25, "vignette_color": Color(0.25, 0.24, 0.22),
 		},
 	},
 }

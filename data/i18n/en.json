@@ -2332,5 +2332,8 @@
 	"allein": "alone",
 	"schwarz": "black",
 	"sad": "sad",
-	"*seufz*": "*sigh*"
+	"*seufz*": "*sigh*",
+	"Welle %d: %s": "Wave %d: %s",
+	"Welle %d geschafft: +%d Gold": "Wave %d cleared: +%d gold",
+	"Welle %d geschafft": "Wave %d cleared"
 }

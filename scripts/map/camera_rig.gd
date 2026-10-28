@@ -258,6 +258,7 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		fill.shadow_enabled = false
 		parent.add_child(fill)
 	_add_outline(parent, look)
+	_add_post(parent, look)
 	return {"env": env, "sun": sun, "fill": fill}
 
 
@@ -280,5 +281,29 @@ static func _add_outline(parent: Node, look: Dictionary) -> void:
 	quad.material_override = mat
 	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# deckt den ganzen Bildschirm, darf nie weggeschnitten werden
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)
+
+
+
+## Vignette über dem ganzen Bild (screen_post.gdshader), Stärke und Farbe aus "vignette"/"vignette_color".
+static func _add_post(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenPost")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.vignette <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_post.gdshader")
+	mat.set_shader_parameter("vignette", look.vignette)
+	mat.set_shader_parameter("vignette_color", look.vignette_color)
+	# ganz zuletzt, nach Effekten und Kontur
+	mat.render_priority = 100
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenPost"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
 	parent.add_child(quad)

@@ -373,14 +373,14 @@ func _start_level(n: int) -> void:
 	_refresh_hud()
 
 
-## „Level 7: Boden, Schnell“
+## „Welle 7: Boden, Schnell“
 func level_title(n: int) -> String:
 	var lv := level_def(n)
 	var parts := [kind_name(str(lv.get("kind", "")))]
 	if specials_on():
 		for s in lv.get("specials", []):
 			parts.append(special_name(s))
-	return tr("Level %d: %s") % [n, ", ".join(parts)]
+	return tr("Welle %d: %s") % [n, ", ".join(parts)]
 
 
 static func kind_name(kind: String) -> String:
@@ -558,7 +558,7 @@ func _end_level() -> void:
 		show_message(tr(str(rules.get("level_40_text", ""))), 8.0)
 	else:
 		countdown = float(rules.level_delay)
-		var done_text: String = tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
+		var done_text: String = tr("Welle %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
 		show_message(done_text + ("\n" + bank_text if bank_text != "" else ""), 4.0)
 	_refresh_hud()
 
