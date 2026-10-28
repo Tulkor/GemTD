@@ -125,6 +125,49 @@ def tower_models() -> dict:
     return out
 
 
+# Rollen-Symbole an den Tower-Icons: Angriff (Fadenkreuz = Einzelziel, Explosion = Masse, Vogel = gegen Flieger)
+# und Unterstützung (Blitz: violett = Kontrolle, grün = Aura, gelb = Ökonomie). Nach Werten und Fähigkeitsnamen.
+MASS = (r"splash|nova|storm|chain|bounce|multishot|barrage|explo|blast|grenade|frag|shrapnel|rain|wave|spread|field|"
+        r"bombard|landslide|smash|hail|cleave|glaive|burst|eruption|breath|blizzard|plague|vapor|swarm|twister|spray|"
+        r"badaboom|bomb|mist|thunderstorm|split|omnislash|earthquake")
+ECO = (r"gold|greed|rich|bounty|treasure|loot|item|knowledge|wisdom|learn|experience|hoard|fortune|luck|steal|"
+       r"excavation|mining|reimbursement|reward|charity|customer|purchase|teachings|research|script reading|exchange")
+CC = (r"slow|stun|freez|frost|ice|icy|cold|entangl|root|silence|banish|fear|panic|net|grapple|cripple|maim|time|chill|"
+      r"sleep|snare|curse|frozen|bash|crush|glare|planeshift|absolute zero|hangover|drunk|speed down|fright|calming|"
+      r"restriction|maledict|atrophy|torture")
+ECO_MODS = ("MOD_BOUNTY_RECEIVED", "MOD_EXP_RECEIVED", "MOD_ITEM_QUALITY_ON_KILL", "MOD_ITEM_CHANCE_ON_KILL")
+
+
+def tower_roles(towers: dict) -> dict:
+    ab = json.load(open(os.path.join(ROOT, "data", "youtd", "abilities.json")))
+    out = {}
+    for tid, t in towers.items():
+        names = []
+        for kind in ("abilities", "auras", "autocasts"):
+            for i in t.get(kind, []):
+                a = ab.get(kind, {}).get(str(i), {})
+                if not a.get("hidden"):
+                    names.append(str(a.get("name", "")).lower())
+        text = " | ".join(names)
+        mods = {m[0]: float(m[1]) for m in t.get("mods", [])}
+        if t.get("targets") == "air" or mods.get("MOD_DMG_TO_AIR", 0) > 0:
+            attack = "air"
+        elif t.get("splash") or t.get("bounce") or t.get("multishot") or mods.get("MOD_DMG_TO_MASS", 0) > 0 \
+                or re.search(MASS, text):
+            attack = "mass"
+        else:
+            attack = "single"
+        util = ""
+        if any(mods.get(k, 0) > 0 for k in ECO_MODS) or re.search(ECO, text):
+            util = "eco"
+        elif re.search(CC, text):
+            util = "cc"
+        elif any(not ab.get("auras", {}).get(str(i), {}).get("hidden") for i in t.get("auras", [])):
+            util = "aura"
+        out[tid] = {"attack": attack, "util": util} if util else {"attack": attack}
+    return out
+
+
 def key_of(model: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", model.replace("res://assets/models/", "").replace(".glb", "").lower()).strip("_")
 
@@ -138,6 +181,7 @@ def main() -> None:
         m = item_key(it["name"])
         models[key_of(m)] = m
         out["items"][iid] = key_of(m)
+    out["roles"] = tower_roles(json.load(open(os.path.join(ROOT, "data", "youtd", "towers.json"))))
     for fam, m in tower_models().items():
         models[key_of(m)] = m
         out["towers"][fam] = key_of(m)

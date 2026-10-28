@@ -2350,5 +2350,13 @@
 	"Items anklicken oder hierher ziehen, oder unten ein Rezept wählen.": "Click items or drag them here, or pick a recipe below.",
 	"Klick: aus dem Würfel nehmen": "Click: take out of the cube",
 	"Öle": "Oils",
-	"6 → 1: %s": "6 → 1: %s"
+	"6 → 1: %s": "6 → 1: %s",
+	"Aufwerten": "Upgrade",
+	"Dieser Tower hat nur %d Item-Plätze": "This tower only has %d item slots",
+	"Aufwerten zu %s": "Upgrade to %s",
+	"Einzelziel": "Single target",
+	"Gegen Flieger": "Anti-air",
+	"Kontrolle (verlangsamen, betäuben)": "Crowd control (slow, stun)",
+	"Aura für Tower in der Nähe": "Aura for nearby towers",
+	"Ökonomie (Gold, Erfahrung, Items)": "Economy (gold, experience, items)"
 }

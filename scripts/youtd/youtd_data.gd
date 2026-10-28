@@ -70,6 +70,11 @@ static func item_icon(id: String) -> Texture2D:
 	return _icon(str((_file("icons") as Dictionary).get("items", {}).get(id, "")))
 
 
+## Rolle eines Towers für die Symbole am Icon: {"attack": "single"|"mass"|"air", "util": ""|"cc"|"aura"|"eco"}.
+static func tower_roles(id: String) -> Dictionary:
+	return (_file("icons") as Dictionary).get("roles", {}).get(id, {})
+
+
 ## Icon eines Towers: das Modell seiner Familie.
 static func tower_icon(id: String) -> Texture2D:
 	var fam := str(int(tower(id).get("family", 0)))

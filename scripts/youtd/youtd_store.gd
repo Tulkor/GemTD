@@ -175,7 +175,9 @@ func _refresh_towers() -> void:
 		var t := YoutdData.tower(id)
 		var s := YoutdSlot.new(YoutdData.tower_icon(id), YoutdData.rarity_color(str(t.get("rarity", "common"))), SLOT)
 		s.set_marked(game.build_id == id, entry[1] != "")
-		s.tooltip_text = YoutdPanel.tower_tip(id) + ("\n" + str(entry[1]) if entry[1] != "" else "\n" + tr("Klick: bauen"))
+		s.set_roles(YoutdData.tower_roles(id))
+		s.tooltip_text = YoutdPanel.tower_tip(id) + ("\n" + s.roles_text() if s.roles_text() != "" else "") \
+				+ ("\n" + str(entry[1]) if entry[1] != "" else "\n" + tr("Klick: bauen"))
 		s.clicked.connect(func(button):
 			if button == MOUSE_BUTTON_LEFT:
 				game.choose_build(id))

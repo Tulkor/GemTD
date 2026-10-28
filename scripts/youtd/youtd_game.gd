@@ -1123,7 +1123,7 @@ func tower_options(t: Tower) -> Array:
 		var up := YoutdData.upgrade_of(yt.yid)
 		if up != "":
 			var cost := int(YoutdData.tower(up).cost) - int(YoutdData.tower(yt.yid).cost)
-			opts.append({"label": tr("Aufwerten: %s") % str(YoutdData.tower(up).get("name", up)), "action": "upgrade", "id": up, "tier": 0,
+			opts.append({"label": tr("Aufwerten"), "action": "upgrade", "id": up, "tier": 0,
 					"cost": cost, "reason": build_reason(up, yt)})
 	if yt.core != null:
 		var list := yt.autocasts()
@@ -1350,8 +1350,16 @@ func _refresh_item_row(yt: YoutdTower) -> void:
 	if yt == null:
 		return
 	var mine := yt.owner_player == local_player
-	for k in yt.slots():
+	var cap := int(YoutdData.rules().get("rarities", {}).get("item_slots_max", {}).get("unique", 6))
+	for k in maxi(cap, yt.slots()):
 		var s: YoutdSlot
+		if k >= yt.slots():
+			# wie in WC3 immer alle Felder: die, die der Tower nicht hat, dunkel
+			s = YoutdSlot.new(null, Color.TRANSPARENT, 40.0)
+			s.set_marked(false, true)
+			s.tooltip_text = tr("Dieser Tower hat nur %d Item-Plätze") % yt.slots()
+			_item_row.add_child(s)
+			continue
 		if k < yt.items.size():
 			var it: YtItem = yt.items[k]
 			var d := YoutdData.item(str(it.get_id()))
@@ -1397,9 +1405,15 @@ func _option_view(_t: Tower, o: Dictionary) -> Dictionary:
 		"take_item":
 			return {"label": o.label, "style": "normal", "tooltip": tr("Item zurück ins Lager legen.")}
 	var sub := tr("%d Gold") % int(o.cost)
+	var tip: String = o.label
+	if str(o.action) == "upgrade":
+		tip = tr("Aufwerten zu %s") % str(YoutdData.tower(str(o.id)).get("name", o.id)) + "\n" + YoutdPanel.tower_tip(str(o.id))
 	if o.get("reason", "") != "":
-		sub += " · " + str(o.reason)
-	return {"label": o.label, "sub": sub, "style": "primary", "icon": "up", "disabled": o.get("reason", "") != "", "tooltip": o.label}
+		# geht noch nicht: kleiner Knopf mit dem Grund, wann es geht
+		sub = str(o.reason) + " · " + sub
+		return {"label": o.label, "sub": sub, "style": "normal", "icon": "up", "disabled": true, "tooltip": tip}
+	var label: String = o.label + " · " + sub if int(o.cost) > 0 else o.label
+	return {"label": label, "sub": sub, "style": "primary", "icon": "up", "tooltip": tip}
 
 
 func _upcoming_waves(count: int) -> Array:

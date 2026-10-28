@@ -13,6 +13,8 @@ var _count: Label
 var _level: Label
 var _border := Color.TRANSPARENT
 var _hover := false
+var _roles := {}
+var _badges: Control
 
 
 func _init(tex: Texture2D = null, border := Color.TRANSPARENT, side := 44.0) -> void:
@@ -27,6 +29,11 @@ func _init(tex: Texture2D = null, border := Color.TRANSPARENT, side := 44.0) -> 
 	add_child(_icon)
 	_count = _corner_label(HORIZONTAL_ALIGNMENT_RIGHT, VERTICAL_ALIGNMENT_BOTTOM, UiTheme.TEXT)
 	_level = _corner_label(HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_TOP, UiTheme.COIN)
+	_badges = Control.new()
+	_badges.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_badges.draw.connect(_draw_badges)
+	_badges.resized.connect(_badges.queue_redraw)
+	add_child(_badges)
 	_style()
 	mouse_entered.connect(func(): _hover = true; _style())
 	mouse_exited.connect(func(): _hover = false; _style())
@@ -55,6 +62,70 @@ func set_count(text: String) -> YoutdSlot:
 func set_level(text: String) -> YoutdSlot:
 	_level.text = text
 	return self
+
+
+## Symbole eines Towers (YoutdData.tower_roles): unten links Fadenkreuz (Einzelziel), Explosion (Masse) oder Vogel
+## (gegen Flieger), oben rechts ein Blitz für Unterstützung: violett Kontrolle, grün Aura, gelb Ökonomie.
+func set_roles(roles: Dictionary) -> YoutdSlot:
+	_roles = roles
+	var parts := []
+	match str(roles.get("attack", "")):
+		"single":
+			parts.append(tr("Einzelziel"))
+		"mass":
+			parts.append(tr("Flächenschaden"))
+		"air":
+			parts.append(tr("Gegen Flieger"))
+	match str(roles.get("util", "")):
+		"cc":
+			parts.append(tr("Kontrolle (verlangsamen, betäuben)"))
+		"aura":
+			parts.append(tr("Aura für Tower in der Nähe"))
+		"eco":
+			parts.append(tr("Ökonomie (Gold, Erfahrung, Items)"))
+	set_meta("roles_text", " · ".join(parts))
+	_badges.queue_redraw()
+	return self
+
+
+## Text zu den Symbolen für Tooltips ("" = keine).
+func roles_text() -> String:
+	return str(get_meta("roles_text", ""))
+
+
+func _draw_badges() -> void:
+	if _roles.is_empty():
+		return
+	var s := size.x / 44.0
+	var dark := Color(UiTheme.BG, 0.85)
+	var r := 7.5 * s
+	var c := Vector2(r + 1, size.y - r - 1)
+	_badges.draw_circle(c, r, dark)
+	match str(_roles.get("attack", "")):
+		"single":
+			_badges.draw_arc(c, 4.0 * s, 0, TAU, 16, UiTheme.TEXT, 1.4 * s, true)
+			for d in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+				_badges.draw_line(c + d * 2.0 * s, c + d * 6.5 * s, UiTheme.TEXT, 1.4 * s, true)
+		"mass":
+			var pts := PackedVector2Array()
+			for i in 16:
+				var ang := TAU * i / 16.0 - PI / 2
+				pts.append(c + Vector2(cos(ang), sin(ang)) * (6.5 if i % 2 == 0 else 3.0) * s)
+			_badges.draw_colored_polygon(pts, UiTheme.MISSING)
+			_badges.draw_circle(c, 2.0 * s, UiTheme.COIN)
+		"air":
+			var wing := PackedVector2Array([c + Vector2(-6, 0) * s, c + Vector2(-3, -3) * s, c + Vector2(0, 0.5) * s,
+					c + Vector2(3, -3) * s, c + Vector2(6, 0) * s])
+			_badges.draw_polyline(wing, UiTheme.TEXT, 1.6 * s, true)
+	var util := str(_roles.get("util", ""))
+	if util == "":
+		return
+	var col: Color = {"cc": UiTheme.PURPLE_LIGHT, "aura": UiTheme.HAVE, "eco": UiTheme.COIN}.get(util, UiTheme.TEXT)
+	var b := Vector2(size.x - r - 1, r + 1)
+	_badges.draw_circle(b, r, dark)
+	var bolt := PackedVector2Array([b + Vector2(1.5, -6) * s, b + Vector2(-3.5, 1) * s, b + Vector2(-0.3, 1) * s,
+			b + Vector2(-1.5, 6) * s, b + Vector2(3.5, -1) * s, b + Vector2(0.3, -1) * s])
+	_badges.draw_colored_polygon(bolt, col)
 
 
 ## Hervorheben (gewählt, im Würfel); gedimmt = gerade nicht nutzbar.

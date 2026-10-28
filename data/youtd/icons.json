@@ -525,6 +525,2299 @@
 		"special_gold_ore": "res://assets/models/special/gold_ore.glb",
 		"special_platonic": "res://assets/models/special/platonic.glb"
 	},
+	"roles": {
+		"1": {
+			"attack": "single"
+		},
+		"10": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"100": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"101": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"102": {
+			"attack": "single"
+		},
+		"103": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"104": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"105": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"106": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"107": {
+			"attack": "mass"
+		},
+		"108": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"109": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"11": {
+			"attack": "single"
+		},
+		"110": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"111": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"112": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"113": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"114": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"115": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"116": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"117": {
+			"attack": "single"
+		},
+		"118": {
+			"attack": "single"
+		},
+		"119": {
+			"attack": "single"
+		},
+		"12": {
+			"attack": "single"
+		},
+		"120": {
+			"attack": "single"
+		},
+		"121": {
+			"attack": "single"
+		},
+		"122": {
+			"attack": "mass"
+		},
+		"123": {
+			"attack": "single"
+		},
+		"124": {
+			"attack": "single"
+		},
+		"125": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"126": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"127": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"128": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"129": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"13": {
+			"attack": "single"
+		},
+		"130": {
+			"attack": "air",
+			"util": "cc"
+		},
+		"131": {
+			"attack": "mass"
+		},
+		"132": {
+			"attack": "mass"
+		},
+		"133": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"134": {
+			"attack": "single"
+		},
+		"135": {
+			"attack": "single"
+		},
+		"136": {
+			"attack": "single"
+		},
+		"137": {
+			"attack": "single"
+		},
+		"138": {
+			"attack": "single"
+		},
+		"139": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"14": {
+			"attack": "single"
+		},
+		"140": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"141": {
+			"attack": "single"
+		},
+		"142": {
+			"attack": "single"
+		},
+		"143": {
+			"attack": "single"
+		},
+		"144": {
+			"attack": "single"
+		},
+		"145": {
+			"attack": "mass"
+		},
+		"146": {
+			"attack": "mass"
+		},
+		"147": {
+			"attack": "mass"
+		},
+		"148": {
+			"attack": "mass"
+		},
+		"149": {
+			"attack": "mass"
+		},
+		"15": {
+			"attack": "single"
+		},
+		"150": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"151": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"152": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"153": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"154": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"155": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"156": {
+			"attack": "single"
+		},
+		"157": {
+			"attack": "mass"
+		},
+		"158": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"159": {
+			"attack": "mass"
+		},
+		"16": {
+			"attack": "single"
+		},
+		"160": {
+			"attack": "single"
+		},
+		"161": {
+			"attack": "mass"
+		},
+		"162": {
+			"attack": "mass"
+		},
+		"163": {
+			"attack": "mass"
+		},
+		"164": {
+			"attack": "mass"
+		},
+		"165": {
+			"attack": "mass"
+		},
+		"166": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"167": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"168": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"169": {
+			"attack": "single"
+		},
+		"17": {
+			"attack": "mass"
+		},
+		"170": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"171": {
+			"attack": "mass"
+		},
+		"172": {
+			"attack": "mass"
+		},
+		"173": {
+			"attack": "mass"
+		},
+		"174": {
+			"attack": "single"
+		},
+		"175": {
+			"attack": "single"
+		},
+		"176": {
+			"attack": "single"
+		},
+		"177": {
+			"attack": "air"
+		},
+		"178": {
+			"attack": "air"
+		},
+		"179": {
+			"attack": "mass"
+		},
+		"18": {
+			"attack": "mass"
+		},
+		"180": {
+			"attack": "mass"
+		},
+		"181": {
+			"attack": "mass"
+		},
+		"182": {
+			"attack": "mass"
+		},
+		"183": {
+			"attack": "mass"
+		},
+		"184": {
+			"attack": "mass"
+		},
+		"185": {
+			"attack": "mass"
+		},
+		"186": {
+			"attack": "single"
+		},
+		"187": {
+			"attack": "single"
+		},
+		"188": {
+			"attack": "single"
+		},
+		"189": {
+			"attack": "single"
+		},
+		"19": {
+			"attack": "mass"
+		},
+		"190": {
+			"attack": "single"
+		},
+		"191": {
+			"attack": "single"
+		},
+		"192": {
+			"attack": "single"
+		},
+		"193": {
+			"attack": "single"
+		},
+		"194": {
+			"attack": "single"
+		},
+		"195": {
+			"attack": "single"
+		},
+		"196": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"197": {
+			"attack": "single"
+		},
+		"198": {
+			"attack": "single"
+		},
+		"199": {
+			"attack": "mass"
+		},
+		"2": {
+			"attack": "mass"
+		},
+		"20": {
+			"attack": "mass"
+		},
+		"200": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"201": {
+			"attack": "mass"
+		},
+		"202": {
+			"attack": "mass"
+		},
+		"203": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"204": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"205": {
+			"attack": "single"
+		},
+		"206": {
+			"attack": "single"
+		},
+		"207": {
+			"attack": "single"
+		},
+		"208": {
+			"attack": "single"
+		},
+		"209": {
+			"attack": "single"
+		},
+		"21": {
+			"attack": "mass"
+		},
+		"210": {
+			"attack": "air"
+		},
+		"211": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"212": {
+			"attack": "single"
+		},
+		"213": {
+			"attack": "single"
+		},
+		"214": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"215": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"216": {
+			"attack": "mass"
+		},
+		"217": {
+			"attack": "mass"
+		},
+		"218": {
+			"attack": "mass"
+		},
+		"219": {
+			"attack": "single"
+		},
+		"22": {
+			"attack": "mass"
+		},
+		"220": {
+			"attack": "single"
+		},
+		"221": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"222": {
+			"attack": "single"
+		},
+		"223": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"224": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"225": {
+			"attack": "mass"
+		},
+		"226": {
+			"attack": "mass"
+		},
+		"227": {
+			"attack": "mass"
+		},
+		"228": {
+			"attack": "mass"
+		},
+		"229": {
+			"attack": "mass"
+		},
+		"23": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"230": {
+			"attack": "single"
+		},
+		"231": {
+			"attack": "single"
+		},
+		"232": {
+			"attack": "single"
+		},
+		"233": {
+			"attack": "single"
+		},
+		"234": {
+			"attack": "single"
+		},
+		"235": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"236": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"237": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"238": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"239": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"24": {
+			"attack": "mass"
+		},
+		"240": {
+			"attack": "single"
+		},
+		"241": {
+			"attack": "single"
+		},
+		"242": {
+			"attack": "single"
+		},
+		"243": {
+			"attack": "single"
+		},
+		"244": {
+			"attack": "single"
+		},
+		"245": {
+			"attack": "single"
+		},
+		"246": {
+			"attack": "single"
+		},
+		"247": {
+			"attack": "single"
+		},
+		"248": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"249": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"25": {
+			"attack": "mass"
+		},
+		"250": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"251": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"252": {
+			"attack": "single"
+		},
+		"253": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"254": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"255": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"256": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"257": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"258": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"26": {
+			"attack": "mass"
+		},
+		"262": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"263": {
+			"attack": "mass"
+		},
+		"264": {
+			"attack": "mass"
+		},
+		"265": {
+			"attack": "mass"
+		},
+		"266": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"267": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"268": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"269": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"27": {
+			"attack": "mass"
+		},
+		"270": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"271": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"272": {
+			"attack": "mass"
+		},
+		"273": {
+			"attack": "mass"
+		},
+		"274": {
+			"attack": "mass"
+		},
+		"275": {
+			"attack": "mass"
+		},
+		"276": {
+			"attack": "mass"
+		},
+		"277": {
+			"attack": "mass"
+		},
+		"278": {
+			"attack": "single"
+		},
+		"279": {
+			"attack": "single"
+		},
+		"28": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"280": {
+			"attack": "single"
+		},
+		"281": {
+			"attack": "single"
+		},
+		"282": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"283": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"284": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"285": {
+			"attack": "single"
+		},
+		"286": {
+			"attack": "single"
+		},
+		"287": {
+			"attack": "single"
+		},
+		"288": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"289": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"29": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"290": {
+			"attack": "mass"
+		},
+		"291": {
+			"attack": "mass"
+		},
+		"292": {
+			"attack": "mass"
+		},
+		"293": {
+			"attack": "mass"
+		},
+		"294": {
+			"attack": "mass"
+		},
+		"295": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"296": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"297": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"298": {
+			"attack": "air"
+		},
+		"299": {
+			"attack": "air"
+		},
+		"3": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"30": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"300": {
+			"attack": "air"
+		},
+		"301": {
+			"attack": "single"
+		},
+		"302": {
+			"attack": "single"
+		},
+		"303": {
+			"attack": "air",
+			"util": "aura"
+		},
+		"304": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"305": {
+			"attack": "single"
+		},
+		"306": {
+			"attack": "mass"
+		},
+		"307": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"308": {
+			"attack": "single"
+		},
+		"309": {
+			"attack": "single"
+		},
+		"31": {
+			"attack": "single"
+		},
+		"310": {
+			"attack": "single"
+		},
+		"311": {
+			"attack": "single"
+		},
+		"312": {
+			"attack": "air"
+		},
+		"313": {
+			"attack": "air"
+		},
+		"314": {
+			"attack": "air"
+		},
+		"315": {
+			"attack": "air"
+		},
+		"316": {
+			"attack": "air"
+		},
+		"317": {
+			"attack": "single"
+		},
+		"318": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"319": {
+			"attack": "single"
+		},
+		"32": {
+			"attack": "single"
+		},
+		"320": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"321": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"322": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"323": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"324": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"325": {
+			"attack": "single"
+		},
+		"326": {
+			"attack": "single"
+		},
+		"327": {
+			"attack": "single"
+		},
+		"328": {
+			"attack": "single"
+		},
+		"329": {
+			"attack": "mass"
+		},
+		"33": {
+			"attack": "single"
+		},
+		"330": {
+			"attack": "single"
+		},
+		"331": {
+			"attack": "single"
+		},
+		"332": {
+			"attack": "single"
+		},
+		"333": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"334": {
+			"attack": "single"
+		},
+		"335": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"336": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"337": {
+			"attack": "mass"
+		},
+		"338": {
+			"attack": "mass"
+		},
+		"339": {
+			"attack": "mass"
+		},
+		"34": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"340": {
+			"attack": "mass"
+		},
+		"341": {
+			"attack": "single"
+		},
+		"342": {
+			"attack": "single"
+		},
+		"343": {
+			"attack": "single"
+		},
+		"344": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"345": {
+			"attack": "single"
+		},
+		"346": {
+			"attack": "single"
+		},
+		"347": {
+			"attack": "single"
+		},
+		"348": {
+			"attack": "single"
+		},
+		"349": {
+			"attack": "single"
+		},
+		"35": {
+			"attack": "mass"
+		},
+		"350": {
+			"attack": "single"
+		},
+		"351": {
+			"attack": "single"
+		},
+		"352": {
+			"attack": "single"
+		},
+		"353": {
+			"attack": "single"
+		},
+		"354": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"355": {
+			"attack": "single"
+		},
+		"356": {
+			"attack": "single"
+		},
+		"357": {
+			"attack": "single"
+		},
+		"358": {
+			"attack": "single"
+		},
+		"359": {
+			"attack": "single"
+		},
+		"36": {
+			"attack": "single"
+		},
+		"360": {
+			"attack": "single"
+		},
+		"361": {
+			"attack": "single"
+		},
+		"362": {
+			"attack": "single"
+		},
+		"363": {
+			"attack": "mass"
+		},
+		"364": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"365": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"366": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"367": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"368": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"369": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"37": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"370": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"371": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"372": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"373": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"374": {
+			"attack": "mass"
+		},
+		"375": {
+			"attack": "mass"
+		},
+		"376": {
+			"attack": "single"
+		},
+		"377": {
+			"attack": "single"
+		},
+		"378": {
+			"attack": "mass"
+		},
+		"379": {
+			"attack": "single"
+		},
+		"38": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"380": {
+			"attack": "mass"
+		},
+		"381": {
+			"attack": "mass"
+		},
+		"382": {
+			"attack": "mass"
+		},
+		"383": {
+			"attack": "mass"
+		},
+		"384": {
+			"attack": "single"
+		},
+		"385": {
+			"attack": "mass"
+		},
+		"386": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"387": {
+			"attack": "mass"
+		},
+		"388": {
+			"attack": "mass"
+		},
+		"389": {
+			"attack": "mass"
+		},
+		"39": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"390": {
+			"attack": "mass"
+		},
+		"391": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"392": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"393": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"394": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"395": {
+			"attack": "single"
+		},
+		"396": {
+			"attack": "single"
+		},
+		"397": {
+			"attack": "single"
+		},
+		"398": {
+			"attack": "single"
+		},
+		"399": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"4": {
+			"attack": "single"
+		},
+		"40": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"400": {
+			"attack": "single"
+		},
+		"401": {
+			"attack": "mass"
+		},
+		"402": {
+			"attack": "single"
+		},
+		"403": {
+			"attack": "single"
+		},
+		"404": {
+			"attack": "mass"
+		},
+		"405": {
+			"attack": "single"
+		},
+		"406": {
+			"attack": "single"
+		},
+		"407": {
+			"attack": "single"
+		},
+		"408": {
+			"attack": "single"
+		},
+		"409": {
+			"attack": "single"
+		},
+		"41": {
+			"attack": "mass"
+		},
+		"410": {
+			"attack": "single"
+		},
+		"411": {
+			"attack": "single"
+		},
+		"412": {
+			"attack": "single"
+		},
+		"413": {
+			"attack": "single"
+		},
+		"414": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"415": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"416": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"417": {
+			"attack": "mass"
+		},
+		"418": {
+			"attack": "mass"
+		},
+		"419": {
+			"attack": "mass"
+		},
+		"42": {
+			"attack": "mass"
+		},
+		"420": {
+			"attack": "mass"
+		},
+		"421": {
+			"attack": "mass"
+		},
+		"422": {
+			"attack": "mass"
+		},
+		"423": {
+			"attack": "mass"
+		},
+		"424": {
+			"attack": "mass"
+		},
+		"425": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"426": {
+			"attack": "air"
+		},
+		"427": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"428": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"429": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"43": {
+			"attack": "mass"
+		},
+		"430": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"431": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"432": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"433": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"434": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"435": {
+			"attack": "mass"
+		},
+		"436": {
+			"attack": "mass"
+		},
+		"437": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"438": {
+			"attack": "single"
+		},
+		"439": {
+			"attack": "single"
+		},
+		"44": {
+			"attack": "mass"
+		},
+		"440": {
+			"attack": "mass"
+		},
+		"441": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"442": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"443": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"444": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"445": {
+			"attack": "mass"
+		},
+		"446": {
+			"attack": "mass"
+		},
+		"447": {
+			"attack": "mass"
+		},
+		"448": {
+			"attack": "mass"
+		},
+		"449": {
+			"attack": "mass"
+		},
+		"45": {
+			"attack": "mass"
+		},
+		"450": {
+			"attack": "single"
+		},
+		"451": {
+			"attack": "mass"
+		},
+		"452": {
+			"attack": "mass"
+		},
+		"453": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"454": {
+			"attack": "mass"
+		},
+		"455": {
+			"attack": "mass"
+		},
+		"456": {
+			"attack": "mass"
+		},
+		"457": {
+			"attack": "mass"
+		},
+		"458": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"459": {
+			"attack": "single"
+		},
+		"46": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"460": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"461": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"462": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"463": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"464": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"465": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"466": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"467": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"468": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"469": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"47": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"470": {
+			"attack": "single"
+		},
+		"471": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"472": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"473": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"474": {
+			"attack": "mass"
+		},
+		"475": {
+			"attack": "single"
+		},
+		"476": {
+			"attack": "mass"
+		},
+		"477": {
+			"attack": "mass"
+		},
+		"478": {
+			"attack": "mass"
+		},
+		"479": {
+			"attack": "mass"
+		},
+		"48": {
+			"attack": "mass"
+		},
+		"480": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"481": {
+			"attack": "single"
+		},
+		"482": {
+			"attack": "single"
+		},
+		"483": {
+			"attack": "single"
+		},
+		"484": {
+			"attack": "single"
+		},
+		"485": {
+			"attack": "single"
+		},
+		"486": {
+			"attack": "single"
+		},
+		"487": {
+			"attack": "single"
+		},
+		"488": {
+			"attack": "single"
+		},
+		"489": {
+			"attack": "single"
+		},
+		"49": {
+			"attack": "single"
+		},
+		"490": {
+			"attack": "single"
+		},
+		"491": {
+			"attack": "single"
+		},
+		"492": {
+			"attack": "single"
+		},
+		"493": {
+			"attack": "single"
+		},
+		"494": {
+			"attack": "single"
+		},
+		"495": {
+			"attack": "single"
+		},
+		"496": {
+			"attack": "single"
+		},
+		"497": {
+			"attack": "single"
+		},
+		"498": {
+			"attack": "single"
+		},
+		"499": {
+			"attack": "single"
+		},
+		"5": {
+			"attack": "single"
+		},
+		"50": {
+			"attack": "single"
+		},
+		"500": {
+			"attack": "single"
+		},
+		"501": {
+			"attack": "single"
+		},
+		"502": {
+			"attack": "single"
+		},
+		"503": {
+			"attack": "single"
+		},
+		"504": {
+			"attack": "single"
+		},
+		"505": {
+			"attack": "single"
+		},
+		"506": {
+			"attack": "single"
+		},
+		"507": {
+			"attack": "single"
+		},
+		"508": {
+			"attack": "single"
+		},
+		"509": {
+			"attack": "single"
+		},
+		"51": {
+			"attack": "single"
+		},
+		"510": {
+			"attack": "single"
+		},
+		"511": {
+			"attack": "single"
+		},
+		"512": {
+			"attack": "single"
+		},
+		"513": {
+			"attack": "single"
+		},
+		"514": {
+			"attack": "single"
+		},
+		"515": {
+			"attack": "single"
+		},
+		"516": {
+			"attack": "single"
+		},
+		"517": {
+			"attack": "single"
+		},
+		"518": {
+			"attack": "single"
+		},
+		"519": {
+			"attack": "single"
+		},
+		"52": {
+			"attack": "mass"
+		},
+		"520": {
+			"attack": "single"
+		},
+		"521": {
+			"attack": "single"
+		},
+		"522": {
+			"attack": "single"
+		},
+		"523": {
+			"attack": "single"
+		},
+		"524": {
+			"attack": "single"
+		},
+		"525": {
+			"attack": "mass"
+		},
+		"526": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"527": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"528": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"529": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"53": {
+			"attack": "mass"
+		},
+		"530": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"531": {
+			"attack": "mass"
+		},
+		"532": {
+			"attack": "single"
+		},
+		"533": {
+			"attack": "single"
+		},
+		"534": {
+			"attack": "single"
+		},
+		"535": {
+			"attack": "single"
+		},
+		"536": {
+			"attack": "single"
+		},
+		"537": {
+			"attack": "single"
+		},
+		"538": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"539": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"54": {
+			"attack": "mass"
+		},
+		"540": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"541": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"542": {
+			"attack": "single"
+		},
+		"543": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"544": {
+			"attack": "mass"
+		},
+		"545": {
+			"attack": "mass"
+		},
+		"546": {
+			"attack": "mass"
+		},
+		"547": {
+			"attack": "mass"
+		},
+		"548": {
+			"attack": "mass"
+		},
+		"549": {
+			"attack": "single"
+		},
+		"55": {
+			"attack": "mass"
+		},
+		"550": {
+			"attack": "single"
+		},
+		"551": {
+			"attack": "mass"
+		},
+		"552": {
+			"attack": "mass"
+		},
+		"553": {
+			"attack": "mass"
+		},
+		"554": {
+			"attack": "single"
+		},
+		"555": {
+			"attack": "single"
+		},
+		"556": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"557": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"558": {
+			"attack": "single"
+		},
+		"559": {
+			"attack": "single"
+		},
+		"56": {
+			"attack": "mass"
+		},
+		"560": {
+			"attack": "single"
+		},
+		"561": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"562": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"563": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"564": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"565": {
+			"attack": "single"
+		},
+		"566": {
+			"attack": "mass"
+		},
+		"567": {
+			"attack": "mass"
+		},
+		"568": {
+			"attack": "mass"
+		},
+		"569": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"57": {
+			"attack": "mass"
+		},
+		"570": {
+			"attack": "single"
+		},
+		"571": {
+			"attack": "mass"
+		},
+		"572": {
+			"attack": "mass"
+		},
+		"573": {
+			"attack": "mass"
+		},
+		"574": {
+			"attack": "mass"
+		},
+		"575": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"576": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"577": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"578": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"579": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"58": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"580": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"581": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"582": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"583": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"584": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"585": {
+			"attack": "single"
+		},
+		"586": {
+			"attack": "mass"
+		},
+		"587": {
+			"attack": "single"
+		},
+		"588": {
+			"attack": "mass"
+		},
+		"589": {
+			"attack": "mass"
+		},
+		"59": {
+			"attack": "single"
+		},
+		"590": {
+			"attack": "single"
+		},
+		"591": {
+			"attack": "single"
+		},
+		"592": {
+			"attack": "single"
+		},
+		"593": {
+			"attack": "single"
+		},
+		"594": {
+			"attack": "single"
+		},
+		"595": {
+			"attack": "single"
+		},
+		"596": {
+			"attack": "mass"
+		},
+		"597": {
+			"attack": "single"
+		},
+		"598": {
+			"attack": "single"
+		},
+		"599": {
+			"attack": "single"
+		},
+		"6": {
+			"attack": "single"
+		},
+		"60": {
+			"attack": "single"
+		},
+		"600": {
+			"attack": "single"
+		},
+		"601": {
+			"attack": "mass"
+		},
+		"602": {
+			"attack": "mass"
+		},
+		"603": {
+			"attack": "mass"
+		},
+		"604": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"605": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"606": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"607": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"608": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"609": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"61": {
+			"attack": "single"
+		},
+		"610": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"611": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"612": {
+			"attack": "single"
+		},
+		"613": {
+			"attack": "single"
+		},
+		"614": {
+			"attack": "single"
+		},
+		"615": {
+			"attack": "single"
+		},
+		"616": {
+			"attack": "single"
+		},
+		"617": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"618": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"619": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"62": {
+			"attack": "single"
+		},
+		"620": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"621": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"622": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"623": {
+			"attack": "single"
+		},
+		"624": {
+			"attack": "single"
+		},
+		"625": {
+			"attack": "single"
+		},
+		"626": {
+			"attack": "single"
+		},
+		"627": {
+			"attack": "single"
+		},
+		"628": {
+			"attack": "single"
+		},
+		"629": {
+			"attack": "single"
+		},
+		"63": {
+			"attack": "mass"
+		},
+		"630": {
+			"attack": "mass"
+		},
+		"631": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"632": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"633": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"634": {
+			"attack": "mass"
+		},
+		"635": {
+			"attack": "mass"
+		},
+		"636": {
+			"attack": "mass"
+		},
+		"637": {
+			"attack": "mass"
+		},
+		"638": {
+			"attack": "air"
+		},
+		"639": {
+			"attack": "air"
+		},
+		"64": {
+			"attack": "mass"
+		},
+		"640": {
+			"attack": "air"
+		},
+		"641": {
+			"attack": "air"
+		},
+		"642": {
+			"attack": "air"
+		},
+		"643": {
+			"attack": "air"
+		},
+		"644": {
+			"attack": "mass"
+		},
+		"645": {
+			"attack": "mass"
+		},
+		"646": {
+			"attack": "mass"
+		},
+		"647": {
+			"attack": "mass"
+		},
+		"648": {
+			"attack": "single"
+		},
+		"649": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"65": {
+			"attack": "mass"
+		},
+		"650": {
+			"attack": "mass"
+		},
+		"651": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"652": {
+			"attack": "single"
+		},
+		"653": {
+			"attack": "single"
+		},
+		"654": {
+			"attack": "mass"
+		},
+		"655": {
+			"attack": "mass"
+		},
+		"656": {
+			"attack": "mass"
+		},
+		"657": {
+			"attack": "mass"
+		},
+		"658": {
+			"attack": "single"
+		},
+		"659": {
+			"attack": "single"
+		},
+		"66": {
+			"attack": "single"
+		},
+		"660": {
+			"attack": "single"
+		},
+		"661": {
+			"attack": "single"
+		},
+		"662": {
+			"attack": "air"
+		},
+		"663": {
+			"attack": "air"
+		},
+		"664": {
+			"attack": "air"
+		},
+		"665": {
+			"attack": "air"
+		},
+		"666": {
+			"attack": "mass"
+		},
+		"667": {
+			"attack": "mass"
+		},
+		"668": {
+			"attack": "mass"
+		},
+		"669": {
+			"attack": "mass"
+		},
+		"67": {
+			"attack": "mass"
+		},
+		"670": {
+			"attack": "mass"
+		},
+		"671": {
+			"attack": "mass"
+		},
+		"672": {
+			"attack": "mass"
+		},
+		"673": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"674": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"675": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"676": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"677": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"678": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"679": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"68": {
+			"attack": "mass"
+		},
+		"680": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"681": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"682": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"683": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"684": {
+			"attack": "single"
+		},
+		"685": {
+			"attack": "single"
+		},
+		"686": {
+			"attack": "single"
+		},
+		"687": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"688": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"69": {
+			"attack": "mass"
+		},
+		"7": {
+			"attack": "single"
+		},
+		"70": {
+			"attack": "single"
+		},
+		"71": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"72": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"73": {
+			"attack": "single"
+		},
+		"74": {
+			"attack": "single"
+		},
+		"75": {
+			"attack": "single"
+		},
+		"76": {
+			"attack": "single"
+		},
+		"77": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"78": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"79": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"8": {
+			"attack": "single"
+		},
+		"80": {
+			"attack": "single"
+		},
+		"81": {
+			"attack": "single"
+		},
+		"82": {
+			"attack": "single"
+		},
+		"83": {
+			"attack": "single"
+		},
+		"84": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"85": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"86": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"87": {
+			"attack": "single"
+		},
+		"88": {
+			"attack": "single"
+		},
+		"89": {
+			"attack": "single"
+		},
+		"9": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"90": {
+			"attack": "single"
+		},
+		"91": {
+			"attack": "single"
+		},
+		"92": {
+			"attack": "single"
+		},
+		"93": {
+			"attack": "single"
+		},
+		"94": {
+			"attack": "single"
+		},
+		"95": {
+			"attack": "single"
+		},
+		"96": {
+			"attack": "single"
+		},
+		"97": {
+			"attack": "single"
+		},
+		"98": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"99": {
+			"attack": "air"
+		},
+		"990": {
+			"attack": "single"
+		},
+		"991": {
+			"attack": "single"
+		},
+		"992": {
+			"attack": "single"
+		},
+		"993": {
+			"attack": "single"
+		},
+		"994": {
+			"attack": "single"
+		}
+	},
 	"towers": {
 		"1": "nature_bush_common",
 		"100": "k_fantasy_stadt_fountain_round",
