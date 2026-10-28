@@ -36,6 +36,9 @@ func setup_youtd(g, w: Dictionary, size_id: String, p: PackedVector2Array, hp_fa
 	core.set_properties(YtPlayer.of(lane), YtCreepSize.from_string(size_id.replace("_", " ")), YtArmorType.from_string(armor_type),
 			YtCreepCategory.from_string(race), hp_value, armor, level)
 	add_child(core)
+	if ground_y != 0.0:  # unten in der Schlucht: Geschosse zielen auf die richtige Höhe
+		core.set_z(ground_y * YtWorld.WC3)
+		core._target_height = core.get_z()
 	YtWaveSpecial.apply_to_creep(specials, core)
 	core.set_health(core.get_overall_health())
 

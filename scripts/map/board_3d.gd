@@ -74,6 +74,9 @@ var ground_alpha := 0.0:
 		if _ground_mat != null:
 			_ground_mat.set_shader_parameter("ground_alpha", v)
 			_ground.visible = ground_alpha > 0.0
+## Tiefe der Schlucht in Einheiten: "_"-Felder (nur Laufweg) liegen so viel tiefer, die Bauflächen stehen
+## wie Klippen darüber (YouTD). 0 = alles flach. Vor add_child setzen.
+var path_depth := 0.0
 ## Feine Linien je Feld zusätzlich zum Towergitter (0 = aus), z. B. im Map-Editor.
 var grid_strength := 0.0:
 	set(v):
@@ -85,6 +88,7 @@ var _ground: MeshInstance3D
 var _ground_mat: ShaderMaterial
 var _floor: MeshInstance3D
 var _floor_mat: ShaderMaterial
+var _cliffs: MeshInstance3D  ## Felswände der Schlucht (nur mit path_depth > 0)
 var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
 var _rock_fits: Array = []  ## je Variante die Transformation, die das Modell auf Feldgröße bringt
 var _rock_outlines: Array = []  ## je Variante die Kontur-Hülle (oder null)
@@ -113,6 +117,16 @@ static func footprint(a: Vector2i, size := TOWER_CELLS) -> Array[Vector2i]:
 		for dx in size:
 			cells.append(a + Vector2i(dx, dy))
 	return cells
+
+
+## Feld liegt in der Schlucht (abgesenkter Laufweg)?
+func is_sunken(c: Vector2i) -> bool:
+	return path_depth > 0.0 and map != null and map.in_bounds(c) and map.get_tile(c) == MapData.WALK_ONLY
+
+
+## Bodenhöhe unter dem Punkt p (Einheiten, X/Z): 0 auf den Bauflächen, -path_depth in der Schlucht.
+func ground_y(p: Vector2) -> float:
+	return -path_depth if is_sunken(Vector2i(floori(p.x / CELL), floori(p.y / CELL))) else 0.0
 
 
 static func to_3d(p: Vector2, height := 0.0) -> Vector3:
@@ -272,10 +286,15 @@ func rebuild() -> void:
 ## Bodenfläche und Erde-Verteilung (ein Pixel pro Feld) neu berechnen.
 func _rebuild_ground() -> void:
 	var size := Vector2(map.width, map.height) * CELL
-	var plane := PlaneMesh.new()
-	plane.size = size
-	_ground.mesh = plane
-	_ground.position = to_3d(size / 2.0)
+	if path_depth > 0.0:
+		_ground.mesh = _terrain_mesh()
+		_ground.position = Vector3.ZERO
+		_rebuild_cliffs()
+	else:
+		var plane := PlaneMesh.new()
+		plane.size = size
+		_ground.mesh = plane
+		_ground.position = to_3d(size / 2.0)
 	_ground_mat.set_shader_parameter("map_size", size)
 	# Abstand jedes Felds zur nächsten Erde-Quelle (Chamfer-Distanz, zwei Durchläufe)
 	var w := map.width
@@ -321,6 +340,8 @@ func _rebuild_ground() -> void:
 	for y in h:
 		for x in w:
 			var a := clampf(1.0 - (dist[y * w + x] - DIRT_CORE) / DIRT_FADE, 0.0, 1.0)
+			if path_depth > 0.0:  # Schlucht: Erde nur unten, oben Gras bis an die Kante
+				a = 1.0 if is_sunken(Vector2i(x, y)) else 0.0
 			img.set_pixel(x, y, Color(a, a, a))
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
@@ -329,10 +350,14 @@ func _rebuild_ground() -> void:
 ## Wegpunkte (G) und schlichte Felder ohne Gitter (B) als Maske, ein Pixel pro Feld.
 func _rebuild_floor() -> void:
 	var size := Vector2(map.width, map.height) * CELL
-	var plane := PlaneMesh.new()
-	plane.size = size
-	_floor.mesh = plane
-	_floor.position = to_3d(size / 2.0, 0.001)
+	if path_depth > 0.0:
+		_floor.mesh = _ground.mesh
+		_floor.position = Vector3(0, 0.001, 0)
+	else:
+		var plane := PlaneMesh.new()
+		plane.size = size
+		_floor.mesh = plane
+		_floor.position = to_3d(size / 2.0, 0.001)
 	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)  # RGBA8: L8 mit ungerader Breite wird im GL-Renderer verschoben hochgeladen
 	var origin := Vector2i(map.width, map.height)  # erstes freies Feld (oben links)
 	for y in map.height:
@@ -364,9 +389,79 @@ func _zone_line_tint() -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## Feld ohne Gitterlinien zeichnen (Maul: unter der Stadt).
-func _floor_plain(_c: Vector2i) -> bool:
-	return false
+## Feld ohne Gitterlinien zeichnen (Maul: unter der Stadt, YouTD: der Weg unten in der Schlucht).
+func _floor_plain(c: Vector2i) -> bool:
+	return is_sunken(c)
+
+
+## Boden mit abgesenkten "_"-Feldern als ein Mesh (gleich hohe Felder einer Zeile zusammengefasst).
+func _terrain_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for y in map.height:
+		var x := 0
+		while x < map.width:
+			var low := is_sunken(Vector2i(x, y))
+			var x2 := x + 1
+			while x2 < map.width and is_sunken(Vector2i(x2, y)) == low:
+				x2 += 1
+			var h := -path_depth if low else 0.0
+			_quad(st, Vector3(x * CELL, h, y * CELL), Vector3(x2 * CELL, h, y * CELL),
+					Vector3(x2 * CELL, h, (y + 1) * CELL), Vector3(x * CELL, h, (y + 1) * CELL), Vector3.UP)
+			x = x2
+	st.generate_tangents()
+	return st.commit()
+
+
+## Senkrechte Felswände überall, wo ein Schluchtfeld an eine Baufläche grenzt; oben heller, unten im Schatten.
+func _rebuild_cliffs() -> void:
+	if _cliffs == null:
+		_cliffs = MeshInstance3D.new()
+		_cliffs.material_override = _cliff_material()
+		add_child(_cliffs)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var d := path_depth
+	for y in map.height:
+		for x in map.width:
+			var c := Vector2i(x, y)
+			if not is_sunken(c):
+				continue
+			for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+				var n: Vector2i = c + dir
+				if not map.in_bounds(n) or is_sunken(n):
+					continue
+				# Kante zwischen c und n, von c aus gesehen links nach rechts
+				var mid := (Vector2(c) + Vector2(0.5, 0.5) + Vector2(dir) * 0.5) * CELL
+				var side := Vector2(-dir.y, dir.x) * CELL * 0.5
+				var a := mid - side
+				var b := mid + side
+				_quad(st, Vector3(a.x, 0, a.y), Vector3(b.x, 0, b.y), Vector3(b.x, -d, b.y), Vector3(a.x, -d, a.y),
+						Vector3(-dir.x, 0, -dir.y), true)
+	_cliffs.mesh = st.commit()
+
+
+func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, e: Vector3, normal: Vector3, shade := false) -> void:
+	for v in [a, b, c, a, c, e]:
+		st.set_normal(normal)
+		st.set_uv(Vector2(v.x, v.z))
+		if shade:
+			st.set_color(Color.WHITE.lerp(Color(0.55, 0.52, 0.48), clampf(-v.y / path_depth, 0.0, 1.0)))
+		st.add_vertex(v)
+
+
+## Fels für die Schluchtwände: Erde-Textur dunkel und grau getönt, ohne Rücksicht auf UVs (triplanar).
+func _cliff_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(GROUND_TEXTURES.dirt)
+	m.albedo_color = Color("b0a898")
+	m.vertex_color_use_as_albedo = true
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * 0.6
+	m.roughness = 0.95
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
 
 
 func refresh_rocks() -> void:
@@ -423,7 +518,7 @@ func refresh_path() -> void:
 	var mm := _path.multimesh
 	mm.instance_count = path_points.size()
 	for i in path_points.size():
-		mm.set_instance_transform(i, Transform3D(Basis(), to_3d(path_points[i], 0.02)))
+		mm.set_instance_transform(i, Transform3D(Basis(), to_3d(path_points[i], 0.02 + ground_y(path_points[i]))))
 
 
 func refresh_hover() -> void:
@@ -506,7 +601,7 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	ring.mesh = torus
 	ring.material_override = FieldStyle.line_material(col, style.marker_energy)
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ring.position = to_3d(cell_center(c), 0.04)
+	ring.position = to_3d(cell_center(c), 0.04 + ground_y(cell_center(c)))
 	_markers.add_child(ring)
 	if text == "":
 		return
@@ -518,7 +613,7 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	label.modulate = col.lerp(Color.WHITE, 0.5)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
-	label.position = to_3d(cell_center(c), 0.9)
+	label.position = to_3d(cell_center(c), 0.9 + ground_y(cell_center(c)))
 	_markers.add_child(label)
 
 

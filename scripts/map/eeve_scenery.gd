@@ -170,10 +170,13 @@ func _size() -> Vector2:
 ## Waldboden um die Karte: derselbe Boden-Shader wie das Spielfeld, nur Gras und etwas dunkler.
 func _add_forest_floor() -> void:
 	var size := _size()
-	var plane := PlaneMesh.new()
-	plane.size = size + Vector2.ONE * FLOOR_MARGIN * 2.0
 	var floor := MeshInstance3D.new()
-	floor.mesh = plane
+	if board.path_depth > 0.0:
+		floor.mesh = _frame_mesh(size)
+	else:
+		var plane := PlaneMesh.new()
+		plane.size = size + Vector2.ONE * FLOOR_MARGIN * 2.0
+		floor.mesh = plane
 	var mat: ShaderMaterial = board._ground_mat.duplicate()
 	var none := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	none.fill(Color.BLACK)
@@ -186,6 +189,27 @@ func _add_forest_floor() -> void:
 	floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	floor.layers = 2
 	add_child(floor)
+
+
+## Waldboden nur als Rahmen um die Karte (Schlucht: unter der Karte darf nichts den abgesenkten Weg verdecken).
+func _frame_mesh(size: Vector2) -> ArrayMesh:
+	var m := FLOOR_MARGIN
+	var o := size / 2.0  # Mitte, das Mesh liegt wie die Fläche um die Kartenmitte
+	var rects := [Rect2(-m, -m, size.x + 2 * m, m), Rect2(-m, size.y, size.x + 2 * m, m),
+			Rect2(-m, 0, m, size.y), Rect2(size.x, 0, m, size.y)]
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for r in rects:
+		var a := Vector3(r.position.x - o.x, 0, r.position.y - o.y)
+		var b := a + Vector3(r.size.x, 0, 0)
+		var c := a + Vector3(r.size.x, 0, r.size.y)
+		var d := a + Vector3(0, 0, r.size.y)
+		for v in [a, b, c, a, c, d]:
+			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2(v.x, v.z))
+			st.add_vertex(v)
+	st.generate_tangents()
+	return st.commit()
 
 
 ## Abstand eines Punkts zum Rand der Karte (0 innerhalb).
@@ -415,6 +439,16 @@ func _muted(mesh: Mesh) -> Mesh:
 
 ## Eine Laterne an jedem Wegpunkt (Spawn, Checkpoints, Ziel): Holzpfosten mit Messinglaterne in der Ecke
 ## des Wegpunkts, die von den Wegen wegzeigt.
+## Ein Pixel pro Feld, R = 1 in der Schlucht (Board3D.is_sunken), für die Lichtflecken.
+func _level_mask() -> Texture2D:
+	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)
+	for y in map.height:
+		for x in map.width:
+			if board.is_sunken(Vector2i(x, y)):
+				img.set_pixel(x, y, Color.RED)
+	return ImageTexture.create_from_image(img)
+
+
 func _add_lanterns() -> void:
 	# schwarzes Eisen wie die Laternenpfähle in Duskwood
 	var wood := StandardMaterial3D.new()
@@ -435,6 +469,7 @@ func _add_lanterns() -> void:
 	for lane in map.lane_count():
 		lanes.append(map.waypoints(lane))
 	var n := 0
+	var mask: Texture2D = null
 	for c in pts:
 		var at := board.cell_center(c)
 		var corner := _free_corner(c, lanes)
@@ -485,6 +520,21 @@ func _add_lanterns() -> void:
 		pool.position = Vector3(foot.x + arm.x, 0.03, foot.y + arm.y)
 		add_child(pool)
 		_pools.append(pool)
+		if board.path_depth > 0.0:
+			# Schlucht: derselbe Fleck noch einmal unten, jeder nur über den Feldern seiner Höhe
+			if mask == null:
+				mask = _level_mask()
+			pm.set_shader_parameter("level", 0.0)
+			var low := pool.duplicate() as MeshInstance3D
+			var lm := pm.duplicate() as ShaderMaterial
+			lm.set_shader_parameter("level", 1.0)
+			low.material_override = lm
+			low.position.y = 0.03 - board.path_depth
+			add_child(low)
+			_pools.append(low)
+			for m in [pm, lm]:
+				m.set_shader_parameter("level_mask", mask)
+				m.set_shader_parameter("map_size", Vector2(map.width, map.height) * Board3D.CELL)
 		n += 1
 
 

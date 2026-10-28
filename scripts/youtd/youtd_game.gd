@@ -15,6 +15,8 @@ extends "res://scripts/game/game.gd"
 ## Items (YtItem mit Skript), Horadrischer Würfel (youtd_cube.gd), Baumeister (YtBuilder), Spielstand (youtd_save.gd)
 ## und Koop mit eigenem Weg je Spieler (youtd_coop.gd) seit Etappe 3.
 
+## Der Weg liegt als Schlucht so tief unter den Bauflächen (Klippen, Board3D.path_depth).
+const PATH_DEPTH := 0.6
 const MODE_IDS := ["random_with_upgrades", "build", "totally_random"]
 
 var rules: Dictionary = {}
@@ -81,6 +83,7 @@ var _player_cfg := {}        ## Host: Baumeister und Weisheit der Mitspieler (Be
 func _ready() -> void:
 	UiTheme.use_skin(UiTheme.DRUID)
 	FieldStyle.night = true
+	path_depth = PATH_DEPTH
 	rules = YoutdData.rules()
 	Session.score_mode = false
 	_coop_count = (Session.coop.get("names", []) as Array).size()
