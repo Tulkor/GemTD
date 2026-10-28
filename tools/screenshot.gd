@@ -189,11 +189,12 @@ func _prepare(game: Node) -> void:
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
 		return
-	if game.has_method("build_tower"):
-		await _prepare_rg(game)
-		return
+	# YouTD vor Randgruppen prüfen: beide haben build_tower()
 	if game.has_method("roll_start"):
 		await _prepare_youtd(game)
+		return
+	if game.has_method("race_towers"):
+		await _prepare_rg(game)
 		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
