@@ -74,6 +74,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
+		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and UiUtil.mouse_over_ui(get_viewport()):
+			return  # über einem Fenster scrollt das Fenster, die Karte zoomt nicht mit
 		match event.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
 				distance = maxf(MIN_DISTANCE, distance * 0.9)

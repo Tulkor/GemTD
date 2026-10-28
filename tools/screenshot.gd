@@ -533,8 +533,8 @@ func _prepare_youtd(game: Node) -> void:
 	Engine.time_scale = 1.0
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
-	if opts.has("wuerfel") and game.youtd_panel != null:
-		game.youtd_panel.toggle_section("cube")
+	if opts.has("wuerfel") and game.youtd_store != null:
+		game.youtd_store.set_cube(true)
 	game._refresh_hud()
 	await _frames(3)
 

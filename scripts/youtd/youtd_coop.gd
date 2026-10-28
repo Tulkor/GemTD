@@ -204,8 +204,8 @@ static func _sync_items(g, d: Dictionary) -> void:
 		for e in list:
 			if known.has(int(e[0])):
 				_update(known[int(e[0])], e)
-	if changed and g.youtd_panel != null:
-		g.youtd_panel.items_dirty()
+	if changed and g.youtd_store != null:
+		g.youtd_store.items_dirty()
 
 
 static func _get_or_make(known: Dictionary, e: Array, p: YtPlayer) -> YtItem:

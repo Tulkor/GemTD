@@ -38,6 +38,7 @@ func _ready() -> void:
 	check(game.yp().builder_id == "backpacker", "Baumeister im Startbefehl gewählt")
 	await _items()
 	await _cube()
+	await _store()
 	await _builders()
 	await _upgrade()
 	print("YTITEMS TEST ", "OK" if failures == 0 else "FAILED (%d)" % failures)
@@ -279,6 +280,51 @@ func _cube() -> void:
 	for it in game.item_stash.duplicate():
 		game.stash_remove(it)
 		it.queue_free()
+
+
+## Lager unten links: Icons, „Öle kombinieren“, Herausnehmen per Befehl, „6 → 1“ im Zufallsmodus.
+func _store() -> void:
+	var p: YtPlayer = game.yp()
+	var all := YoutdData.items()
+	check(all.keys().all(func(id): return YoutdData.item_icon(str(id)) != null), "jedes Item hat ein Icon")
+	check(YoutdData.towers().keys().all(func(id): return YoutdData.tower_icon(str(id)) != null), "jeder Tower hat ein Icon")
+	# 9 gewöhnliche Öle: 2× destillieren (8 → 2 ungewöhnliche), 1 bleibt
+	var oils: Array = all.keys().filter(func(id): return all[id].type == "oil" and all[id].rarity == "common")
+	for i in 9:
+		game.stash_add(YtItem.make(int(oils[i % oils.size()]), p))
+	check(game.can_merge_oils(), "Öle kombinieren möglich")
+	check(game.submit({"type": "oil_merge"}), "Öle kombinieren")
+	var left: Array = game.item_stash.filter(func(it): return it.get_type_name() == "oil" and YoutdData.item(str(it.get_id())).rarity == "common")
+	check(left.size() == 1 and game.item_stash.size() == 3, "9 gewöhnliche Öle → 1 übrig + 2 höhere (Lager %d)" % game.item_stash.size())
+	check(not game.can_merge_oils(), "danach nichts mehr zu kombinieren")
+	await get_tree().process_frame
+	check(game.youtd_store._items.get_child_count() >= game.item_stash.size(), "Item-Lager zeigt Felder")
+	for it in game.item_stash.duplicate():
+		game.stash_remove(it)
+		it.queue_free()
+	# Herausnehmen per Befehl (Ziehen von der Auswahlkarte ins Lager)
+	var t: YoutdTower = _place([_carrier_ids()[0]])[0]
+	game.stash_add(YtItem.make(2, p))
+	check(game.submit({"type": "item_put", "tower": game.tower_ref(t), "uid": game.item_stash[0].get_uid()}), "Item in Tower legen")
+	check(game.submit({"type": "item_take", "tower": game.tower_ref(t), "index": 0}), "Item herausnehmen")
+	await get_tree().create_timer(1.0).timeout
+	check(t.items.is_empty() and game.item_stash.size() == 1, "Item wieder im Lager")
+	for it in game.item_stash.duplicate():
+		game.stash_remove(it)
+		it.queue_free()
+	# 6 → 1 im Zufallsmodus
+	var mode: int = game.mode_index
+	game.mode_index = 0
+	var commons: Array = YoutdData.towers().keys().filter(func(id): return YoutdData.tower(id).rarity == "common" and int(YoutdData.tower(id).tier) == 1)
+	game.stash = commons.slice(0, 7)
+	check(game.merge_option().get("from", "") == "common", "6 → 1 angeboten")
+	check(game.submit({"type": "tower_merge", "rarity": "common"}), "6 → 1")
+	var st: Array = game.stash
+	check(st.size() == 2 and st[0] == commons[6] and YoutdData.tower(st[1]).rarity == "uncommon", "6 gewöhnliche → 1 ungewöhnlicher: %s" % [st])
+	check(not game.submit({"type": "tower_merge", "rarity": "common"}), "mit 1 gewöhnlichem kein 6 → 1")
+	game.stash = []
+	game.mode_index = mode
+	_clear()
 
 
 ## Baumeister: Wirkung auf den Spieler und auf Tower.
