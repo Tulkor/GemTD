@@ -15,7 +15,7 @@ extends RefCounted
 ##
 ## Maul-Maps (Koop): weitere Bahnen in "lanes" [{spawn, checkpoints, player}], alle enden im selben goal;
 ## Bahn 0 ist spawn/checkpoints oben (Spieler in "spawn_player"). Eine Bahn mit player p spawnt nur, wenn
-## Spieler p mitspielt, -1 heißt immer. "zones" [{rect [x, y, w, h], player}]: gibt es Zonen, baut jeder
+## Spieler p mitspielt, -1 heißt immer. Eine Bahn mit eigenem "goal" endet dort (YouTD-Koop: jeder sein Weg). "zones" [{rect [x, y, w, h], player}]: gibt es Zonen, baut jeder
 ## Spieler nur in seinen (player -1 = alle).
 
 const FLOOR := "."
@@ -33,7 +33,7 @@ var spawn := Vector2i(1, 1)
 var goal := Vector2i(2, 2)
 var checkpoints: Array[Vector2i] = []
 var spawn_player := -1
-var lanes: Array = []   ## weitere Bahnen: {spawn: Vector2i, checkpoints: Array[Vector2i], player: int}
+var lanes: Array = []   ## weitere Bahnen: {spawn: Vector2i, checkpoints: Array[Vector2i], player: int[, goal: Vector2i]}
 var zones: Array = []   ## {rect: Rect2i, player: int}
 var marker_radius := 1
 var wave_set := "classic"
@@ -82,6 +82,8 @@ static func from_dict(d: Dictionary) -> MapData:
 		for c in l.get("checkpoints", []):
 			cps.append(_vec(c))
 		m.lanes.append({"spawn": _vec(l.get("spawn", [0, 0])), "checkpoints": cps, "player": int(l.get("player", -1))})
+		if l.has("goal"):
+			m.lanes[-1].goal = _vec(l.goal)
 	for z in d.get("zones", []):
 		var r: Array = z.get("rect", [0, 0, 0, 0])
 		m.zones.append({"rect": Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3])), "player": int(z.get("player", -1))})
@@ -139,8 +141,11 @@ func to_dict() -> Dictionary:
 	if spawn_player >= 0:
 		d.spawn_player = spawn_player
 	if not lanes.is_empty():
-		d.lanes = lanes.map(func(l): return {"spawn": [l.spawn.x, l.spawn.y], "player": l.player,
-			"checkpoints": l.checkpoints.map(func(c): return [c.x, c.y])})
+		d.lanes = lanes.map(func(l):
+			var ld := {"spawn": [l.spawn.x, l.spawn.y], "player": l.player, "checkpoints": l.checkpoints.map(func(c): return [c.x, c.y])}
+			if l.has("goal"):
+				ld.goal = [l.goal.x, l.goal.y]
+			return ld)
 	if not zones.is_empty():
 		d.zones = zones.map(func(z): return {"rect": [z.rect.position.x, z.rect.position.y, z.rect.size.x, z.rect.size.y], "player": z.player})
 	return d
@@ -187,8 +192,15 @@ func lane_player(i: int) -> int:
 func waypoints(lane := 0) -> Array[Vector2i]:
 	var pts: Array[Vector2i] = [spawn if lane == 0 else lanes[lane - 1].spawn]
 	pts.append_array(checkpoints if lane == 0 else lanes[lane - 1].checkpoints)
-	pts.append(goal)
+	pts.append(lane_goal(lane))
 	return pts
+
+
+## Ziel von Bahn lane (eigenes "goal" der Bahn, sonst das gemeinsame).
+func lane_goal(lane: int) -> Vector2i:
+	if lane > 0 and lanes[lane - 1].has("goal"):
+		return lanes[lane - 1].goal
+	return goal
 
 
 ## Wegpunkte aller Bahnen (Ziel einmal).

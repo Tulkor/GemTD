@@ -20,6 +20,7 @@ var lane_paths: Array = []
 var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
+var path_depth := 0.0  ## Laufweg ("_"-Felder) so tief als Schlucht unter den Bauflächen (Board3D.path_depth)
 var camera_rig: CameraRig
 var effects: Effects
 var hud: Hud
@@ -153,6 +154,7 @@ func _ready() -> void:
 	board = Board3D.new()
 	board.map = map
 	board.rocks = rocks
+	board.path_depth = path_depth
 	add_child(board)
 	effects = Effects.new()
 	board.add_child(effects)

@@ -1,5 +1,5 @@
 {
-	"_info": "TD-Modi im Hauptmenü und in der Lobby. ready: schon spielbar. min_players/max_players: erlaubte Spielerzahl (Lobby: nur diese Modi sind wählbar). scene: Einstieg des Modus, dort steht der Modus in Session.game_kind. Maps gehören über ihr Feld \"game\" zu einem Modus (ohne Feld: gemtd). needs_map false: der Modus wählt seine Karte selbst, die Map-Auswahl entfällt.",
+	"_info": "TD-Modi im Hauptmenü und in der Lobby. ready: schon spielbar. min_players/max_players: erlaubte Spielerzahl (Lobby: nur diese Modi sind wählbar). scene: Einstieg des Modus, dort steht der Modus in Session.game_kind. Maps gehören über ihr Feld \"game\" zu einem Modus (ohne Feld: gemtd). needs_map false: der Modus wählt seine Karte selbst, die Map-Auswahl entfällt. coop_only: mit mehreren Spielern immer Koop (keine eigenen Felder).",
 	"modes": [
 		{
 			"id": "gemtd",
@@ -40,6 +40,17 @@
 			"scene": "res://scenes/rg_game.tscn",
 			"hint": "Rasse wählen, Tower frei in die eigene Zone bauen, 35 Level gegen die Spießer, Koop bis 9 Spieler",
 			"needs_map": false
+		},
+		{
+			"id": "youtd",
+			"name": "YouTD",
+			"ready": true,
+			"min_players": 1,
+			"max_players": 4,
+			"scene": "res://scenes/youtd_game.tscn",
+			"hint": "Elemente erforschen, Tower würfeln oder kaufen, Items sammeln, feste Wege. Koop bis 4 Spieler, jeder mit eigenem Weg. Spieler-XP bleibt über Partien.",
+			"needs_map": true,
+			"coop_only": true
 		}
 	]
 }

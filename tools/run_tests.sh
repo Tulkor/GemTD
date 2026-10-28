@@ -174,14 +174,15 @@ pick_changed() {
       tools/html_editor/*) t+="htmleditor " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
-      data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul " ;;
+      data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul youtd " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
       scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
       scripts/game/rg_*|data/randgruppen.json|data/*/rg_*|data/maps/randgruppen.json|scenes/rg_*) t+="randgruppen " ;;
+      scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig ytitems ytkoop " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
       scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
       scripts/game/rogue*|data/roguelike.json) t+="roguelike smoke " ;;
-      scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul " ;;
+      scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul youtd " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;

@@ -34,6 +34,7 @@ extends Node
 ##   --rasse=kleingarten     Randgruppen TD (--map=randgruppen): Rasse für das Bild, --bauen=N Bauvorschau Tower N
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
@@ -190,6 +191,9 @@ func _prepare(game: Node) -> void:
 		return
 	if game.has_method("build_tower"):
 		await _prepare_rg(game)
+		return
+	if game.has_method("roll_start"):
+		await _prepare_youtd(game)
 		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
@@ -447,6 +451,49 @@ func _prepare_eeve(game: Node) -> void:
 	while t < wait:
 		await get_tree().process_frame
 		t += get_process_delta_time()
+
+
+## YouTD: Elemente erforschen, entlang der ersten Bahnen verschiedene Tower setzen, Items ins Lager, Welle 1 läuft.
+## Mit --einstellungen bleibt das Einstellungsfenster offen.
+func _prepare_youtd(game: Node) -> void:
+	if not game.setup_done:
+		return
+	for el in ["nature", "fire", "ice", "astral", "darkness", "iron", "storm"]:
+		game.elements[el] = 4
+	game.gold = 5000
+	game.tomes = 120
+	var ids := ["1", "41", "439", "474", "498", "673"]
+	for el in ["fire", "ice", "astral", "darkness", "iron", "storm"]:
+		var list: Array = YoutdRoll._group(true, el, "common")
+		ids.append_array(list.slice(0, 2))
+	var x := 8
+	for i in ids.size():
+		var cell := Vector2i(x, 12 if i % 2 == 0 else 22)
+		game.debug_place(str(ids[i]), cell)
+		if i % 2 == 1:
+			x += 4
+	game.debug_used = false
+	game.stash = YoutdRoll.with_count(game, 5)
+	for id in [2, 3, 1001, 11, 12, 9]:
+		var it := YtItem.make(id, game.yp())
+		if it != null:
+			game.stash_add(it)
+	# ein Item im ausgewählten Tower, damit Auswahlkarte Items und Effekte zeigt
+	var sel = game.towers.get(Vector2i(12, 12))
+	if sel != null and not game.item_stash.is_empty():
+		game.put_item(sel, game.item_stash.size() - 1)
+	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
+	game.submit({"type": "next_wave"})
+	Engine.time_scale = 8.0
+	for i in 40:
+		await get_tree().process_frame
+	Engine.time_scale = 1.0
+	if opts.has("auswahl"):
+		game._select(game.towers.get(Vector2i(12, 12)))
+	if opts.has("wuerfel") and game.youtd_panel != null:
+		game.youtd_panel.toggle_section("cube")
+	game._refresh_hud()
+	await _frames(3)
 
 
 ## --treffer: warten, bis ein Treffer leuchtet. Die Spielzeit läuft dabei langsam (Xvfb rendert nur wenige
