@@ -31,6 +31,7 @@ extends Node
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
+##   --rasse=kleingarten     Randgruppen TD (--map=randgruppen): Rasse für das Bild, --bauen=N Bauvorschau Tower N
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
@@ -61,6 +62,8 @@ func _ready() -> void:
 	RunHistory.path = "user://screenshot_run_history.json"
 	Profile.dir = "user://screenshot_profile"
 	Session.skip_setup = not opts.has("einstellungen")
+	if opts.has("rasse"):
+		Session.rg_choice = {"race": str(opts.rasse)}
 	FieldStyle.night = opts.has("nacht")
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
@@ -184,6 +187,9 @@ func _prepare(game: Node) -> void:
 		game.set_show_all_paths(true)
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
+		return
+	if game.has_method("build_tower"):
+		await _prepare_rg(game)
 		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
@@ -347,6 +353,33 @@ func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
 			plan[walls[i]] = chain
 		i += 1
 	return plan
+
+
+## Randgruppen TD (--map=randgruppen): zwei versetzte Reihen Tower der Rasse (--rasse=kleingarten) in der roten Zone,
+## --phase=welle startet Level 1, --auswahl wählt einen Tower aus, --bauen=1 setzt die Bauvorschau für Tower 1.
+func _prepare_rg(game: Node) -> void:
+	if opts.has("rasse"):
+		game.rp().race = str(opts.rasse)
+	game.gold = 20000
+	var list: Array = game.race_towers()
+	var z: Rect2i = game.map.zones[0].rect
+	var i := 0
+	for row in [z.position.y + 14, z.position.y + 26]:
+		var xs := range(z.position.x + 1, z.end.x - 8, 2) if row == z.position.y + 14 else range(z.position.x + 9, z.end.x - 1, 2)
+		for x in xs:
+			if game.build_tower(str(list[i % 6]), Vector2i(x, row)):
+				i += 1
+	game.gold = 180
+	if opts.has("bauen"):
+		game.start_placement(str(list[int(opts.bauen) - 1]))
+	if opts.has("auswahl") and not game.own_towers().is_empty():
+		game._select(game.own_towers()[3])
+	if opts.get("phase", "bau") == "welle":
+		game.submit({"type": "start_level"})
+		Engine.time_scale = 2.0
+		await _frames(int(float(opts.get("warten", "6")) * 60 / 2.0))
+		Engine.time_scale = 1.0
+	await _frames(5)
 
 
 ## eeveTD: kleines Labyrinth aus Barrikaden vor dem Eingang, einige davon zu Towern aufgewertet.

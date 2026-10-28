@@ -1,0 +1,19 @@
+{
+	"id": "rg_hardliner",
+	"name": "Hardliner",
+	"category": "randgruppen",
+	"hp": 5500,
+	"speed": 2.734,
+	"armor": 23.0,
+	"armor_type": "rg_medium",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 31,
+		"wc3": "n00X"
+	}
+}

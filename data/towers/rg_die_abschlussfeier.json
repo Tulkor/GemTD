@@ -1,0 +1,41 @@
+{
+	"id": "rg_die_abschlussfeier",
+	"name": "Die Abschlussfeier",
+	"category": "randgruppen",
+	"color": "#7ad0a0",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"wg"
+		],
+		"place": 6,
+		"cost": 750,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_erstsemester",
+			"rg_wg_party",
+			"rg_bibliotheksratte",
+			"rg_klimaaktivistin",
+			"rg_ruhestoerer",
+			"rg_die_professorin"
+		],
+		"wc3": "o02A"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

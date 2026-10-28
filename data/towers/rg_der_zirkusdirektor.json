@@ -1,0 +1,41 @@
+{
+	"id": "rg_der_zirkusdirektor",
+	"name": "Der Zirkusdirektor",
+	"category": "randgruppen",
+	"color": "#ffd060",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"zirkus"
+		],
+		"place": 6,
+		"cost": 900,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_jongleur",
+			"rg_schlangenbeschwoerer",
+			"rg_kanonenkugel_mann",
+			"rg_trapezkuenstlerin",
+			"rg_eislaeuferin",
+			"rg_dompteur"
+		],
+		"wc3": "n015"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1001.0,
+				1100.0
+			],
+			"range": 78.125,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

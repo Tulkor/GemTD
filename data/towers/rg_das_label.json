@@ -1,0 +1,41 @@
+{
+	"id": "rg_das_label",
+	"name": "Das Label",
+	"category": "randgruppen",
+	"color": "#ff5aa0",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"hiphop"
+		],
+		"place": 6,
+		"cost": 750,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_reimschmied",
+			"rg_freestyler",
+			"rg_beatboxer",
+			"rg_battle_rapper",
+			"rg_die_cypher",
+			"rg_bassbox"
+		],
+		"wc3": "o023"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 78.125,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

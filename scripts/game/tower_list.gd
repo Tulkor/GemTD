@@ -264,7 +264,7 @@ func _tooltip(t) -> Control:
 	if not made.is_empty():
 		var c := UiUtil.wrap_label(tr("Kombinierbar zu: %s") % ", ".join(made), v, 250)
 		c.add_theme_font_size_override("font_size", 12)
-		c.add_theme_color_override("font_color", UiTheme.CYAN)
+		c.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 		if not game.is_wave_running():
 			var w := UiUtil.wrap_label(tr("Kombinieren geht erst wieder während der Welle."), v, 250)
 			w.add_theme_font_size_override("font_size", 12)

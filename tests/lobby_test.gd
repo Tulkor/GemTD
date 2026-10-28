@@ -33,7 +33,7 @@ func _ready() -> void:
 	get_tree().root.add_child(holder)
 	get_tree().current_scene = holder
 	_test_modes()
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.game_kind = "gemtd"
 	Net.uid = role + "-uid"
 	Net.my_name = "Host" if role == "host" else "Gast"
@@ -67,7 +67,7 @@ func _host() -> void:
 	check(Net.host(PORT) == OK, "Sitzung gehostet")
 	check(await _wait(func(): return Net.session_slots().size() == 2, 20.0), "Gast in der Lobby")
 	var ids := Net.vote_tally().map(func(e): return e.id)
-	check(ids == ["gemtd", "eevetd"], "für 2 Spieler wählbar: %s (Maul nur solo)" % [ids])
+	check(ids == ["gemtd", "eevetd", "randgruppen"], "für 2 Spieler wählbar: %s (Maul nur solo)" % [ids])
 	check(await _wait(func(): return Net.votes().size() == 1, 10.0), "Stimme des Gasts angekommen")
 	check(Net.vote_winner(false) == "eevetd", "eine Stimme: eeveTD vorne")
 	Net.vote("gemtd")

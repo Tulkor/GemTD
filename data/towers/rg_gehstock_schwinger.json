@@ -1,0 +1,40 @@
+{
+	"id": "rg_gehstock_schwinger",
+	"name": "Gehstock-Schwinger",
+	"category": "randgruppen",
+	"color": "#c8b8a0",
+	"model": "res://assets/models/city/1story_sign.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.44999999999999996,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"senioren"
+		],
+		"place": 1,
+		"cost": 55,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00T"
+	},
+	"tiers": [
+		{
+			"damage": [
+				64.0,
+				80.0
+			],
+			"range": 10.938,
+			"cooldown": 1.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.469,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"id": "rg_buerokrat",
+	"name": "Bürokrat",
+	"category": "randgruppen",
+	"hp": 565,
+	"speed": 2.734,
+	"armor": 6.0,
+	"armor_type": "rg_small",
+	"bounty": 3,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 11,
+		"wc3": "n00B"
+	}
+}

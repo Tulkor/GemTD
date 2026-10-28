@@ -1,0 +1,19 @@
+{
+	"id": "rg_nachbarschafts_drohne",
+	"name": "Nachbarschafts-Drohne",
+	"category": "randgruppen",
+	"hp": 250,
+	"speed": 1.875,
+	"armor": 3.0,
+	"armor_type": "rg_small",
+	"bounty": 2,
+	"damage": 1,
+	"flying": true,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 5,
+		"wc3": "n005"
+	}
+}

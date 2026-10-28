@@ -30,6 +30,16 @@
 			"scene": "res://scenes/maul_game.tscn",
 			"hint": "Filiale eröffnen, Tower kaufen und aufwerten, Profi-Filialen ab 25 XP, Koop bis 8 Spieler",
 			"needs_map": false
+		},
+		{
+			"id": "randgruppen",
+			"name": "Randgruppen TD",
+			"ready": true,
+			"min_players": 1,
+			"max_players": 9,
+			"scene": "res://scenes/rg_game.tscn",
+			"hint": "Rasse wählen, Tower frei in die eigene Zone bauen, 35 Level gegen die Spießer, Koop bis 9 Spieler",
+			"needs_map": false
 		}
 	]
 }

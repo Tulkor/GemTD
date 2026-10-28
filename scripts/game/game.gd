@@ -333,7 +333,7 @@ func _load_map() -> MapData:
 		var maps := Database.list_maps()
 		if maps.is_empty():
 			return null
-		path = maps[0].path
+		path = str(Database.first_map().get("path", maps[0].path))
 	return MapData.load_file(path)
 
 

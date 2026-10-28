@@ -30,7 +30,7 @@ func _ready() -> void:
 	var holder := Node.new()
 	get_tree().root.add_child(holder)
 	get_tree().current_scene = holder
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Net.uid = role + "-uid"
 	Net.my_name = "Anna" if role == "host" else "Ben"
 	if role == "host":

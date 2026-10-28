@@ -1,0 +1,40 @@
+{
+	"id": "rg_tagebuchschreiber",
+	"name": "Tagebuchschreiber",
+	"category": "randgruppen",
+	"color": "#c03aa0",
+	"model": "res://assets/models/city/1story_sign.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.44999999999999996,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"emos"
+		],
+		"place": 1,
+		"cost": 45,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				24.0,
+				30.0
+			],
+			"range": 10.9,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 4.0
+				}
+			]
+		}
+	]
+}

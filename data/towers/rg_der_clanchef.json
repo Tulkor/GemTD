@@ -1,0 +1,41 @@
+{
+	"id": "rg_der_clanchef",
+	"name": "Der Clanchef",
+	"category": "randgruppen",
+	"color": "#40d0ff",
+	"model": "res://assets/models/city/6story_stack.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.6,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"zocker"
+		],
+		"place": 6,
+		"cost": 700,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_konsolenkind",
+			"rg_rollenspieler",
+			"rg_strategie_general",
+			"rg_shooter_profi",
+			"rg_ruhestoerer",
+			"rg_hack_and_slay_fan"
+		],
+		"wc3": "o00Z"
+	},
+	"tiers": [
+		{
+			"damage": [
+				751.0,
+				850.0
+			],
+			"range": 24.219,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

@@ -425,7 +425,7 @@ func _build_bottom() -> void:
 	strip_row.add_theme_constant_override("separation", 8)
 	strip_col.add_child(strip_row)
 	strip_hint = UiUtil.label("", strip_col, 12)
-	strip_hint.add_theme_color_override("font_color", UiTheme.CYAN)
+	strip_hint.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 	_vsep(h)
 
 	# Werte links, Fähigkeiten rechts über die ganze Höhe; beide fest breit, damit die Karte beim
@@ -460,7 +460,7 @@ func _build_bottom() -> void:
 	head.add_child(info_tier)
 	info_tier_label = UiUtil.label("", info_tier, 14)
 	info_tier_label.add_theme_font_override("font", QualityBadge.roman_font())
-	info_tier_label.add_theme_color_override("font_color", UiTheme.CYAN)
+	info_tier_label.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 	# Kills neben dem Namen, Hover zeigt den Kill-Rang
 	info_kills = TooltipHost.new()
 	info_kills.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.COIN, 0, 2, 4))
@@ -486,7 +486,8 @@ func _build_bottom() -> void:
 	info_body.add_theme_color_override("font_color", UiTheme.DIM)
 	# Fähigkeiten in einem eigenen Fenster rechts neben den Werten (mit den neuen Gems daneben darunter)
 	abil_panel = PanelContainer.new()
-	abil_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.BG, UiTheme.CYAN, 0, 2, 10))
+	abil_panel.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2 if UiTheme.poster() else UiTheme.BG,
+			UiTheme.BORDER if UiTheme.poster() else UiTheme.CYAN, 0, 2, 10))
 	abil_panel.custom_minimum_size.x = ABIL_W
 	info_main.add_child(abil_panel)
 	var abil_scroll := ScrollContainer.new()
@@ -699,7 +700,7 @@ func _chance_tooltip(level: int, next_wave: int) -> Control:
 	var divider := UiUtil.label("━━ " + (tr("Stufe %d ab Welle %d") % [level + 1, next_wave] if next_wave >= 0 else tr("Höchste Stufe erreicht")) + " ━━", v, 13)
 	divider.uppercase = true
 	divider.add_theme_font_override("font", UiTheme.font(true))
-	divider.add_theme_color_override("font_color", UiTheme.CYAN)
+	divider.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 	divider.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if next_wave >= 0:
 		_chance_rows(v, level + 1, 0.6)
@@ -843,7 +844,9 @@ func set_selection(info: Dictionary) -> void:
 		_update_layout()
 		return
 	info_title.text = info.title
-	info_title.add_theme_color_override("font_color", (info.color as Color).lerp(Color.WHITE, 0.25))
+	# Plakatwand: helle Papierfläche, Turmfarbe deshalb abdunkeln statt aufhellen
+	var tint: Color = (info.color as Color).darkened(0.45) if UiTheme.poster() else (info.color as Color).lerp(Color.WHITE, 0.25)
+	info_title.add_theme_color_override("font_color", tint)
 	info_swatch.color = info.color
 	info_tier.visible = info.has("tier")
 	if info_tier.visible:
@@ -1028,7 +1031,7 @@ func _show_stats(st: Dictionary) -> void:
 	var head := UiUtil.label("◆ " + (tr("Beschreibung") if abils.is_empty() and str(st.description) != "" else tr("Fähigkeiten")), abil_box, 12)
 	head.uppercase = true
 	head.add_theme_font_override("font", UiTheme.font(true))
-	head.add_theme_color_override("font_color", UiTheme.CYAN)
+	head.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 	for text in abils:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
@@ -1149,7 +1152,7 @@ func _diff_tooltip(o: Dictionary) -> Control:
 				was.add_theme_color_override("font_color", UiTheme.MUTED)
 			var l := UiUtil.wrap_label(("→ " if str(r.old) != "" else "") + str(r.new), v, 330)
 			l.add_theme_font_size_override("font_size", 12)
-			l.add_theme_color_override("font_color", UiTheme.CYAN if str(r.old) != "" else col)
+			l.add_theme_color_override("font_color", UiTheme.CYAN_TEXT if str(r.old) != "" else col)
 			continue
 		var h := _tip_row(v, str(r.label), str(r.old), UiTheme.MUTED)
 		UiUtil.label("→", h, 13).add_theme_color_override("font_color", UiTheme.MUTED)
@@ -1380,7 +1383,7 @@ func _build_leave_confirm() -> void:
 	_leave_plain.add_theme_color_override("font_color", UiTheme.MISSING)
 	_leave_plain.add_theme_color_override("font_hover_color", UiTheme.MISSING.lightened(0.2))
 	_leave_status = UiUtil.label("", v, 14)
-	_leave_status.add_theme_color_override("font_color", UiTheme.CYAN)
+	_leave_status.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 	_leave_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_leave_status.hide()
 	var hint := UiUtil.label("Esc: weiterspielen", v, 13)

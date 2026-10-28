@@ -1,0 +1,34 @@
+{
+	"id": "rg_vereinswart",
+	"name": "Vereinswart",
+	"category": "randgruppen",
+	"color": "#5cc85c",
+	"model": "res://assets/models/city/3story_balcony.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.54,
+	"damage_type": "magic",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"kleingarten"
+		],
+		"place": 4,
+		"cost": 230,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01N"
+	},
+	"tiers": [
+		{
+			"damage": [
+				147.0,
+				203.0
+			],
+			"range": 7.422,
+			"cooldown": 0.75,
+			"abilities": []
+		}
+	]
+}

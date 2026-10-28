@@ -108,7 +108,7 @@ Ins Repo kommt nur, was öffentlich liegen und mit dem Spiel verkauft werden dar
   [assets/fx/QUELLEN.md](assets/fx/QUELLEN.md)
 - **Sounds:** eigene Aufnahmen von Lukas und Sounds von Pixabay ([Pixabay Content License](https://pixabay.com/service/license-summary/)):
   [assets/sounds/QUELLEN.md](assets/sounds/QUELLEN.md)
-- **Schriften:** DejaVu Sans Mono (eigene freie Lizenz), Limelight, Federo, Uncial Antiqua, Alegreya (SIL OFL),
+- **Schriften:** DejaVu Sans Mono (eigene freie Lizenz), Limelight, Federo, Uncial Antiqua, Alegreya, Bowlby One, Courier Prime, Sedgwick Ave Display, Rubik Wet Paint, Pirata One (SIL OFL),
   Lizenztexte in `assets/fonts/`
 - **Texturen:** Bodenfotos von Unsplash ([assets/textures/ground/CREDITS.md](assets/textures/ground/CREDITS.md)),
   Sternenhimmel aus Space 3D von wwwtyro, Unlicense ([assets/textures/sky/CREDITS.md](assets/textures/sky/CREDITS.md))

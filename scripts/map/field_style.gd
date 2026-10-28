@@ -5,6 +5,8 @@ extends RefCounted
 ## - Arcade (GemTD): Neon-Gitter über dem Weltraum, wie bisher.
 ## - Druidenhain (eeveTD): Gras und Erde bei Tageslicht, dunkles Raster wie in den Boden geritzt, Steinsockel.
 ## - Art déco (Shopping Maul): Petrol-Marmor mit Messingfugen und Messingrauten, Messingsockel, Abendlicht.
+## - Plakatwand (Randgruppen TD): hellgrauer Beton mit ein paar Steinen, Splitt auf den Wegen, Tageslicht;
+##   die Wände bestehen aus Häusern und Bäumen (RgScenery).
 
 ## Nachtversion des Stils (env_night/floor_night), vor dem Anlegen der Szene setzen.
 static var night := false
@@ -12,6 +14,7 @@ static var night := false
 const NEON := "neon"
 const DRUID := "druid"
 const DECO := "deco"
+const POSTER := "poster"
 
 ## Licht und Himmel (CameraRig.add_environment): Arcade-Stand, andere Stile überschreiben einzelne Werte.
 ## Ohne "sky_top" bleibt die Weltraum-Skybox. ambient_sky = Anteil des Umgebungslichts vom Himmel
@@ -27,6 +30,16 @@ const ENV_DEFAULT := {
 	"glow_threshold": 1.0, "glow_intensity": 1.1, "glow_bloom": 0.0,
 	"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 0.9, "white": 1.0,
 	"contrast": 1.0, "saturation": 1.0, "tint": Color.WHITE,
+}
+
+## Plakatwand: Bodentexturen statt Gras und Erde (selbst erzeugt, tools/rg_texturen.py).
+const POSTER_TEXTURES := {
+	"grass_a": "res://assets/textures/ground/concrete.jpg",
+	"grass_b": "res://assets/textures/ground/concrete.jpg",
+	"dirt": "res://assets/textures/ground/gravel.jpg",
+	"grass_a_normal": "res://assets/textures/ground/concrete_normal.jpg",
+	"grass_b_normal": "res://assets/textures/ground/concrete_normal.jpg",
+	"dirt_normal": "res://assets/textures/ground/gravel_normal.jpg",
 }
 
 ## Werte je Stil. "floor" sind Parameter für neon_floor.gdshader, "env" für CameraRig.add_environment.
@@ -144,7 +157,42 @@ const STYLES := {
 			"major_glow": 0.35, "major_glow_color": Color("ffc35a"),
 		},
 	},
+	POSTER: {
+		"ground_alpha": 1.0,
+		"ground_textures": POSTER_TEXTURES,
+		"ground": {
+			"brightness": 0.74, "saturation": 0.5, "tint": Vector3(1.0, 1.0, 1.0),
+			"grass_tile": 3.0, "dirt_tile": 2.0, "detail_blur": 0.0, "grass_contrast": 1.0, "normal_strength": 0.6,
+		},
+		"floor": {
+			"floor_alpha": 0.0,
+			"line_color": Color("2a2a2a"), "edge_color": Color("151515"),
+			"line_energy": 1.0, "major_energy": 1.0, "minor_energy": 1.0, "cell_energy": 1.0,
+			"cell_alpha": 0.0, "minor_alpha": 0.12, "major_alpha": 0.3,
+			"edge_energy": 1.0, "core_white": 0.0, "halo_width": 0.004, "line_width": 0.012,
+			"zone_color": Color("e8372a"), "zone_alpha": 0.22, "zone_edge_energy": 0.9,
+			"zone_edge_color": Color("151515"),
+			"blocked_color": Color("5a5f55"), "blocked_alpha": 0.35,
+		},
+		"path": Color("e8372a"), "path_energy": 1.2,
+		"marker": Color("151515"), "marker_energy": 1.0,
+		"rock": "stone",
+		"base": "stone",
+		"contact_shadow": 0.55,
+		"hit_glow": 0.5,
+		"env": {
+			"sky_top": Color("9fb4c4"), "sky_horizon": Color("dcdcd4"), "ground_bottom": Color("6a6a64"),
+			"ambient": Color("c8ccd0"), "ambient_energy": 0.35, "ambient_sky": 0.5,
+			"sun": Color("fff1dc"), "sun_energy": 1.6, "sun_pitch": -48.0, "sun_yaw": -110.0,
+			"shadow_blur": 1.8, "shadow_opacity": 0.75,
+			"fill": Color("b0c0d0"), "fill_energy": 0.3, "fill_pitch": -30.0,
+			"glow_threshold": 1.4, "glow_intensity": 0.4,
+			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
+			"contrast": 1.04, "saturation": 0.95,
+		},
+	},
 }
+
 
 
 ## Name des Stils, der zum aktiven Oberflächen-Stil passt.
@@ -154,6 +202,8 @@ static func current_name() -> String:
 			return DRUID
 		UiTheme.DECO:
 			return DECO
+		UiTheme.POSTER:
+			return POSTER
 	return NEON
 
 
