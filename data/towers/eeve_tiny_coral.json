@@ -4,7 +4,7 @@
 	"name_original": "Tiny Coral",
 	"category": "eeve",
 	"color": "#2fc8e8",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/pp_einzeln/orange_coral.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

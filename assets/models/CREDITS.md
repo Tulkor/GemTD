@@ -124,7 +124,36 @@ steht in `pakete/<id>/LISTE.txt`. Alle Pakete stehen unter CC0 1.0 (Public Domai
 Animierte Figuren und Tiere behalten Skelett und Animationen (auch die FBX-Pakete, die über Godot laufen). Kenney
 Animated Characters 3 hat Animationen nur als eigene Dateien, die nicht mit umgewandelt sind.
 
-## Tower-Modelle `towers/` (CC0, 2026-10-28)
+## Einzelmodelle `pakete/pp_einzeln/` (Poly Pizza, CC-BY 3.0 oder CC0, Nennung Pflicht, 2026-10-28)
+
+Von Lukas einzeln von Poly Pizza geladen. Poly Pizza führt nur CC0- und CC-BY-Modelle; wo die Lizenz nicht sicher
+bekannt ist, gilt hier CC-BY (Nennung). `polar_bear.glb` ist `black_bear.glb` mit weiß umgefärbter Textur.
+
+- `pakete/pp_einzeln/barn_owl.glb`: Barn owl by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/eSEv3rCMKbg)
+- `pakete/pp_einzeln/beetle.glb`: Beetle by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/4yufxgZ1QQ2)
+- `pakete/pp_einzeln/black_bear.glb`: Black bear by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/56ym_pyVnel)
+- `pakete/pp_einzeln/clown.glb`: Clown NEW BLOCKS by Olga Nabatova [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/9zy4BD4ewUZ)
+- `pakete/pp_einzeln/cobra.glb`: Cobra by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/40_5Xq467-U)
+- `pakete/pp_einzeln/cobra_jeremy.glb`: Cobra by jeremy [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/fBz0OKeCCON)
+- `pakete/pp_einzeln/gnome.glb`: Gnome by Polygonal Mind [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/Yy3yuQ4l6r)
+- `pakete/pp_einzeln/helicopter.glb`: Helicopter by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/cTzINMr0WdS)
+- `pakete/pp_einzeln/helicopter_jeremy.glb`: Helicopter by jeremy [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/eb7b31pjGtQ)
+- `pakete/pp_einzeln/igloo.glb`: Igloo by Jarlan Perez [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/4t1hupO69xj)
+- `pakete/pp_einzeln/kangaroo.glb`: Kangaroo by jeremy [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/3yiIERrKNQr)
+- `pakete/pp_einzeln/lion.glb`: Lion by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/3XAJojWxSWz)
+- `pakete/pp_einzeln/mailbox.glb`: Mailbox by CreativeTrio [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/2olZ0G8iur)
+- `pakete/pp_einzeln/newt.glb`: Newt by Jakob Hippe [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/3Gyw-gUrpp0)
+- `pakete/pp_einzeln/orange_coral.glb`: Orange Coral by Device Lab [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/3HEc6LvqCJd)
+- `pakete/pp_einzeln/owl.glb`: Owl by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/eoAo21aoZHJ)
+- `pakete/pp_einzeln/rat.glb`: Rat by Quaternius CC0 via Poly Pizza (https://poly.pizza/m/iltq5bVNaV)
+- `pakete/pp_einzeln/spider.glb`: Spider by Quaternius CC0 via Poly Pizza (https://poly.pizza/m/yRYJiAJyiM)
+- `pakete/pp_einzeln/spotted_gecko.glb`: Spotted Gecko by Jeff Larson [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/65Yj7059c2K)
+- `pakete/pp_einzeln/step_pyramid.glb`: Step Pyramid by Jarlan Perez [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/5fksyItujX1)
+- `pakete/pp_einzeln/tiger.glb`: Tiger by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/5A3w06FXUup)
+- `pakete/pp_einzeln/turtle.glb`: Turtle by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/c6n73UnGEP4)
+- `pakete/pp_einzeln/walrus.glb`: Walrus by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/2ivrvruGzxc)
+
+## Tower-Modelle `towers/` (CC0, aus `pp_einzeln` CC-BY wie oben, 2026-10-28)
 
 Kopien einzelner Modelle aus der Bibliothek `pakete/` (gleicher Unterordner = gleiches Paket, Quelle und Lizenz
 wie oben), geholt mit `tools/modelle/tower_modelle.py` nach der Zuordnung in `data/tower_models.json`.
