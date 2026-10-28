@@ -58,7 +58,11 @@ void fragment() {
 	ALBEDO = rgb;
 	float a = clamp(t.a, 0.0, 1.0);
 #ifdef FX_ADD
-	a = mix(a, sqrt(a), halo * (1.0 - a));
+	// Schein nur innerhalb des Sprites anheben und zu den Kanten des Rechtecks weich auslaufen lassen,
+	// sonst zeichnen sich die fast durchsichtigen Ränder des Sheets als eckiger Kasten ab
+	vec2 inner = min(UV, 1.0 - UV);
+	float edge_fade = smoothstep(0.0, 0.35, inner.y) * smoothstep(0.0, 0.12, inner.x);
+	a = mix(a, sqrt(a), halo * (1.0 - a) * edge_fade);
 #endif
 	float fade = 1.0;
 	if (soft > 0.0) {

@@ -28,7 +28,7 @@ const LIGHT_HEIGHT := 0.35
 ## Dazu ein Lichtschein flach auf dem Boden: der Neon-Boden von GemTD ist unbeleuchtet und nimmt kein Licht an.
 ## Beleuchtete Böden (Gras, Marmor) bekommen das echte Licht und nur einen schwächeren Schein (FieldStyle "hit_glow").
 const GLOW_SIZE := 3.2
-const GLOW_STRENGTH := 1.2
+const GLOW_STRENGTH := 1.6
 const GLOW_KEY := "glow"
 
 ## Treffer-Lichter an/aus (z. B. für schwache Rechner).

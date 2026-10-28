@@ -27,9 +27,11 @@ const ENV_DEFAULT := {
 	"sun_specular": 1.0, "shadow_blur": 1.5, "shadow_opacity": 1.0,
 	"fill": Color(0.55, 0.45, 1.0), "fill_energy": 0.0, "fill_pitch": -25.0,
 	"fog": Color.BLACK, "fog_density": 0.0,
-	"glow_threshold": 1.0, "glow_intensity": 1.1, "glow_bloom": 0.0,
+	"glow_threshold": 1.0, "glow_intensity": 1.5, "glow_bloom": 0.02,
 	"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 0.9, "white": 1.0,
 	"contrast": 1.0, "saturation": 1.0, "tint": Color.WHITE,
+	# leichte Kontur um alles Deckende (CameraRig, screen_outline.gdshader), 0 = aus
+	"outline": 0.4, "outline_color": Color(0.03, 0.02, 0.06),
 }
 
 ## Plakatwand: Bodentexturen statt Gras und Erde (selbst erzeugt, tools/rg_texturen.py).
@@ -45,6 +47,7 @@ const POSTER_TEXTURES := {
 ## Werte je Stil. "floor" sind Parameter für neon_floor.gdshader, "env" für CameraRig.add_environment.
 ## "floor_lit": Feld beleuchtet und deckend (neon_floor_lit.gdshader, nimmt Sonne, Schatten, Treffer-Lichter an).
 ## "contact_shadow": Stärke des weichen Schattens unter Towern und Steinen (ContactShadow, 0 = aus).
+## "reflect": Stärke der Spiegelung auf dem Feld (Board3D, 0 = keine; Gras und Beton spiegeln nicht).
 ## "hit_glow": Faktor für den flachen Treffer-Schein auf dem Boden (FxPlayer, Standard 1).
 const STYLES := {
 	NEON: {
@@ -54,6 +57,8 @@ const STYLES := {
 		"marker": Color("ff36d8"), "marker_energy": 2.2,
 		"rock": "glass",
 		"base": "glass",
+		# Glasboden: Gems und Gegner spiegeln sich (Board3D, floor_reflect.gdshader)
+		"reflect": 0.35,
 		# violettes Gegenlicht von hinten: Gems und Felsen bekommen eine Lichtkante
 		"env": {"fill": Color("b070ff"), "fill_energy": 0.35, "fill_pitch": -20.0},
 	},
@@ -61,7 +66,7 @@ const STYLES := {
 		"ground_alpha": 1.0,
 		"ground": {
 			"brightness": 0.5, "saturation": 0.55, "tint": Vector3(0.9, 0.97, 0.8),
-			"grass_tile": 2.6, "detail_blur": 2.2, "grass_contrast": 0.4, "normal_strength": 0.35,
+			"grass_tile": 2.6, "detail_blur": 2.2, "grass_contrast": 0.4, "normal_strength": 0.7,
 		},
 		"floor": {
 			"floor_alpha": 0.0,
@@ -89,7 +94,7 @@ const STYLES := {
 			# schwaches violettes Gegenlicht als Lichtkante an den Umrissen
 			"fill": Color("8a70d0"), "fill_energy": 0.22, "fill_pitch": -20.0,
 			"fog": Color("1c2038"), "fog_density": 0.014,
-			"glow_threshold": 0.85, "glow_intensity": 0.95,
+			"glow_threshold": 0.85, "glow_intensity": 1.3,
 			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.2, "white": 1.0, "contrast": 1.12, "saturation": 1.0,
 		},
 		"env": {
@@ -102,7 +107,7 @@ const STYLES := {
 			"shadow_blur": 2.0, "shadow_opacity": 0.82,
 			"fill": Color("9fbcd8"), "fill_energy": 0.4, "fill_pitch": -30.0,
 			"fog": Color("8a9a80"), "fog_density": 0.0015,
-			"glow_threshold": 1.4, "glow_intensity": 0.5,
+			"glow_threshold": 1.2, "glow_intensity": 0.8,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.88, "white": 6.0,
 			"contrast": 1.06, "saturation": 0.95,
 		},
@@ -130,6 +135,7 @@ const STYLES := {
 		"zone_own": Color("e8c87a"), "zone_other": Color("4d7a78"), "zone_leak": Color("b4553f"),
 		"rock": "marble",
 		"base": "brass",
+		"reflect": 0.25,
 		"contact_shadow": 0.55,
 		"hit_glow": 0.5,
 		"env": {
@@ -140,7 +146,7 @@ const STYLES := {
 			"sun": Color("ffd9a0"), "sun_energy": 0.8, "sun_pitch": -34.0, "sun_yaw": -115.0, "sun_specular": 0.12,
 			"shadow_blur": 1.6, "shadow_opacity": 0.85,
 			"fill": Color("5fb0b0"), "fill_energy": 0.3, "fill_pitch": -25.0,
-			"glow_threshold": 1.0, "glow_intensity": 0.6,
+			"glow_threshold": 1.0, "glow_intensity": 0.9,
 			"exposure": 0.85, "contrast": 1.05,
 		},
 		# Nacht: schwaches, kühles Mondlicht von oben, die Bodenleuchten tragen das Licht
@@ -152,7 +158,7 @@ const STYLES := {
 			"shadow_opacity": 0.75, "shadow_blur": 2.2,
 			"fill": Color("3a5a78"), "fill_energy": 0.25,
 			# etwa 400 K wärmer als neutrales Mondlicht
-			"glow_threshold": 0.85, "glow_intensity": 0.9, "exposure": 1.05, "tint": Color(1.0, 0.95, 0.86),
+			"glow_threshold": 0.85, "glow_intensity": 1.25, "exposure": 1.05, "tint": Color(1.0, 0.95, 0.86),
 		},
 		# wärmerer Marmor, die dicken Messinglinien glimmen golden
 		"floor_night": {
@@ -165,7 +171,7 @@ const STYLES := {
 		"ground_textures": POSTER_TEXTURES,
 		"ground": {
 			"brightness": 0.74, "saturation": 0.5, "tint": Vector3(1.0, 1.0, 1.0),
-			"grass_tile": 3.0, "dirt_tile": 2.0, "detail_blur": 0.0, "grass_contrast": 1.0, "normal_strength": 0.6,
+			"grass_tile": 3.0, "dirt_tile": 2.0, "detail_blur": 0.0, "grass_contrast": 1.0, "normal_strength": 0.9,
 		},
 		"floor": {
 			"floor_alpha": 0.0,
@@ -189,7 +195,7 @@ const STYLES := {
 			"sun": Color("fff1dc"), "sun_energy": 1.6, "sun_pitch": -48.0, "sun_yaw": -110.0,
 			"shadow_blur": 1.8, "shadow_opacity": 0.75,
 			"fill": Color("b0c0d0"), "fill_energy": 0.3, "fill_pitch": -30.0,
-			"glow_threshold": 1.4, "glow_intensity": 0.4,
+			"glow_threshold": 1.2, "glow_intensity": 0.6,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
 			"contrast": 1.04, "saturation": 0.95,
 		},

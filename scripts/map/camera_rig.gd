@@ -206,6 +206,9 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 	env.glow_intensity = look.glow_intensity
 	env.glow_bloom = look.glow_bloom
 	env.glow_hdr_threshold = look.glow_threshold
+	# weicher, breiter Schein: zu den Standard-Stufen 3 und 5 auch 2 (eng) und 4 (mittel)
+	env.set_glow_level(1, 0.6)
+	env.set_glow_level(3, 0.8)
 	# Umgebungslicht: feste Farbe, oder mit "ambient_sky" > 0 anteilig vom Himmel (oben Himmelsfarbe,
 	# unten Bodenfarbe), dann sind Oberseiten heller als Flanken und Unterseiten
 	if look.ambient_sky > 0.0 and env.sky != null:
@@ -254,4 +257,28 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		fill.light_specular = 0.25
 		fill.shadow_enabled = false
 		parent.add_child(fill)
+	_add_outline(parent, look)
 	return {"env": env, "sun": sun, "fill": fill}
+
+
+## Leichte Kontur um alles Deckende (screen_outline.gdshader), Farbe und Stärke aus "outline_color"/"outline".
+static func _add_outline(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenOutline")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.outline <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_outline.gdshader")
+	mat.set_shader_parameter("color", look.outline_color)
+	mat.set_shader_parameter("strength", look.outline)
+	mat.render_priority = 0
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenOutline"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# deckt den ganzen Bildschirm, darf nie weggeschnitten werden
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)

@@ -87,6 +87,8 @@ var grid_strength := 0.0:
 var _ground: MeshInstance3D
 var _ground_mat: ShaderMaterial
 var _floor: MeshInstance3D
+## Spiegelung auf dem Feld (FieldStyle "reflect"), gleiche Fläche wie _floor
+var _reflect: MeshInstance3D
 var _floor_mat: ShaderMaterial
 var _cliffs: MeshInstance3D  ## Felswände der Schlucht (nur mit path_depth > 0)
 var _rocks: Array = []  ## je Variante ein MultiMeshInstance3D
@@ -178,6 +180,15 @@ func _ready() -> void:
 	_floor.material_override = _floor_mat
 	_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_floor)
+	if float(style.get("reflect", 0.0)) > 0.0:
+		var rm := ShaderMaterial.new()
+		rm.shader = preload("res://assets/shaders/floor_reflect.gdshader")
+		rm.set_shader_parameter("strength", float(style.reflect))
+		rm.render_priority = 0
+		_reflect = MeshInstance3D.new()
+		_reflect.material_override = rm
+		_reflect.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(_reflect)
 	ground_alpha = maxf(ground_alpha, style.ground_alpha)
 	for path in ROCK_MODELS:
 		var m := ModelLoader.mesh_with_transform(path, ROCK_SIZE, true, ROCK_MAX_HEIGHT)
@@ -360,6 +371,9 @@ func _rebuild_floor() -> void:
 		plane.size = size
 		_floor.mesh = plane
 		_floor.position = to_3d(size / 2.0, 0.001)
+	if _reflect != null:
+		_reflect.mesh = _floor.mesh
+		_reflect.position = _floor.position + Vector3(0, 0.001, 0)
 	var img := Image.create(map.width, map.height, false, Image.FORMAT_RGBA8)  # RGBA8: L8 mit ungerader Breite wird im GL-Renderer verschoben hochgeladen
 	var origin := Vector2i(map.width, map.height)  # erstes freies Feld (oben links)
 	for y in map.height:
