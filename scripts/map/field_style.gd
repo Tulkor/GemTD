@@ -16,7 +16,8 @@ const DRUID := "druid"
 const DECO := "deco"
 const POSTER := "poster"
 
-## Licht und Himmel (CameraRig.add_environment): Arcade-Stand, andere Stile überschreiben einzelne Werte.
+## Licht und Himmel (CameraRig.add_environment, Vulkan/Forward+: Glow wirkt dort stärker als im alten
+## Compatibility-Renderer, die Werte sind darauf abgestimmt): Arcade-Stand, andere Stile überschreiben einzelne Werte.
 ## Ohne "sky_top" bleibt die Weltraum-Skybox. ambient_sky = Anteil des Umgebungslichts vom Himmel
 ## (0 = nur Farbe "ambient"). "fill" = Gegenlicht ohne Schatten von der anderen Seite.
 const ENV_DEFAULT := {
@@ -27,11 +28,13 @@ const ENV_DEFAULT := {
 	"sun_specular": 1.0, "shadow_blur": 1.5, "shadow_opacity": 1.0,
 	"fill": Color(0.55, 0.45, 1.0), "fill_energy": 0.0, "fill_pitch": -25.0,
 	"fog": Color.BLACK, "fog_density": 0.0,
-	"glow_threshold": 1.0, "glow_intensity": 1.5, "glow_bloom": 0.02,
+	"glow_threshold": 1.0, "glow_intensity": 0.9, "glow_bloom": 0.0,
 	"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 0.9, "white": 1.0,
 	"contrast": 1.0, "saturation": 1.0, "tint": Color.WHITE,
 	# leichte Kontur um alles Deckende (CameraRig, screen_outline.gdshader), 0 = aus
 	"outline": 0.4, "outline_color": Color(0.03, 0.02, 0.06),
+	# Umgebungsverdeckung, indirektes Licht und Volumen-Nebel (Forward+), 0 = aus
+	"ssao": 1.0, "ssao_radius": 0.8, "ssil": 0.0, "vol_fog": 0.0,
 	# Ränder abdunkeln und leicht tönen (CameraRig, screen_post.gdshader), 0 = aus
 	"vignette": 0.45, "vignette_color": Color(0.12, 0.04, 0.22),
 }
@@ -54,7 +57,9 @@ const POSTER_TEXTURES := {
 const STYLES := {
 	NEON: {
 		"ground_alpha": 0.0,
-		"floor": {},
+		# Vulkan mischt in linearem Licht: Fläche durchsichtiger und Linien etwas schwächer,
+		# sonst wirkt der Boden heller als im alten Renderer
+		"floor": {"floor_alpha": 0.26, "major_energy": 1.6, "line_energy": 0.85},
 		"path": Color("2ef2e0"), "path_energy": 2.2,
 		"marker": Color("ff36d8"), "marker_energy": 2.2,
 		"rock": "glass",
@@ -96,9 +101,10 @@ const STYLES := {
 			# schwaches violettes Gegenlicht als Lichtkante an den Umrissen
 			"fill": Color("8a70d0"), "fill_energy": 0.22, "fill_pitch": -20.0,
 			"fog": Color("1c2038"), "fog_density": 0.014,
-			"glow_threshold": 0.85, "glow_intensity": 1.3,
+			"glow_threshold": 0.9, "glow_intensity": 0.7,
 			"tonemap": Environment.TONE_MAPPER_FILMIC, "exposure": 1.2, "white": 1.0, "contrast": 1.12, "saturation": 1.0,
 			"vignette": 0.55, "vignette_color": Color(0.04, 0.04, 0.12),
+			"ssao": 1.4, "ssil": 0.8, "vol_fog": 0.02,
 		},
 		"env": {
 			"sky_top": Color("6f97a8"), "sky_horizon": Color("c9d6b8"), "ground_bottom": Color("2e3a26"),
@@ -110,10 +116,11 @@ const STYLES := {
 			"shadow_blur": 2.0, "shadow_opacity": 0.82,
 			"fill": Color("9fbcd8"), "fill_energy": 0.4, "fill_pitch": -30.0,
 			"fog": Color("8a9a80"), "fog_density": 0.0015,
-			"glow_threshold": 1.2, "glow_intensity": 0.8,
+			"glow_threshold": 1.2, "glow_intensity": 0.5,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.88, "white": 6.0,
 			"contrast": 1.06, "saturation": 0.95,
 			"vignette": 0.3, "vignette_color": Color(0.2, 0.22, 0.12),
+			"ssao": 1.6, "ssil": 0.6,
 		},
 	},
 	DECO: {
@@ -129,7 +136,8 @@ const STYLES := {
 			# beleuchteter Marmor (floor_lit): etwas dunkler, weil die Sonne ihn aufhellt; glänzend
 			"lit_albedo": 1.0, "line_glow": 0.4, "floor_roughness": 0.55, "floor_specular": 0.25,
 			# warme Bodenleuchten in den Messingrauten
-			"floor_lamp": 5.0, "lamp_color": Color("ffbf70"), "lamp_size": 0.085, "lamp_radius": 1.1, "lamp_pool": 0.25,
+			"floor_lamp": 3.5, "lamp_color": Color("ffbf70"), "lamp_size": 0.085, "lamp_radius": 1.0, "lamp_pool": 0.12,
+			"tint_shade": 0.55,
 			"blocked_color": Color("071618"), "blocked_alpha": 1.0,
 			"zone_color": Color("b4553f"), "zone_alpha": 0.3, "zone_edge_energy": 1.0,
 			"zone_edge_color": Color("d8b97f"),
@@ -150,9 +158,10 @@ const STYLES := {
 			"sun": Color("ffd9a0"), "sun_energy": 0.8, "sun_pitch": -34.0, "sun_yaw": -115.0, "sun_specular": 0.12,
 			"shadow_blur": 1.6, "shadow_opacity": 0.85,
 			"fill": Color("5fb0b0"), "fill_energy": 0.3, "fill_pitch": -25.0,
-			"glow_threshold": 1.0, "glow_intensity": 0.9,
+			"glow_threshold": 1.1, "glow_intensity": 0.45,
 			"exposure": 0.85, "contrast": 1.05,
 			"vignette": 0.4, "vignette_color": Color(0.02, 0.1, 0.11),
+			"ssao": 1.5, "ssil": 0.5,
 		},
 		# Nacht: schwaches, kühles Mondlicht von oben, die Bodenleuchten tragen das Licht
 		"env_night": {
@@ -163,7 +172,7 @@ const STYLES := {
 			"shadow_opacity": 0.75, "shadow_blur": 2.2,
 			"fill": Color("3a5a78"), "fill_energy": 0.25,
 			# etwa 400 K wärmer als neutrales Mondlicht
-			"glow_threshold": 0.85, "glow_intensity": 1.25, "exposure": 1.05, "tint": Color(1.0, 0.95, 0.86),
+			"glow_threshold": 0.95, "glow_intensity": 0.65, "exposure": 1.05, "tint": Color(1.0, 0.95, 0.86),
 		},
 		# wärmerer Marmor, die dicken Messinglinien glimmen golden
 		"floor_night": {
@@ -200,10 +209,11 @@ const STYLES := {
 			"sun": Color("fff1dc"), "sun_energy": 1.6, "sun_pitch": -48.0, "sun_yaw": -110.0,
 			"shadow_blur": 1.8, "shadow_opacity": 0.75,
 			"fill": Color("b0c0d0"), "fill_energy": 0.3, "fill_pitch": -30.0,
-			"glow_threshold": 1.2, "glow_intensity": 0.6,
+			"glow_threshold": 1.2, "glow_intensity": 0.35,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
 			"contrast": 1.04, "saturation": 0.95,
 			"vignette": 0.25, "vignette_color": Color(0.25, 0.24, 0.22),
+			"ssao": 1.6, "ssil": 0.4,
 		},
 	},
 }

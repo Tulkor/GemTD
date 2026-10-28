@@ -1,7 +1,6 @@
 // Nachbearbeitung über dem ganzen Bild (CameraRig.add_environment, Stilwerte "vignette"/"vignette_color"):
 // zu den Rändern hin abgedunkelt und leicht in der Stilfarbe getönt, damit der Blick zur Mitte geht.
 // Legt nur eine Farbe darüber (blend_mix mit Deckkraft): liest kein Bild, die Mitte bleibt unverändert.
-// (blend_mul ginge nicht: im Compatibility-Renderer läuft auch Weiß durch das Tonemapping und dunkelt alles ab.)
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, depth_test_disabled, cull_disabled, shadows_disabled, fog_disabled;
 

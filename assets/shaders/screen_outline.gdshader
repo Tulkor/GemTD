@@ -4,6 +4,7 @@
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, depth_test_disabled, cull_disabled, shadows_disabled, fog_disabled;
 
+// Vulkan (Forward+): der Tiefenwert geht unverändert als z in INV_PROJECTION_MATRIX (umgekehrtes Z, 1 = nah)
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
 uniform vec4 color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float strength = 0.45;
@@ -18,9 +19,9 @@ void vertex() {
 	POSITION = vec4(VERTEX.xy * 2.0, 0.0, 1.0);
 }
 
-// Tiefe hier übergeben: die Tiefen-Textur geht im Compatibility-Renderer nur direkt in fragment()
+// Tiefe hier übergeben: die Tiefen-Textur geht nur direkt in fragment()
 float lin(vec2 uv, float d, mat4 inv_proj) {
-	vec4 v = inv_proj * vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+	vec4 v = inv_proj * vec4(uv * 2.0 - 1.0, d, 1.0);
 	return -v.z / v.w;
 }
 

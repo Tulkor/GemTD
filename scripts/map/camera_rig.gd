@@ -231,6 +231,26 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		env.fog_light_color = look.fog
 		env.fog_density = look.fog_density
 		env.fog_sky_affect = 0.0
+	# Forward+ (Vulkan): Umgebungsverdeckung (SSAO) dunkelt Fugen, Ecken und den Fuß der Tower ab,
+	# indirektes Licht (SSIL) trägt Farbe von hellen Flächen auf die Umgebung
+	if look.ssao > 0.0:
+		env.ssao_enabled = true
+		env.ssao_radius = look.ssao_radius
+		env.ssao_intensity = look.ssao
+		env.ssao_power = 1.5
+		env.ssao_light_affect = 0.15
+	if look.ssil > 0.0:
+		env.ssil_enabled = true
+		env.ssil_radius = 3.0
+		env.ssil_intensity = look.ssil
+	# Volumen-Nebel: Licht der Laternen und Treffer wird im Dunst sichtbar
+	if look.vol_fog > 0.0:
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = look.vol_fog
+		env.volumetric_fog_albedo = look.fog
+		env.volumetric_fog_length = 40.0
+		env.volumetric_fog_ambient_inject = 0.3
+		env.volumetric_fog_sky_affect = 0.0
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(look.sun_pitch), deg_to_rad(look.sun_yaw), 0)
 	sun.light_color = look.sun * tint

@@ -17,6 +17,7 @@ uniform float ramp = 0.6;
 /// Kern über 1 heben (HDR), 0 = aus
 uniform float hot = 1.2;
 uniform float flicker = 0.18;
+// Vulkan (Forward+): der Tiefenwert geht unverändert als z in INV_PROJECTION_MATRIX (umgekehrtes Z, 1 = nah)
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform float soft = 0.12;
 
@@ -48,7 +49,7 @@ void fragment() {
 	float fade = 1.0;
 	if (soft > 0.0) {
 		float d = texture(depth_tex, SCREEN_UV).r;
-		vec4 v = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+		vec4 v = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, d, 1.0);
 		fade = clamp((-v.z / v.w + VERTEX.z) / soft, 0.0, 1.0);
 	}
 	ALPHA = c.a * tint.a * fade;

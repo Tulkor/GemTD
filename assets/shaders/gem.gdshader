@@ -22,7 +22,7 @@ uniform float vein_amount = 0.0;
 uniform float stone_tint = 0.0;
 uniform vec4 stone_color : source_color = vec4(0.42, 0.41, 0.36, 1.0);
 uniform vec4 moss_color : source_color = vec4(0.30, 0.38, 0.18, 1.0);
-/// Gespiegelte Umgebung auf den Facetten (der Compatibility-Renderer spiegelt nur den Sternenhimmel):
+/// Gespiegelte Umgebung auf den Facetten (gespiegelt würde sonst nur der Sternenhimmel):
 /// heller Horizont-Streifen und Himmel, je Facette anders, an den Rändern stärker (Fresnel). 0 = aus
 uniform float env_reflect = 0.55;
 uniform vec4 reflect_horizon : source_color = vec4(1.0, 0.45, 0.9, 1.0);

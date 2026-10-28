@@ -518,6 +518,8 @@ func _add_lanterns() -> void:
 		var pm := ShaderMaterial.new()
 		pm.shader = pool_shader
 		pm.set_shader_parameter("light_color", POOL_LIGHT)
+		# Vulkan rechnet den Fleck in linearem Licht, ohne Abschwächung wirkt er grell orange
+		pm.set_shader_parameter("strength", 0.42)
 		pm.set_shader_parameter("phase", float(n) * 2.3)
 		# Pfosten im Fleck (UV), von dort fällt sein Schatten von der Laterne weg
 		pm.set_shader_parameter("post_uv", Vector2(0.5, 0.5) - arm / POOL_SIZE)

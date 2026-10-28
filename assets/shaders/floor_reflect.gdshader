@@ -1,11 +1,12 @@
 // Spiegelung auf dem Spielfeld (Board3D, Stärke je Stil "reflect"): eigene Fläche knapp über dem Boden,
 // sucht entlang des gespiegelten Blickstrahls im Tiefenbild nach Towern und Gegnern (Screen-Space) und
-// zeigt deren Farbe leicht verschwommen. Der Compatibility-Renderer hat keine eingebauten Spiegelungen.
+// zeigt deren Farbe leicht verschwommen. Das eingebaute SSR wirkt nur auf deckende Flächen, der Glasboden ist durchsichtig.
 // Sieht nur Deckendes (Tower, Gegner, Steine); Effekte und Durchsichtiges spiegeln sich nicht.
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap, repeat_disable;
+// Vulkan (Forward+): der Tiefenwert geht unverändert als z in INV_PROJECTION_MATRIX (umgekehrtes Z, 1 = nah)
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
 /// Deckkraft der Spiegelung (0 = aus)
 uniform float strength = 0.3;
@@ -24,9 +25,9 @@ vec2 project(vec3 v, mat4 proj) {
 	return c.xy / c.w * 0.5 + 0.5;
 }
 
-// Tiefe hier übergeben: Tiefen- und Bildschirm-Textur gehen im Compatibility-Renderer nur direkt in fragment()
+// Tiefe hier übergeben: Tiefen- und Bildschirm-Textur gehen nur direkt in fragment()
 float scene_z(vec2 uv, float d, mat4 inv_proj) {
-	vec4 v = inv_proj * vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+	vec4 v = inv_proj * vec4(uv * 2.0 - 1.0, d, 1.0);
 	return v.z / v.w;
 }
 

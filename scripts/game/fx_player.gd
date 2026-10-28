@@ -16,10 +16,10 @@ const HIT_TOWARD_CAMERA := 0.35
 ## Obergrenzen, damit späte Wellen mit vielen Towern nicht ruckeln.
 const MAX_EFFECTS := 160
 const MAX_SPRITES := 2500
-## Treffer leuchten kurz als echte Lichtquelle in ihrer Farbe. Wenige Lichter im Pool (jedes Licht kostet im
-## Compatibility-Renderer einen Zeichendurchgang mehr für alles, was es trifft); Treffer nahe an einem
-## leuchtenden Licht frischen dieses auf, statt ein neues zu nehmen.
-const MAX_LIGHTS := 8
+## Treffer leuchten kurz als echte Lichtquelle in ihrer Farbe. Forward+ rechnet Lichter gebündelt (Cluster),
+## trotzdem ein Pool mit Obergrenze; Treffer nahe an einem leuchtenden Licht frischen dieses auf,
+## statt ein neues zu nehmen.
+const MAX_LIGHTS := 24
 const LIGHT_TIME := 0.3
 const LIGHT_RANGE := 2.4
 const LIGHT_ENERGY := 4.0
