@@ -3,7 +3,7 @@
 	"shops": [
 		{
 			"id": "media_markt",
-			"name": "Media Markt",
+			"name": "Medio Markt",
 			"name_en": "Electric Shop",
 			"kind": "standard",
 			"bonus": "rebate",
@@ -227,7 +227,7 @@
 				},
 				{
 					"id": "o005",
-					"name": "Aibo 2.1",
+					"name": "Aibot 2.1",
 					"cost": 1200,
 					"value": 1200,
 					"upgrade_from": null,
@@ -333,7 +333,7 @@
 		},
 		{
 			"id": "hm",
-			"name": "H&M",
+			"name": "H&N",
 			"name_en": "Clothes Shop",
 			"kind": "standard",
 			"bonus": "damage",
@@ -577,7 +577,7 @@
 				},
 				{
 					"id": "o02C",
-					"name": "Hugo Boss",
+					"name": "Hugo Bass",
 					"cost": 2444,
 					"value": 2444,
 					"upgrade_from": null,
@@ -608,7 +608,7 @@
 				},
 				{
 					"id": "o01K",
-					"name": "Giorgio Armani",
+					"name": "Giorgio Armoni",
 					"cost": 6300,
 					"value": 6300,
 					"upgrade_from": null,
@@ -664,7 +664,7 @@
 		},
 		{
 			"id": "obi",
-			"name": "Obi Baumarkt",
+			"name": "Obo Baumarkt",
 			"name_en": "Do-It-Yourself Store",
 			"kind": "standard",
 			"bonus": "damage",
@@ -962,8 +962,8 @@
 		},
 		{
 			"id": "mcdonalds",
-			"name": "Mc Donalds",
-			"name_en": "Mc Donalds",
+			"name": "Mc Donuts",
+			"name_en": "Mc Donuts",
 			"kind": "standard",
 			"bonus": "damage",
 			"color": "#ffd166",
@@ -1020,7 +1020,7 @@
 				},
 				{
 					"id": "h002",
-					"name": "Big Mac",
+					"name": "Big Mäc",
 					"cost": 15,
 					"value": 15,
 					"upgrade_from": null,
@@ -1060,7 +1060,7 @@
 				},
 				{
 					"id": "o013",
-					"name": "Happy Meal",
+					"name": "Happy Mahl",
 					"cost": 180,
 					"value": 180,
 					"upgrade_from": null,
@@ -1080,7 +1080,7 @@
 				},
 				{
 					"id": "o00M",
-					"name": "Ronald McDonald",
+					"name": "Ronald Mc Donut",
 					"cost": 220,
 					"value": 220,
 					"upgrade_from": null,
@@ -1100,7 +1100,7 @@
 				},
 				{
 					"id": "o01Q",
-					"name": "McFlurry",
+					"name": "Mc Slurry",
 					"cost": 450,
 					"value": 450,
 					"upgrade_from": null,
@@ -1152,7 +1152,7 @@
 				},
 				{
 					"id": "o02E",
-					"name": "Burnt Down Burger King",
+					"name": "Burnt Down Burger Queen",
 					"cost": 1130,
 					"value": 1130,
 					"upgrade_from": null,
@@ -1249,7 +1249,7 @@
 		},
 		{
 			"id": "aldi",
-			"name": "Aldi",
+			"name": "Oldi",
 			"name_en": "Supermarket",
 			"kind": "standard",
 			"bonus": "damage",
@@ -1928,13 +1928,13 @@
 		},
 		{
 			"id": "porsche",
-			"name": "Porsche Autohaus",
-			"name_en": "Porsche Car Dealer",
+			"name": "Borsche Autohaus",
+			"name_en": "Borsche Car Dealer",
 			"kind": "standard",
 			"bonus": "damage",
 			"color": "#c0c8d8",
 			"text": "Reichweite: Hoch Schaden: Hoch Geschwindigkeit: Hoch  Besonderheiten: Viele der sehr teuren Tower verursachen Frost-Schaden und alle verlangsamen Gegner mit einer Aura.",
-			"rules": "Fast alle Tower haben die Aura 'Porsche' (-10 % Bewegungstempo der Gegner); teure Tower mit Frost. Manager: Aufdecken.",
+			"rules": "Fast alle Tower haben die Aura 'Borsche' (-10 % Bewegungstempo der Gegner); teure Tower mit Frost. Manager: Aufdecken.",
 			"towers": [
 				{
 					"id": "o00T",
@@ -2068,7 +2068,7 @@
 				},
 				{
 					"id": "o02G",
-					"name": "Porsche Fan",
+					"name": "Borsche Fan",
 					"cost": 765,
 					"value": 765,
 					"upgrade_from": null,
@@ -2094,7 +2094,7 @@
 				},
 				{
 					"id": "o02H",
-					"name": "Mr Porsche",
+					"name": "Mr Borsche",
 					"cost": 1000,
 					"value": 1000,
 					"upgrade_from": null,
@@ -2125,7 +2125,7 @@
 				},
 				{
 					"id": "o016",
-					"name": "Cayenne Turbo S",
+					"name": "Kajenne Turbo S",
 					"cost": 1250,
 					"value": 1250,
 					"upgrade_from": null,
@@ -2156,7 +2156,7 @@
 				},
 				{
 					"id": "o017",
-					"name": "Boxster S",
+					"name": "Boxxer S",
 					"cost": 1705,
 					"value": 1705,
 					"upgrade_from": null,
@@ -2187,7 +2187,7 @@
 				},
 				{
 					"id": "o018",
-					"name": "Carrera GT",
+					"name": "Karrera GT",
 					"cost": 3200,
 					"value": 3200,
 					"upgrade_from": null,
@@ -2218,7 +2218,7 @@
 				},
 				{
 					"id": "o02L",
-					"name": "Pimped Carrera GT",
+					"name": "Pimped Karrera GT",
 					"cost": 7400,
 					"value": 7400,
 					"upgrade_from": null,
@@ -2274,12 +2274,12 @@
 			],
 			"todo": [
 				"Hood Babe: Flirten (Amls)",
-				"Carrera GT: Neid (ACwb)"
+				"Karrera GT: Neid (ACwb)"
 			]
 		},
 		{
 			"id": "bank",
-			"name": "Deutsche Bank",
+			"name": "Teutsche Bank",
 			"name_en": "Bank",
 			"kind": "standard",
 			"bonus": "damage",
@@ -2554,7 +2554,7 @@
 		},
 		{
 			"id": "aral",
-			"name": "Aral Tankstelle",
+			"name": "Arol Tankstelle",
 			"name_en": "Gas Station",
 			"kind": "standard",
 			"bonus": "damage",
@@ -2887,7 +2887,7 @@
 		},
 		{
 			"id": "sexshop",
-			"name": "Beate Uhse Sexshop",
+			"name": "Beate Muhse Sexshop",
 			"name_en": "Sexshop",
 			"kind": "standard",
 			"bonus": "rebate",
@@ -3238,7 +3238,7 @@
 		},
 		{
 			"id": "cinemaxx",
-			"name": "CinemaxX",
+			"name": "CineMoxx",
 			"name_en": "Cinema",
 			"kind": "standard",
 			"bonus": "damage",
@@ -3671,7 +3671,7 @@
 			"bonus": "damage",
 			"color": "#9fa8b8",
 			"text": "Reichweite: - Schaden: - Geschwindigkeit: -  Besonderheiten: Mit dem Copyshop kann man jeden beliebigen Tower kopieren, die allerdings dann etwa 5% mehr kosten. Dafür sind die Bauzeit und die Möglichkeiten unschlagbar.",
-			"rules": "Einziger Tower: Towercopier (9 G). Fähigkeit 'Tower kopieren' (A01I) verwandelt ihn in einen beliebigen Tower. Verrechnet werden Punktwert x 1,05 - 9 G (der Bestätigungsdialog zeigt fälschlich x 1,4 - 9). Tower mit Punktwert < 9 sind gratis. Nur Ziele mit <= 500 max. HP; Tower von TUI/Bestatter sind laut Meldung nicht kopierbar. Manager: passive Enttarnung.",
+			"rules": "Einziger Tower: Towercopier (9 G). Fähigkeit 'Tower kopieren' (A01I) verwandelt ihn in einen beliebigen Tower. Verrechnet werden Punktwert x 1,05 - 9 G (der Bestätigungsdialog zeigt fälschlich x 1,4 - 9). Tower mit Punktwert < 9 sind gratis. Nur Ziele mit <= 500 max. HP; Tower von TOI/Bestatter sind laut Meldung nicht kopierbar. Manager: passive Enttarnung.",
 			"towers": [
 				{
 					"id": "h01T",
@@ -3698,7 +3698,7 @@
 		},
 		{
 			"id": "tui",
-			"name": "TUI Reisebüro",
+			"name": "TOI Reisebüro",
 			"name_en": "Travel Agency",
 			"kind": "pro",
 			"bonus": "damage",
@@ -3931,13 +3931,13 @@
 		},
 		{
 			"id": "aok",
-			"name": "AOK",
+			"name": "AOX",
 			"name_en": "Sickness Fund",
 			"kind": "pro",
 			"bonus": "rebate",
 			"color": "#5fe08a",
 			"text": "Reichweite: Hoch Schaden: Niedrig Geschwindigkeit: Niedrig  Besonderheiten: 10%ige Chance, bei einem Kill Leben zu erhalten. Angriffe prallen mehrfach ab. Bonusgold beim Verlust von Leben. Falls alle Leben vorhanden sind gibt es einen 33%igen Angriffsbonus für alle Tower.",
-			"rules": "Tower mit Multitarget (bis 4 Ziele). 10 % Chance auf +1 Leben pro Kill. Bonus bei Lebensverlust: Level x floor(0,66 x verlorene Leben), höchstens Level x 25 G ('AOK Bonus'). Laut Tooltip +33 % Schaden bei vollen Leben. Nicht verfügbar im Modus 'Auge um Auge' (R00N). AOK-Spieler bekommen R00U nicht, also kein Headquarters und kein Revised Plan B. Rabatt statt Bonus.",
+			"rules": "Tower mit Multitarget (bis 4 Ziele). 10 % Chance auf +1 Leben pro Kill. Bonus bei Lebensverlust: Level x floor(0,66 x verlorene Leben), höchstens Level x 25 G ('AOX Bonus'). Laut Tooltip +33 % Schaden bei vollen Leben. Nicht verfügbar im Modus 'Auge um Auge' (R00N). AOX-Spieler bekommen R00U nicht, also kein Headquarters und kein Revised Plan B. Rabatt statt Bonus.",
 			"towers": [
 				{
 					"id": "h02B",
@@ -4117,7 +4117,7 @@
 				},
 				{
 					"id": "h02F",
-					"name": "Doc Morris",
+					"name": "Doc Moritz",
 					"cost": 999,
 					"value": 999,
 					"upgrade_from": null,
@@ -4312,8 +4312,8 @@
 		},
 		{
 			"id": "ikea",
-			"name": "IKEA",
-			"name_en": "IKEA",
+			"name": "IKEO",
+			"name_en": "IKEO",
 			"kind": "pro",
 			"bonus": "rebate",
 			"color": "#ffd84f",

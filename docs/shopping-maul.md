@@ -47,29 +47,29 @@ dazu Kopfgeld für jeden eigenen Kill.
 
 - Tower gibt es nur aus der eigenen Filiale und nur im eigenen Gebiet. Wege dürfen nicht versperrt werden,
   solange ein Boss lebt, wird nicht gebaut.
-- Höchstens 80 Tower pro Spieler (TUI Reisebüro und Waffenladen: 6).
+- Höchstens 80 Tower pro Spieler (TOI Reisebüro und Waffenladen: 6).
 - Tower lassen sich aufwerten; Verkaufen gibt 75 % des Werts zurück.
 - **Bonus-Upgrade** (5 Stufen): je nach Filiale +5 % Schaden für alle Tower oder 5 % Rabatt auf jeden Kauf pro Stufe.
-- **Enttarnung:** Media Markt, Aldi und Mc Donalds sehen unsichtbare Gegner immer. Alle anderen haben „Aufdecken“
+- **Enttarnung:** Medio Markt, Oldi und Mc Donuts sehen unsichtbare Gegner immer. Alle anderen haben „Aufdecken“
   (30 Sekunden, alle 60 Sekunden), dazu enttarnen manche Tower in ihrer Reichweite.
 
 ## Filialen
 
 | Filiale | Reichweite / Schaden / Tempo | Besonderheit |
 |---|---|---|
-| Media Markt | normal / normal / normal | enttarnt immer, gut gegen große Gruppen; Rabatt statt Schadensbonus |
-| H&M | hoch / niedrig / sehr hoch | kritische Treffer und Betäubung |
-| Obi Baumarkt | sehr niedrig / sehr hoch / hoch | verliert jede Runde 1 % des Towerwerts |
-| Mc Donalds | extrem hoch / sehr niedrig / hoch | enttarnt immer, verlangsamt |
-| Aldi | hoch / hoch / sehr niedrig | enttarnt immer, viel Flächenschaden |
+| Medio Markt | normal / normal / normal | enttarnt immer, gut gegen große Gruppen; Rabatt statt Schadensbonus |
+| H&N | hoch / niedrig / sehr hoch | kritische Treffer und Betäubung |
+| Obo Baumarkt | sehr niedrig / sehr hoch / hoch | verliert jede Runde 1 % des Towerwerts |
+| Mc Donuts | extrem hoch / sehr niedrig / hoch | enttarnt immer, verlangsamt |
+| Oldi | hoch / hoch / sehr niedrig | enttarnt immer, viel Flächenschaden |
 | Tante Emma Laden | normal / anfangs niedrig / hoch | viele Tower vergiften |
-| Porsche Autohaus | hoch / hoch / hoch | teure Tower, Frost, Verlangsamungs-Aura |
-| Deutsche Bank | normal / normal / hoch | greift nur Bodengegner an |
-| Aral Tankstelle | niedrig–normal / normal / hoch | ein Grundtower mit langer Upgradekette, oft Betäubung |
-| Beate Uhse Sexshop | normal / hoch / niedrig | schnell gebaut, Flächenzauber; Rabatt statt Schadensbonus |
-| CinemaxX | mäßig / mäßig / sehr hoch | drei Tower gegen Luft |
+| Borsche Autohaus | hoch / hoch / hoch | teure Tower, Frost, Verlangsamungs-Aura |
+| Teutsche Bank | normal / normal / hoch | greift nur Bodengegner an |
+| Arol Tankstelle | niedrig–normal / normal / hoch | ein Grundtower mit langer Upgradekette, oft Betäubung |
+| Beate Muhse Sexshop | normal / hoch / niedrig | schnell gebaut, Flächenzauber; Rabatt statt Schadensbonus |
+| CineMoxx | mäßig / mäßig / sehr hoch | drei Tower gegen Luft |
 
-Das Gold-Einkommen der Deutschen Bank und die Stammkundin des Tante-Emma-Ladens aus dem Original fehlen noch.
+Das Gold-Einkommen der Teutschen Bank und die Stammkundin des Tante-Emma-Ladens aus dem Original fehlen noch.
 
 ## Erfahrung und Profi-Filialen
 
@@ -84,9 +84,9 @@ Rechner gespeichert (`user://maul.cfg`) und bleiben zwischen den Partien erhalte
 |---|---|
 | Post | Tower mit Waffen-Slots, Waffen lassen sich während des Levels zwischen Towern tauschen |
 | Copyshop | ein Kopierer, der sich in jeden Tower jeder Filiale verwandelt (etwa 5 % teurer) |
-| TUI Reisebüro | höchstens 6 Tower, Schaden und Reichweite getrennt erforschbar |
-| AOK | Angriffe springen über, 10 % Chance auf Leben pro Kill, Gold bei Lebensverlust, +33 % Schaden bei vollen Leben |
-| IKEA | Show Houses mit Möbel-Slots, zwei passende Teile ergeben ein besseres |
+| TOI Reisebüro | höchstens 6 Tower, Schaden und Reichweite getrennt erforschbar |
+| AOX | Angriffe springen über, 10 % Chance auf Leben pro Kill, Gold bei Lebensverlust, +33 % Schaden bei vollen Leben |
+| IKEO | Show Houses mit Möbel-Slots, zwei passende Teile ergeben ein besseres |
 | Gärtnerei | billige Pflanzen, die Wasser aus Bewässerungsanlagen brauchen |
 | Fitness-Studio | Tower brauchen jede Runde bezahlte Anabolika, werden dafür stärker, Doping möglich |
 | Bestattungsinstitut | Friedhöfe erwecken bewegliche Zombies, Kultstätten heilen sie |

@@ -27,7 +27,7 @@ Herausforderungen, sechs Schwierigkeiten von „Anfänger“ bis „IMPOSSIBLE!�
 Regeln ausführlich: [docs/eevetd.md](docs/eevetd.md).
 
 ### Shopping Maul
-Jeder Spieler eröffnet eine Filiale (Media Markt, Aldi, Obi, IKEA …), kauft dort Tower und wertet sie auf.
+Jeder Spieler eröffnet eine Filiale (Medio Markt, Oldi, Obo, IKEO …), kauft dort Tower und wertet sie auf.
 Gegner laufen durch die Gebiete aller Spieler ins gemeinsame Ziel, nach Level 40 folgen 10 Bonuslevel.
 Erfahrungspunkte bleiben zwischen den Partien erhalten und schalten neun Profi-Filialen frei (Post, Waffenladen,
 Bestattungsinstitut …). Regeln ausführlich: [docs/shopping-maul.md](docs/shopping-maul.md).

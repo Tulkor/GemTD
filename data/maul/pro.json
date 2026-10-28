@@ -87,7 +87,7 @@
 		"I00E": {"name": "FRÄN Messerblock", "name_en": "FRÄN Knife Block", "cost": 12, "damage": 12, "cooldown": 0.3, "range": 3.12},
 		"I00C": {"name": "ISTMI Regal", "name_en": "ISMEI Rack", "cost": 37, "damage": 160, "cooldown": 0.15, "range": 3.91, "targets": "air"},
 		"I00F": {"name": "Herr Nilson", "name_en": "Mr Nilson", "cost": 90, "damage": 52, "cooldown": 0.15, "range": 3.12},
-		"I00G": {"name": "Pippi Langstrumpf", "name_en": "Pippi Longstocking", "cost": 160, "damage": 173, "cooldown": 0.25, "range": 3.32, "targets": "ground"},
+		"I00G": {"name": "Pippa Kniestrumpf", "name_en": "Pippa Kneesock", "cost": 160, "damage": 173, "cooldown": 0.25, "range": 3.32, "targets": "ground"},
 		"I00I": {"name": "Kundin", "name_en": "Female Costumer", "cost": 240, "damage": 240, "cooldown": 0.25, "range": 3.52},
 		"I00H": {"name": "Elch", "name_en": "Elk", "cost": 375, "damage": 400, "cooldown": 0.25, "range": 3.52},
 		"I010": {"name": "Knäckebrot", "name_en": "Crispbread", "cost": 440, "damage": 11600, "cooldown": 1.0, "range": 9.38, "targets": "air"},

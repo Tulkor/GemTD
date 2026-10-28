@@ -211,7 +211,7 @@ func _build_shop() -> void:
 		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 		b.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 		_tab_buttons[id] = b
-	_tab_buttons["main"].tooltip_text = "Hauptgebäude: Bonus-Upgrade oder Rabatt, beim TUI die Forschung"
+	_tab_buttons["main"].tooltip_text = "Hauptgebäude: Bonus-Upgrade oder Rabatt, beim TOI die Forschung"
 	_shop_page = VBoxContainer.new()
 	_shop_page.add_theme_constant_override("separation", 6)
 	box.add_child(_shop_page)
@@ -298,7 +298,7 @@ func _refresh_xpert() -> void:
 
 
 ## Reiter Zentrale (Hauptgebäude): Bonus-Upgrade (+5 % Schaden je Stufe) oder Rabatt (5 % zurück),
-## beim TUI die Forschung, dazu die eigene Erfahrung.
+## beim TOI die Forschung, dazu die eigene Erfahrung.
 func _build_main() -> void:
 	for c in _main_box.get_children():
 		c.queue_free()
@@ -582,7 +582,7 @@ func _pro_actions(t: MaulTower, gold: int) -> void:
 				game.show_message(tr("Klick auf den Tower, der die Items bekommen soll")))
 			mv.tooltip_text = "Alle Items in einen anderen eigenen Tower mit freien Slots legen"
 		_item_grid(game.items_for(p, "weapon"), gold, func(id): game.submit({"type": "item", "cell": t.cell, "item": id}),
-			t.items.size() >= t.slots(), "Items kaufen", "Erst einen Laden bauen (Post: Package Store, IKEA: Store)")
+			t.items.size() >= t.slots(), "Items kaufen", "Erst einen Laden bauen (Post: Package Store, IKEO: Store)")
 	if pro.fitness.upkeep.has(t.tower_id):
 		_item_grid(game.items_for(p, "drug"), gold, func(id): game.submit({"type": "item", "cell": t.cell, "item": id}),
 			false, "Doping", "Erst Erich´s Pharmacy bauen")
@@ -637,7 +637,7 @@ func _item_grid(ids: Array, gold: int, buy: Callable, full: bool, caption: Strin
 		b.disabled = full or int(it.cost) > gold
 
 
-## Copyshop: Tower einer Standard-Filiale oder der AOK wählen und für Wert × 1,05 − 9 Gold kopieren.
+## Copyshop: Tower einer Standard-Filiale oder der AOX wählen und für Wert × 1,05 − 9 Gold kopieren.
 func _copy_picker(t: MaulTower, gold: int) -> void:
 	UiTheme.caption("Kopieren", _sel_box)
 	var opt := OptionButton.new()
