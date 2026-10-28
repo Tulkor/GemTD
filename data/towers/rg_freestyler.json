@@ -1,0 +1,33 @@
+{
+	"id": "rg_freestyler",
+	"name": "Freestyler",
+	"category": "randgruppen",
+	"color": "#ff5aa0",
+	"model": "res://assets/models/towers/q_modular_maenner/casual_2.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "pierce",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"hiphop"
+		],
+		"place": 1,
+		"cost": 35,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01Z"
+	},
+	"tiers": [
+		{
+			"damage": [
+				27.0,
+				33.0
+			],
+			"range": 7.031,
+			"cooldown": 0.65,
+			"abilities": []
+		}
+	]
+}

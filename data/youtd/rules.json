@@ -1,0 +1,1055 @@
+{
+	"_info": "Regeln von YouTD nach YouTD 2 (MIT, github.com/Praytic/youtd2, siehe docs/youtd.md und QUELLEN.md). Entfernungen in WC3-Einheiten (128 = 1 Towerbreite), Tempo in WC3-Einheiten pro Sekunde. Tower, Items, Specials und XP-Tabellen erzeugt tools/youtd/youtd_daten.py.",
+	"start": {
+		"gold": 70,
+		"tomes": 90,
+		"food": 55,
+		"food_max": 300,
+		"lives": 100,
+		"tower_rolls": 6
+	},
+	"income": {
+		"base": 20,
+		"per_level": 2,
+		"interest": 0.05,
+		"interest_max": 1000,
+		"tomes": 8
+	},
+	"time": {
+		"first_wave": 180,
+		"between_waves": 15
+	},
+	"units": {
+		"wc3_per_tower": 128,
+		"range_bonus": 72,
+		"move_speed": 222,
+		"move_speed_min": 100,
+		"move_speed_max": 522
+	},
+	"elements": {
+		"order": [
+			"ice",
+			"nature",
+			"fire",
+			"astral",
+			"darkness",
+			"iron",
+			"storm"
+		],
+		"names": {
+			"ice": "Eis",
+			"nature": "Natur",
+			"fire": "Feuer",
+			"astral": "Astral",
+			"darkness": "Dunkelheit",
+			"iron": "Eisen",
+			"storm": "Sturm"
+		},
+		"colors": {
+			"ice": "#8fd8ff",
+			"nature": "#6fcf5a",
+			"fire": "#ff6a2a",
+			"astral": "#c9a8ff",
+			"darkness": "#9a5cc9",
+			"iron": "#b4b8be",
+			"storm": "#5aa8ff"
+		},
+		"research_base": 20,
+		"max_level": 15,
+		"cost_for_level": {
+			"1": 140,
+			"2": 215,
+			"3": 345,
+			"4": 500,
+			"5": 680,
+			"6": 900,
+			"7": 1080,
+			"8": 1300,
+			"9": 1550,
+			"10": 1850,
+			"11": 2130,
+			"12": 2440,
+			"13": 2750,
+			"14": 3100,
+			"15": 3500
+		}
+	},
+	"rarities": {
+		"order": [
+			"common",
+			"uncommon",
+			"rare",
+			"unique"
+		],
+		"names": {
+			"common": "Gewöhnlich",
+			"uncommon": "Ungewöhnlich",
+			"rare": "Selten",
+			"unique": "Einzigartig"
+		},
+		"colors": {
+			"common": "#4fd35a",
+			"uncommon": "#4f7bff",
+			"rare": "#a77be0",
+			"unique": "#ffd040"
+		},
+		"food": {
+			"common": 2,
+			"uncommon": 3,
+			"rare": 4,
+			"unique": 6
+		},
+		"tomes_build_mode": {
+			"common": 0,
+			"uncommon": 4,
+			"rare": 10,
+			"unique": 25
+		},
+		"min_wave_build_mode": {
+			"common": 0,
+			"uncommon": 6,
+			"rare": 18,
+			"unique": 36
+		},
+		"item_slots_min": {
+			"common": 1,
+			"uncommon": 1,
+			"rare": 3,
+			"unique": 5
+		},
+		"item_slots_max": {
+			"common": 4,
+			"uncommon": 4,
+			"rare": 5,
+			"unique": 6
+		}
+	},
+	"item_slots_cost": [
+		[
+			6,
+			2000
+		],
+		[
+			5,
+			1700
+		],
+		[
+			4,
+			1500
+		],
+		[
+			3,
+			1200
+		],
+		[
+			2,
+			400
+		],
+		[
+			1,
+			0
+		]
+	],
+	"required_wave_max": 80,
+	"modes": [
+		{
+			"id": "random_with_upgrades",
+			"name": "Zufall mit Aufwertungen",
+			"sell": 0.75,
+			"score": 1.0,
+			"element_chance": 0.075,
+			"weight_power": 0.25,
+			"first_tier_only": true,
+			"text": "Jede Welle bringt zufällige Tower der erforschten Elemente ins Lager. Gebaute Tower lassen sich gegen Gold zur nächsten Stufe ihrer Familie aufwerten."
+		},
+		{
+			"id": "build",
+			"name": "Bauen",
+			"sell": 0.5,
+			"score": 0.9,
+			"text": "Alle Tower der erforschten Elemente frei kaufen. Seltene Tower kosten zusätzlich Wissensbücher und brauchen eine Mindestwelle."
+		},
+		{
+			"id": "totally_random",
+			"name": "Komplett zufällig",
+			"sell": 0.75,
+			"score": 1.35,
+			"element_chance": 0.1,
+			"weight_power": 0.8,
+			"first_tier_only": false,
+			"text": "Wie Zufall, aber Tower aller Stufen kommen direkt ins Lager und lassen sich nicht aufwerten. Mehr Punkte."
+		}
+	],
+	"lengths": [
+		{
+			"waves": 80,
+			"name": "Probe",
+			"score": 1.0
+		},
+		{
+			"waves": 120,
+			"name": "Voll",
+			"score": 1.0
+		},
+		{
+			"waves": 240,
+			"name": "Endlos",
+			"score": 0.9
+		}
+	],
+	"difficulties": [
+		{
+			"id": "beginner",
+			"name": "Anfänger",
+			"score": 1.0,
+			"hp": [
+				34.8,
+				32.0,
+				1.82,
+				0.015,
+				0.0001,
+				1.33e-05,
+				1.1e-08
+			],
+			"armor": [
+				0,
+				0.26,
+				0
+			]
+		},
+		{
+			"id": "easy",
+			"name": "Leicht",
+			"score": 2.0,
+			"hp": [
+				42.0,
+				41.6,
+				2.08,
+				0.018,
+				0.0003,
+				1.71e-05,
+				1.2e-08
+			],
+			"armor": [
+				2,
+				0.28,
+				0
+			]
+		},
+		{
+			"id": "medium",
+			"name": "Mittel",
+			"score": 3.0,
+			"hp": [
+				50.4,
+				52.8,
+				2.34,
+				0.021,
+				0.0005,
+				2.09e-05,
+				1.3e-08
+			],
+			"armor": [
+				4,
+				0.3,
+				0
+			]
+		},
+		{
+			"id": "hard",
+			"name": "Schwer",
+			"score": 4.0,
+			"hp": [
+				60.0,
+				65.6,
+				2.6,
+				0.024,
+				0.0008,
+				2.47e-05,
+				1.5e-08
+			],
+			"armor": [
+				6,
+				0.32,
+				0.0004
+			]
+		},
+		{
+			"id": "extreme",
+			"name": "Extrem",
+			"score": 5.0,
+			"hp": [
+				70.8,
+				80.0,
+				2.86,
+				0.027,
+				0.001,
+				2.85e-05,
+				1.8e-08
+			],
+			"armor": [
+				8,
+				0.34,
+				0.001
+			]
+		}
+	],
+	"waves": {
+		"size_chances": {
+			"mass": 15,
+			"normal": 50,
+			"air": 15,
+			"boss": 20
+		},
+		"champion_chances": {
+			"mass": {
+				"0": 70,
+				"1": 30
+			},
+			"normal": {
+				"0": 42.5,
+				"1": 30,
+				"2": 20,
+				"3": 7.5
+			}
+		},
+		"challenge_every": 8,
+		"challenge_mass_every": 16,
+		"capacity": 20,
+		"capacity_per_40": 1,
+		"armor_types": [
+			"hel",
+			"myt",
+			"lua",
+			"sol"
+		],
+		"sif_from_wave": 32,
+		"sif_chance": 0.15,
+		"sif_hp": 0.48,
+		"races": [
+			"undead",
+			"magic",
+			"nature",
+			"orc",
+			"humanoid"
+		],
+		"specials_from_wave": 8,
+		"special_count_chances": {
+			"0": 10,
+			"1": 60,
+			"2": 30
+		},
+		"special_count_chances_bonus": {
+			"0": 30,
+			"1": 50,
+			"2": 20
+		},
+		"special_sizes_all": [
+			"mass",
+			"normal",
+			"air",
+			"boss"
+		]
+	},
+	"sizes": {
+		"mass": {
+			"weight": 1,
+			"hp": 0.3,
+			"gold": 1,
+			"xp": 1,
+			"score": 1,
+			"portal": 1,
+			"items": 1,
+			"delay": [
+				0.15,
+				0.4
+			]
+		},
+		"normal": {
+			"weight": 2,
+			"hp": 1.0,
+			"gold": 2,
+			"xp": 2,
+			"score": 2,
+			"portal": 2,
+			"items": 2,
+			"delay": [
+				0.4,
+				2.2
+			]
+		},
+		"air": {
+			"weight": 4,
+			"hp": 1.0,
+			"gold": 2,
+			"xp": 4,
+			"score": 4,
+			"portal": 4,
+			"items": 4,
+			"delay": [
+				1.0,
+				3.0
+			]
+		},
+		"champion": {
+			"weight": 4,
+			"hp": 1.75,
+			"gold": 4,
+			"xp": 4,
+			"score": 4,
+			"portal": 4,
+			"items": 4,
+			"delay": [
+				0.7,
+				4.4
+			]
+		},
+		"boss": {
+			"weight": 20,
+			"hp": 6.0,
+			"gold": 4,
+			"xp": 20,
+			"score": 20,
+			"portal": 20,
+			"items": 20,
+			"delay": [
+				1.5,
+				9.0
+			]
+		},
+		"challenge_mass": {
+			"weight": 2,
+			"hp": 1.6,
+			"gold": 0,
+			"xp": 4,
+			"score": 20,
+			"portal": 0,
+			"items": 4,
+			"delay": [
+				0.15,
+				0.4
+			]
+		},
+		"challenge_boss": {
+			"weight": 20,
+			"hp": 12.0,
+			"gold": 0,
+			"xp": 40,
+			"score": 200,
+			"portal": 0,
+			"items": 40,
+			"delay": [
+				1.5,
+				9.0
+			]
+		}
+	},
+	"size_names": {
+		"mass": "Masse",
+		"normal": "Normal",
+		"air": "Luft",
+		"champion": "Champion",
+		"boss": "Boss",
+		"challenge_mass": "Challenge-Masse",
+		"challenge_boss": "Challenge-Boss"
+	},
+	"race_names": {
+		"undead": "Untot",
+		"magic": "Magisch",
+		"nature": "Natur",
+		"orc": "Ork",
+		"humanoid": "Humanoid",
+		"challenge": "Challenge"
+	},
+	"armor_names": {
+		"hel": "Hel",
+		"myt": "Myt",
+		"lua": "Lua",
+		"sol": "Sol",
+		"sif": "Sif",
+		"zod": "Zod"
+	},
+	"attack_names": {
+		"physical": "Physisch",
+		"decay": "Verfall",
+		"energy": "Energie",
+		"essence": "Essenz",
+		"elemental": "Elementar",
+		"arcane": "Arkan"
+	},
+	"damage_table": {
+		"physical": {
+			"lua": 1.8,
+			"sol": 1.2,
+			"hel": 0.9,
+			"myt": 0.6,
+			"sif": 0.4,
+			"zod": 1.0
+		},
+		"decay": {
+			"sol": 1.8,
+			"hel": 1.2,
+			"myt": 0.9,
+			"lua": 0.6,
+			"sif": 0.4,
+			"zod": 1.0
+		},
+		"energy": {
+			"hel": 1.8,
+			"myt": 1.2,
+			"lua": 0.9,
+			"sol": 0.6,
+			"sif": 0.4,
+			"zod": 1.0
+		},
+		"essence": {
+			"hel": 1.0,
+			"myt": 1.0,
+			"lua": 1.0,
+			"sol": 1.0,
+			"sif": 1.0,
+			"zod": 1.0
+		},
+		"elemental": {
+			"myt": 1.8,
+			"lua": 1.2,
+			"sol": 0.9,
+			"hel": 0.6,
+			"sif": 0.4,
+			"zod": 1.0
+		},
+		"arcane": {
+			"myt": 1.5,
+			"lua": 1.5,
+			"sol": 1.5,
+			"hel": 1.5,
+			"sif": 0.4,
+			"zod": 1.0
+		}
+	},
+	"combat": {
+		"crit_chance": 0.0125,
+		"crit_damage": 1.25,
+		"crit_cap": 0.8,
+		"multicrit_falloff": 0.8,
+		"spell_damage": 0.9,
+		"spell_damage_sif": 0.4,
+		"level_damage": 0.04,
+		"level_attackspeed": 0.01,
+		"level_crit_chance": 0.0015,
+		"level_crit_damage": 0.02,
+		"attackspeed_min": 0.2,
+		"attackspeed_max": 5.0,
+		"cooldown_min": 0.2,
+		"armor_factor": 0.06
+	},
+	"tower_levels": {
+		"max": 25,
+		"max_bonus": 30
+	},
+	"roll": {
+		"rarity_base": {
+			"common": 0.76,
+			"uncommon": 0.18,
+			"rare": 0.06,
+			"unique": 0.0
+		},
+		"rarity_add": {
+			"common": -0.018,
+			"uncommon": 0.008,
+			"rare": 0.006,
+			"unique": 0.004
+		},
+		"rarity_cost_threshold": {
+			"common": 0,
+			"uncommon": 0,
+			"rare": 500,
+			"unique": 1500
+		},
+		"rarity_cost_factor": {
+			"common": 1.0,
+			"uncommon": 1.05,
+			"rare": 1.12,
+			"unique": 1.2
+		},
+		"element_cost_base": 0.75,
+		"element_cost_add": 0.03
+	},
+	"items": {
+		"drop_chance": 0.0475,
+		"rarity_weights": [
+			1000.0,
+			0.25,
+			0.06,
+			0.02
+		],
+		"oil_chance": 0.4,
+		"oil_quality_wave": [
+			0,
+			6,
+			18,
+			36
+		],
+		"stash_max": 40,
+		"type_names": {
+			"regular": "Item",
+			"oil": "Öl",
+			"consumable": "Verbrauch"
+		}
+	},
+	"score": {
+		"to_exp": 0.002
+	},
+	"player": {
+		"max_level": 300,
+		"levels_per_wisdom": 6
+	},
+	"wisdom": [
+		{
+			"id": "advanced_fortune",
+			"name": "Fortuna",
+			"text": "+10 % Auslösechance von Fähigkeiten",
+			"mods": [
+				[
+					"MOD_TRIGGER_CHANCES",
+					0.1
+				]
+			]
+		},
+		{
+			"id": "element_mastery",
+			"name": "Elementmeister",
+			"text": "+40 Wissensbücher zum Start",
+			"tomes": 40
+		},
+		{
+			"id": "swiftness_mastery",
+			"name": "Schnelligkeit",
+			"text": "+7 % Angriffstempo",
+			"mods": [
+				[
+					"MOD_ATTACKSPEED",
+					0.07
+				]
+			]
+		},
+		{
+			"id": "combat_mastery",
+			"name": "Kampfkunst",
+			"text": "+8 % Grundschaden",
+			"mods": [
+				[
+					"MOD_DAMAGE_BASE_PERC",
+					0.08
+				]
+			]
+		},
+		{
+			"id": "mastery_of_pain",
+			"name": "Meister des Schmerzes",
+			"text": "+4 % kritische Chance (Angriff und Zauber)",
+			"mods": [
+				[
+					"MOD_ATK_CRIT_CHANCE",
+					0.04
+				],
+				[
+					"MOD_SPELL_CRIT_CHANCE",
+					0.04
+				]
+			]
+		},
+		{
+			"id": "advanced_sorcery",
+			"name": "Zauberkunst",
+			"text": "+10 % Zauberschaden",
+			"mods": [
+				[
+					"MOD_SPELL_DAMAGE_DEALT",
+					0.1
+				]
+			]
+		},
+		{
+			"id": "mastery_of_magic",
+			"name": "Meister der Magie",
+			"text": "+20 % Mana und Manaregeneration",
+			"mods": [
+				[
+					"MOD_MANA_PERC",
+					0.2
+				],
+				[
+					"MOD_MANA_REGEN_PERC",
+					0.2
+				]
+			]
+		},
+		{
+			"id": "mastery_of_logistics",
+			"name": "Logistik",
+			"text": "+16 Food zum Start",
+			"food": 16
+		},
+		{
+			"id": "loot_mastery",
+			"name": "Beutemeister",
+			"text": "+12 % Item-Chance",
+			"mods": [
+				[
+					"MOD_ITEM_CHANCE_ON_KILL",
+					0.12
+				]
+			]
+		},
+		{
+			"id": "advanced_wisdom",
+			"name": "Weisheit",
+			"text": "+20 % Tower-Erfahrung",
+			"mods": [
+				[
+					"MOD_EXP_RECEIVED",
+					0.2
+				]
+			]
+		},
+		{
+			"id": "pillage_mastery",
+			"name": "Plünderer",
+			"text": "+16 % Kopfgeld",
+			"mods": [
+				[
+					"MOD_BOUNTY_RECEIVED",
+					0.16
+				]
+			]
+		},
+		{
+			"id": "fortified_will",
+			"name": "Fester Wille",
+			"text": "−9 % Dauer negativer Effekte auf Tower",
+			"mods": [
+				[
+					"MOD_DEBUFF_DURATION",
+					-0.09
+				]
+			]
+		},
+		{
+			"id": "inner_focus",
+			"name": "Innere Ruhe",
+			"text": "+6,5 % Dauer positiver Effekte",
+			"mods": [
+				[
+					"MOD_BUFF_DURATION",
+					0.065
+				]
+			]
+		},
+		{
+			"id": "bond_of_unity",
+			"name": "Band der Einheit",
+			"text": "+20 % Portal-Leben",
+			"lives": 20
+		},
+		{
+			"id": "foundation_of_knowledge",
+			"name": "Grundwissen",
+			"text": "Jeder neue Tower startet mit 30 Erfahrung",
+			"tower_exp": 30
+		},
+		{
+			"id": "deadly_strikes",
+			"name": "Tödliche Hiebe",
+			"text": "+17,5 % kritischer Schaden (Angriff und Zauber)",
+			"mods": [
+				[
+					"MOD_ATK_CRIT_DAMAGE",
+					0.175
+				],
+				[
+					"MOD_SPELL_CRIT_DAMAGE",
+					0.175
+				]
+			]
+		},
+		{
+			"id": "fortunes_favor",
+			"name": "Glückskind",
+			"text": "+6,5 % Item-Qualität",
+			"mods": [
+				[
+					"MOD_ITEM_QUALITY_ON_KILL",
+					0.065
+				]
+			]
+		},
+		{
+			"id": "challenge_conqueror",
+			"name": "Herausforderer",
+			"text": "+10 % Schaden gegen Challenges",
+			"mods": [
+				[
+					"MOD_DMG_TO_CHALLENGE",
+					0.1
+				]
+			]
+		},
+		{
+			"id": "master_of_destruction",
+			"name": "Zerstörer",
+			"text": "+2,5 % Gesamtschaden",
+			"mods": [
+				[
+					"MOD_DMG_TOTAL_MULTIPLIER",
+					0.025
+				]
+			]
+		},
+		{
+			"id": "advanced_optics",
+			"name": "Fernsicht",
+			"text": "+25 Reichweite",
+			"range": 25
+		},
+		{
+			"id": "elemental_overload",
+			"name": "Elementflut",
+			"text": "Höchste Elementstufe +2 (wirkt nicht über die Weisheit-Stärke)",
+			"element_max": 2,
+			"fixed": true
+		},
+		{
+			"id": "pinnacle_of_power",
+			"name": "Gipfel der Macht",
+			"text": "Höchstes Tower-Level +2 (wirkt nicht über die Weisheit-Stärke)",
+			"tower_max": 2,
+			"fixed": true
+		},
+		{
+			"id": "advanced_synergy",
+			"name": "Synergie",
+			"text": "Alle Weisheits-Boni +6 % stärker",
+			"strength": 0.06,
+			"fixed": true
+		},
+		{
+			"id": "the_path_of_ascension",
+			"name": "Pfad des Aufstiegs",
+			"text": "Jedes nicht verteilte Spielerlevel macht alle Boni 0,1 % stärker",
+			"strength_per_free_level": 0.001,
+			"fixed": true
+		}
+	],
+	"builders": {
+		"blademaster": {"text": "Tower: +8 % Krit-Chance, +40 % Krit-Schaden, ein Mehrfach-Krit mehr."},
+		"queen": {"text": "Tower: +10 % Angriffstempo, +30 % Schaden gegen Flieger (+2 % je Level). Flieger sind 60 langsamer."},
+		"adventurer": {"text": "Tower: +15 % Item-Chance und +20 % Item-Qualität bei Kills."},
+		"iron_maiden": {"text": "Portal +50 % Leben. Nach jeder Welle heilt das Portal 1 % (unter 50 %) bzw. 2 % (unter 10 %)."},
+		"farseer": {"text": "Tower: +75 Reichweite, +10 % Zauberschaden."},
+		"elementalist": {"text": "+65 Wissensbücher und +20 Food zu Beginn, +2 Bücher je Welle. Tower: mehr Schaden gegen Orks (+25 %) und Untote (+20 %), weniger gegen Natur (−20 %) und Humanoide (−5 %)."},
+		"veteran_pilot": {"text": "Tower: +20 % Angriffstempo (+2 % je Level). Gegner laufen 50 schneller."},
+		"royal_assassin": {"text": "Tower: +15 % Schaden gegen Bosse (+1 % je Level), +25 % gegen Champions, +2 % Item-Qualität je Level; −8 % gegen Normale, −12 % gegen Masse."},
+		"benevolent_witch": {"text": "Tower: +10 Mana, doppeltes Mana, +50 % Manaregeneration (+2 % je Level), aber −25 % Zauberschaden."},
+		"spirit_warden": {"text": "Tower: Buffs halten 80 % länger, Debuffs auf Towern 30 % kürzer, +10 % Schaden gegen Masse, −10 % gegen Bosse."},
+		"master": {"text": "Tower starten 5 Level höher und bekommen +60 % Erfahrung (+1 % je Level), aber −15 % Grundschaden."},
+		"fender": {"text": "Weisheit wirkt 25 % stärker. −20 % Einkommen, −45 Wissensbücher. Tower: +50 % gegen Untote und Masse, +30 % gegen Orks, −30 % gegen Magische."},
+		"realist": {"text": "Tower: +15 % Grund- und Zauberschaden (+1,5 % je Level), +150 % Manaregeneration; −50 % Auslöse-Chancen, −20 % Krit-Chance."},
+		"arch_sorceress": {"text": "Tower: +50 % Zauberschaden, +20 % Zauber-Krit-Chance, +50 % Zauber-Krit-Schaden (+2 % je Level), +1 % gegen Magische je Level; −10 % Grundschaden."},
+		"barbarian": {"text": "Tower: +35 % Grundschaden, +10 % Angriffstempo, zwei Mehrfach-Krits mehr, Krit wächst mit dem Level; kaum Mana und kein Zauberschaden."},
+		"panda": {"text": "Tower: +25 % Angriffstempo, +15 % Grundschaden und +20 % Zauberschaden (beides wächst mit dem Level); viel weniger Items (−60 % Chance)."},
+		"naga": {"text": "Tower: +40 % Auslöse-Chancen, +30 % Angriffstempo, aber −25 % Grund- und Zauberschaden."},
+		"goblin": {"text": "+15 % Einkommen, +2 % Zinsen. Tower: +20 % Kopfgeld, +35 % Item-Qualität; Buffs 35 % kürzer, Debuffs 25 % länger, −15 % Angriffstempo."},
+		"backpacker": {"text": "Zwei Item-Plätze mehr je Tower und drei zusätzliche Würfel-Rezepte, +40 % Item-Qualität. Tower tragen nur Items ihrer Seltenheit oder einzigartige."},
+		"maverick": {"text": "Tower dürfen nicht nebeneinander stehen, −20 Food, Weisheit wirkt schwächer (62,5 %). Tower: +50 % gegen Bosse, +25 % gegen Champions, Schaden wächst stark mit dem Level."},
+		"antagonizer": {"text": "Tower: +10 % Grundschaden (+4 % je Level), +10 % Angriffstempo, +25 % Zauberschaden; −60 % Erfahrung, −16 % Auslöse-Chancen."}
+	},
+	"special_names": {
+		"Speed": "Schnell",
+		"Greater Speed": "Sehr schnell",
+		"Xtreme Speed": "Extrem schnell",
+		"Slow": "Langsam",
+		"Invisible": "Unsichtbar",
+		"Strong": "Stark",
+		"Rich": "Reich",
+		"Relic Raider": "Reliktjäger",
+		"Ultra Wisdom": "Ultraweise",
+		"Armored": "Gepanzert",
+		"Heavy Armored": "Schwer gepanzert",
+		"Xtreme Armor": "Extrem gepanzert",
+		"Evasion": "Ausweichen",
+		"Xtreme Evasion": "Extremes Ausweichen",
+		"Ghost": "Geist",
+		"Spell Resistance": "Zauberresistenz",
+		"Greater Spell Resistance": "Hohe Zauberresistenz",
+		"Magic Immunity": "Magieimmun",
+		"Ethereal": "Ätherisch",
+		"Slow Aura": "Bremsaura",
+		"Mana Drain Aura": "Manaraub-Aura",
+		"Spellbinder": "Zauberbinder",
+		"Stun Revenge": "Betäubungsrache",
+		"Regeneration": "Regeneration",
+		"Xtreme Regeneration": "Extreme Regeneration",
+		"Second Chance": "Zweite Chance",
+		"Semi-Mechanical": "Halbmechanisch",
+		"Mechanical": "Mechanisch",
+		"Meaty": "Fleischig",
+		"Evolving": "Entwickelnd",
+		"Unlucky": "Pechvogel",
+		"Flock": "Schwarm",
+		"Gravid": "Trächtig",
+		"Protector": "Beschützer",
+		"Manashield": "Manaschild",
+		"Manashield+": "Manaschild+",
+		"Necromancer": "Nekromant",
+		"Purge Revenge": "Bannrache",
+		"Fireball": "Feuerball",
+		"Dart": "Pfeil",
+		"Broody": "Brütend"
+	},
+	"special_effects": {
+		"Speed": {
+			"speed": 0.25,
+			"text": "+25 % Tempo"
+		},
+		"Greater Speed": {
+			"speed": 0.6,
+			"text": "+60 % Tempo"
+		},
+		"Xtreme Speed": {
+			"speed": 10.0,
+			"text": "Höchsttempo"
+		},
+		"Slow": {
+			"speed": -0.33,
+			"text": "−33 % Tempo"
+		},
+		"Strong": {
+			"exp": 0.5,
+			"bounty": 0.25,
+			"text": "+50 % Erfahrung, +25 % Kopfgeld"
+		},
+		"Rich": {
+			"bounty": 0.6,
+			"exp": -1.0,
+			"text": "+60 % Kopfgeld, keine Erfahrung"
+		},
+		"Relic Raider": {
+			"bounty": -0.5,
+			"item_chance": 0.8,
+			"item_quality": 0.3,
+			"text": "−50 % Kopfgeld, +80 % Item-Chance, +30 % Item-Qualität"
+		},
+		"Ultra Wisdom": {
+			"bounty": -1.0,
+			"exp": 2.0,
+			"item_chance": -1.0,
+			"text": "kein Kopfgeld, keine Items, dreifache Erfahrung"
+		},
+		"Armored": {
+			"armor": 10,
+			"armor_perc": 0.4,
+			"text": "Rüstung +10 und +40 %"
+		},
+		"Heavy Armored": {
+			"armor": 25,
+			"armor_perc": 1.0,
+			"text": "Rüstung +25 und +100 %"
+		},
+		"Xtreme Armor": {
+			"armor": 100,
+			"armor_perc": 4.0,
+			"speed": -0.25,
+			"text": "Rüstung +100 und +400 %, −25 % Tempo"
+		},
+		"Evasion": {
+			"evasion": 0.25,
+			"text": "weicht 25 % der Angriffe aus"
+		},
+		"Xtreme Evasion": {
+			"evasion": 0.66,
+			"text": "weicht 66 % der Angriffe aus"
+		},
+		"Ghost": {
+			"evasion": 0.9,
+			"text": "90 % der Angriffe gehen durch ihn hindurch"
+		},
+		"Spell Resistance": {
+			"spell": -0.5,
+			"text": "−50 % Zauberschaden"
+		},
+		"Greater Spell Resistance": {
+			"spell": -0.75,
+			"text": "−75 % Zauberschaden"
+		},
+		"Magic Immunity": {
+			"spell": -1.0,
+			"immune": true,
+			"text": "immun gegen Zauber und Arkan-Angriffe"
+		},
+		"Regeneration": {
+			"regen": {
+				"mass": 0.05,
+				"normal": 0.025,
+				"air": 0.0285,
+				"champion": 0.022,
+				"boss": 0.007
+			},
+			"text": "heilt Leben pro Sekunde"
+		},
+		"Xtreme Regeneration": {
+			"regen": {
+				"mass": 0.175,
+				"normal": 0.0875,
+				"air": 0.1,
+				"champion": 0.078,
+				"boss": 0.025
+			},
+			"text": "heilt viel Leben pro Sekunde"
+		},
+		"Flock": {
+			"text": "doppelt so viele Gegner"
+		}
+	},
+	"mod_names": {
+		"MOD_ATK_CRIT_CHANCE": "Krit-Chance",
+		"MOD_ATK_CRIT_DAMAGE": "Krit-Schaden",
+		"MOD_ATTACKSPEED": "Angriffstempo",
+		"MOD_BOUNTY_RECEIVED": "Kopfgeld",
+		"MOD_BUFF_DURATION": "Dauer eigener Stärkungen",
+		"MOD_DAMAGE_ADD_PERC": "Schaden",
+		"MOD_DAMAGE_BASE_PERC": "Grundschaden",
+		"MOD_DEBUFF_DURATION": "Dauer fremder Schwächungen",
+		"MOD_DMG_TOTAL_MULTIPLIER": "Gesamtschaden",
+		"MOD_DMG_TO_AIR": "Schaden gegen Flieger",
+		"MOD_DMG_TO_BOSS": "Schaden gegen Bosse",
+		"MOD_DMG_TO_CHALLENGE": "Schaden gegen Herausforderungen",
+		"MOD_DMG_TO_CHAMPION": "Schaden gegen Champions",
+		"MOD_DMG_TO_HUMANOID": "Schaden gegen Humanoide",
+		"MOD_DMG_TO_MAGIC": "Schaden gegen Magische",
+		"MOD_DMG_TO_MASS": "Schaden gegen Massen",
+		"MOD_DMG_TO_NATURE": "Schaden gegen Natur",
+		"MOD_DMG_TO_NORMAL": "Schaden gegen Normale",
+		"MOD_DMG_TO_ORC": "Schaden gegen Orks",
+		"MOD_DMG_TO_UNDEAD": "Schaden gegen Untote",
+		"MOD_DPS_ADD": "Schaden pro Sekunde",
+		"MOD_EXP_RECEIVED": "Erfahrung",
+		"MOD_ITEM_CHANCE_ON_KILL": "Item-Chance",
+		"MOD_ITEM_QUALITY_ON_KILL": "Item-Qualität",
+		"MOD_MANA": "Mana",
+		"MOD_MANA_PERC": "Mana",
+		"MOD_MANA_REGEN": "Mana-Regeneration",
+		"MOD_MANA_REGEN_PERC": "Mana-Regeneration",
+		"MOD_MULTICRIT_COUNT": "Mehrfach-Krit",
+		"MOD_SPELL_CRIT_CHANCE": "Zauber-Krit-Chance",
+		"MOD_SPELL_CRIT_DAMAGE": "Zauber-Krit-Schaden",
+		"MOD_SPELL_DAMAGE_DEALT": "Zauberschaden",
+		"MOD_TRIGGER_CHANCES": "Auslösechancen"
+	},
+	"mod_flat": [
+		"MOD_DPS_ADD",
+		"MOD_MANA",
+		"MOD_MANA_REGEN",
+		"MOD_MULTICRIT_COUNT"
+	]
+}

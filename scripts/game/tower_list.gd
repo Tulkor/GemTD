@@ -103,7 +103,7 @@ func towers() -> Array:
 	if game == null:
 		return []
 	# eeveTD: Barrikaden sind nur Mauern und stehen nicht in der Liste
-	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new and not t.def.get("eeve", {}).get("barricade", false))
+	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new and not t.def.get("eeve", {}).get("barricade", false) and not t.def.get("eeve", {}).get("market", false))
 	match sort:
 		"kills":
 			list_t.sort_custom(func(a, b): return a.kills > b.kills if a.kills != b.kills else a.total_damage > b.total_damage)
@@ -157,7 +157,8 @@ func refresh() -> void:
 ## Spezial-Tower, die t zusammen mit anderen fertigen Towern auf dem Feld ergeben würde (Namen).
 ## Kombinieren geht nur während der Welle, markiert wird aber immer, damit man es planen kann.
 func combos(t, field: Array = []) -> Array:
-	if game == null or not is_instance_valid(t) or t.is_new or str(t.def.get("category", "gem")) == "eeve":
+	if game == null or not is_instance_valid(t) or t.is_new or str(t.def.get("category", "gem")) == "eeve" \
+			or t.tower_id.begins_with("youtd_"):
 		return []
 	if field.is_empty():
 		field = towers()
@@ -264,7 +265,7 @@ func _tooltip(t) -> Control:
 	if not made.is_empty():
 		var c := UiUtil.wrap_label(tr("Kombinierbar zu: %s") % ", ".join(made), v, 250)
 		c.add_theme_font_size_override("font_size", 12)
-		c.add_theme_color_override("font_color", UiTheme.CYAN)
+		c.add_theme_color_override("font_color", UiTheme.CYAN_TEXT)
 		if not game.is_wave_running():
 			var w := UiUtil.wrap_label(tr("Kombinieren geht erst wieder während der Welle."), v, 250)
 			w.add_theme_font_size_override("font_size", 12)

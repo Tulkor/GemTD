@@ -1,0 +1,7 @@
+cow
+horse
+llama
+pig
+pug
+sheep
+zebra

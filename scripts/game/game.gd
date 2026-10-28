@@ -20,6 +20,7 @@ var lane_paths: Array = []
 var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
+var path_depth := 0.0  ## Laufweg ("_"-Felder) so tief als Schlucht unter den Bauflächen (Board3D.path_depth)
 var camera_rig: CameraRig
 var effects: Effects
 var hud: Hud
@@ -32,7 +33,7 @@ var rocks: Dictionary = {}       ## Anker -> true
 var occupied: Dictionary = {}    ## jedes von Tower/Stein belegte Feld -> Anker
 var traps: Dictionary = {}       ## Anker -> Falle
 var trap_cells: Dictionary = {}  ## jedes Feld unter einer Falle -> Anker
-var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewählt wird
+var moving: Tower = null         ## Falle, für die gerade ein neuer Platz gewählt wird, oder Tower mit „Tauschen“
 var enemies: Array = []
 ## Spieler (solo nur einer). Was jedem allein gehört, steht in PlayerState; Leben, Punkte und Wellen sind gemeinsam.
 var players: Array = [PlayerState.new()]
@@ -153,6 +154,7 @@ func _ready() -> void:
 	board = Board3D.new()
 	board.map = map
 	board.rocks = rocks
+	board.path_depth = path_depth
 	add_child(board)
 	effects = Effects.new()
 	board.add_child(effects)
@@ -165,6 +167,8 @@ func _ready() -> void:
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
+	hud.extra_chance_requested.connect(func(): hud.extra_chance_panel.open(extra_chance_cfg(), gold, pl(local_player).extra_chance))
+	hud.extra_chance_panel.chosen.connect(func(id): submit({"type": "extra_chance", "id": id}))
 	hud.speed_selected.connect(func(f): submit({"type": "speed", "factor": f}))
 	hud.menu_requested.connect(func(): Session.goto(Session.return_scene))
 	hud.main_menu_requested.connect(func(): Session.goto(Session.MAIN_MENU))
@@ -333,7 +337,7 @@ func _load_map() -> MapData:
 		var maps := Database.list_maps()
 		if maps.is_empty():
 			return null
-		path = maps[0].path
+		path = str(Database.first_map().get("path", maps[0].path))
 	return MapData.load_file(path)
 
 
@@ -421,7 +425,9 @@ func _process(delta: float) -> void:
 func _update_hover() -> void:
 	var c := NO_CELL
 	var size := Board3D.TOWER_CELLS
-	if moving != null:
+	if moving != null and not moving.is_trap():
+		c = occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL)
+	elif moving != null:
 		size = Board3D.TRAP_CELLS
 		c = board.mouse_anchor(camera_rig.camera, size)
 	elif stage() == Phase.BUILD and not occupied.has(board.mouse_cell(camera_rig.camera)):
@@ -429,7 +435,7 @@ func _update_hover() -> void:
 	if c != board.hover_cell or size != board.hover_size:
 		board.hover_cell = c
 		board.hover_size = size
-		board.hover_ok = can_move_trap(moving, c) if moving != null else can_place(c)
+		board.hover_ok = (can_swap(moving, c) if not moving.is_trap() else can_move_trap(moving, c)) if moving != null else can_place(c)
 		board.refresh_hover()
 
 
@@ -479,6 +485,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## c: Feld unter der Maus, anchor: wo ein neuer Tower hinkäme. add (Strg): Stein zur Auswahl hinzufügen/abwählen.
 func _on_click(c: Vector2i, anchor: Vector2i, add := false) -> void:
+	if moving != null and not moving.is_trap():
+		var other: Vector2i = occupied.get(c, NO_CELL)
+		if can_swap(moving, other):
+			submit({"type": "swap", "tower": tower_ref(moving), "with": other})
+		else:
+			Sfx.play("error")
+		return
 	if moving != null:
 		var target := board.mouse_anchor(camera_rig.camera, Board3D.TRAP_CELLS)
 		if can_move_trap(moving, target):
@@ -574,6 +587,48 @@ func move_trap(t: Tower, a: Vector2i) -> bool:
 	return true
 
 
+## „Tauschen“ (Schwarzer Opal, Feld swap_cost in der Tower-Datei): Platz mit einem eigenen fertigen Gem oder einem
+## Stein tauschen. Beide belegen 2×2 Felder und blockieren, der Weg bleibt also gleich.
+func swap_cost(t: Tower) -> int:
+	return int(t.def.get("swap_cost", 0)) if t != null and is_instance_valid(t) else 0
+
+
+func can_swap(t: Tower, other: Vector2i) -> bool:
+	if swap_cost(t) <= 0 or t.is_new or t.owner_player != acting or other == t.cell or gold < swap_cost(t):
+		return false
+	if rocks.has(other):
+		return map.can_build_for(other, acting)
+	var o: Tower = towers.get(other, null)
+	return o != null and not o.is_new and o.owner_player == acting
+
+
+func swap_tower(t: Tower, other: Vector2i) -> bool:
+	if t == null or not is_instance_valid(t) or t.is_trap() or not can_swap(t, other):
+		return false
+	gold -= swap_cost(t)
+	var from := t.cell
+	var o: Tower = towers.get(other, null)
+	_unregister(t)
+	if o != null:
+		_unregister(o)
+		o.place_at(from)
+		_register(o)
+	else:
+		rocks.erase(other)
+		_occupy(other, false, true)
+		rocks[from] = true
+		_occupy(from, true, true)
+	t.place_at(other)
+	_register(t)
+	moving = null
+	board.hover_cell = NO_CELL
+	board.refresh_rocks()
+	_update_paths()
+	_update_auras()
+	_refresh_hud()
+	return true
+
+
 ## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren? Fallen darunter stören nicht.
 ## any_zone: Zonen der Maul-Maps nicht beachten (zufällige Steine beim Start)
 func can_place(a: Vector2i, any_zone := false) -> bool:
@@ -643,6 +698,27 @@ func debug_jump_to_wave(number: int) -> void:
 	_refresh_hud()
 
 
+## Extra Chance (data/balance.json → extra_chance): nur GemTD, leer = aus.
+func extra_chance_cfg() -> Dictionary:
+	return Database.balance.get("extra_chance", {}) if Session.game_kind == "gemtd" else {}
+
+
+## In der eigenen Bauphase einmal pro Runde eine Gem-Sorte kaufen (Befehl "extra_chance").
+func can_buy_extra_chance() -> bool:
+	var ec := extra_chance_cfg()
+	return not ec.is_empty() and stage() == Phase.BUILD and gems_left() > 0 and pl().extra_chance == "" \
+		and gold >= int(ec.get("cost", 175)) and phase < Phase.GAME_OVER
+
+
+func buy_extra_chance(id: String) -> bool:
+	if not can_buy_extra_chance() or not Database.gem_ids().has(id):
+		return false
+	gold -= int(extra_chance_cfg().get("cost", 175))
+	pl().extra_chance = id
+	_refresh_hud()
+	return true
+
+
 func rock_remove_cost() -> int:
 	return int(Database.balance.get("rock_remove_cost", 0))
 
@@ -654,6 +730,7 @@ func _enter_build() -> void:
 		p.stage = Phase.BUILD
 		p.round_towers.clear()
 		p.undo_gems.clear()
+		p.extra_chance = ""
 	round_path_start = path_length
 	if rogue != null:
 		rogue.on_build()
@@ -688,6 +765,10 @@ func place_gem(c: Vector2i) -> Tower:
 		var roll := Database.roll_gem(chance_level + (rogue.luck(acting) if rogue != null else 0), rng)
 		id = roll[0]
 		tier = roll[1]
+		var ec := extra_chance_cfg()
+		if pl().extra_chance != "" and rng.randf() < float(ec.get("chance", 0.0)):
+			id = pl().extra_chance
+			tier = mini(int(ec.get("tier", 4)), Database.tier_count(id) - 1)
 	if not Database.towers.has(id):
 		push_error("Unbekannter Tower: " + id)
 		return null
@@ -843,6 +924,9 @@ func tower_options(t: Tower) -> Array:
 	if t.is_trap() and t.moves_left > 0:
 		opts.append({"label": tr("Verschieben (noch %d×)") % t.moves_left, "action": "move", "id": t.tower_id,
 				"tier": t.tier, "consume": [], "cost": 0})
+	if swap_cost(t) > 0 and not t.is_trap():
+		opts.append({"label": tr("Tauschen"), "action": "swap", "id": t.tower_id, "tier": t.tier, "consume": [],
+				"cost": swap_cost(t)})
 	return opts.filter(func(o): return not _makes_blocked_trap(t, o))
 
 
@@ -988,7 +1072,7 @@ func _on_option_chosen(index: int) -> void:
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
-	if o.action == "move":
+	if o.action == "move" or o.action == "swap":
 		# Platz wählen ist nur Ansicht, der Befehl kommt beim Klick (move_trap)
 		moving = selected
 		board.hover_cell = NO_CELL
@@ -1137,6 +1221,10 @@ func _execute(cmd: Dictionary) -> bool:
 			return take_back(tower_from_ref(cmd.get("tower", {})))
 		"move_trap":
 			return move_trap(tower_from_ref(cmd.get("tower", {})), cmd.get("to", NO_CELL))
+		"extra_chance":
+			return buy_extra_chance(str(cmd.get("id", "")))
+		"swap":
+			return swap_tower(tower_from_ref(cmd.get("tower", {})), cmd.get("with", NO_CELL))
 		"setup":
 			if setup_done or acting != 0:
 				return false
@@ -1197,7 +1285,7 @@ func tower_from_ref(ref: Dictionary) -> Tower:
 
 ## Option o (aus tower_options(t)) ausführen: Behalten, Kombinieren, Aufwerten.
 func _apply_option(t: Tower, o: Dictionary) -> bool:
-	if t == null or o.action in ["move", "take_back"] or gold < int(o.cost):
+	if t == null or o.action in ["move", "swap", "take_back"] or gold < int(o.cost):
 		return false
 	gold -= int(o.cost)
 	run_stats.flush(t)
@@ -1771,6 +1859,7 @@ func _refresh_hud_local() -> void:
 	else:
 		_set_phase_banner(my_stage, shot_text)
 	hud.set_chance(chance_level, next_chance_wave())
+	hud.set_extra_chance(not extra_chance_cfg().is_empty(), can_buy_extra_chance(), pl(local_player).extra_chance)
 	if rogue != null:
 		var every := int(Rogue.rules().get("every", 10))
 		var next := (floori(wave_index / float(every)) + 1) * every if every > 0 else -1
@@ -1817,6 +1906,12 @@ func _refresh_selection() -> void:
 		opts.append({"label": (tr("Stein entfernen") if n == 1 else tr("%d Steine entfernen") % n) + _gold_text(each * n), "style": "normal"})
 		hud.set_options(opts)
 		hud.set_options_enabled(phase < Phase.GAME_OVER and gold >= each * (k if free > 0 else n))
+		return
+	if moving != null and is_instance_valid(moving) and not moving.is_trap():
+		hud.set_selection({"title": tr("%s tauschen") % moving.label(), "color": moving.color, "used_in": null,
+				"body": tr("Eigenen Gem oder Stein anklicken, der Opal tauscht mit ihm den Platz (%d Gold).\nRechtsklick oder Esc bricht ab.") % swap_cost(moving)})
+		hud.set_options([{"label": tr("Abbrechen"), "style": "normal"}])
+		hud.set_options_enabled(true)
 		return
 	if moving != null and is_instance_valid(moving):
 		hud.set_selection({"title": tr("%s verschieben") % moving.label(), "color": moving.color, "used_in": null,

@@ -1,0 +1,33 @@
+{
+	"id": "rg_raufbold",
+	"name": "Raufbold",
+	"category": "randgruppen",
+	"color": "#c06040",
+	"model": "res://assets/models/towers/kk_abenteurer/barbarian.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"ritter"
+		],
+		"place": 2,
+		"cost": 100,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00G"
+	},
+	"tiers": [
+		{
+			"damage": [
+				91.0,
+				115.0
+			],
+			"range": 2.734,
+			"cooldown": 0.4,
+			"abilities": []
+		}
+	]
+}

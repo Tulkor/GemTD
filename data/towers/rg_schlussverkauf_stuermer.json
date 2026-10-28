@@ -1,0 +1,44 @@
+{
+	"id": "rg_schlussverkauf_stuermer",
+	"name": "Schlussverkauf-Stürmer",
+	"category": "randgruppen",
+	"color": "#e8c440",
+	"model": "res://assets/models/towers/k_supermarkt/shopping_cart.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"schnaeppchen"
+		],
+		"place": 5,
+		"cost": 425,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o006"
+	},
+	"tiers": [
+		{
+			"damage": [
+				206.0,
+				236.0
+			],
+			"range": 7.812,
+			"cooldown": 0.29,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.352,
+					"factor": 0.5
+				},
+				{
+					"type": "slow",
+					"factor": 0.25,
+					"duration": 3.0
+				}
+			]
+		}
+	]
+}

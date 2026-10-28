@@ -1,0 +1,40 @@
+{
+	"id": "rg_der_obmann",
+	"name": "Der Obmann",
+	"category": "randgruppen",
+	"color": "#5cc85c",
+	"model": "res://assets/models/towers/q_modular_maenner/farmer.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"kleingarten"
+		],
+		"place": 6,
+		"cost": 750,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_gartenzwerg",
+			"rg_heckenschneider",
+			"rg_hochsitz",
+			"rg_vereinsheim",
+			"rg_vereinswart",
+			"rg_rasensprenger"
+		],
+		"wc3": "o01P"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

@@ -16,7 +16,7 @@ const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 96
 ## Befehle, die ein Mitspieler schicken darf (maul_game.gd → _execute)
 const COMMANDS := ["shop", "build", "sell", "upgrade", "speed", "reveal", "bonus", "research", "item", "item_sell",
-	"move_items", "copy", "summon", "drone", "module", "module_sell", "post"]
+	"move_items", "copy", "summon", "drone", "module", "module_sell", "post", "deposit", "withdraw", "auto_deposit", "bank_upgrade"]
 ## Werte, die sich laufend ändern und allein keinen sofortigen Stand auslösen
 const LIVE_KEYS := ["live", "gt", "countdown"]
 
@@ -100,7 +100,8 @@ func snapshot() -> Dictionary:
 	var ps := []
 	for p in g.players:
 		ps.append({"name": p.name, "shop": p.shop, "gold": p.gold, "xp": p.xp, "bonus": p.bonus, "research": p.research,
-			"kills": p.kills, "reveal_until": p.reveal_until, "reveal_ready": p.reveal_ready})
+			"kills": p.kills, "reveal_until": p.reveal_until, "reveal_ready": p.reveal_ready,
+			"bank": [p.account, p.auto_deposit, p.bank_level, ceilf(p.withdraw_in), p.emma_mined]})
 	var ts := []
 	var live := []
 	for t in g.towers.values():
@@ -189,6 +190,12 @@ func apply_state(s: Dictionary) -> void:
 		p.kills = int(d.get("kills", 0))
 		p.reveal_until = float(d.get("reveal_until", -1.0))
 		p.reveal_ready = float(d.get("reveal_ready", 0.0))
+		var bank: Array = d.get("bank", [0, false, 0, 0.0, 0])
+		p.account = int(bank[0])
+		p.auto_deposit = bool(bank[1])
+		p.bank_level = int(bank[2])
+		p.withdraw_in = float(bank[3])
+		p.emma_mined = int(bank[4])
 	# Tower: gleicher Anker ist derselbe Tower, so bleibt die Auswahl erhalten
 	var wanted := {}
 	var list: Array = s.get("towers", [])

@@ -160,6 +160,8 @@ func shot_for(id: String, tier: int) -> Dictionary:
 	var def: Dictionary = Database.towers.get(id, {})
 	if def.is_empty():
 		def = MaulData.tower(id)
+	if def.is_empty() and id.begins_with("youtd_"):
+		def = YoutdTower.fx_def(id)
 	var rules: Dictionary = _data.get("shots", {})
 	var own := str(def.get("shot_sfx", ""))
 	if own == "none":

@@ -4,7 +4,7 @@
 	"name_original": "Ultra Hot zOMG Dine in Hell Tower",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_18.glb",
+	"model": "res://assets/models/towers/q_fantasy_props/cauldron.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -32,5 +32,9 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.55,
+	"flame_height": 0.7
 }

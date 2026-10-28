@@ -4,7 +4,7 @@
 	"name_original": "Moonlight Beam",
 	"category": "eeve",
 	"color": "#7fb2ff",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/q_ruinen/arch_gothic.glb",
 	"damage_type": "electric",
 	"targets": "both",
 	"eeve": {
@@ -32,5 +32,7 @@
 			]
 		}
 	],
-	"hit_fx": "kb_shock_ring"
+	"hit_fx": "kb_shock_ring",
+	"model_tint": false,
+	"model_solid": true
 }

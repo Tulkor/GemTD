@@ -1,0 +1,39 @@
+{
+	"id": "rg_dosenwerfer",
+	"name": "Dosenwerfer",
+	"category": "randgruppen",
+	"color": "#9bff2a",
+	"model": "res://assets/models/towers/q_modular_maenner/punk.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"punks"
+		],
+		"place": 1,
+		"cost": 40,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				30.0,
+				42.0
+			],
+			"range": 6.25,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.94,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

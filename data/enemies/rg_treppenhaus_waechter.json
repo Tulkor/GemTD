@@ -1,0 +1,19 @@
+{
+	"id": "rg_treppenhaus_waechter",
+	"name": "Treppenhaus-Wächter",
+	"category": "randgruppen",
+	"hp": 350,
+	"speed": 2.578,
+	"armor": 5.0,
+	"armor_type": "rg_small",
+	"bounty": 2,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 7,
+		"wc3": "n007"
+	}
+}

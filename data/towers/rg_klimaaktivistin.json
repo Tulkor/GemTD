@@ -1,0 +1,33 @@
+{
+	"id": "rg_klimaaktivistin",
+	"name": "Klimaaktivistin",
+	"category": "randgruppen",
+	"color": "#7ad0a0",
+	"model": "res://assets/models/towers/q_figuren/casual3_female.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"wg"
+		],
+		"place": 3,
+		"cost": 175,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o028"
+	},
+	"tiers": [
+		{
+			"damage": [
+				106.0,
+				160.0
+			],
+			"range": 7.422,
+			"cooldown": 0.6,
+			"abilities": []
+		}
+	]
+}

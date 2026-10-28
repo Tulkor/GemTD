@@ -82,7 +82,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 
 	# Spiel automatisch spielen
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	var game: Node = load(Session.GAME).instantiate()
 	add_child(game)
 	await get_tree().process_frame
@@ -197,6 +197,26 @@ func _ready() -> void:
 	check(amethyst.cell == on_cp and amethyst.moves_left == 1 and game.traps.has(on_cp) and not game.traps.has(slate_cell), "Falle liegt jetzt am Checkpoint")
 	check(game.move_trap(amethyst, slate_cell) and amethyst.moves_left == 0, "zweites Verschieben")
 	check(not game.can_move_trap(amethyst, on_cp) and not game.tower_options(amethyst).any(func(o): return o.action == "move"), "kein drittes Verschieben")
+	# Schwarzer Opal: Tauschen mit Stein und eigenem Gem (swap_cost)
+	var sw_field: Array = game.towers.values().filter(func(o): return not o.is_new and o.owner_player == 0)
+	if sw_field.size() >= 2 and not game.rocks.is_empty():
+		var sw_opal: Tower = sw_field[0]
+		var sw_other: Tower = sw_field[1]
+		sw_opal.set_tower("black_opal", 0)
+		game.gold = 1000
+		var sw_from: Vector2i = sw_opal.cell
+		var sw_rock: Vector2i = game.rocks.keys()[0]
+		var sw_path_len: int = game.ground_path.size()
+		check(game.tower_options(sw_opal).any(func(o): return o.action == "swap" and o.cost == 200), "Schwarzer Opal bietet Tauschen für 200 Gold")
+		check(game.submit({"type": "swap", "tower": game.tower_ref(sw_opal), "with": sw_rock}), "Tauschen mit Stein")
+		check(sw_opal.cell == sw_rock and game.towers.get(sw_rock) == sw_opal and game.rocks.has(sw_from) and not game.rocks.has(sw_rock) and game.gold == 800, "Opal steht am Stein, Stein am alten Platz, 200 Gold weg")
+		check(game.ground_path.size() == sw_path_len, "Weg bleibt gleich lang")
+		var sw_other_cell: Vector2i = sw_other.cell
+		check(game.swap_tower(sw_opal, sw_other_cell) and sw_opal.cell == sw_other_cell and sw_other.cell == sw_rock and game.towers.get(sw_rock) == sw_other, "Tauschen mit eigenem Gem")
+		game.gold = 100
+		check(not game.can_swap(sw_opal, sw_rock), "Ohne 200 Gold kein Tauschen")
+	else:
+		check(false, "Für den Tausch-Test fehlen Tower oder Steine")
 	# Steine auch während der Welle entfernen
 	var wave_rock: Vector2i = game.rocks.keys()[0]
 	check(game.remove_rock(wave_rock) and not game.ground_path.is_empty(), "Stein während der Welle entfernt")
@@ -631,6 +651,7 @@ func _ready() -> void:
 	await _score_test()
 	await _rock_select_test()
 	await _take_back_test()
+	await _extra_chance_test()
 	await _final_boss_test()
 	await _command_test()
 	await _coop_test()
@@ -660,7 +681,7 @@ func _ready() -> void:
 ## Spielstände: Zustand mitten in einer Welle sichern, in ein neues Spiel laden, gleich weiter;
 ## Datei ist verschlüsselt und eine geänderte Datei lädt nicht mehr.
 func _save_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -740,7 +761,7 @@ func _save_test() -> void:
 
 ## Punkte-Modus: späte Wellen zählen mehr, ein Durchbruch kostet die Hälfte, kein Leben geht verloren.
 func _score_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.score_mode = true
 	var g: Node = load(Session.GAME).instantiate()
@@ -787,7 +808,7 @@ func _score_test() -> void:
 
 ## Steine: per Rahmen bis zu 5 auswählen, direkt durch Gems ersetzen (nur so viele, wie die Runde noch hat), Rest entfernen.
 func _rock_select_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -831,8 +852,38 @@ func _rock_select_test() -> void:
 
 
 ## Strg+Klick: Steine einzeln zur Auswahl hinzufügen/abwählen. Gesetzte Gems zurücknehmen, ohne neu zu würfeln.
+## Extra Chance: Gem-Sorte kaufen, Gems der Runde werden mit chance zum Perfekten dieser Sorte, einmal pro Runde.
+func _extra_chance_test() -> void:
+	Session.game_kind = "gemtd"
+	Session.map_path = Database.first_map().path
+	Session.map_override = null
+	var g: Node = load(Session.GAME).instantiate()
+	add_child(g)
+	await get_tree().process_frame
+	var cfg: Dictionary = Database.balance.get("extra_chance", {})
+	check(int(cfg.get("cost", 0)) == 175, "Extra Chance kostet 175 Gold")
+	var saved: Dictionary = cfg.duplicate()
+	cfg["chance"] = 1.0
+	g.gold = 0
+	check(not g.can_buy_extra_chance(), "Ohne Gold keine Extra Chance")
+	g.gold = 500
+	check(g.submit({"type": "extra_chance", "id": "ruby"}) and g.gold == 325 and g.pl().extra_chance == "ruby", "Extra Chance Rubin gekauft")
+	check(not g.submit({"type": "extra_chance", "id": "topaz"}), "Nur einmal pro Runde")
+	var t: Tower = null
+	for y in range(10, 60, 4):
+		if g.can_place(Vector2i(14, y)):
+			t = g.place_gem(Vector2i(14, y))
+			break
+	check(t != null and t.tower_id == "ruby" and t.tier == 4, "Gem wird zum Perfekten Rubin: %s" % (t.label() if t != null else "keiner"))
+	g._enter_build()
+	check(g.pl().extra_chance == "", "Neue Runde: Extra Chance wieder frei")
+	Database.balance["extra_chance"] = saved
+	g.queue_free()
+	await get_tree().process_frame
+
+
 func _take_back_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -921,7 +972,7 @@ func _gem_key(t: Tower) -> String:
 ## Endboss der letzten Welle: Schadenscheck ohne Lebensverlust, im Punkte-Modus Punkte nach Schaden; Aufschlüsselung.
 func _final_boss_test() -> void:
 	for mode in [false, true]:
-		Session.map_path = Database.list_maps()[0].path
+		Session.map_path = Database.first_map().path
 		Session.map_override = null
 		Session.score_mode = mode
 		var g: Node = load(Session.GAME).instantiate()
@@ -970,7 +1021,7 @@ func _final_boss_test() -> void:
 
 ## Koop-Vorbereitung: Spieleraktionen als Befehle (reine Daten), auch nach einer Netz-Übertragung (var_to_bytes).
 func _command_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -1001,7 +1052,7 @@ func _command_test() -> void:
 ## wenn beide fertig sind. Fremde Tower lassen sich nicht wählen oder zurücknehmen, das Kopfgeld geht an
 ## den Besitzer des Towers, der zuletzt getroffen hat.
 func _coop_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)
@@ -1062,7 +1113,7 @@ func _coop_test() -> void:
 ## Koop übers Netz, hier ohne Netz verbunden: der Host rechnet, der Mitspieler schickt Befehle und
 ## übernimmt den Stand (coop_sync.gd).
 func _coop_sync_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
 	var g: Node = load(Session.GAME).instantiate()
@@ -1139,7 +1190,7 @@ func _setup_test() -> void:
 	Session.skip_setup = false
 	Session.difficulty = 1
 	Session.score_mode = false
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	Session.coop = {"role": "host", "player": 0, "names": ["Anna", "Ben"]}
 	var g: Node = load(Session.GAME).instantiate()
@@ -1249,12 +1300,12 @@ func _maul_test() -> void:
 	for n in [k, h, g]:
 		n.queue_free()
 	await get_tree().process_frame
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 
 
 ## Außerhalb jeder Tower-Reichweite laufen Gegner idle_speed_factor (8×) so schnell, in Reichweite normal.
 func _idle_speed_test() -> void:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)

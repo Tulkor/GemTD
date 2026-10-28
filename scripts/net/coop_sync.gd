@@ -10,14 +10,18 @@ extends Node
 ##                Weg weiter (enemy.gd → _remote_step).
 ##   Andere Modi auf game.gd (eeveTD) hängen sich mit eigenen Methoden an, falls vorhanden:
 ##                coop_commands() weitere erlaubte Befehle, new_tower() Tower-Klasse für Mitspieler,
-##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode").
+##                coop_snapshot()/apply_coop_snapshot(d) eigener Stand (unter "mode"), coop_stats()/apply_coop_stats(d)
+##                was sich laufend ändert und nicht als neuer Stand zählt (unter "mstats", wie "tstats"),
+##                coop_fast()/apply_coop_fast(d) was mit den Gegnern 15 Mal pro Sekunde mitgeht (unter "m", z. B.
+##                Geschosse in YouTD).
 
 const STATE_INTERVAL := 1.0
 const CHECK_INTERVAL := 0.05
 const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 64
 ## Befehle, die ein Mitspieler schicken darf (siehe game.gd → execute)
-const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed", "rogue_pick"]
+const COMMANDS := ["place", "remove_rocks", "replace_rocks", "take_back", "option", "move_trap", "speed", "rogue_pick",
+	"swap", "extra_chance"]
 
 var game  # game.gd
 var host := true
@@ -125,7 +129,7 @@ func snapshot() -> Dictionary:
 		rs.append(c.y)
 	var ps := []
 	for p in game.players:
-		ps.append({"name": p.name, "gold": p.gold, "stage": p.stage, "away": p.away,
+		ps.append({"name": p.name, "gold": p.gold, "stage": p.stage, "away": p.away, "extra_chance": p.extra_chance,
 			"round": p.round_towers.map(func(t): return game.tower_ref(t))})
 	var s := {
 		"phase": game.phase,
@@ -151,12 +155,15 @@ func snapshot() -> Dictionary:
 		s.rogue = game.rogue.to_dict()
 	if game.has_method("coop_snapshot"):
 		s.mode = game.coop_snapshot()
+	if game.has_method("coop_stats"):
+		s.mstats = game.coop_stats()
 	return s
 
 
 static func structure_hash(s: Dictionary) -> int:
 	var d := s.duplicate()
 	d.erase("tstats")
+	d.erase("mstats")
 	return hash(d)
 
 
@@ -166,6 +173,8 @@ func enemy_packet() -> Dictionary:
 		if not e.dead:
 			list.append(e.net_state())
 	var p := {"e": list, "b": _beams, "q": game.spawn_queue.size(), "wl": game.wave_live, "now": Time.get_ticks_msec()}
+	if game.has_method("coop_fast"):
+		p.m = game.coop_fast()
 	_beams = []
 	return p
 
@@ -241,6 +250,7 @@ func apply_state(s: Dictionary) -> void:
 		p.gold = int(pd.get("gold", 0))
 		p.stage = int(pd.get("stage", 0))
 		p.away = bool(pd.get("away", false))
+		p.extra_chance = str(pd.get("extra_chance", ""))
 		p.round_towers = pd.get("round", []).map(func(r): return g.tower_from_ref(r)).filter(func(t): return t != null)
 	# Gemeinsames
 	g.wave_index = int(s.get("wave", 0))
@@ -256,6 +266,8 @@ func apply_state(s: Dictionary) -> void:
 		g.enable_rogue().from_dict(s.rogue)
 	if s.has("mode") and g.has_method("apply_coop_snapshot"):
 		g.apply_coop_snapshot(s.mode)
+	if s.has("mstats") and g.has_method("apply_coop_stats"):
+		g.apply_coop_stats(s.mstats)
 	if s.get("setup", true) and not g.setup_done:
 		Session.difficulty = int(s.get("difficulty", Session.difficulty))
 		Session.score_mode = bool(s.get("score_mode", false))
@@ -309,6 +321,8 @@ func _remove_tower(t: Tower) -> void:
 ## Gegner vom Host: wie beim Zuschauen anlegen, nachführen und entfernen.
 func apply_enemies(packet: Dictionary) -> void:
 	var g = game
+	if packet.has("m") and g.has_method("apply_coop_fast"):
+		g.apply_coop_fast(packet.m)
 	if g.phase != g.Phase.WAVE:
 		return
 	var age: float = paths.packet_age(packet)

@@ -1,0 +1,23 @@
+[
+	{"id":"blademaster","name":"Blademaster","tier":"beginner","level":0,"script":"builder_blademaster"},
+	{"id":"queen","name":"Queen of the Seven Skies","tier":"beginner","level":0,"script":"builder_queen"},
+	{"id":"adventurer","name":"Adventurer","tier":"beginner","level":0,"script":"builder_adventurer"},
+	{"id":"iron_maiden","name":"Iron Maiden","tier":"beginner","level":0,"script":"builder_iron_maiden"},
+	{"id":"farseer","name":"Farseer","tier":"beginner","level":0,"script":"builder_farseer"},
+	{"id":"elementalist","name":"Elementalist","tier":"advanced","level":5,"script":"builder_elementalist"},
+	{"id":"veteran_pilot","name":"Veteran Pilot","tier":"advanced","level":5,"script":"builder_veteran_pilot"},
+	{"id":"royal_assassin","name":"Royal Assassin","tier":"advanced","level":5,"script":"builder_royal_assassin"},
+	{"id":"benevolent_witch","name":"Benevolent Witch","tier":"advanced","level":5,"script":"builder_benevolent_witch"},
+	{"id":"spirit_warden","name":"Spirit Warden","tier":"advanced","level":5,"script":"builder_spirit_warden"},
+	{"id":"master","name":"Master of Encyclopedic Wisdom","tier":"advanced","level":5,"script":"builder_master_of_encyclopedic_wisdom"},
+	{"id":"fender","name":"Feeble Fender","tier":"specialist","level":10,"script":"builder_feeble_fender"},
+	{"id":"realist","name":"Realist","tier":"specialist","level":10,"script":"builder_realist"},
+	{"id":"arch_sorceress","name":"Arch Sorceress","tier":"specialist","level":10,"script":"builder_arch_sorceress"},
+	{"id":"barbarian","name":"Barbarian Warlord","tier":"specialist","level":10,"script":"builder_barbarian_warlord"},
+	{"id":"panda","name":"Panda Monk","tier":"specialist","level":10,"script":"builder_panda_monk"},
+	{"id":"naga","name":"Naga Time Twister","tier":"specialist","level":10,"script":"builder_naga_time_twister"},
+	{"id":"goblin","name":"Goblin Alchemist","tier":"specialist","level":10,"script":"builder_goblin_alchemist"},
+	{"id":"backpacker","name":"Backpacker","tier":"specialist","level":10,"script":"builder_backpacker"},
+	{"id":"maverick","name":"Maverick","tier":"hardcore","level":20,"script":"builder_maverick"},
+	{"id":"antagonizer","name":"Antagonizer","tier":"hardcore","level":20,"script":"builder_antagonizer"}
+]

@@ -8,6 +8,7 @@
 	"armor": 5.0,
 	"armor_type": "eeve_divine",
 	"bounty": 1000,
+	"points": 1000,
 	"damage": 0,
 	"flying": false,
 	"color": "#e8c840",

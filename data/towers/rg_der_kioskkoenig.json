@@ -1,0 +1,40 @@
+{
+	"id": "rg_der_kioskkoenig",
+	"name": "Der Kioskkönig",
+	"category": "randgruppen",
+	"color": "#ff8a3d",
+	"model": "res://assets/models/towers/k_supermarkt/cash_register.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"spaetkauf"
+		],
+		"place": 6,
+		"cost": 850,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_brausepulver",
+			"rg_grillanzuender",
+			"rg_zuckerschock",
+			"rg_leuchtreklame",
+			"rg_energydrink",
+			"rg_dreifach_espresso"
+		],
+		"wc3": "o00D"
+	},
+	"tiers": [
+		{
+			"damage": [
+				901.0,
+				1000.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

@@ -1,0 +1,22 @@
+extends YtBuilder
+## Portiert aus YouTD 2 (MIT, github.com/Praytic/youtd2) von tools/youtd/faehigkeiten.py, nicht von Hand ändern.
+
+
+func apply_to_player(player: YtPlayer):
+	player.add_tomes(65)
+	player.modify_food_cap(20)
+
+
+func _get_tower_modifier() -> YtModifier:
+	var mod: YtModifier = YtModifier.new()
+	mod.add_modification(YtModificationType.enm.MOD_DMG_TO_ORC, 0.25, 0.0)
+	mod.add_modification(YtModificationType.enm.MOD_DMG_TO_UNDEAD, 0.20, 0.0)
+
+	mod.add_modification(YtModificationType.enm.MOD_DMG_TO_NATURE, -0.20, 0.0)
+	mod.add_modification(YtModificationType.enm.MOD_DMG_TO_HUMANOID, -0.05, 0.0)
+
+	return mod
+
+
+func apply_wave_finished_effect(player: YtPlayer):
+	player.add_tomes(2)

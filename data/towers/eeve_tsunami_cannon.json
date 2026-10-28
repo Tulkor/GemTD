@@ -4,7 +4,7 @@
 	"name_original": "Tsunami Cannon",
 	"category": "eeve",
 	"color": "#2fc8e8",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/k_piraten/cannon_mobile.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

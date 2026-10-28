@@ -1,0 +1,33 @@
+{
+	"id": "rg_praktikant",
+	"name": "Praktikant",
+	"category": "randgruppen",
+	"color": "#8ca0c0",
+	"model": "res://assets/models/towers/q_figuren/casual_male.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"buero"
+		],
+		"place": 1,
+		"cost": 70,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01R"
+	},
+	"tiers": [
+		{
+			"damage": [
+				43.0,
+				49.0
+			],
+			"range": 2.344,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

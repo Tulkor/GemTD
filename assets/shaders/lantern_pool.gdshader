@@ -18,8 +18,21 @@ uniform float phase = 0.0;
 uniform float gain = 12.0;
 uniform float glow = 0.12;
 uniform sampler2D screen : hint_screen_texture, filter_linear_mipmap;
+/// Schlucht (YouTD): der Fleck liegt doppelt, einmal oben (level 0) und einmal unten (level 1); jeder zeichnet
+/// nur über den Feldern seiner Höhe (Maske: R = 1 in der Schlucht, ein Pixel pro Feld). level < 0 = ohne Maske.
+uniform float level = -1.0;
+uniform sampler2D level_mask : filter_nearest;
+uniform vec2 map_size = vec2(1.0);
+varying vec2 world_xz;
+
+void vertex() {
+	world_xz = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
+}
 
 void fragment() {
+	if (level >= 0.0 && abs(texture(level_mask, world_xz / map_size).r - level) > 0.5) {
+		discard;
+	}
 	float r = length(UV - vec2(0.5)) * 2.0;
 	// heller Kern, der nach außen etwas nachlässt, mit kurzem, klarem Rand; danach schwacher, weicher Schein
 	float edge = 1.0 - smoothstep(core - 0.05, core + 0.04, r);

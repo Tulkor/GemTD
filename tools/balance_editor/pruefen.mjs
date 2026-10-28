@@ -94,8 +94,18 @@ const rhp2 = await page.evaluate((id) => [FILES["data/roguelike_enemies.json"].c
 check(rhp2[0] === Math.round(rhp[0] * 1.05) && rhp2[1] === rhp[1], `Roguelike Welle 45 Leben +5 %, normale Werte gleich: ${rhp} -> ${rhp2}`);
 if (shots) await page.screenshot({ path: path.join(shots, "balance_editor_roguelike.png"), fullPage: true });
 
-// eeveTD und Maul
+// eeveTD Items: Zusatzschaden eines Items und Marktplatz-Preise
 await page.click(".tab >> text=eeveTD");
+await page.click("#kind >> text=Items");
+await page.selectOption("#pick", JSON.stringify(["items", "razorblades"]));
+await page.locator(".stat", { hasText: "Zusatzschaden" }).first().locator(".arrow.up").click();
+const blade = await page.evaluate(() => FILES["data/eeve_items.json"].cur.items.razorblades.damage);
+check(blade === 53, `eeveTD Item Rasierklingen Schaden 50 -> ${blade}`);
+await page.selectOption("#pick", JSON.stringify(["market", "shop"]));
+check(await page.locator(".card", { hasText: "Holz" }).count() > 0, "eeveTD Marktplatz-Angebot mit Preisen");
+await page.evaluate(() => { FILES["data/eeve_items.json"].cur = clone(FILES["data/eeve_items.json"].orig); render(); });
+
+// eeveTD und Maul
 await page.click("#kind >> text=Tower");
 const eeveCount = await page.locator("#pick option").count();
 check(eeveCount > 100, "eeveTD-Tower im Menü: " + eeveCount);

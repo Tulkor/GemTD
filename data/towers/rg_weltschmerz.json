@@ -1,0 +1,39 @@
+{
+	"id": "rg_weltschmerz",
+	"name": "Weltschmerz",
+	"category": "randgruppen",
+	"color": "#c03aa0",
+	"model": "res://assets/models/towers/kk_halloween/tree_dead_large.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"emos"
+		],
+		"place": 5,
+		"cost": 380,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				280.0,
+				330.0
+			],
+			"range": 9.4,
+			"cooldown": 0.55,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 8.0,
+					"duration": 4.0
+				}
+			]
+		}
+	]
+}

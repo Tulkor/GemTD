@@ -1,0 +1,39 @@
+{
+	"id": "rg_leuchtreklame",
+	"name": "Leuchtreklame",
+	"category": "randgruppen",
+	"color": "#ff8a3d",
+	"model": "res://assets/models/towers/q_cyberpunk/sign_1.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "normal",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"spaetkauf"
+		],
+		"place": 3,
+		"cost": 165,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00A"
+	},
+	"tiers": [
+		{
+			"damage": [
+				169.0,
+				197.0
+			],
+			"range": 10.938,
+			"cooldown": 1.3,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.625,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+	"id": "rg_der_star",
+	"name": "Der Star",
+	"category": "randgruppen",
+	"color": "#d070ff",
+	"model": "res://assets/models/towers/q_figuren/kimono_female.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"theater"
+		],
+		"place": 6,
+		"cost": 750,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_statist",
+			"rg_kuehler_kritiker",
+			"rg_intrigantin",
+			"rg_stepptaenzer",
+			"rg_buehnennebel",
+			"rg_der_regisseur"
+		],
+		"wc3": "o00R"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

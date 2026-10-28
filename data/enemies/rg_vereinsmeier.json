@@ -1,0 +1,19 @@
+{
+	"id": "rg_vereinsmeier",
+	"name": "Vereinsmeier",
+	"category": "randgruppen",
+	"hp": 400,
+	"speed": 2.422,
+	"armor": 8.0,
+	"armor_type": "rg_fort",
+	"bounty": 2,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 8,
+		"wc3": "n008"
+	}
+}

@@ -1,0 +1,12 @@
+alpaca
+bull
+cow
+deer
+donkey
+fox
+horse
+horse_white
+husky
+shiba_inu
+stag
+wolf

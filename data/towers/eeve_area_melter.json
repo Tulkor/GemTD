@@ -4,7 +4,7 @@
 	"name_original": "Area Melter",
 	"category": "eeve",
 	"color": "#ff5a2a",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/kk_gemischt/woodstove.glb",
 	"damage_type": "elemental",
 	"targets": "both",
 	"eeve": {
@@ -32,5 +32,9 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"flame": 0.45,
+	"flame_height": 0.9
 }

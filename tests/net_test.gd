@@ -26,7 +26,7 @@ func _ready() -> void:
 			role = a.substr(7)
 		elif a.begins_with("--shot="):
 			shot_dir = a.substr(7)
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	if role == "host":
 		await _host()
 	else:

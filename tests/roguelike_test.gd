@@ -16,7 +16,7 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _new_game() -> Node:
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.map_override = null
 	var g: Node = load(Session.GAME).instantiate()
 	add_child(g)

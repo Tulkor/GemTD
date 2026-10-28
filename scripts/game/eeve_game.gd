@@ -10,6 +10,8 @@ extends "res://scripts/game/game.gd"
 ## Fallen (Elementstufe 4) baut man direkt auf den Weg, Gegner laufen darüber. Ab 3 Punkten in zwei Elementen
 ## wird eine Barrikade zum Dual-Grundturm und der kostenlos zum Dual-Tower dieser beiden Elemente.
 ## Tower und Fallen sind EeveTower (eeve_tower.gd) mit den Sonderfähigkeiten der Dual-Tower und Fallen.
+## Items, Lager und Marktplatz: eeve_items.gd (Werte in data/eeve_items.json), Oberfläche eeve_items_panel.gd
+## (Lager rechts unten) und eeve_market_panel.gd (Fenster des Marktplatzes).
 ##
 ## Koop (Lobby, coop_sync.gd): alle bauen auf einem Feld, die Leben sind gemeinsam. Jeder hat eigenes Gold, Food,
 ## Holz und eigene Elementpunkte (eeve_players) und wertet nur eigene Tower auf. Die Gegner haben je weiterem
@@ -56,6 +58,16 @@ var clock := 0.0           ## Spielzeit in Wellen (für zeitlich begrenzte Effek
 var placing_trap := ""     ## Falle, die gerade gesetzt wird (Klick aufs Feld), "" = keine
 var eeve_panel: EevePanel
 var scenery: EeveScenery    ## Wald, Laternen und Tag/Nacht rund um das Spielfeld
+## Bonusfelder (Lava, Eis, schwarzer Marmor): Anker -> Sorte. Ein Tower bekommt den Bonus, wenn er genau darauf steht.
+var bonus_tiles := {}
+var bonus_view: EeveBonusTiles
+## Wertung wie im Original, für das ganze Feld (im Koop gemeinsam): creeps = Punkte je Kill, challenges =
+## Challenge-Punkte nach Schadensanteil. Leben, Gold und Feldbonus kommen erst am Ende dazu (score_parts()).
+var eeve_score := {"creeps": 0.0, "challenges": 0.0}
+var _challenge_run := {"points": 0.0, "damage": 0.0, "hp": 0.0}  ## laufende Challenge (für die Meldung danach)
+var eitems: EeveItems       ## Items, Drops und Marktplatz
+var items_panel: EeveItemsPanel
+var market_panel: EeveMarketPanel
 
 
 func _ready() -> void:
@@ -64,6 +76,7 @@ func _ready() -> void:
 	# eeveTD spielt nachts (Laternen, Glühwürmchen), vor dem Licht in game.gd; Tag über das Debug-Menü
 	FieldStyle.night = bool(Session.eeve_choice.get("night", true))
 	rules = Database.eeve
+	eitems = EeveItems.new(self)
 	var fresh: bool = Session.load_state.is_empty()
 	difficulty = int(Session.eeve_choice.get("difficulty", difficulty))
 	field_type = int(Session.eeve_choice.get("field", field_type))
@@ -76,6 +89,9 @@ func _ready() -> void:
 			p.gold = int(rules.get("start_gold", 200))
 		level_pause = float(rules.get("first_pause", 45))
 	scenery = EeveScenery.add_to(self)
+	bonus_view = EeveBonusTiles.new()
+	add_child(bonus_view)
+	bonus_view.show_tiles(bonus_tiles)
 	_style_hud()
 	_refresh_hud()
 
@@ -95,6 +111,13 @@ func _style_hud() -> void:
 	eeve_panel.game = self
 	hud.left_col.add_child(eeve_panel)
 	hud.left_col.move_child(eeve_panel, 0)
+	items_panel = EeveItemsPanel.new()
+	items_panel.game = self
+	hud.root.add_child(items_panel)
+	hud.tower_list.limits.append(items_panel)
+	market_panel = EeveMarketPanel.new()
+	market_panel.game = self
+	hud.root.add_child(market_panel)
 	_setup_debug()
 
 
@@ -211,7 +234,7 @@ func ep(p := -1) -> Dictionary:
 			els[id] = 0
 			caps[id] = int(rules.get("point_max_normal", 4))
 		eeve_players.append({"elements": els, "caps": caps, "points": int(rules.get("start_points", 1)),
-				"food_cap": int(rules.get("start_food", 40)), "lumber": 0, "log": []})
+				"food_cap": int(rules.get("start_food", 40)), "lumber": 0, "log": [], "items": [], "market": {}, "drop": ""})
 	return eeve_players[i]
 
 
@@ -271,6 +294,14 @@ func _execute(cmd: Dictionary) -> bool:
 			return add_element_point(str(cmd.get("element", "")))
 		"debug_place":
 			return debug_place(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
+		"item_use":
+			return _after(eitems.use(int(cmd.get("index", -1)), tower_from_ref(cmd.get("tower", {}))))
+		"item_sell":
+			return _after(eitems.sell(int(cmd.get("index", -1))))
+		"market_buy":
+			return _after(eitems.buy(str(cmd.get("id", ""))))
+		"market_upgrade":
+			return _after(eitems.buy_upgrade(str(cmd.get("kind", ""))))
 		"start_level":
 			if phase != Phase.BUILD or not setup_done:
 				return false
@@ -295,11 +326,19 @@ func _execute(cmd: Dictionary) -> bool:
 	return super._execute(cmd)
 
 
+## Nach einem Item- oder Marktplatz-Befehl die Anzeige erneuern.
+func _after(ok: bool) -> bool:
+	if ok:
+		_refresh_hud()
+	return ok
+
+
 func _apply_setup(diff: int, field: int) -> void:
 	difficulty = clampi(diff, 0, (rules.get("difficulties", []) as Array).size() - 1)
 	field_type = clampi(field, 0, (rules.get("fields", []) as Array).size() - 1)
 	Session.eeve_choice = {"difficulty": difficulty, "field": field_type}
 	waves = _make_waves()
+	_place_bonus_tiles(int(rules.fields[field_type].get("tiles", 0)))
 	_place_field_rocks(int(rules.fields[field_type].get("rocks", 0)))
 	level_pause = float(rules.get("first_pause", 45))
 	setup_done = true
@@ -314,12 +353,97 @@ func _place_field_rocks(count: int) -> void:
 		if placed >= count:
 			break
 		var c := Vector2i(rng.randi_range(1, map.width - 3), rng.randi_range(1, map.height - 3))
-		if can_place(c, true):
+		if can_place(c, true) and not _on_bonus_tile(c):
 			rocks[c] = true
 			_occupy(c, true, true)
 			placed += 1
 	_update_paths()
 	board.refresh_rocks()
+
+
+## Bonusfelder: count Stück je Sorte, zufällig auf freien Feldern (nicht auf Wegpunkten, nicht übereinander).
+func _place_bonus_tiles(count: int) -> void:
+	bonus_tiles = {}
+	for kind in rules.get("bonus_tiles", []):
+		var placed := 0
+		for attempt in count * 40:
+			if placed >= count:
+				break
+			var c := Vector2i(rng.randi_range(1, map.width - 3), rng.randi_range(1, map.height - 3))
+			if can_place(c, true) and not _on_bonus_tile(c):
+				bonus_tiles[c] = str(kind.id)
+				placed += 1
+	if bonus_view != null:
+		bonus_view.show_tiles(bonus_tiles)
+
+
+## Liegt ein Tower oder Fels mit Anker a (auch nur teilweise) auf einem Bonusfeld?
+func _on_bonus_tile(a: Vector2i) -> bool:
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			if bonus_tiles.has(a + Vector2i(dx, dy)):
+				return true
+	return false
+
+
+## Regeln des Bonusfelds unter Tower t ({} = keins). Nur ganz darauf stehende Tower zählen, Fallen nie.
+func bonus_tile_of(t: Tower) -> Dictionary:
+	if t.is_trap() or not bonus_tiles.has(t.cell):
+		return {}
+	for kind in rules.get("bonus_tiles", []):
+		if kind.id == bonus_tiles[t.cell]:
+			return kind
+	return {}
+
+
+static func _tiles_to_list(tiles: Dictionary) -> Array:
+	var out := []
+	for a in tiles:
+		out.append([a.x, a.y, tiles[a]])
+	return out
+
+
+static func _tiles_from_list(list: Array) -> Dictionary:
+	var out := {}
+	for e in list:
+		out[Vector2i(int(e[0]), int(e[1]))] = str(e[2])
+	return out
+
+
+# --- Wertung --------------------------------------------------------------------------
+
+func score_factor() -> float:
+	return float(diff_rules().get("score", 1.0))
+
+
+## Punkte am Ende in Teilen; Leben, Gold und Feldbonus nur nach einem Sieg (wie im Original).
+func score_parts(victory: bool) -> Dictionary:
+	var sc: Dictionary = rules.get("score", {})
+	var gold_left := 0
+	for p in players:
+		gold_left += int(p.gold)
+	var parts := {"creeps": float(eeve_score.creeps), "challenges": float(eeve_score.challenges),
+		"lives": 0.0, "gold": 0.0, "field": 0.0, "lives_left": lives, "gold_left": gold_left}
+	if victory:
+		parts.lives = float(sc.get("lives", 100)) * maxi(lives, 0) * score_factor()
+		parts.gold = float(sc.get("gold", 0.5)) * gold_left * score_factor()
+		parts.field = float(rules.fields[field_type].get("bonus", 0)) * score_factor()
+	return parts
+
+
+func score_total(victory := false) -> int:
+	var parts := score_parts(victory)
+	return roundi(parts.creeps + parts.challenges + parts.lives + parts.gold + parts.field)
+
+
+## Challenge-Punkte für Gegner e: Anteil des Schadens an seinen Leben mal Punkte der Challenge.
+func _score_challenge(e: Enemy, killed: bool) -> void:
+	var share := 1.0 if killed else clampf(1.0 - e.hp / maxf(e.max_hp, 1.0), 0.0, 1.0)
+	var pts := float(e.get_meta("challenge_score", 0.0)) * share * score_factor()
+	eeve_score.challenges += pts
+	_challenge_run.points += pts
+	_challenge_run.damage += e.max_hp * share
+	_challenge_run.hp += e.max_hp
 
 
 # --- Ablauf: Pause, Level, Pause … --------------------------------------------------
@@ -340,6 +464,11 @@ func _enter_build() -> void:
 		p.stage = Phase.BUILD
 	# Nach jeder Golem-Challenge (Level 11, 22, 33, 44) ein zufälliger Elementpunkt über die Grenze hinaus
 	var done := wave_index  # gerade beendetes Level (1-basiert)
+	if float(_challenge_run.hp) > 0.0:
+		for p in players.size():
+			_note(tr("Challenge: %d %% Schaden · +%d Punkte") % [
+				roundi(100.0 * _challenge_run.damage / _challenge_run.hp), roundi(_challenge_run.points)], p)
+		_challenge_run = {"points": 0.0, "damage": 0.0, "hp": 0.0}
 	if done > 0 and str(rules.get("challenges", {}).get(str(done), {}).get("enemy", "")) != "" and done % 11 == 0 and done <= 44:
 		for p in players.size():
 			var st := ep(p)
@@ -372,6 +501,7 @@ func _start_level() -> void:
 			st.points += 1
 			st.lumber += 1
 			_note(tr("Neuer Elementpunkt und 1 Holz!"), p)
+	eitems.on_level_start(level)
 	ready_players.clear()
 	super._start_wave()
 	_queue_rows()
@@ -425,7 +555,13 @@ func add_ring(p: Vector2, r: float, col: Color) -> void:
 
 ## Brennende Gegner (Flammenrost) explodieren beim Tod und treffen alle Gegner im Umkreis.
 func on_enemy_killed(e: Enemy) -> void:
+	if e.has_meta("challenge_score"):
+		_score_challenge(e, true)
+	else:
+		eeve_score.creeps += float(Database.enemies.get(e.enemy_id, {}).get("points", 0)) * score_factor()
 	super.on_enemy_killed(e)
+	if not mirror:
+		eitems.on_kill(e)
 	var burn: Dictionary = e.get_meta("eeve_burn", {})
 	if burn.is_empty() or float(burn.until) < clock or not is_instance_valid(burn.tower):
 		return
@@ -442,11 +578,31 @@ func on_enemy_killed(e: Enemy) -> void:
 
 func _finish(p: Phase) -> void:
 	phase = p
-	record_profile(p == Phase.VICTORY)
+	var won := p == Phase.VICTORY
+	record_profile(won)
 	Engine.time_scale = 1.0
-	hud.show_game_over(p == Phase.VICTORY, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
-		null, run_summary())
+	hud.show_game_over(won, mini(wave_index + 1, waves.size()), waves.size(), lives, enemies_killed, path_length,
+		score_total(won), score_summary(won))
+	hud.game_over_title.text = tr("Gewonnen!") if won else tr("Verloren")
+	hud.game_over_stats.text = tr("Punkte: %d") % score_total(won) + "\n" + tr("Schwierigkeit: ") \
+		+ tr(str(diff_rules().get("name", ""))) + " · " + tr(str(rules.fields[field_type].get("name", ""))) + "\n" \
+		+ tr("Level %d von %d") % [mini(wave_index + 1, waves.size()), waves.size()] + "\n" + tr("Gegner besiegt: %d") % enemies_killed
 	_refresh_hud()
+
+
+## Tabelle für den Endbildschirm: woher die Punkte kommen.
+func score_summary(victory: bool) -> Dictionary:
+	var parts := score_parts(victory)
+	var rows := [
+		[tr("Gegner"), str(enemies_killed), str(roundi(parts.creeps))],
+		[tr("Challenges"), "", str(roundi(parts.challenges))],
+	]
+	if victory:
+		rows.append([tr("Übrige Leben"), str(parts.lives_left), str(roundi(parts.lives))])
+		rows.append([tr("Übriges Gold"), str(parts.gold_left), str(roundi(parts.gold))])
+		rows.append([tr("Feldbonus"), tr(str(rules.fields[field_type].get("name", ""))), str(roundi(parts.field))])
+	rows.append([tr("Punktefaktor"), "", "×" + str(score_factor())])
+	return {"headers": ["Wertung", "", "Punkte"], "rows": rows}
 
 
 func profile_mode() -> String:
@@ -455,14 +611,14 @@ func profile_mode() -> String:
 
 ## Zusätzlich fürs Profil: Elemente, Holz und Feld.
 func profile_extra() -> Dictionary:
-	return {"elements": elements.duplicate(), "lumber": lumber}
+	return {"elements": elements.duplicate(), "lumber": lumber, "score": score_total(phase == Phase.VICTORY)}
 
 
 # --- Koop (coop_sync.gd) -------------------------------------------------------------
 
 ## Befehle, die Mitspieler zusätzlich zu denen von GemTD schicken dürfen.
 func coop_commands() -> Array:
-	return ["build", "trap", "element", "start_level"]
+	return ["build", "trap", "element", "start_level", "item_use", "item_sell", "market_buy", "market_upgrade"]
 
 
 ## Mitspieler legen Tower vom Host als EeveTower an.
@@ -474,10 +630,15 @@ func new_tower() -> Tower:
 ## damit sich der Stand nicht jedes Bild ändert.
 func coop_snapshot() -> Dictionary:
 	var spent := {}
+	var titems := {}
 	for t in all_towers():
-		spent["%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()]] = int(t.get_meta("spent", 0))
+		var key := "%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()]
+		spent[key] = int(t.get_meta("spent", 0))
+		if t is EeveTower and (not t.items.is_empty() or t.extra_slots > 0):
+			titems[key] = _tower_items(t)
 	return {"difficulty": difficulty, "field": field_type, "seed": wave_seed, "pause": ceili(maxf(level_pause, 0.0)),
-		"ready": ready_players.keys(), "players": eeve_players.duplicate(true), "spent": spent}
+		"ready": ready_players.keys(), "players": eeve_players.duplicate(true), "spent": spent,
+		"tiles": _tiles_to_list(bonus_tiles), "score": eeve_score.duplicate(), "items": titems}
 
 
 func apply_coop_snapshot(d: Dictionary) -> void:
@@ -495,15 +656,40 @@ func apply_coop_snapshot(d: Dictionary) -> void:
 	if not ps.is_empty():
 		eeve_players = ps
 	var spent: Dictionary = d.get("spent", {})
+	var titems: Dictionary = d.get("items", {})
 	for t in all_towers():
-		t.set_meta("spent", int(spent.get("%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()], 0)))
+		var key := "%d,%d,%s" % [t.cell.x, t.cell.y, t.is_trap()]
+		t.set_meta("spent", int(spent.get(key, 0)))
+		_set_tower_items(t, titems.get(key, {}))
+	if d.has("score"):
+		eeve_score = {"creeps": float(d.score.get("creeps", 0.0)), "challenges": float(d.score.get("challenges", 0.0))}
+	var tiles := _tiles_from_list(d.get("tiles", []))
+	if tiles != bonus_tiles:
+		bonus_tiles = tiles
+		if bonus_view != null:
+			bonus_view.show_tiles(bonus_tiles)
+	_update_auras()
 
 
 # --- Spielstand (save_game.gd) ---------------------------------------------------------
 
 func save_extra() -> Dictionary:
 	return {"difficulty": difficulty, "field": field_type, "seed": wave_seed, "pause": level_pause, "clock": clock,
-		"players": eeve_players.duplicate(true), "spent": all_towers().map(func(t): return int(t.get_meta("spent", 0)))}
+		"players": eeve_players.duplicate(true), "spent": all_towers().map(func(t): return int(t.get_meta("spent", 0))),
+		"tiles": _tiles_to_list(bonus_tiles), "score": eeve_score.duplicate(),
+		"items": all_towers().map(func(t): return _tower_items(t))}
+
+
+## Items und Zusatzplätze eines Towers für Spielstand und Koop.
+func _tower_items(t: Tower) -> Dictionary:
+	return {"items": t.items.duplicate(), "slots": t.extra_slots} if t is EeveTower else {}
+
+
+func _set_tower_items(t: Tower, d: Dictionary) -> void:
+	if not t is EeveTower:
+		return
+	t.items = (d.get("items", []) as Array).map(func(id): return str(id))
+	t.extra_slots = int(d.get("slots", 0))
 
 
 ## made: Tower in der Reihenfolge des Spielstands (null = nicht mehr vorhanden).
@@ -516,6 +702,11 @@ func load_extra(d: Dictionary, made: Array) -> void:
 	waves = _waves_from_seed()
 	level_pause = float(d.get("pause", level_pause))
 	clock = float(d.get("clock", 0.0))
+	bonus_tiles = _tiles_from_list(d.get("tiles", []))
+	if bonus_view != null:
+		bonus_view.show_tiles(bonus_tiles)
+	var sc: Dictionary = d.get("score", {})
+	eeve_score = {"creeps": float(sc.get("creeps", 0.0)), "challenges": float(sc.get("challenges", 0.0))}
 	eeve_players = []
 	for ps in d.get("players", []):
 		var st: Dictionary = ps.duplicate(true)
@@ -526,11 +717,21 @@ func load_extra(d: Dictionary, made: Array) -> void:
 			st[k] = fixed
 		for k in ["points", "food_cap", "lumber"]:
 			st[k] = int(st.get(k, 0))
+		st.items = (st.get("items", []) as Array).map(func(id): return str(id))
+		var market := {}
+		for k in st.get("market", {}):
+			market[str(k)] = int(st.market[k])
+		st.market = market
+		st.drop = str(st.get("drop", ""))
 		eeve_players.append(st)
 	var spent: Array = d.get("spent", [])
 	for i in mini(spent.size(), made.size()):
 		if made[i] != null:
 			made[i].set_meta("spent", int(spent[i]))
+	var titems: Array = d.get("items", [])
+	for i in mini(titems.size(), made.size()):
+		if made[i] != null:
+			_set_tower_items(made[i], titems[i])
 	_update_auras()
 
 
@@ -539,6 +740,8 @@ func load_extra(d: Dictionary, made: Array) -> void:
 ## Leben, Rüstung und Eigenschaften stehen schon in der Welle (eeve_waves.gd), dazu der Zauber-Faktor.
 func _apply_enemy_difficulty(e: Enemy, g: Dictionary) -> void:
 	e.spell_factor = float(diff_rules().get("spells", 1.0))
+	if g.has("challenge_score"):
+		e.set_meta("challenge_score", float(g.challenge_score))
 	var props: Array = g.get("props", [])
 	if props.has("immune"):
 		e.spell_factor = 0.0
@@ -563,6 +766,8 @@ static func boss_leak_damage(level: int, hp: float, max_hp: float) -> int:
 
 
 func on_enemy_leaked(e: Enemy) -> void:
+	if e.has_meta("challenge_score"):
+		_score_challenge(e, false)
 	if e.boss and e.damage > 0:
 		e.damage = boss_leak_damage(wave_index + 1, e.hp, e.max_hp)
 	super.on_enemy_leaked(e)
@@ -624,6 +829,19 @@ func _update_auras() -> void:
 		t.damage_bonus += per * lvl
 		var names := " + ".join(els.map(func(el): return element_name(el)))
 		t.damage_source = tr("%s Stufe %s") % [names, str(snappedf(lvl, 0.5))] + (" + " + aura if aura != "" else "")
+	for t in all_towers():
+		var tile := bonus_tile_of(t)
+		t.xp_factor = 1.0 + float(tile.get("xp", 0.0))
+		t.set_base_tint(Color(str(tile.color)) if not tile.is_empty() else Color(0, 0, 0, 0))
+		if tile.is_empty():
+			continue
+		var name: String = tr("%s-Feld") % tr(str(tile.name))
+		if tile.has("damage"):
+			t.damage_bonus += float(tile.damage)
+			t.damage_source = name + (" + " + t.damage_source if t.damage_source != "" else "")
+		if tile.has("speed"):
+			t.speed_bonus += float(tile.speed)
+			t.speed_source = name + (" + " + t.speed_source if t.speed_source != "" else "")
 	for src in all_towers():
 		if not src is EeveTower or src.rage_left <= 0.0:
 			continue
@@ -632,6 +850,8 @@ func _update_auras() -> void:
 			if t.pos.distance_to(src.pos) <= float(ab.radius):
 				t.damage_bonus += float(ab.bonus)
 				t.damage_source += " + " + src.label()
+	for t in all_towers():
+		eitems.apply_to(t)
 
 
 # --- Bauen und Aufwerten -------------------------------------------------------------
@@ -781,16 +1001,20 @@ func tower_options(t: Tower) -> Array:
 		# Dual-Grundturm zeigt nur die Dual-Tower, deren beide Elemente auf Stufe 3 sind
 		if nd.has("elements") and not dual_pair_ready(nd.elements):
 			continue
+		if nd.get("market", false) and eitems.has_market(acting):
+			reason = tr("nur ein Marktplatz je Spieler")
 		if nd.get("dual_base", false) and not any_dual_ready():
 			reason = tr("zwei Elemente auf Stufe %d nötig") % need
 		elif not nd.get("dual_base", false) and el != "" and elements.get(el, 0) < need:
 			reason = tr("%s %d nötig") % [element_name(el), need]
-		elif gold < cost:
+		elif reason == "" and gold < cost:
 			reason = tr("zu wenig Gold")
-		elif lumber < wood:
+		elif reason == "" and lumber < wood:
 			reason = tr("zu wenig Holz")
 		opts.append({"label": Database.tower_label(id, 0), "action": "eeve_upgrade", "id": id, "tier": 0, "consume": [],
 				"cost": cost, "lumber": wood, "element": el, "level": need, "reason": reason})
+	if t.def.get("eeve", {}).get("market", false):
+		opts.append({"label": tr("Marktplatz öffnen"), "action": "market_open", "id": t.tower_id, "tier": t.tier, "consume": [], "cost": 0, "reason": ""})
 	opts.append({"label": tr("Abreißen"), "action": "scrap", "id": t.tower_id, "tier": t.tier, "consume": [], "cost": 0, "reason": ""})
 	return opts
 
@@ -799,7 +1023,9 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 	if t == null or o.get("reason", "") != "":
 		return false
 	if o.action == "scrap":
-		# Abreißen gibt kein Gold zurück (wie im Original)
+		# Abreißen gibt kein Gold zurück (wie im Original), eingesetzte Items kommen zurück ins Lager
+		for id in t.items:
+			eitems.give(t.owner_player, id)
 		run_stats.flush(t)
 		_unregister(t)
 		if t == selected:
@@ -859,6 +1085,8 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 	var trap: Tower = traps.get(trap_cells.get(c, NO_CELL), null)
 	if towers.has(a):
 		_select(towers[a])
+		if towers[a].def.get("eeve", {}).get("market", false) and towers[a].owner_player == local_player:
+			market_panel.open()
 	elif rocks.has(a):
 		_select(null, a)
 	elif trap != null:
@@ -898,6 +1126,9 @@ func _on_option_chosen(index: int) -> void:
 	if index < 0 or index >= opts.size():
 		return
 	var o: Dictionary = opts[index]
+	if o.action == "market_open":
+		market_panel.open()
+		return
 	submit({"type": "option", "tower": tower_ref(selected), "index": index, "action": o.action, "id": o.id, "tier": o.tier})
 
 
@@ -932,6 +1163,10 @@ func _refresh_hud_local() -> void:
 	_refresh_selection()
 	if eeve_panel != null:
 		eeve_panel.refresh()
+	if items_panel != null:
+		items_panel.refresh()
+	if market_panel != null:
+		market_panel.refresh()
 
 
 func _props_text(w: Dictionary) -> String:
@@ -950,11 +1185,15 @@ func _refresh_selection() -> void:
 	if selected == null or not is_instance_valid(selected):
 		hud.set_selection({})
 		hud.set_options([])
+		if items_panel != null:
+			items_panel.refresh()
 		return
 	var view := TowerStats.view(selected)
 	var e: Dictionary = selected.def.get("eeve", {})
 	if e.get("barricade", false):
 		view.subtitle = tr("Barrikade · zum Grundturm eines Elements aufwerten")
+	elif e.get("market", false):
+		view.subtitle = tr("Marktplatz · kauft Items an, verkauft Holz, Tränke und Upgrades")
 	elif e.get("trap", false):
 		view.subtitle = tr("Falle · %s · Gegner laufen darüber, trifft nur Bodengegner") % element_name(str(e.get("element", "")))
 	elif e.get("dual_base", false):
@@ -966,15 +1205,22 @@ func _refresh_selection() -> void:
 	var body := ""
 	for todo in e.get("todo", []):
 		body += tr("Kommt noch: ") + tr(str(todo)) + "\n"
+	var tile := bonus_tile_of(selected)
+	if not tile.is_empty():
+		body += tr("Steht auf %s: %s") % [tr(str(tile.name)), tr(str(tile.text))] + "\n"
 	body += tr("Ausgegeben: %d Gold") % int(selected.get_meta("spent", 0))
 	hud.set_selection({"title": selected.label(), "color": selected.color, "body": body.strip_edges(), "used_in": null, "stats": view})
 	hud.set_options(tower_options(selected).map(func(o): return _option_view(selected, o)))
 	hud.set_options_enabled(true)
+	if items_panel != null:
+		items_panel.refresh()
 
 
 func _option_view(t: Tower, o: Dictionary) -> Dictionary:
 	if o.action == "scrap":
 		return {"label": o.label, "style": "normal", "tooltip": tr("Tower oder Barrikade entfernen. Gold gibt es nicht zurück, das Food wird frei.")}
+	if o.action == "market_open":
+		return {"label": o.label, "style": "primary", "tooltip": tr("Items kaufen und verkaufen, Upgrades für alle eigenen Tower")}
 	var sub := tr("%d Gold") % int(o.cost) if int(o.cost) > 0 else tr("kostenlos")
 	if int(o.get("lumber", 0)) > 0:
 		sub += " + " + tr("%d Holz") % int(o.lumber)

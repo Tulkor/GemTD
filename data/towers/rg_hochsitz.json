@@ -1,0 +1,39 @@
+{
+	"id": "rg_hochsitz",
+	"name": "Hochsitz",
+	"category": "randgruppen",
+	"color": "#5cc85c",
+	"model": "res://assets/models/towers/k_piraten/tower_watch.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"kleingarten"
+		],
+		"place": 2,
+		"cost": 90,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01L"
+	},
+	"tiers": [
+		{
+			"damage": [
+				65.0,
+				85.0
+			],
+			"range": 5.469,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.625,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

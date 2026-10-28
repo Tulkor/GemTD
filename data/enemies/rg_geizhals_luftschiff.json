@@ -1,0 +1,19 @@
+{
+	"id": "rg_geizhals_luftschiff",
+	"name": "Geizhals-Luftschiff",
+	"category": "randgruppen",
+	"hp": 2100,
+	"speed": 2.344,
+	"armor": 14.0,
+	"armor_type": "rg_small",
+	"bounty": 5,
+	"damage": 1,
+	"flying": true,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 25,
+		"wc3": "n00Q"
+	}
+}

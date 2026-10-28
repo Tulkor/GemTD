@@ -21,7 +21,8 @@
 			"eeve_storm_base_tower",
 			"eeve_water_base_tower",
 			"eeve_earth_base_tower",
-			"eeve_dual_element_base_tower"
+			"eeve_dual_element_base_tower",
+			"eeve_marketplace"
 		],
 		"wc3": "h006",
 		"barricade": true

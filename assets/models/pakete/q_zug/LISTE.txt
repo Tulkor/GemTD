@@ -1,0 +1,14 @@
+cargo_train_coal_container
+cargo_train_container
+cargo_train_front
+cargo_train_wagon
+cargo_train_wagon_empty
+cargo_train_wagon_open_container
+high_speed_front
+high_speed_wagon
+locomotive_coal_tender
+locomotive_front
+locomotive_passenger_wagon
+locomotive_wagon
+railway_track_curve
+railway_track_straight

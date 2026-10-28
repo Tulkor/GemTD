@@ -15,6 +15,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "modelle"))
+from tower_look import look  # noqa: E402  Modelle aus data/tower_models.json
+
 ROOT = Path(__file__).resolve().parents[3]
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/mnt/project-files/konzepte/recherche-stand/eeve")
 U = 128.0  # WC3-Einheiten pro Towerbreite
@@ -350,6 +353,7 @@ def tower_json(uid, element, line, children, kind="tower"):
     if element == "storm":
         d["hit_fx"] = STORM_HIT
     d.update(LOOK.get(name, {}))
+    d.update(look("eeve", d["id"][5:]))
     if kind == "trap":
         d["kind"] = "trap"
         d["model_scale"] = 0.3
@@ -379,6 +383,17 @@ def dual_element(uid):
     return "+".join(ELEMENTS[e] for e in TOWERS[uid]["element"].split("+"))
 
 
+# Marktplatz (h0AV): im Original vom Erbauer gebaut (40 Gold, 1 Food), bei uns eine Barrikade für 38 Gold mehr.
+# Kauft Items an, verkauft Holz und Tränke, hat die globalen Upgrades (data/eeve_items.json, eeve_items.gd).
+MARKETPLACE = {
+    "id": "eeve_marketplace", "name": "Marktplatz", "name_original": "Marketplace", "category": "eeve",
+    "color": "#d8b860", "model": "res://assets/models/scenery/mine_chest.glb", "model_tint": False, "model_solid": True,
+    "damage_type": "", "targets": "both",
+    "eeve": {"element": "", "level": 0, "cost": 38, "lumber": 0, "from": "eeve_barricade", "next": [], "wc3": "h0AV", "market": True},
+    "tiers": [{"damage": [0, 0], "range": 0.0, "cooldown": 0.0, "abilities": []}],
+}
+
+
 def towers():
     out = [{
         "id": "eeve_barricade", "name": "Barrikade", "name_original": "Barricade", "category": "eeve",
@@ -403,6 +418,8 @@ def towers():
         out.append(tower_json(uid, ELEMENTS[TOWERS[uid]["element"]], i + 2, [], kind="trap"))
     duals = TOWERS[DUAL_BASE]["upgrades"].split(",") + TOWERS[DUAL_PAGE_2]["upgrades"].split(",")
     out[0]["eeve"]["next"].append("eeve_dual_element_base_tower")
+    out[0]["eeve"]["next"].append(MARKETPLACE["id"])
+    out.append(MARKETPLACE)
     out.append(tower_json(DUAL_BASE, "", 5, duals))
     for i, uid in enumerate(duals):
         out.append(tower_json(uid, dual_element(uid), i, []))
@@ -468,6 +485,7 @@ def enemy_json(name, kind, stage):
         "armor": float(m.get("udef") or 0),
         "armor_type": ARMOR.get(m.get("udty")),
         "bounty": int(m.get("ubba") or 0) + int(m.get("ubdi") or 0),
+        "points": int(m.get("upoi") or 0),
         "damage": {"ground": 4, "ground_mass": 1, "air": 4, "air_mass": 1, "boss": 40, "challenge": 0}[kind],
         "flying": m.get("umvt") == "fly",
         "color": ENEMY_COLORS[(stage - 1) % len(ENEMY_COLORS)] if stage else "#e8c840",

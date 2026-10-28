@@ -6,6 +6,7 @@
 	"model": "res://assets/models/crystals/crystal_26.glb",
 	"damage_type": "magic",
 	"targets": "both",
+	"swap_cost": 200,
 	"tiers": [
 		{
 			"name": "Schwarzer Opal",

@@ -9,6 +9,8 @@ const ARCADE := ""
 const DRUID := "druid"
 ## Shopping Maul: Art déco wie die Menüs vor dem Spiel (deco_theme.gd), Petrol und Messing.
 const DECO := "deco"
+## Randgruppen TD: Plakatwand (poster_theme.gd), Papier, Druckerschwärze, Signalrot.
+const POSTER := "poster"
 
 const ARCADE_COLORS := {
 	"BG": Color("07040e"), "BAR": Color("0d0618"), "PANEL": Color("0d0618"), "PANEL_2": Color("160b28"),
@@ -18,7 +20,7 @@ const ARCADE_COLORS := {
 	"MISSING": Color("ff5d7a"), "SHADOW": Color("22c4ee"),
 }
 
-## Aktiver Stil: ARCADE, DRUID oder DECO.
+## Aktiver Stil: ARCADE, DRUID, DECO oder POSTER.
 static var skin := ARCADE
 
 static var BG: Color = ARCADE_COLORS.BG
@@ -35,6 +37,8 @@ static var GOLD: Color = ARCADE_COLORS.GOLD
 ## Text auf der Akzentfarbe.
 static var GOLD_DARK: Color = ARCADE_COLORS.GOLD_DARK
 static var CYAN: Color = ARCADE_COLORS.CYAN
+## Cyan als Schriftfarbe (Hinweise, Stufen). Auf dem hellen Papier der Plakatwand ein dunkles Blau statt Gelb.
+static var CYAN_TEXT: Color = ARCADE_COLORS.CYAN
 ## Farbe für Goldbeträge.
 static var COIN: Color = ARCADE_COLORS.COIN
 static var PURPLE: Color = ARCADE_COLORS.PURPLE
@@ -53,7 +57,11 @@ static func use_skin(name: String) -> void:
 	if name == skin:
 		return
 	skin = name
-	var c: Dictionary = DruidTheme.COLORS if name == DRUID else (_deco_colors() if name == DECO else ARCADE_COLORS)
+	var c: Dictionary = ARCADE_COLORS
+	match name:
+		DRUID: c = DruidTheme.COLORS
+		DECO: c = _deco_colors()
+		POSTER: c = PosterTheme.COLORS
 	BG = c.BG
 	BAR = c.BAR
 	PANEL = c.PANEL
@@ -72,6 +80,7 @@ static func use_skin(name: String) -> void:
 	HAVE = c.HAVE
 	MISSING = c.MISSING
 	SHADOW = c.SHADOW
+	CYAN_TEXT = c.get("CYAN_TEXT", CYAN)
 
 
 static func druid() -> bool:
@@ -80,6 +89,10 @@ static func druid() -> bool:
 
 static func deco() -> bool:
 	return skin == DECO
+
+
+static func poster() -> bool:
+	return skin == POSTER
 
 
 ## Farben von DecoTheme unter den Namen von UiTheme (kein Versatz-Schatten: SHADOW = Leistenfarbe).
@@ -118,6 +131,8 @@ static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBo
 		return DruidTheme.frame(bg, border, pad)
 	if deco():
 		return DecoTheme.chamfer(bg, border, cut, pad)
+	if poster():
+		return PosterTheme.frame(bg, BORDER, pad)
 	var s := box(bg, border, 0, 2, pad)
 	s.corner_radius_top_left = cut
 	s.corner_radius_bottom_right = cut
@@ -129,6 +144,8 @@ static func chamfer(bg: Color, border: Color, cut := 10, pad := 10.0) -> StyleBo
 
 ## Hauptpanel: dicker rosa Rahmen, harter türkiser Schatten nach rechts unten.
 static func panel(pad := 14.0, alpha := 0.95, border := Color.TRANSPARENT) -> StyleBox:
+	if poster():
+		return PosterTheme.panel(pad, alpha, BORDER if border.a == 0.0 else border)
 	if border.a == 0.0:
 		border = GOLD
 	if druid():
@@ -148,6 +165,8 @@ static func font(bold := false) -> Font:
 		return DruidTheme.font(bold)
 	if deco():
 		return DecoTheme.font(bold)
+	if poster():
+		return PosterTheme.font(bold)
 	return load(FONT_BOLD if bold else FONT)
 
 
@@ -164,7 +183,7 @@ static func get_theme() -> Theme:
 	t.set_stylebox("normal", "Button", box(PANEL_2, BORDER))
 	t.set_stylebox("hover", "Button", box(PANEL_2, GOLD))
 	t.set_stylebox("pressed", "Button", box(CYAN, CYAN))
-	var off_bg := BAR if druid() else Color("0b0614")
+	var off_bg := BAR if skin != ARCADE else Color("0b0614")
 	t.set_stylebox("disabled", "Button", box(off_bg, BORDER.darkened(0.3) if druid() else Color("24183a")))
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", TEXT)
@@ -207,6 +226,8 @@ static func get_theme() -> Theme:
 	t.set_icon("grabber_disabled", "HSlider", _square_icon(BORDER_2, 18))
 	if druid():
 		DruidTheme.extend_theme(t)
+	elif poster():
+		PosterTheme.extend_theme(t)
 	_themes[skin] = t
 	return t
 
@@ -250,6 +271,9 @@ static func accent_button(b: Button, bg: Color, fg: Color, _glow: Color = Color.
 	if deco():
 		DecoTheme.accent_button(b, bg, fg, Color.TRANSPARENT, false)
 		return
+	if poster():
+		PosterTheme.accent_button(b, bg, fg)
+		return
 	var normal := box(bg, Color.TRANSPARENT, 0, 0, 14)
 	normal.shadow_color = CYAN if bg != CYAN else GOLD
 	normal.shadow_size = 1
@@ -275,6 +299,8 @@ static func caption(text: String, parent: Node) -> Label:
 		l.add_theme_font_override("font", DruidTheme.font(true, 2))
 	elif deco():
 		l.add_theme_color_override("font_color", GOLD)
+	elif poster():
+		l.add_theme_font_override("font", PosterTheme.font(true))
 	return l
 
 
@@ -283,6 +309,8 @@ static func caption(text: String, parent: Node) -> Label:
 static func heading(l: Label, color := Color.TRANSPARENT) -> Label:
 	if druid():
 		return DruidTheme.heading(l)
+	if poster():
+		return PosterTheme.heading(l, color)
 	if deco():
 		# Messing, Großbuchstaben, gesperrt (Federo; Limelight erst ab DecoTheme.DISPLAY_SIZE)
 		l.uppercase = true
@@ -300,6 +328,8 @@ static func heading(l: Label, color := Color.TRANSPARENT) -> Label:
 static func title(l: Label, size := 0) -> Label:
 	if druid():
 		return DruidTheme.title(l, size)
+	if poster():
+		return PosterTheme.title(l, size)
 	if deco():
 		return DecoTheme.title(l, size)
 	l.uppercase = true

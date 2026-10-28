@@ -22,6 +22,9 @@ import re
 import struct
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import maul_namen  # noqa: E402
+
 CELL = 64          # WC3-Einheiten pro Feld
 TOWER = 128        # WC3-Einheiten pro Towerbreite (Einheit im Spiel)
 X0, X1 = -7552, 7552
@@ -370,6 +373,8 @@ def build_towers(rs, out):
             xpert = entry
         else:
             shops.append(entry)
+    # echte Marken nur leicht abgewandelt zeigen (maul_namen.py)
+    shops, xpert = maul_namen.anwenden(shops), maul_namen.anwenden(xpert)
     with open(out, "w", encoding="utf-8") as f:
         json.dump({"source": "Shopping Maul 5.44f, maulwork/maul_towers.json + objects.json", "shops": shops,
                    "xpert": xpert}, f, ensure_ascii=False, indent="\t")

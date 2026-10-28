@@ -1,0 +1,19 @@
+{
+	"id": "rg_sturkopf",
+	"name": "Sturkopf",
+	"category": "randgruppen",
+	"hp": 3100,
+	"speed": 2.734,
+	"armor": 14.0,
+	"armor_type": "rg_medium",
+	"bounty": 5,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 26,
+		"wc3": "n00I"
+	}
+}

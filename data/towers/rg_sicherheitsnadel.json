@@ -1,0 +1,39 @@
+{
+	"id": "rg_sicherheitsnadel",
+	"name": "Sicherheitsnadel",
+	"category": "randgruppen",
+	"color": "#9bff2a",
+	"model": "res://assets/models/towers/q_modular_maenner/punk.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "pierce",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"punks"
+		],
+		"place": 3,
+		"cost": 140,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				90.0,
+				120.0
+			],
+			"range": 7.4,
+			"cooldown": 0.6,
+			"abilities": [
+				{
+					"type": "poison",
+					"dps": 6.0,
+					"duration": 4.0
+				}
+			]
+		}
+	]
+}

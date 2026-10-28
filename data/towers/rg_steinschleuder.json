@@ -1,0 +1,40 @@
+{
+	"id": "rg_steinschleuder",
+	"name": "Steinschleuder",
+	"category": "randgruppen",
+	"color": "#c06040",
+	"model": "res://assets/models/city/1story.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.42,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"ritter"
+		],
+		"place": 0,
+		"cost": 24,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01D"
+	},
+	"tiers": [
+		{
+			"damage": [
+				22.0,
+				26.0
+			],
+			"range": 4.688,
+			"cooldown": 0.7,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.625,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

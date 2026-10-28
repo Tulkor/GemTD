@@ -1,0 +1,33 @@
+{
+	"id": "rg_ponyfranse",
+	"name": "Ponyfranse",
+	"category": "randgruppen",
+	"color": "#c03aa0",
+	"model": "res://assets/models/towers/q_figuren/casual2_female.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "magic",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"emos"
+		],
+		"place": 0,
+		"cost": 10,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				14.0,
+				18.0
+			],
+			"range": 7.8,
+			"cooldown": 0.9,
+			"abilities": []
+		}
+	]
+}

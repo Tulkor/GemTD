@@ -12,7 +12,7 @@ extends Node3D
 ##
 ## Etappe 2 (pro.json): Hauptgebäude mit Bonus (+5 % Schaden je Stufe) oder Rabatt (5 % des
 ## Kaufpreises zurück), XP über Spiele hinweg (maul_xp.gd) mit XPert-Towern, die Profi-Filialen
-## mit Items (Post, IKEA, Fitness, Waffenladen), Wasser (Gärtnerei), Zombies und Drohnen (maul_unit.gd).
+## mit Items (Post, IKEO, Fitness, Waffenladen), Wasser (Gärtnerei), Zombies und Drohnen (maul_unit.gd).
 
 enum Phase { SETUP, COUNTDOWN, WAVE, GAME_OVER, VICTORY }
 
@@ -32,8 +32,14 @@ class Player:
 	var bonus := 0            ## Stufe Bonus-Upgrade bzw. Rabatt im Hauptgebäude (0–5)
 	var xp := 10              ## Erfahrung in Zehnteln (10 = 1,0 XP)
 	var xp_pot := 0.0
-	var research := {}        ## TUI: Forschung → Stufe
-	var aok_lives := 0        ## AOK: in diesem Level zurückgeholte Leben
+	var research := {}        ## TOI: Forschung → Stufe
+	var aok_lives := 0        ## AOX: in diesem Level zurückgeholte Leben
+	var account := 0          ## Konto (maul_bank.gd)
+	var auto_deposit := false ## am Levelende alles Gold aufs Konto
+	var bank_level := 0       ## Bank-Upgrade im Hauptgebäude (0–3)
+	var withdraw_in := 0.0    ## laufende Überweisung: Sekunden bis zur Auszahlung (0 = keine)
+	var emma_mined := 0       ## Tante Emma: von der Stammkundin geholtes Gold
+	var emma_timer := 0.0
 	var away := false
 
 var rules: Dictionary
@@ -66,6 +72,7 @@ var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
 var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
+var level_save := {}        ## Einzelspiel: Stand vom Beginn des laufenden Levels (maul_save.gd)
 
 var phase := Phase.SETUP
 var difficulty := 1
@@ -172,6 +179,12 @@ func _ready() -> void:
 	_refresh_paths()
 	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
+	var saved: Dictionary = Session.load_state
+	Session.load_state = {}
+	if coop_info.is_empty() and not saved.is_empty():
+		MaulSave.apply(self, saved)
+	elif coop_info.is_empty():
+		Session.save_id = ""
 	if not coop_info.is_empty():
 		sync = MaulSync.new()
 		sync.game = self
@@ -266,6 +279,8 @@ func _process(delta: float) -> void:
 			Phase.WAVE:
 				_process_wave(delta)
 		_water(delta)
+		if phase < Phase.GAME_OVER and MaulBank.process(self, delta):
+			_refresh_hud()
 	elif phase == Phase.COUNTDOWN:
 		countdown = maxf(countdown - delta, 0.0)
 	_hud_timer -= delta / maxf(Engine.time_scale, 0.001)
@@ -329,6 +344,8 @@ func _start_level(n: int) -> void:
 	if n > levels.size():
 		_finish(Phase.VICTORY)
 		return
+	if sync == null:
+		level_save = MaulSave.state(self)
 	level = n
 	var lv := level_def(n)
 	level_kind = str(lv.get("kind", "ground"))
@@ -525,11 +542,12 @@ func _end_level() -> void:
 		if i == 0:
 			share += floori(income_pot * float(inc.red_share) / m)
 		players[i].gold += share
-	# Obi: jede Runde −1 % Towerwert
+	# Obo: jede Runde −1 % Towerwert
 	for t in towers.values():
 		if shop_of(t.owner_player) == "obi":
 			t.value = floori(t.value * 0.99)
 	_fitness_upkeep()
+	var bank_text := MaulBank.end_level(self)
 	run_stats.wave_done(_my_towers(), n, level_lost)
 	if n >= levels.size():
 		_finish(Phase.VICTORY)
@@ -540,12 +558,16 @@ func _end_level() -> void:
 		show_message(tr(str(rules.get("level_40_text", ""))), 8.0)
 	else:
 		countdown = float(rules.level_delay)
-		show_message(tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)], 4.0)
+		var done_text: String = tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
+		show_message(done_text + ("\n" + bank_text if bank_text != "" else ""), 4.0)
 	_refresh_hud()
 
 
 func _finish(p: Phase) -> void:
 	phase = p
+	if sync == null and Session.save_id != "":
+		SaveGame.remove(Session.save_id)
+		Session.save_id = ""
 	Engine.time_scale = 1.0
 	build_id = ""
 	_record_profile(p == Phase.VICTORY)
@@ -748,7 +770,7 @@ func on_enemy_killed(e) -> void:
 	players[p].gold += int(e.bounty)
 	players[p].kills += 1
 	players[p].level_kills += 1
-	# AOK: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
+	# AOX: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
 	var aok: Dictionary = MaulData.pro().aok
 	if players[p].shop == "aok" and lives < max_lives and randf() < float(aok.life_chance):
 		var room: int = int(aok.life_max_per_level) - players[p].aok_lives
@@ -970,7 +992,7 @@ static func tower_slot(def: Dictionary) -> String:
 	return ""
 
 
-## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOK,
+## Fehlende Voraussetzung eines Towers für Spieler p ("" = erfüllt): XP, Level 20 geschafft, kein AOX,
 ## höchstens ein XP- und ein Ultimate-Tower. ignore: Tower, der gerade aufgewertet wird.
 func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> String:
 	if debug_free:
@@ -985,7 +1007,7 @@ func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> S
 					return tr("Erst ab Level %d") % (int(MaulData.pro().get("ultimate_level", 20)) + 1)
 			"R00U":
 				if shop_of(p) == "aok":
-					return tr("Nicht mit der AOK")
+					return tr("Nicht mit der AOX")
 	var slot := tower_slot(def)
 	if slot != "" and ignore == null:
 		for t in towers.values():
@@ -1146,6 +1168,8 @@ func _execute(cmd: Dictionary) -> bool:
 			me.reveal_until = game_time + float(rules.reveal.duration)
 			me.reveal_ready = game_time + float(rules.reveal.cooldown)
 			return true
+		"deposit", "withdraw", "auto_deposit", "bank_upgrade":
+			return MaulBank.execute(self, p, str(cmd.type))
 		"bonus":
 			var me: Player = players[p]
 			var kind := str(MaulData.shop(me.shop).get("bonus", ""))
@@ -1328,7 +1352,7 @@ func _buy_item(p: int, t: MaulTower, id: String) -> bool:
 	return true
 
 
-## IKEA: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
+## IKEO: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
 func _combine(t: MaulTower) -> void:
 	var again := true
 	while again:
@@ -1406,7 +1430,7 @@ func sell_value(t: MaulTower) -> int:
 
 # --- Profi-Filialen: Schaden, Wasser, Einheiten, Levelende -------------------------------
 
-## Faktor auf den Schaden aller Tower von Spieler p: Bonus-Upgrade +5 % je Stufe, AOK mit vollen
+## Faktor auf den Schaden aller Tower von Spieler p: Bonus-Upgrade +5 % je Stufe, AOX mit vollen
 ## Leben +33 %, First/Second Aid +40/+50 % (nicht stapelbar).
 func damage_factor_for(p: int) -> float:
 	if p < 0 or p >= players.size():
@@ -1431,7 +1455,7 @@ func damage_factor(t) -> float:
 	return damage_factor_for(t.owner_player)
 
 
-## Zusätzlicher Schaden pro Treffer: TUI-Forschung (Grundschaden, Profischaden für die Endstufen).
+## Zusätzlicher Schaden pro Treffer: TOI-Forschung (Grundschaden, Profischaden für die Endstufen).
 func flat_bonus_for(t) -> float:
 	var pl: Player = players[t.owner_player] if t.owner_player < players.size() else null
 	if pl == null or pl.shop != "tui" or str(t.def.get("shop", "")) != "tui":
@@ -1532,7 +1556,7 @@ func _fitness_upkeep() -> void:
 			_tell(t.owner_player, tr("Kalter Entzug: %s setzt ein Level aus") % t.label())
 
 
-## AOK-Bonus und XP am Levelende.
+## AOX-Bonus und XP am Levelende.
 func _end_level_pro(n: int) -> void:
 	var aok: Dictionary = MaulData.pro().aok
 	for p in players:

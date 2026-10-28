@@ -111,7 +111,12 @@ func _update_text() -> void:
 	_diff_text.text = tr("Gegner-Leben %d %% · Rüstung +%d bis +%d · Zauberschaden −%d %% · Punkte ×%s · Pause %d s") % [
 		roundi(float(d.hp) * 100), int(armor[0]), int(armor[-1]), spells, str(d.score), int(d.pause)]
 	var f: Dictionary = game.rules.fields[field]
-	_field_text.text = tr("Leeres Feld.") if int(f.rocks) == 0 else tr("Bis zu %d zufällige Felsen, die man umbauen muss.") % int(f.rocks)
+	var text := tr("Leeres Feld.") if int(f.rocks) == 0 else tr("Bis zu %d zufällige Felsen, die man umbauen muss.") % int(f.rocks)
+	if int(f.get("bonus", 0)) > 0:
+		text += " " + tr("Feldbonus am Ende: %d Punkte × Punktefaktor.") % int(f.bonus)
+	var tiles: Array = (game.rules.get("bonus_tiles", []) as Array).map(func(k): return tr(str(k.name)) + " " + tr(str(k.text)))
+	text += "\n" + tr("Je %d Bonusfelder: %s. Der Tower muss genau darauf stehen.") % [int(f.get("tiles", 0)), " · ".join(tiles)]
+	_field_text.text = text
 
 
 func _toggle(text: String, parent: Node, group: ButtonGroup, on: bool, pressed: Callable) -> Button:

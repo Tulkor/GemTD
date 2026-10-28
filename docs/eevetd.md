@@ -86,6 +86,43 @@ wird pro Spiel neu ausgewürfelt (die nächsten Level stehen links im Bild):
 Ein durchgelassener Gegner kostet Leben. Ein Boss kostet Level + seine restlichen Leben in Prozent
 (Level 20 mit 11 % Rest: 31 Leben). Wer Level 57 übersteht, hat gewonnen.
 
+## Bonusfelder
+
+Auf jedem Feld liegen je 15 Bonusfelder (WTF-Feld 18) jeder Sorte, so groß wie ein Tower. Der Tower muss genau
+darauf stehen: **Lava** +40 % Schaden, **Eis** +35 % Angriffstempo, **schwarzer Marmor** doppelte Erfahrung
+(Kills zählen doppelt für die Kill-Ränge). Felsen liegen nie auf Bonusfeldern, Fallen bekommen keinen Bonus.
+
+## Wertung
+
+Wie im Original (Werte aus der Kartendatei), alles mal Punktefaktor der Schwierigkeit (0,65 bis 4,5):
+
+- **Punkte je Kill:** jeder Gegner hat einen festen Punktwert (`points` in `data/enemies/eeve_*.json`).
+- **Challenge-Punkte:** Anteil des Schadens an der Challenge mal 3000 (Lehmgolem), 5000 (Fleisch), 7000 (Fels),
+  9000 (Stahl) oder 20000 (Massen-, Luft-Challenge, Höllengolem; bei der Masse geteilt auf die 40 Gegner).
+  Nach jeder Challenge steht in der Seitenleiste, wie viel Prozent Schaden das gebracht hat.
+- **Am Ende, nur nach einem Sieg:** 100 je übrigem Leben, 0,5 je übrigem Gold (alle Spieler) und der Feldbonus
+  (Felsenfeld 3000, WTF-Feld 5000).
+
+Den Zwischenstand zeigt die Seitenleiste („Wertung“), die Aufschlüsselung der Endbildschirm. Im Koop zählt ein
+gemeinsamer Stand. Der Zeitbonus des Speed-Modus fehlt, solange es den Modus nicht gibt.
+
+## Items und Marktplatz
+
+Werte in `data/eeve_items.json` (im Balance-Editor unter eeveTD → Items), wie in der Originalkarte.
+
+- **Marktplatz:** eine Barrikade für 38 Gold zum Marktplatz aufwerten (zusammen 40 Gold und 1 Food), einer je Spieler.
+  Anklicken öffnet das Fenster: Holz (900), Erweiterungstrank (650), Läuterungstrank (350), Leere Erfahrungsphiole (140),
+  Items verkaufen (halber Wert) und Upgrades für alle eigenen Tower: Schaden +10 %, Reichweite +40, Tempo +8 %,
+  je 4 Stufen zu 300/600/900/1.200 Gold und 1 Holz.
+- **Lager** (rechts unten, 8 Plätze): Item anklicken, eigenen Tower wählen, „einsetzen“ bzw. „benutzen“.
+- **Item-Plätze:** ab Elementstufe 3 einer, je Stufe einer mehr, Dual-Tower 2, Fallen keine; Erweiterungstrank bis 6.
+  Eingesetzte Items bleiben im Tower, nur der Läuterungstrank holt sie zurück. Abreißen gibt sie ins Lager.
+- **Items:** Klingen (+50 bis +300 Schaden), Ärmel (+10 bis +40 % Tempo), Klauen (Schaden + 15 % Krit), Hämmer
+  (Schaden + Betäubung mit Zusatzschaden), Glühende Kette der Macht, Kugeln (Zauberschaden auf zufällige Gegner),
+  Erfahrungstrank (+10 Kills). Den Zauberschild des Originals gibt es nicht, weil Gegner keine Tower verzaubern.
+- **Drops:** ab Level 11 wird je Level gewürfelt, ob der erste Kill ein Item bringt (Chance und Stufe steigen mit dem
+  Level). Golems (Level 11–44) bringen immer ein Verbrauchs-Item und ein Item. Holz zählt sofort, volles Lager verkauft.
+
 ## Koop
 
 Bis 4 Spieler. Alle bauen auf einem Feld und teilen die Leben. Jeder hat eigenes Gold, Food, Holz und eigene
@@ -94,6 +131,6 @@ Alternativ spielt in der Lobby jeder sein eigenes Feld (verschiedene Feldnummern
 
 ## Sonstiges
 
-- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. Nacht gibt es bisher nur über
-  das Debug-Menü („Tageszeit“).
+- Umgebung: Wald mit Friedhof und Bergwerk, Laternen an jedem Wegpunkt. eeveTD spielt nachts
+  (Glühwürmchen, Nebel über Friedhof und Bergwerk); Tag gibt es über das Debug-Menü („Tageszeit“).
 - Debug-Menü: Ressourcen, alle Elemente auf 8, jeden Tower und jede Falle gratis setzen, Level-Sprung, Unsterblich.

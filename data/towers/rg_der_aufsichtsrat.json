@@ -1,0 +1,40 @@
+{
+	"id": "rg_der_aufsichtsrat",
+	"name": "Der Aufsichtsrat",
+	"category": "randgruppen",
+	"color": "#8ca0c0",
+	"model": "res://assets/models/towers/q_figuren/old_classy_male.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"buero"
+		],
+		"place": 6,
+		"cost": 770,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_pfoertner",
+			"rg_praktikant",
+			"rg_abteilungsleiter",
+			"rg_vorstandsetage",
+			"rg_boersenhai",
+			"rg_alleinunterhalter"
+		],
+		"wc3": "o01U"
+	},
+	"tiers": [
+		{
+			"damage": [
+				1001.0,
+				1100.0
+			],
+			"range": 35.156,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

@@ -1,0 +1,34 @@
+{
+	"id": "rg_vereinsheim",
+	"name": "Vereinsheim",
+	"category": "randgruppen",
+	"color": "#5cc85c",
+	"model": "res://assets/models/city/2story_balcony.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.51,
+	"damage_type": "spells",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"kleingarten"
+		],
+		"place": 3,
+		"cost": 140,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o003"
+	},
+	"tiers": [
+		{
+			"damage": [
+				104.0,
+				116.0
+			],
+			"range": 5.469,
+			"cooldown": 0.8,
+			"abilities": []
+		}
+	]
+}

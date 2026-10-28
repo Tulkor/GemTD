@@ -1,0 +1,39 @@
+{
+	"id": "rg_burgtor",
+	"name": "Burgtor",
+	"category": "randgruppen",
+	"color": "#c06040",
+	"model": "res://assets/models/towers/k_piraten/castle_gate.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "magic",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"ritter"
+		],
+		"place": 4,
+		"cost": 340,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00I"
+	},
+	"tiers": [
+		{
+			"damage": [
+				156.0,
+				204.0
+			],
+			"range": 8.594,
+			"cooldown": 0.5,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.664,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

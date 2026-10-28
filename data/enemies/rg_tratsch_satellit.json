@@ -1,0 +1,19 @@
+{
+	"id": "rg_tratsch_satellit",
+	"name": "Tratsch-Satellit",
+	"category": "randgruppen",
+	"hp": 5000,
+	"speed": 2.344,
+	"armor": 15.0,
+	"armor_type": "rg_small",
+	"bounty": 5,
+	"damage": 1,
+	"flying": true,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 30,
+		"wc3": "n00W"
+	}
+}

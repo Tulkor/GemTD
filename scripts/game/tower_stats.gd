@@ -90,7 +90,7 @@ static func view(t) -> Dictionary:
 		boosted.range = float(s.get("range", 3.0)) * (1.0 + t.rogue_range)
 		if s.has("range_air"):
 			boosted.range_air = float(s.range_air) * (1.0 + t.rogue_range)
-		range_rows.append([_t("Roguelike-Bonus"), pct(t.rogue_range), "up"])
+		range_rows.append([_t(t.bonus_label), pct(t.rogue_range), "up"])
 		reach = range_text(boosted, trap)
 		range_total = [_t("Gesamt"), reach]
 	tiles.append({"key": "range", "caption": _t("Reichweite"), "value": reach, "mod": t.rogue_range > 0.0 and attack,
@@ -101,7 +101,7 @@ static func view(t) -> Dictionary:
 		if t.speed_bonus > 0.0:
 			rows.append([(t.speed_source if t.speed_source != "" else _t("Tempo")) + " " + _t("(Aura)"), pct(t.speed_bonus), "up"])
 		if t.rogue_speed > 0.0:
-			rows.append([_t("Roguelike-Bonus"), pct(t.rogue_speed), "up"])
+			rows.append([_t(t.bonus_label), pct(t.rogue_speed), "up"])
 		tiles.append({"key": "speed", "caption": _t("Tempo"), "value": num(t.cooldown(), 2) + " s", "mod": t.speed_bonus + t.rogue_speed > 0.0,
 				"rows": rows, "total": [_t("Gesamt"), num(t.cooldown(), 2) + " s"]})
 		var dmg: Array = s.get("damage", [0, 0])
@@ -120,9 +120,11 @@ static func view(t) -> Dictionary:
 		if t.damage_bonus > 0.0:
 			drows.append([(t.damage_source if t.damage_source != "" else _t("Schaden")) + " " + _t("(Aura)"), pct(t.damage_bonus), "up"])
 		if t.rogue_damage > 0.0:
-			drows.append([_t("Roguelike-Bonus"), pct(t.rogue_damage), "up"])
+			drows.append([_t(t.bonus_label), pct(t.rogue_damage), "up"])
 		var f: float = 1.0 + t.damage_bonus + kb + t.rogue_damage
-		var total := dmg_text(lo * f, hi * f)
+		if t.flat_damage > 0.0:
+			drows.append([_t("Items"), "+%d" % roundi(t.flat_damage), "up"])
+		var total := dmg_text(lo * f + t.flat_damage, hi * f + t.flat_damage)
 		tiles.append({"key": "damage", "caption": _t("Schaden"), "value": total, "mod": drows.size() > 1,
 				"rows": drows, "total": [_t("Gesamt"), total]})
 		var dt: String = t.damage_type()

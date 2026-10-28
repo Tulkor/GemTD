@@ -31,6 +31,7 @@ var damage := 1      ## Leben, die der Spieler verliert, wenn der Gegner durchko
 var score_value := 0.0  ## Punkte-Modus: Punkte für den Kill (game.gd → score_for)
 var final_boss := false  ## Endboss der letzten Welle: nur Schadenscheck, kostet keine Leben
 var flying := false
+var ground_y := 0.0  ## Bodenhöhe des Laufwegs (Schlucht, game.path_depth), Flieger bleiben auf FLY_HEIGHT
 var armor_type := ""
 var spell_factor := 1.0     ## Faktor auf Zauberschaden (eeveTD: Schwierigkeit, 0 = zauberimmun)
 var hit_reduction := 0.0    ## weniger Schaden pro Treffer, nicht bei Zaubern (eeveTD: Eigenschaft „Zäh“)
@@ -106,6 +107,8 @@ func setup(g, def: Dictionary, o: Dictionary, p: PackedVector2Array) -> void:
 	bounty = float(o.get("bounty", def.get("bounty", 1)))
 	damage = int(o.get("damage", def.get("damage", 1)))
 	flying = bool(def.get("flying", false))
+	var depth = g.get("path_depth") if g != null else null
+	ground_y = 0.0 if flying or depth == null else -float(depth)
 	armor_type = str(o.get("armor_type", def.get("armor_type", "")))
 	size = float(o.get("size", def.get("size", 1.0)))
 	color = Color.from_string(str(def.get("color", "#cccccc")), Color.GRAY)
@@ -336,7 +339,7 @@ func place_on_path(dist: float) -> void:
 
 
 func _sync_position() -> void:
-	position = Board3D.to_3d(pos, FLY_HEIGHT if flying else 0.0)
+	position = Board3D.to_3d(pos, FLY_HEIGHT if flying else ground_y)
 
 
 ## Schwierigkeitsstufe: Leben und (positive) Rüstung skalieren.

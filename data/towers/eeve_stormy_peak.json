@@ -4,7 +4,7 @@
 	"name_original": "Stormy Peak",
 	"category": "eeve",
 	"color": "#7fb2ff",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/kk_wald/rock_1_a_color1.glb",
 	"damage_type": "electric",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,7 @@
 			]
 		}
 	],
-	"hit_fx": "kb_shock_ring"
+	"hit_fx": "kb_shock_ring",
+	"model_tint": false,
+	"model_solid": true
 }

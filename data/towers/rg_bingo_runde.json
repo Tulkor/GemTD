@@ -1,0 +1,33 @@
+{
+	"id": "rg_bingo_runde",
+	"name": "Bingo-Runde",
+	"category": "randgruppen",
+	"color": "#c8b8a0",
+	"model": "res://assets/models/towers/k_spielhalle/prize_wheel.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "spells",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"senioren"
+		],
+		"place": 4,
+		"cost": 265,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00W"
+	},
+	"tiers": [
+		{
+			"damage": [
+				236.0,
+				266.0
+			],
+			"range": 7.422,
+			"cooldown": 0.85,
+			"abilities": []
+		}
+	]
+}

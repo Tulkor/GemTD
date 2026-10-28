@@ -4,7 +4,7 @@
 	"name_original": "Storm Generator",
 	"category": "eeve",
 	"color": "#7fb2ff",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/q_geschuetze/upwards_2.glb",
 	"damage_type": "electric",
 	"targets": "both",
 	"eeve": {
@@ -34,5 +34,7 @@
 			]
 		}
 	],
-	"hit_fx": "kb_shock_ring"
+	"hit_fx": "kb_shock_ring",
+	"model_tint": false,
+	"model_solid": true
 }

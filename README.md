@@ -27,7 +27,7 @@ Herausforderungen, sechs Schwierigkeiten von „Anfänger“ bis „IMPOSSIBLE!�
 Regeln ausführlich: [docs/eevetd.md](docs/eevetd.md).
 
 ### Shopping Maul
-Jeder Spieler eröffnet eine Filiale (Media Markt, Aldi, Obi, IKEA …), kauft dort Tower und wertet sie auf.
+Jeder Spieler eröffnet eine Filiale (Medio Markt, Oldi, Obo, IKEO …), kauft dort Tower und wertet sie auf.
 Gegner laufen durch die Gebiete aller Spieler ins gemeinsame Ziel, nach Level 40 folgen 10 Bonuslevel.
 Erfahrungspunkte bleiben zwischen den Partien erhalten und schalten neun Profi-Filialen frei (Post, Waffenladen,
 Bestattungsinstitut …). Regeln ausführlich: [docs/shopping-maul.md](docs/shopping-maul.md).
@@ -99,6 +99,10 @@ docs/          Regeln der drei Modi, Tower-Werte, WC3-Referenz
 
 ## Credits und Lizenzen
 
+Der Quellcode von TD Hub steht unter der **GNU General Public License v3.0** ([LICENSE](LICENSE)). Das gilt nur für den
+eigenen Code und die eigenen Daten; Modelle, Effekte, Sounds, Schriften und Texturen behalten ihre eigenen Lizenzen (unten).
+Im Spiel zeigt der Hub alle Nennungen unter „Mitwirkende“ (`data/credits.json`).
+
 Ins Repo kommt nur, was öffentlich liegen und mit dem Spiel verkauft werden darf. Fast alles ist CC0:
 
 - **Modelle:** Crystal Pack (iPoly3D), Rocks, Stylized Nature MegaKit, animierte Monster u. a. von Quaternius (CC0).
@@ -108,7 +112,7 @@ Ins Repo kommt nur, was öffentlich liegen und mit dem Spiel verkauft werden dar
   [assets/fx/QUELLEN.md](assets/fx/QUELLEN.md)
 - **Sounds:** eigene Aufnahmen von Lukas und Sounds von Pixabay ([Pixabay Content License](https://pixabay.com/service/license-summary/)):
   [assets/sounds/QUELLEN.md](assets/sounds/QUELLEN.md)
-- **Schriften:** DejaVu Sans Mono (eigene freie Lizenz), Limelight, Federo, Uncial Antiqua, Alegreya (SIL OFL),
+- **Schriften:** DejaVu Sans Mono (eigene freie Lizenz), Limelight, Federo, Uncial Antiqua, Alegreya, Bowlby One, Courier Prime, Sedgwick Ave Display, Rubik Wet Paint, Pirata One (SIL OFL),
   Lizenztexte in `assets/fonts/`
 - **Texturen:** Bodenfotos von Unsplash ([assets/textures/ground/CREDITS.md](assets/textures/ground/CREDITS.md)),
   Sternenhimmel aus Space 3D von wwwtyro, Unlicense ([assets/textures/sky/CREDITS.md](assets/textures/sky/CREDITS.md))

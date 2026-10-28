@@ -1,0 +1,33 @@
+{
+	"id": "rg_stepptaenzer",
+	"name": "Stepptänzer",
+	"category": "randgruppen",
+	"color": "#d070ff",
+	"model": "res://assets/models/towers/q_figuren/cowboy_male.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"theater"
+		],
+		"place": 3,
+		"cost": 135,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00O"
+	},
+	"tiers": [
+		{
+			"damage": [
+				78.0,
+				150.0
+			],
+			"range": 3.516,
+			"cooldown": 0.2,
+			"abilities": []
+		}
+	]
+}

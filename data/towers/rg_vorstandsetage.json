@@ -1,0 +1,45 @@
+{
+	"id": "rg_vorstandsetage",
+	"name": "Vorstandsetage",
+	"category": "randgruppen",
+	"color": "#8ca0c0",
+	"model": "res://assets/models/city/2story_balcony.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"model_scale": 0.51,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"buero"
+		],
+		"place": 3,
+		"cost": 150,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o01T"
+	},
+	"tiers": [
+		{
+			"damage": [
+				131.0,
+				131.0
+			],
+			"range": 9.375,
+			"cooldown": 0.7,
+			"abilities": [
+				{
+					"type": "slow",
+					"factor": 0.5,
+					"duration": 4.0
+				},
+				{
+					"type": "poison",
+					"dps": 4.0,
+					"duration": 4.0
+				}
+			]
+		}
+	]
+}

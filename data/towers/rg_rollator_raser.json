@@ -1,0 +1,39 @@
+{
+	"id": "rg_rollator_raser",
+	"name": "Rollator-Raser",
+	"category": "randgruppen",
+	"color": "#c8b8a0",
+	"model": "res://assets/models/towers/k_mini_figuren/wheelchair_power.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "magic",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"senioren"
+		],
+		"place": 2,
+		"cost": 135,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00U"
+	},
+	"tiers": [
+		{
+			"damage": [
+				110.0,
+				130.0
+			],
+			"range": 8.438,
+			"cooldown": 1.0,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.273,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

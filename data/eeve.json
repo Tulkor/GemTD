@@ -34,10 +34,18 @@
 		{"name": "IMPOSSIBLE!", "hp": 1.0, "armor": [12, 15, 18, 22, 27, 33, 40, 48, 58, 70], "spells": 0.34, "score": 4.5, "pause": 15}
 	],
 	"fields": [
-		{"name": "Offenes Feld", "rocks": 0, "bonus": 0},
-		{"name": "Felsenfeld", "rocks": 250, "bonus": 3000},
-		{"name": "WTF-Feld", "rocks": 600, "bonus": 5000}
+		{"name": "Offenes Feld", "rocks": 0, "bonus": 0, "tiles": 15},
+		{"name": "Felsenfeld", "rocks": 250, "bonus": 3000, "tiles": 15},
+		{"name": "WTF-Feld", "rocks": 600, "bonus": 5000, "tiles": 18}
 	],
+	"_bonus_tiles": "Bonusfelder (Lava, Eis, schwarzer Marmor): je Sorte fields[].tiles Stück, 2 × 2 Felder groß; der Tower muss genau darauf stehen. xp = Kills zählen für die Kill-Ränge so viel mehr.",
+	"bonus_tiles": [
+		{"id": "lava", "name": "Lava", "text": "+40 % Schaden", "damage": 0.4, "color": "#ff6a1a"},
+		{"id": "ice", "name": "Eis", "text": "+35 % Angriffstempo", "speed": 0.35, "color": "#9fe4ff"},
+		{"id": "marble", "name": "Schwarzer Marmor", "text": "doppelte Erfahrung (Kill-Ränge)", "xp": 1.0, "color": "#2a2a33"}
+	],
+	"_score": "Wertung wie im Original (alles × Punktefaktor der Schwierigkeit): Punkte je Kill (points des Gegners), Challenge-Punkte nach Schadensanteil (challenges[].score, bei Masse geteilt durch die Anzahl), am Ende lives je übrigem Leben, gold je übrigem Gold und der Feldbonus (fields[].bonus).",
+	"score": {"lives": 100, "gold": 0.5},
 	"wave_types": {
 		"ground": {"count": 10, "hp_factor": 1.0, "k": "ground"},
 		"ground_mass": {"count": 40, "hp_factor": 0.25, "k": "ground"},
@@ -52,13 +60,13 @@
 		"mass": 0.35
 	},
 	"challenges": {
-		"11": {"enemy": "eeve_lehmgolem", "count": 1},
-		"22": {"enemy": "eeve_fleischgolem", "count": 1},
-		"33": {"enemy": "eeve_felsgolem", "count": 1},
-		"44": {"enemy": "eeve_stahlgolem", "count": 1},
-		"55": {"enemy": "eeve_massen_challenge", "count": 40},
-		"56": {"enemy": "eeve_luft_challenge", "count": 1},
-		"57": {"enemy": "eeve_hoellengolem", "count": 1}
+		"11": {"enemy": "eeve_lehmgolem", "count": 1, "score": 3000},
+		"22": {"enemy": "eeve_fleischgolem", "count": 1, "score": 5000},
+		"33": {"enemy": "eeve_felsgolem", "count": 1, "score": 7000},
+		"44": {"enemy": "eeve_stahlgolem", "count": 1, "score": 9000},
+		"55": {"enemy": "eeve_massen_challenge", "count": 40, "score": 20000},
+		"56": {"enemy": "eeve_luft_challenge", "count": 1, "score": 20000},
+		"57": {"enemy": "eeve_hoellengolem", "count": 1, "score": 20000}
 	},
 	"properties_odds": {"two": 0.18, "one": 0.47},
 	"properties": [

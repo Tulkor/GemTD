@@ -4,7 +4,7 @@
 	"name_original": "Fire Breathing Snowman",
 	"category": "eeve",
 	"color": "#979189",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/towers/kk_feiertage/snowman_a.glb",
 	"damage_type": "spells",
 	"targets": "both",
 	"eeve": {
@@ -37,5 +37,8 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true,
+	"hit_fx": "bk_fire"
 }

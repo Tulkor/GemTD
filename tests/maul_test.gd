@@ -92,6 +92,8 @@ func _ready() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await _pro_tests()
+	await _bank_tests()
+	await _save_tests()
 	await _debug_tests()
 	await _coop_tests()
 	print("FERTIG mit %d Fehlern" % failures)
@@ -184,7 +186,7 @@ func _pro_tests() -> void:
 	check(t.flat == 25.0, "Amphetamin: +25 Schaden")
 	game._take_drug(t, MaulData.item("I01T"))
 	check(t.side == 10 and is_equal_approx(t.side_factor(), 0.5), "Steroide: 10 Stufen Nebenwirkungen")
-	# IKEA-Combo
+	# IKEO-Combo
 	var combo: Array = MaulData.pro().combos[0]
 	t.items = [combo[0], combo[1]]
 	game._combine(t)
@@ -285,7 +287,7 @@ func _coop_tests() -> void:
 	check(client.phase == MaulGame.Phase.COUNTDOWN, "Mitspieler sieht den Countdown")
 	client.start_game("aldi", 0, "group")
 	pump.call()
-	check(host.shop_of(1) == "aldi" and client.shop_of() == "aldi", "Mitspieler hat Aldi eröffnet")
+	check(host.shop_of(1) == "aldi" and client.shop_of() == "aldi", "Mitspieler hat Oldi eröffnet")
 	check(not client.hud.setup_visible(), "Filialwahl beim Mitspieler zu")
 	var zone: Rect2i = host.map.zones[1].rect
 	var cheap := str(MaulData.buyable("aldi")[0].id)
@@ -306,6 +308,100 @@ func _coop_tests() -> void:
 	host.queue_free()
 	client.queue_free()
 	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Konto, Deutsche Bank und Stammkundin (maul_bank.gd).
+func _bank_tests() -> void:
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.start_game("tante_emma", 1, "group")
+	var me: MaulGame.Player = game.players[0]
+	me.gold = 1000
+	check(game.submit({"type": "deposit"}) and me.account == 1000 and me.gold == 0, "Einzahlen: 1000 Gold aufs Konto")
+	MaulBank.end_level(game)
+	check(me.account == 1040, "4 %% Zinsen am Levelende: %d" % me.account)
+	check(not game.submit({"type": "bank_upgrade"}), "Bank-Upgrade ohne Gold geht nicht")
+	me.gold = 100
+	check(game.submit({"type": "bank_upgrade"}) and me.bank_level == 1 and me.gold == 25, "Bank-Upgrade 1 kostet 75")
+	check(game.submit({"type": "withdraw"}) and is_equal_approx(me.withdraw_in, 20.0), "Abheben dauert nach Upgrade 20 s")
+	check(not game.submit({"type": "withdraw"}), "Zweite Überweisung geht nicht")
+	MaulBank.process(game, 19.0)
+	check(me.account == 1040 and me.gold == 25, "Nach 19 s noch nicht ausgezahlt")
+	MaulBank.process(game, 2.0)
+	check(me.account == 0 and me.gold == 1065, "Überweisung ausgezahlt: %d Gold" % me.gold)
+	me.account = 10000
+	MaulBank.end_level(game)
+	check(me.account == 10300, "Zinsen höchstens auf 5000 Gold (6 %%): %d" % me.account)
+	me.account = 0
+	check(game.submit({"type": "auto_deposit"}) and me.auto_deposit, "Auto-Einzahlen an")
+	MaulBank.end_level(game)
+	check(me.gold == 0 and me.account == 1065 + floori(1065 * 0.06), "Auto-Einzahlen legt das Gold aufs Konto: %d" % me.account)
+	# Stammkundin: Altenheim bauen, dann alle 10 s 10 Gold
+	me.gold = 500
+	var home := str(MaulBank.emma_cfg().tower)
+	var spot: Vector2i = _spots(game, game.map.zones[0].rect).filter(func(c): return game.build_problem(home, c, 0) == "")[0]
+	check(game.submit({"type": "build", "tower": home, "cell": spot}), "Altenheim gebaut")
+	var gold := me.gold
+	MaulBank.process(game, 25.0)
+	check(me.gold == gold + 20 and me.emma_mined == 20, "Stammkundin bringt 2 × 10 Gold: %d" % (me.gold - gold))
+	# Deutsche Bank: kein Konto, 5 % aller Konten, höchstens 750
+	var other := MaulGame.Player.new()
+	other.shop = "aldi"
+	other.account = 4000
+	game.players.append(other)
+	me.shop = MaulBank.OWNER
+	me.gold = 100
+	check(not game.submit({"type": "deposit"}), "Deutsche Bank kann nicht einzahlen")
+	MaulBank.end_level(game)
+	check(me.account == 0 and me.gold == 100 + 1128 + 200, "Bank zahlt ihr Konto aus und bekommt 5 %% (200): %d" % me.gold)
+	other.account = 20000
+	check(MaulBank.owner_income(game) == 750, "Ab 15.000 auf allen Konten fest 750 Gold")
+	game.queue_free()
+	await get_tree().process_frame
+
+
+## Spielstand (maul_save.gd): Countdown speichert jetzt, mitten im Level der Stand vom Levelbeginn.
+func _save_tests() -> void:
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	check(MaulSave.capture(game).is_empty(), "Vor der Filialwahl kein Spielstand")
+	game.start_game("aldi", 2, "group")
+	var me: MaulGame.Player = game.players[0]
+	me.gold = 5000
+	var cheap := str(MaulData.buyable("aldi")[1].id)
+	var built := 0
+	for a in _spots(game, game.map.zones[0].rect):
+		if built < 5 and game.submit({"type": "build", "tower": cheap, "cell": a}):
+			built += 1
+	me.account = 777
+	me.bank_level = 2
+	game.lives = 60
+	var gold := me.gold
+	game._start_level(1)
+	check(game.phase == MaulGame.Phase.WAVE, "Level 1 läuft")
+	me.gold += 999
+	var st: Dictionary = _wire(MaulSave.capture(game))
+	check(int(st.sync.level) == 0 and int(st.sync.players[0].gold) == gold, "Mitten im Level: Stand vom Levelbeginn")
+	game.queue_free()
+	await get_tree().process_frame
+	Session.load_state = st
+	var loaded: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(loaded)
+	await get_tree().process_frame
+	var p: MaulGame.Player = loaded.players[0]
+	check(loaded.phase == MaulGame.Phase.COUNTDOWN and loaded.countdown >= 10.0, "Geladen: Countdown vor Level 1")
+	check(loaded.shop_of() == "aldi" and loaded.difficulty == 2 and loaded.lives == 60, "Filiale, Schwierigkeit, Leben geladen")
+	check(loaded.towers.size() == built and p.gold == gold, "%d Tower und %d Gold geladen" % [loaded.towers.size(), p.gold])
+	check(p.account == 777 and p.bank_level == 2, "Konto und Bank-Upgrade geladen")
+	check(not loaded.hud.setup_visible(), "Keine Filialwahl nach dem Laden")
+	loaded.submit({"type": "start_now"})
+	for i in 10:
+		await get_tree().process_frame
+	check(loaded.phase == MaulGame.Phase.WAVE and loaded.level == 1, "Geladenes Spiel startet Level 1")
+	loaded.queue_free()
 	await get_tree().process_frame
 
 

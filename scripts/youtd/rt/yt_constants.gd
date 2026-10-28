@@ -1,0 +1,84 @@
+class_name YtConstants
+extends RefCounted
+## Portiert aus YouTD 2 (MIT, github.com/Praytic/youtd2), siehe data/youtd/QUELLEN.md.
+
+const TILE_SIZE: Vector2 = Vector2(256, 128)
+
+const TILE_SIZE_PIXELS: float = 181.01933598375618
+const TILE_SIZE_PIXELS_HALF: float = YtConstants.TILE_SIZE_PIXELS / 2
+
+const TILE_SIZE_WC3: float = 128
+
+const WC3_DISTANCE_TO_PIXELS: float = TILE_SIZE_PIXELS / TILE_SIZE_WC3
+
+const RANGE_CHECK_BONUS_FOR_TOWERS: float = 72
+const RANGE_CHECK_BONUS_FOR_OTHER_UNITS: float = 8
+
+const DEATH_EXPLODE_EFFECT_SIZE: float = 32.0
+const LEVEL_UP_EFFECT_SIZE: float = 64.0
+
+const SPELL_DAMAGE_RATIO: float = 0.9
+const SPELL_DAMAGE_RATIO_FOR_SIF: float = 0.4
+
+const TOWER_MAX_LEVEL_BASE: int = 25
+const TOWER_MAX_LEVEL_WITH_BONUS: int = 30
+const PLAYER_MAX_LEVEL: int = 300
+const SIF_ARMOR_CHANCE: float = 0.15
+const MIN_WAVE_FOR_SPECIAL: int = 8
+
+const INVENTORY_CAPACITY_MAX: int = 6
+
+const WAVE_COUNT_TRIAL: int = 80
+const WAVE_COUNT_FULL: int = 120
+const WAVE_COUNT_NEVERENDING: int = 240
+
+const INNATE_MOD_ATK_CRIT_CHANCE: float = 0.0125
+const INNATE_MOD_ATK_CRIT_DAMAGE: float = 1.25
+const INNATE_MOD_SPELL_CRIT_DAMAGE: float = 1.25
+const INNATE_MOD_SPELL_CRIT_CHANCE: float = 0.0125
+
+const INNATE_MOD_ATK_CRIT_CHANCE_LEVEL_ADD: float = 0.0015
+const INNATE_MOD_ATK_CRIT_DAMAGE_LEVEL_ADD: float = 0.02
+const INNATE_MOD_SPELL_CRIT_CHANCE_LEVEL_ADD: float = 0.0015
+const INNATE_MOD_SPELL_CRIT_DAMAGE_LEVEL_ADD: float = 0.02
+const INNATE_MOD_DAMAGE_BASE_PERC_LEVEL_ADD: float = 0.04
+const INNATE_MOD_ATTACKSPEED_LEVEL_ADD: float = 0.01
+
+const ATK_CRIT_CHANCE_CAP: float = 0.8
+const ATK_MULTICRIT_DIMISHING: float = 0.8
+const MOD_ATTACKSPEED_MIN: float = 0.2
+const MOD_ATTACKSPEED_MAX: float = 5.0
+const ATTACK_COOLDOWN_MIN: float = 0.2
+
+const PROJECTILE_SPEED_MAX: int = 30000
+const BOUNCE_ATTACK_RANGE: int = 340
+const BASE_ITEM_DROP_CHANCE: float = 0.0475
+
+const MOVE_SPEED_MIN: float = 100.0
+const MOVE_SPEED_MAX: float = 522.0
+const DEFAULT_MOVE_SPEED: float = 222.0
+
+const IRL_SECONDS_TO_GAME_WORLD_HOURS: float = 24.0 / 480.0
+const INITIAL_TIME_OF_DAY: float = 12.0
+
+const DAMAGE_MIN: float = 0
+const DAMAGE_MAX: float = 1000000000000000
+
+const SIF_CREEP_HEALTH_MULTIPLIER: float = 0.48
+
+const TIME_BEFORE_FIRST_WAVE: float = 180.0
+const TIME_BETWEEN_WAVES: float = 15.0
+
+const MAX_ELEMENT_LEVEL_BASE: int = 15
+
+const BUFFGROUP_COUNT: int = 6
+
+const MAX_UPDATE_TICKS_PER_PHYSICS_TICK: int = 20
+
+const SCORE_TO_EXP: float = 0.002
+const PLAYER_LEVEL_TO_WISDOM_UPGRADE_COUNT: float = 1 / 6.0
+
+const TOMES_WARNING_THRESHOLD: int = 50
+const WAVE_LEVEL_AFTER_WHICH_TOME_WARNINGS_STOP: int = 100
+
+const TOWER_ATTACK_ABILITY_NAME_ENGLISH: String = "Normal attack"

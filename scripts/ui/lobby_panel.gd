@@ -254,8 +254,10 @@ func no_map_mode() -> bool:
 	return not bool(Database.mode(Net.vote_winner(false)).get("needs_map", true))
 
 
-## Startet die Sitzung als reiner Koop (alle auf einem Feld)?
+## Startet die Sitzung als reiner Koop (alle auf einem Feld)? Modi mit coop_only (YouTD) immer.
 func coop_selected() -> bool:
+	if bool(Database.mode(Net.vote_winner(false)).get("coop_only", false)):
+		return true
 	var g := field_groups()
 	return g.size() == 1 and (g[0].size() > 1 or coop_mode)
 

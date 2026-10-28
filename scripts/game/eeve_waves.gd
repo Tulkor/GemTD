@@ -93,7 +93,8 @@ static func generate(rules: Dictionary, diff: Dictionary, r: RandomNumberGenerat
 				"enemy": str(c.enemy), "count": int(c.count), "hp": float(cd.get("hp", 1000)),
 				"armor": float(cd.get("armor", 0)) + armor_bonus, "damage": 0,
 				"interval": float(interval.get("mass" if int(c.count) > 1 else "boss", 1.0)),
-				"row": int(rules.get("mass_row", 1)) if int(c.count) > 1 else 1, "props": []}]})
+				"row": int(rules.get("mass_row", 1)) if int(c.count) > 1 else 1, "props": [],
+				"challenge_score": float(c.get("score", 0)) / maxf(int(c.count), 1)}]})
 			continue
 		var kind := roll_kind(rules, level, r)
 		var props := roll_props(rules, level, kind, r)

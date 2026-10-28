@@ -4,7 +4,7 @@
 	"name_original": "Ancient Fountain of Wisdom",
 	"category": "eeve",
 	"color": "#c46bff",
-	"model": "res://assets/models/crystals/crystal_13.glb",
+	"model": "res://assets/models/towers/k_fantasy_stadt/fountain_round_detail.glb",
 	"damage_type": "magic",
 	"targets": "both",
 	"eeve": {
@@ -35,5 +35,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

@@ -1,0 +1,40 @@
+{
+	"id": "rg_mister_sonderpreis",
+	"name": "Mister Sonderpreis",
+	"category": "randgruppen",
+	"color": "#e8c440",
+	"model": "res://assets/models/towers/q_figuren/suit_male.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"schnaeppchen"
+		],
+		"place": 6,
+		"cost": 750,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_wuehltisch_kunde",
+			"rg_coupon_sammler",
+			"rg_sperrmuell_sammler",
+			"rg_flohmarkt_profi",
+			"rg_ramschhaendler",
+			"rg_schlussverkauf_stuermer"
+		],
+		"wc3": "o005"
+	},
+	"tiers": [
+		{
+			"damage": [
+				801.0,
+				900.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

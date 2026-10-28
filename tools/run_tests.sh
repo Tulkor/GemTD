@@ -139,6 +139,7 @@ do_test() {
     tabelle) run_check tabelle python3 tools/tower_tabelle.py --pruefen ;;
     ui)      run_check ui python3 tools/pruefe_ui.py ;;
     maps)    run_check maps python3 tools/map_check.py --kurz ;;
+    marken)  run_check marken python3 tools/wc3/maul_namen.py --pruefe ;;
     werkzeuge) run_check werkzeuge check_tools ;;
     balanceeditor) run_check balanceeditor node tools/balance_editor/pruefen.mjs ;;
     htmleditor) run_check htmleditor node tools/html_editor/pruefen.mjs ;;
@@ -160,7 +161,7 @@ tools/godot_import.sh "$LOG_DIR/import.log"
 
 # Tests passend zu den geänderten Dateien (Commits seit origin/main und ungespeicherte Änderungen).
 pick_changed() {
-  local base files f n t=" tabelle ui maps werkzeuge skripte "
+  local base files f n t=" tabelle ui maps marken werkzeuge skripte "
   base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   files=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   for f in $files; do
@@ -174,13 +175,15 @@ pick_changed() {
       tools/html_editor/*) t+="htmleditor " ;;
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
-      data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul " ;;
+      data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul youtd " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
-      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
+      scripts/game/eeve*|data/eeve.json|data/eeve_items.json|data/*/eeve_*|scenes/eeve*|scripts/ui/item_icon.gd) t+="eeve eeveitems " ;;
+      scripts/game/rg_*|data/randgruppen.json|data/*/rg_*|data/maps/randgruppen.json|scenes/rg_*) t+="randgruppen " ;;
+      scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig ytitems ytkoop " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
       scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
       scripts/game/rogue*|data/roguelike.json) t+="roguelike smoke " ;;
-      scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul " ;;
+      scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul youtd " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
@@ -199,9 +202,9 @@ if [ "$MODE" = geaendert ]; then
 fi
 case $MODE in
   # shellcheck disable=SC2046
-  schnell) set -- tabelle ui maps werkzeuge $(all_tests ohne_fest) ;;
+  schnell) set -- tabelle ui maps marken werkzeuge $(all_tests ohne_fest) ;;
   # shellcheck disable=SC2046
-  alle)    set -- tabelle ui maps werkzeuge $(all_tests) ;;
+  alle)    set -- tabelle ui maps marken werkzeuge $(all_tests) ;;
 esac
 # Prüfskripte, Smoke und die Host/Client-Paare (eigene Ports) laufen parallel, Balance-Läufe danach einzeln.
 PAR=(); SEQ=(); declare -A WEIGHT

@@ -1,0 +1,39 @@
+{
+	"id": "rg_energydrink",
+	"name": "Energydrink",
+	"category": "randgruppen",
+	"color": "#ff8a3d",
+	"model": "res://assets/models/towers/k_essen/soda_can.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "siege",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"spaetkauf"
+		],
+		"place": 4,
+		"cost": 300,
+		"lumber": 0,
+		"ultimate": false,
+		"requires": [],
+		"wc3": "o00B"
+	},
+	"tiers": [
+		{
+			"damage": [
+				194.0,
+				218.0
+			],
+			"range": 6.641,
+			"cooldown": 0.4,
+			"abilities": [
+				{
+					"type": "splash",
+					"radius": 0.508,
+					"factor": 0.5
+				}
+			]
+		}
+	]
+}

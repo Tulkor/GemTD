@@ -2,7 +2,7 @@ extends Node
 ## Screenshots aus dem echten Spiel, ohne jedes Mal ein eigenes Aufnahme-Skript zu schreiben.
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
-##   --seite=single|history|profile|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
+##   --seite=single|history|profile|credits|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
 ##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
@@ -19,11 +19,14 @@ extends Node
 ##   --tower=ruby:2,opal:0   diese Gems in der nächsten Runde setzen (Reihenfolge = Platzierung)
 ##   --welle=N               nächste Welle ist Welle N (Debug-Sprung)
 ##   --phase=bau|wahl|welle  Stand für das Bild (Standard bau); welle startet die Welle
+##   --extra                 Fenster Extra Chance offen (Bauphase)
 ##   --warten=S              Sekunden Spielzeit vor dem Bild (z. B. Gegner unterwegs), Standard 1
 ##   --faehigkeiten=pierce,fork   allen Towern auf dem Feld diese Fähigkeiten (Standardwerte) dazugeben
 ##   --auswahl               ersten Tower der Runde (sonst den ersten auf dem Feld) auswählen
 ##   --treffer               nach --warten weiter warten, bis ein Treffer-Effekt leuchtet (höchstens 10 s), dann Bild
 ##   --grundtower=water      eeveTD: statt des festen Plans überall den Grundturm dieses Elements
+##   --items                 eeveTD: Marktplatz (Feld 32,76), Lager mit Items, Höllenkohlenbecken (44,76) mit zwei Items;
+##                           --auswahl wählt es, --lagerwahl=N wählt Item N im Lager, --markt öffnet das Marktplatz-Fenster
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
 ##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
@@ -31,11 +34,15 @@ extends Node
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
+##   --rasse=kleingarten     Randgruppen TD (--map=randgruppen): Rasse für das Bild, --bauen=N Bauvorschau Tower N
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
+##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
+##   --bonusfelder           eeveTD: Bonusfelder (Lava, Eis, Marmor) auslegen, drei davon unter Towern des Plans
+##   --ende                  eeveTD: Endbildschirm mit Wertung (Sieg)
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
@@ -61,6 +68,8 @@ func _ready() -> void:
 	RunHistory.path = "user://screenshot_run_history.json"
 	Profile.dir = "user://screenshot_profile"
 	Session.skip_setup = not opts.has("einstellungen")
+	if opts.has("rasse"):
+		Session.rg_choice = {"race": str(opts.rasse)}
 	FieldStyle.night = opts.has("nacht")
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
@@ -116,6 +125,8 @@ func _ready() -> void:
 	if scene == "spiel":
 		await _prepare(node)
 		angles = String(opts.get("winkel", "schraeg")).split(",")
+	if opts.has("extra") and scene == "spiel":
+		node.hud.extra_chance_requested.emit()
 	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
 		if scene == "maul":
 			node.hud.toggle_debug()
@@ -184,6 +195,13 @@ func _prepare(game: Node) -> void:
 		game.set_show_all_paths(true)
 	if game.has_method("add_element_point"):
 		await _prepare_eeve(game)
+		return
+	# YouTD vor Randgruppen prüfen: beide haben build_tower()
+	if game.has_method("roll_start"):
+		await _prepare_youtd(game)
+		return
+	if game.has_method("race_towers"):
+		await _prepare_rg(game)
 		return
 	for i in int(opts.get("runden", "0")):
 		_place_round(game, [])
@@ -335,6 +353,8 @@ func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
 			"eeve_greater_bird_launcher", "eeve_gold_mine", "eeve_altar_of_magic", "eeve_itching_thorns_tower", "eeve_searing_totem",
 			"eeve_sacred_orb_of_power", "eeve_ornate_obelisk", "eeve_nonhazardous_shroom_field", "eeve_hell_brazier",
 			"eeve_greater_rock_launcher", "eeve_ruinous_obelisk", "eeve_xtreme_bird_launcher"]
+	if opts.has("tower"):  # --vitrine --tower=hydro_cannon,…: genau diese Tower (ohne eeve_)
+		targets = Array(str(opts.tower).split(",", false)).map(func(t): return "eeve_" + t)
 	var plan := {}
 	var i := 0
 	for id in targets:
@@ -347,6 +367,33 @@ func _eeve_vitrine(game: Node, walls: Array) -> Dictionary:
 			plan[walls[i]] = chain
 		i += 1
 	return plan
+
+
+## Randgruppen TD (--map=randgruppen): zwei versetzte Reihen Tower der Rasse (--rasse=kleingarten) in der roten Zone,
+## --phase=welle startet Level 1, --auswahl wählt einen Tower aus, --bauen=1 setzt die Bauvorschau für Tower 1.
+func _prepare_rg(game: Node) -> void:
+	if opts.has("rasse"):
+		game.rp().race = str(opts.rasse)
+	game.gold = 20000
+	var list: Array = game.race_towers()
+	var z: Rect2i = game.map.zones[0].rect
+	var i := 0
+	for row in [z.position.y + 14, z.position.y + 26]:
+		var xs := range(z.position.x + 1, z.end.x - 8, 2) if row == z.position.y + 14 else range(z.position.x + 9, z.end.x - 1, 2)
+		for x in xs:
+			if game.build_tower(str(list[i % 6]), Vector2i(x, row)):
+				i += 1
+	game.gold = 180
+	if opts.has("bauen"):
+		game.start_placement(str(list[int(opts.bauen) - 1]))
+	if opts.has("auswahl") and not game.own_towers().is_empty():
+		game._select(game.own_towers()[3])
+	if opts.get("phase", "bau") == "welle":
+		game.submit({"type": "start_level"})
+		Engine.time_scale = 2.0
+		await _frames(int(float(opts.get("warten", "6")) * 60 / 2.0))
+		Engine.time_scale = 1.0
+	await _frames(5)
 
 
 ## eeveTD: kleines Labyrinth aus Barrikaden vor dem Eingang, einige davon zu Towern aufgewertet.
@@ -364,6 +411,17 @@ func _prepare_eeve(game: Node) -> void:
 		points += ["fire", "fire"]
 	for el in points:
 		game.add_element_point(el)
+	if opts.has("bonusfelder"):
+		game.rng.seed = 5
+		game._place_bonus_tiles(15)
+		for c in [Vector2i(44, 76), Vector2i(50, 76), Vector2i(40, 68), Vector2i(48, 68), Vector2i(54, 68), Vector2i(36, 76)]:
+			game.bonus_tiles.erase(c)
+		game.bonus_tiles[Vector2i(44, 76)] = "lava"
+		game.bonus_tiles[Vector2i(50, 76)] = "ice"
+		game.bonus_tiles[Vector2i(40, 68)] = "marble"
+		if opts.has("bonusreihe"):   # je eine Sorte nebeneinander zwischen den Mauern (Aussehen prüfen)
+			game.bonus_tiles = {Vector2i(40, 72): "lava", Vector2i(44, 72): "ice", Vector2i(48, 72): "marble"}
+		game.bonus_view.show_tiles(game.bonus_tiles)
 	# Zwei versetzte Mauern vor dem Eingang (unten Mitte), Gegner laufen im Bogen herum
 	var walls := []
 	for x in range(30, 58, 2):
@@ -403,17 +461,82 @@ func _prepare_eeve(game: Node) -> void:
 		for p in path:
 			if game.build_trap("eeve_flame_grate", Vector2i(p) - Vector2i.ONE):
 				break
-	game.gold = 412
+	if opts.has("items"):
+		var m: Tower = game.towers.get(Vector2i(32, 76))
+		var mo: Array = game.tower_options(m)
+		game._apply_option(m, mo[mo.map(func(x): return x.id).find("eeve_marketplace")])
+		var h: Tower = game.towers.get(Vector2i(44, 76))
+		h.set_tower("eeve_hell_brazier", 0)
+		h.items = ["glowing_blade", "orb_fire"]
+		for id in ["razorblades", "sleeve_speed", "killer_claws", "orb_ice", "xp_potion", "expansion"]:
+			game.ep().items.append(id)
+		game.ep().market = {"damage": 1}
+		game._update_auras()
+		if opts.has("lagerwahl"):
+			game.items_panel.picked = int(opts.lagerwahl)
+	game.gold = 412 if not opts.has("items") else 1840
 	game.log_lines = []
+	game.eeve_score = {"creeps": 4180.0, "challenges": 23560.0}
+	if opts.has("ende"):
+		game.wave_index = 56
+		game.lives = 37
+		game._finish(game.Phase.VICTORY)
 	if opts.get("phase", "bau") == "welle":
 		game.submit({"type": "start_level"})
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(32, 68) if opts.has("fallen") else Vector2i(44, 76)))
+	if opts.has("markt"):
+		game.market_panel.open()
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:
 		await get_tree().process_frame
 		t += get_process_delta_time()
+
+
+## YouTD: Elemente erforschen, entlang der ersten Bahnen verschiedene Tower setzen, Items ins Lager, Welle 1 läuft.
+## Mit --einstellungen bleibt das Einstellungsfenster offen.
+func _prepare_youtd(game: Node) -> void:
+	if not game.setup_done:
+		return
+	for el in ["nature", "fire", "ice", "astral", "darkness", "iron", "storm"]:
+		game.elements[el] = 4
+	game.gold = 5000
+	game.tomes = 120
+	var ids := ["1", "41", "439", "474", "498", "673"]
+	for el in ["fire", "ice", "astral", "darkness", "iron", "storm"]:
+		var list: Array = YoutdRoll._group(true, el, "common")
+		ids.append_array(list.slice(0, 2))
+	if opts.has("tower"):  # --tower=1,41,…: genau diese YouTD-Tower (IDs aus data/youtd/towers.json)
+		ids = Array(str(opts.tower).split(",", false))
+	var x := 8
+	for i in ids.size():
+		var cell := Vector2i(x, 12 if i % 2 == 0 else 22)
+		game.debug_place(str(ids[i]), cell)
+		if i % 2 == 1:
+			x += 4
+	game.debug_used = false
+	game.stash = YoutdRoll.with_count(game, 5)
+	for id in [2, 3, 1001, 11, 12, 9]:
+		var it := YtItem.make(id, game.yp())
+		if it != null:
+			game.stash_add(it)
+	# ein Item im ausgewählten Tower, damit Auswahlkarte Items und Effekte zeigt
+	var sel = game.towers.get(Vector2i(12, 12))
+	if sel != null and not game.item_stash.is_empty():
+		game.put_item(sel, game.item_stash.size() - 1)
+	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
+	game.submit({"type": "next_wave"})
+	Engine.time_scale = 8.0
+	for i in 40:
+		await get_tree().process_frame
+	Engine.time_scale = 1.0
+	if opts.has("auswahl"):
+		game._select(game.towers.get(Vector2i(12, 12)))
+	if opts.has("wuerfel") and game.youtd_panel != null:
+		game.youtd_panel.toggle_section("cube")
+	game._refresh_hud()
+	await _frames(3)
 
 
 ## --treffer: warten, bis ein Treffer leuchtet. Die Spielzeit läuft dabei langsam (Xvfb rendert nur wenige

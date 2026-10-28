@@ -1,0 +1,40 @@
+{
+	"id": "rg_das_konzert_in_schwarz",
+	"name": "Das Konzert in Schwarz",
+	"category": "randgruppen",
+	"color": "#c03aa0",
+	"model": "res://assets/models/towers/kk_gemischt/guitar_b.glb",
+	"model_tint": false,
+	"model_solid": true,
+	"damage_type": "chaos",
+	"targets": "both",
+	"rg": {
+		"races": [
+			"emos"
+		],
+		"place": 6,
+		"cost": 780,
+		"lumber": 1,
+		"ultimate": true,
+		"requires": [
+			"rg_ponyfranse",
+			"rg_tagebuchschreiber",
+			"rg_eyeliner_profi",
+			"rg_mixtape",
+			"rg_regenwolke",
+			"rg_weltschmerz"
+		],
+		"wc3": ""
+	},
+	"tiers": [
+		{
+			"damage": [
+				851.0,
+				950.0
+			],
+			"range": 23.438,
+			"cooldown": 0.3,
+			"abilities": []
+		}
+	]
+}

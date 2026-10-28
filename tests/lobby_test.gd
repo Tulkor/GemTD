@@ -33,7 +33,7 @@ func _ready() -> void:
 	get_tree().root.add_child(holder)
 	get_tree().current_scene = holder
 	_test_modes()
-	Session.map_path = Database.list_maps()[0].path
+	Session.map_path = Database.first_map().path
 	Session.game_kind = "gemtd"
 	Net.uid = role + "-uid"
 	Net.my_name = "Host" if role == "host" else "Gast"
@@ -46,12 +46,12 @@ func _ready() -> void:
 	get_tree().quit(1 if failures > 0 else 0)
 
 
-## Alle Modi spielbar, Shopping Maul nur solo (das Hauptmenü lädt die Daten neu, danach wieder aufrufen).
+## Alle Modi spielbar, Shopping Maul und YouTD nur solo (das Hauptmenü lädt die Daten neu, danach wieder aufrufen).
 func _test_modes() -> void:
 	for m in Database.modes:
 		m.ready = true
 		m.scene = Session.GAME
-		m.max_players = 1 if m.id == "shoppingmaul" else 8
+		m.max_players = 1 if m.id in ["shoppingmaul", "youtd"] else 8
 
 
 func _wait(cond: Callable, seconds: float) -> bool:
@@ -67,7 +67,7 @@ func _host() -> void:
 	check(Net.host(PORT) == OK, "Sitzung gehostet")
 	check(await _wait(func(): return Net.session_slots().size() == 2, 20.0), "Gast in der Lobby")
 	var ids := Net.vote_tally().map(func(e): return e.id)
-	check(ids == ["gemtd", "eevetd"], "für 2 Spieler wählbar: %s (Maul nur solo)" % [ids])
+	check(ids == ["gemtd", "eevetd", "randgruppen"], "für 2 Spieler wählbar: %s (Maul nur solo)" % [ids])
 	check(await _wait(func(): return Net.votes().size() == 1, 10.0), "Stimme des Gasts angekommen")
 	check(Net.vote_winner(false) == "eevetd", "eine Stimme: eeveTD vorne")
 	Net.vote("gemtd")

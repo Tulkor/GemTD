@@ -4,7 +4,7 @@
 	"name_original": "Red Lightning Generator",
 	"category": "eeve",
 	"color": "#bf8694",
-	"model": "res://assets/models/crystals/crystal_19.glb",
+	"model": "res://assets/models/towers/q_geschuetze/teleporter2.glb",
 	"damage_type": "chaos",
 	"targets": "both",
 	"eeve": {
@@ -40,5 +40,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

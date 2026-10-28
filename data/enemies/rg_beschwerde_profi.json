@@ -1,0 +1,19 @@
+{
+	"id": "rg_beschwerde_profi",
+	"name": "Beschwerde-Profi",
+	"category": "randgruppen",
+	"hp": 1150,
+	"speed": 2.5,
+	"armor": 9.0,
+	"armor_type": "rg_medium",
+	"bounty": 4,
+	"damage": 1,
+	"flying": false,
+	"boss": false,
+	"color": "#d8d0c0",
+	"size": 1.0,
+	"rg": {
+		"level": 17,
+		"wc3": "n00H"
+	}
+}

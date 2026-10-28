@@ -1,0 +1,19 @@
+{
+	"id": "rg_der_oberspiesser",
+	"name": "Der Oberspießer",
+	"category": "randgruppen",
+	"hp": 120000,
+	"speed": 2.734,
+	"armor": 50.0,
+	"armor_type": "rg_small",
+	"bounty": 0,
+	"damage": 1000,
+	"flying": true,
+	"boss": true,
+	"color": "#d8d0c0",
+	"size": 1.6,
+	"rg": {
+		"level": 35,
+		"wc3": "n00U"
+	}
+}
