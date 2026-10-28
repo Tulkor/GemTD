@@ -60,14 +60,17 @@ const MIST_NIGHT := Color(0.5, 0.56, 0.72)
 ## Bodennebel und kühlerer, dunklerer Boden und Wald (Faktoren auf die Tagwerte).
 const NIGHT_EXTRA := {
 	"fog_height": 0.6, "fog_height_density": 0.05,
-	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.8, "forest_tint": Color(0.5, 0.56, 0.78),
+	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.7, "forest_tint": Color(0.5, 0.56, 0.78),
+	# nachts mehr Struktur im Gras und große hellere und dunklere Flecken wie Mondlicht durch Wolken,
+	# sonst wirkt das Feld wie eine einheitlich blaue Fläche
+	"ground_contrast": 0.7, "ground_macro": 0.45,
 }
 
 var board: Board3D
 var map: MapData
 var _env: Environment
 var _lights_env: Array = []  ## Sonne/Mond und Gegenlicht aus CameraRig.add_environment
-var _ground_day := []   ## [tint, brightness] des Spielfeldbodens am Tag
+var _ground_day := []   ## [tint, brightness, grass_contrast, macro] des Spielfeldbodens am Tag
 var _forest_mats := []  ## [Material, Tagesfarbe] der Bäume und Büsche
 var _prop_mats := {}    ## [Originalmaterial, Tönung] -> abgedunkelte Kopie (Friedhof)
 var _lights: Array[OmniLight3D] = []
@@ -97,7 +100,10 @@ func _ready() -> void:
 	var gm: ShaderMaterial = board._ground_mat
 	var tint = gm.get_shader_parameter("tint")
 	var bright = gm.get_shader_parameter("brightness")
-	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72]
+	var contrast = gm.get_shader_parameter("grass_contrast")
+	var macro = gm.get_shader_parameter("macro")
+	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72,
+		float(contrast) if contrast != null else 1.0, float(macro) if macro != null else 0.12]
 	_add_forest_floor()
 	_add_forest()
 	_add_graveyard()
@@ -150,6 +156,8 @@ func _apply(on: bool) -> void:
 	var gm: ShaderMaterial = board._ground_mat
 	gm.set_shader_parameter("tint", _ground_day[0] * look.get("ground_tint", Vector3.ONE))
 	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
+	gm.set_shader_parameter("grass_contrast", maxf(_ground_day[2], look.get("ground_contrast", 0.0)))
+	gm.set_shader_parameter("macro", look.get("ground_macro", _ground_day[3]))
 	for m in _forest_mats:
 		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
 	for l in _lights:

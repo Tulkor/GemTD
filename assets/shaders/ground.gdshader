@@ -30,6 +30,8 @@ uniform float saturation = 0.75;
 uniform vec3 tint = vec3(1.0);
 /// Deckkraft des Bodens; 0 = unsichtbar (nur Rasterlinien bleiben sichtbar).
 uniform float ground_alpha = 1.0;
+// Stärke der großflächigen Helligkeitsschwankung (Flecken über mehrere Felder)
+uniform float macro = 0.12;
 /// Rasterlinien (für den Map-Editor), 0 = aus.
 uniform float grid_strength = 0.0;
 uniform float cell = 0.5;
@@ -118,7 +120,7 @@ void fragment() {
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 	col = mix(vec3(lum), col, saturation) * brightness * tint;
 	// leichte großflächige Helligkeitsschwankung
-	col *= 0.94 + 0.12 * fbm(p * 0.12 + vec2(-8.0, 2.0));
+	col *= 1.0 - macro * 0.5 + macro * fbm(p * 0.12 + vec2(-8.0, 2.0));
 
 	float alpha = ground_alpha;
 	if (grid_strength > 0.0) {

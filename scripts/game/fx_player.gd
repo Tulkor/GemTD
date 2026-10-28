@@ -467,6 +467,11 @@ func _batch(key: String, d: Dictionary) -> Dictionary:
 	# Flach am Boden (Nova, Lichtschein): keine weichen Kanten, sonst blendet der Boden sie ganz aus
 	if bool(d.get("flat", false)) or str(d.get("kind", "")) == "nova":
 		mat.set_shader_parameter("soft", 0.0)
+	# Lichtschein am Boden ohne glühenden Kern (sonst ein weißer Fleck unter jedem Treffer)
+	if str(d.get("tex", "")) == GLOW_KEY:
+		mat.set_shader_parameter("vivid", 0.0)
+		mat.set_shader_parameter("hot", 0.0)
+		mat.set_shader_parameter("halo", 0.0)
 	if d.has("sheet"):
 		mat.set_shader_parameter("tiles", Vector2(float(d.get("cols", 1)), float(d.get("rows", 1))))
 	else:

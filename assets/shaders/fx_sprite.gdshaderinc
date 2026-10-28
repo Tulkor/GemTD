@@ -1,7 +1,7 @@
 // Sprites der Treffer- und Schuss-Effekte (fx_player.gd). Lage und Größe rechnet fx_player.gd pro Partikel,
 // hier nur Bildausschnitt (Sprite-Sheet), Farbe und Farbton-Drehung.
 // INSTANCE_CUSTOM: x = Bild im Sheet, y = Farbton-Drehung (0..1), z = Sättigung (Faktor)
-// Eingebunden von fx_add.gdshader (additiv) und fx_mix.gdshader (Alpha).
+// Eingebunden von fx_add.gdshader (additiv, setzt FX_ADD) und fx_mix.gdshader (Alpha).
 
 uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_disable;
 uniform vec2 tiles = vec2(1.0, 1.0);
@@ -11,6 +11,13 @@ uniform float brightness = 1.0;
 // Weiche Kanten: Sprites blenden aus, wo sie in Boden, Gegner oder Tower stoßen (statt harter Schnittkante).
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
 uniform float soft = 0.15;
+// Leuchtkraft der additiven Sprites (fx_add): satte Farbe am Rand statt blassem Weiß, dazu ein heller Kern
+// über 1 (HDR), den das Leuchten (Glow) der Umgebung aufgreift. 0 = wie im Sheet (Lichtschein am Boden).
+// halo: schwache, farbige Ränder (geringe Deckkraft) anheben, damit Strahlen und Treffer einen sichtbaren
+// Farbschein bekommen.
+uniform float vivid = 0.8;
+uniform float hot = 1.5;
+uniform float halo = 0.5;
 
 varying vec4 custom;
 
@@ -36,9 +43,23 @@ void fragment() {
 	if (abs(custom.y) > 0.001) {
 		rgb = max(hue_rotate(rgb, custom.y), vec3(0.0));
 	}
+#ifdef FX_ADD
+	float peak = max(rgb.r, max(rgb.g, rgb.b));
+	if (peak > 0.0001) {
+		// Farbton mit voller Helligkeit kräftiger machen, im hellsten Teil weiß glühend und über 1
+		vec3 hue = rgb / peak;
+		hue = max(mix(vec3(dot(hue, vec3(0.299, 0.587, 0.114))), hue, 1.0 + vivid), vec3(0.0));
+		float core = pow(clamp(peak * t.a, 0.0, 1.0), 4.0);
+		rgb = mix(hue, vec3(1.0), core * 0.75) * peak * (1.0 + hot * core);
+	}
+#endif
 	float grey = dot(rgb, vec3(0.299, 0.587, 0.114));
 	rgb = mix(vec3(grey), rgb, custom.z) * brightness;
 	ALBEDO = rgb;
+	float a = clamp(t.a, 0.0, 1.0);
+#ifdef FX_ADD
+	a = mix(a, sqrt(a), halo * (1.0 - a));
+#endif
 	float fade = 1.0;
 	if (soft > 0.0) {
 		float d = texture(depth_tex, SCREEN_UV).r;
@@ -46,5 +67,5 @@ void fragment() {
 		float scene = -v.z / v.w;
 		fade = clamp((scene + VERTEX.z) / soft, 0.0, 1.0);
 	}
-	ALPHA = clamp(t.a, 0.0, 1.0) * fade;
+	ALPHA = a * fade;
 }
