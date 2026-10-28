@@ -21,6 +21,8 @@ var balance: Dictionary = {}
 var eeve: Dictionary = {}
 ## Regeln für Randgruppen TD (res://data/randgruppen.json): Rassen, Level, Wirtschaft, Schadenstabelle.
 var randgruppen: Dictionary = {}
+## Items und Marktplatz in eeveTD (res://data/eeve_items.json), siehe eeve_items.gd.
+var eeve_items: Dictionary = {}
 ## GemTD-Variante Roguelike (res://data/roguelike.json): Boni alle zehn Wellen, siehe rogue.gd.
 var roguelike: Dictionary = {}
 ## Gegnerwerte im Roguelike (res://data/roguelike_enemies.json), über die normalen gelegt (Rogue.enemy_def).
@@ -43,6 +45,8 @@ func reload() -> void:
 	eeve = e if typeof(e) == TYPE_DICTIONARY else {}
 	var rg = load_json(RES_DATA + "randgruppen.json")
 	randgruppen = rg if typeof(rg) == TYPE_DICTIONARY else {}
+	var ei = load_json(RES_DATA + "eeve_items.json")
+	eeve_items = ei if typeof(ei) == TYPE_DICTIONARY else {}
 	var rl = load_json(RES_DATA + "roguelike.json")
 	roguelike = rl if typeof(rl) == TYPE_DICTIONARY else {}
 	var re = load_json(RES_DATA + "roguelike_enemies.json")

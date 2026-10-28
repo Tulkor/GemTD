@@ -103,7 +103,7 @@ func towers() -> Array:
 	if game == null:
 		return []
 	# eeveTD: Barrikaden sind nur Mauern und stehen nicht in der Liste
-	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new and not t.def.get("eeve", {}).get("barricade", false))
+	var list_t: Array = game.all_towers().filter(func(t): return is_instance_valid(t) and not t.is_new and not t.def.get("eeve", {}).get("barricade", false) and not t.def.get("eeve", {}).get("market", false))
 	match sort:
 		"kills":
 			list_t.sort_custom(func(a, b): return a.kills > b.kills if a.kills != b.kills else a.total_damage > b.total_damage)

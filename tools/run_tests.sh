@@ -177,7 +177,7 @@ pick_changed() {
       data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
       data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul youtd " ;;
       scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
-      scripts/game/eeve*|data/eeve.json|data/*/eeve_*|scenes/eeve*) t+="eeve " ;;
+      scripts/game/eeve*|data/eeve.json|data/eeve_items.json|data/*/eeve_*|scenes/eeve*|scripts/ui/item_icon.gd) t+="eeve eeveitems " ;;
       scripts/game/rg_*|data/randgruppen.json|data/*/rg_*|data/maps/randgruppen.json|scenes/rg_*) t+="randgruppen " ;;
       scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig ytitems ytkoop " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;

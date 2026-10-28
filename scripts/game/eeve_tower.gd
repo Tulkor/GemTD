@@ -9,11 +9,15 @@ extends Tower
 ##   pulse            Zauber mit eigener Abklingzeit (Zeitsperre, Aufspießen, Verhexen)
 ##   rage             Abklingzeit-Buff: +Schaden für Tower im Umkreis (Feuerbeeren)
 ##   hp_cut           Gegner verlieren beim Betreten des Radius einmalig einen Teil ihrer Leben
+##   orb              Item-Kugel: schießt alle every Sekunden auf einen zufälligen Gegner im Radius (Zauberschaden)
+## Items (eeve_items.gd) stecken in items; ihre Werte kommen über set_rogue() und flat_damage dazu.
 
 const EXTRA := ["area_debuff", "amplify", "chain", "death_explosion"]
 
 var rage_left := 0.0       ## Sekunden, die der Schadens-Buff noch wirkt
 var _cd := {}              ## Index der Fähigkeit -> Restzeit (pulse, rage)
+var items: Array = []      ## eingesetzte Items (ids aus data/eeve_items.json), bleiben im Tower
+var extra_slots := 0       ## zusätzliche Item-Plätze aus Erweiterungstränken
 
 
 func set_tower(id: String, t: int) -> void:
@@ -30,6 +34,11 @@ func _process(delta: float) -> void:
 	for i in list.size():
 		var ab: Dictionary = list[i]
 		match str(ab.get("type", "")):
+			"orb":
+				var left: float = _cd.get(i, 0.0) - delta
+				if left <= 0.0 and _orb(ab):
+					left += float(ab.get("every", 0.5))
+				_cd[i] = maxf(left, -delta)
 			"pulse", "rage":
 				var left: float = _cd.get(i, 0.0) - delta
 				if left <= 0.0 and _cast(ab):
@@ -167,3 +176,18 @@ func _spell(e, dmg: float) -> void:
 	total_damage += e.take_damage(dmg * (1.0 + damage_bonus + kill_bonus()), "spells")
 	if e.dead:
 		kills += 1
+
+
+## Item-Kugel: ein Geschoss auf einen zufälligen Gegner im Radius, Schaden = dps × Abstand (Zauberschaden,
+## ohne Element- und Kill-Bonus wie im Original). true = geschossen.
+func _orb(ab: Dictionary) -> bool:
+	var list: Array = game.enemies_in_radius(pos, float(ab.get("radius", 6.25))).filter(func(e): return not e.dead)
+	if list.is_empty():
+		return false
+	var e = list[randi() % list.size()]
+	game.add_beam(position + Vector3(0, 1.1, 0), _hit_point(e), Color(str(ab.get("color", "#c8b0ff"))))
+	e.last_hit_by = owner_player
+	total_damage += e.take_damage(float(ab.dps) * float(ab.get("every", 0.5)), "spells")
+	if e.dead:
+		kills += 1
+	return true

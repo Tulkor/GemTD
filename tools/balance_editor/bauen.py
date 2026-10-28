@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 DEFAULT = Path("/mnt/project-files/balance-editor/balance_editor.html")
-FILES = ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", "data/roguelike_enemies.json"]
+FILES = ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", "data/roguelike_enemies.json", "data/eeve_items.json"]
 
 
 def data_texts():

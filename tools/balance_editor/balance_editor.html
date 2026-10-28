@@ -264,6 +264,11 @@ function towerFiles(eeve) {
 function enemyFile(id) { return "data/enemies/" + id + ".json"; }
 // Roguelike: eigene Gegnerwerte je Gegner in einer Datei (Tower, Anzahl und Abstand teilt es mit GemTD)
 const ROGUE_FILE = "data/roguelike_enemies.json";
+// eeveTD: Items und Marktplatz in einer Datei (Reiter eeveTD, Auswahl „Items“)
+const ITEMS_FILE = "data/eeve_items.json";
+const ITEM_KEYS = ["value", "damage", "speed", "amount", "stage"];
+const ITEM_LABELS = { value: "Wert (Gold, Verkauf zum halben Wert)", damage: "Zusatzschaden", speed: "Angriffstempo (+Anteil)", amount: "Kills", stage: "Stufe (Drop-Pool)" };
+const ITEM_STAGES = ["Verbrauch und Zauberschild", "Stufe I", "Stufe II", "Stufe III", "Stufe IV"];
 function enemyName(id) { const f = FILES[enemyFile(id)]; return f ? f.cur.name : id; }
 
 // Einträge fürs Auswahlmenü: {key, label, group}
@@ -280,6 +285,15 @@ function entries(mode, kind) {
       const t = FILES[p].cur, e = t.eeve || {};
       out.push({ key: p, label: t.name + (e.level ? " (Lv " + e.level + ")" : ""), group: ELEMENTS[e.element || ""] || e.element, sort: e.level || 0 });
     }
+  } else if (mode === "eeve" && kind === "items") {
+    const f = FILES[ITEMS_FILE]; if (!f) return out;
+    for (const [id, it] of Object.entries(f.cur.items || {}))
+      out.push({ key: JSON.stringify(["items", id]), label: it.name, group: ITEM_STAGES[it.stage || 0] || "Items", sort: 0 });
+    for (const k of Object.keys((f.cur.market || {}).upgrades || {}))
+      out.push({ key: JSON.stringify(["market", "upgrades", k]), label: "Upgrade " + f.cur.market.upgrades[k].name, group: "Marktplatz", sort: 1 });
+    out.push({ key: JSON.stringify(["market", "shop"]), label: "Angebot (Preise)", group: "Marktplatz", sort: 0 });
+    out.push({ key: JSON.stringify(["drops"]), label: "Drop-Chancen", group: "Marktplatz", sort: 2 });
+    out.push({ key: JSON.stringify([]), label: "Lager, Plätze, Verkauf", group: "Marktplatz", sort: 3 });
   } else if (mode === "maul" && kind === "tower") {
     const s = FILES["data/maul/shops.json"]; if (!s) return out;
     const shops = s.cur.shops.map((x, i) => [["shops", i], x]);
@@ -503,6 +517,24 @@ function viewTowerFile(p) {
   if (t.eeve && t.eeve.todo && t.eeve.todo.length) box.append(el("div", { class: "note" }, "Noch nicht umgesetzt: " + t.eeve.todo.join("; ")));
   return box;
 }
+function viewEeveItem(key) {
+  $("sub").replaceChildren();
+  const path = JSON.parse(key), v = getAt(FILES[ITEMS_FILE].cur, path);
+  if (v === undefined) return el("div", { class: "empty" }, "Nicht gefunden.");
+  const box = el("div", {}, el("div", { class: "note" }, ITEMS_FILE + (path.length ? " · " + path.join(".") : "") + (v.name_original ? " · Original: " + v.name_original : "")));
+  if (Array.isArray(v)) {
+    v.forEach((x, i) => box.append(el("div", { class: "card" }, el("h3", {}, (FILES[ITEMS_FILE].cur.items[x.item] || {}).name || x.item),
+      statGrid(ITEMS_FILE, path.concat(i), ["price"], null, { price: "Preis (Gold)" }))));
+    return box;
+  }
+  box.append(statGrid(ITEMS_FILE, path, ITEM_KEYS.concat(["per_level", "costs", "lumber"]), null,
+    Object.assign({ per_level: "Wirkung je Stufe", costs: "Kosten je Stufe (Gold)", lumber: "Holz je Stufe" }, ITEM_LABELS)));
+  if (path[0] === "items" && path.length === 2) {
+    if (v.abilities) box.append(abilityPanel(ITEMS_FILE, path.concat("abilities")));
+    if (v.text) box.append(el("div", { class: "note" }, v.text));
+  }
+  return box;
+}
 function viewMaulTower(key) {
   const file = "data/maul/shops.json", path = JSON.parse(key), t = getAt(FILES[file].cur, path);
   $("sub").replaceChildren();
@@ -575,7 +607,7 @@ function draw() {
     class: "tab" + (m.id === state.mode ? " on" : ""), onclick: () => { state.mode = m.id; state.tier = 0; remember(); render(); },
   }, m.name, perMode[m.id] ? el("span", { class: "badge" }, perMode[m.id]) : null)));
   $("kind").replaceChildren(
-    ...[["enemies", "Enemies"], ["tower", "Tower"]].map(([k, n]) => el("button", {
+    ...[["enemies", "Enemies"], ["tower", "Tower"]].concat(state.mode === "eeve" ? [["items", "Items"]] : []).map(([k, n]) => el("button", {
       class: "btn" + (state.kind === k ? " on" : ""), onclick: () => { state.kind = k; state.tier = 0; remember(); render(); },
     }, n)));
   $("pct").replaceChildren(el("span", { class: "muted small" }, "SCHRITT"),
@@ -584,6 +616,7 @@ function draw() {
     el("input", { type: "number", min: "0", step: "any", value: state.custom, title: "eigener Schritt in %",
       onchange: (ev) => { state.custom = Number(ev.target.value) || 0; state.useCustom = true; remember(); render(); } }), el("span", {}, "%"));
 
+  if (state.kind === "items" && state.mode !== "eeve") state.kind = "tower";
   const list = entries(state.mode, state.kind);
   const k = state.mode + "/" + state.kind;
   if (!list.some((e) => e.key === state.sel[k])) state.sel[k] = list.length ? list[0].key : undefined;
@@ -598,6 +631,7 @@ function draw() {
   let view;
   if (!Object.keys(FILES).length) view = el("div", { class: "empty" }, "Keine Daten geladen. „Ordner öffnen“ und den Repo-Ordner wählen.");
   else if (key === undefined) view = el("div", { class: "empty" }, "Keine Einträge.");
+  else if (state.kind === "items") view = viewEeveItem(key);
   else if (state.kind === "tower") view = state.mode === "maul" ? viewMaulTower(key) : viewTowerFile(key);
   else if (state.mode === "gemtd" || state.mode === "rogue") view = viewGemWave(Number(key), state.mode === "rogue");
   else if (state.mode === "eeve") view = viewEeveStage(Number(key));
@@ -615,6 +649,7 @@ function draw() {
 }
 function modeOf(p) {
   if (p === ROGUE_FILE) return "rogue";
+  if (p === ITEMS_FILE) return "eeve";
   if (p.startsWith("data/maul/")) return "maul";
   if (p.includes("/eeve_")) return "eeve";
   return "gemtd";
@@ -625,6 +660,8 @@ function changeLabel(c) {
   if (c.datei === "data/maul/shops.json") {
     const ti = rest.indexOf("towers"); const t = getAt(root, rest.slice(0, ti + 2)); name = t ? t.name : name; rest = rest.slice(ti + 2);
   } else if (c.datei === "data/maul/waves.json" && rest[0] === "levels") { name = "Level " + (rest[1] + 1); rest = rest.slice(2); }
+  else if (c.datei === ITEMS_FILE && rest[0] === "items") { name = (root.items[rest[1]] || {}).name || rest[1]; rest = rest.slice(2); }
+  else if (c.datei === ITEMS_FILE) { name = "Marktplatz"; }
   else if (c.datei === ROGUE_FILE && rest[0] === "enemies") { name = enemyName(rest[1]) + " (Roguelike)"; rest = rest.slice(2); }
   else if (rest[0] === "waves") { name = "Welle " + (rest[1] + 1); rest = rest.slice(2); }
   else if (rest[0] === "tiers") { name += " " + ((root.tiers[rest[1]] || {}).name || "Stufe " + (ROMAN[rest[1]] || rest[1] + 1)); rest = rest.slice(2); }
@@ -651,7 +688,7 @@ function renderChanges(changes) {
 }
 
 // ---------------------------------------------------------------- Laden und Speichern
-const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE].includes(p);
+const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE, ITEMS_FILE].includes(p);
 
 // Liest die Fähigkeiten-Liste aus scripts/game/abilities.gd (Zeilen wie "splash": {"label": …, "params": {…}},)
 function parseAbilitiesGd(text) {
@@ -683,7 +720,8 @@ async function openFolder() {
         if (fh.kind === "file" && WANTED(p)) texts[p] = await (await fh.getFile()).text();
       }
     }
-    try { texts[ROGUE_FILE] = await (await (await data.getFileHandle(ROGUE_FILE.split("/")[1])).getFile()).text(); } catch (e) { /* ältere Stände ohne Roguelike */ }
+    for (const f of [ROGUE_FILE, ITEMS_FILE])
+      try { texts[f] = await (await (await data.getFileHandle(f.split("/")[1])).getFile()).text(); } catch (e) { /* ältere Stände ohne diese Datei */ }
     if (!Object.keys(texts).length) throw new Error("Im gewählten Ordner liegt kein data/towers. Bitte den Repo-Ordner (oder seinen data-Ordner) wählen.");
     if (allChanges().length && !confirm("Ungespeicherte Änderungen verwerfen und Daten aus dem Ordner laden?")) return;
     if (root) {
