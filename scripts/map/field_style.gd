@@ -60,7 +60,7 @@ const STYLES := {
 		"ground_alpha": 0.0,
 		# Vulkan mischt in linearem Licht: Fläche durchsichtiger und Linien etwas schwächer,
 		# sonst wirkt der Boden heller als im alten Renderer
-		"floor": {"floor_alpha": 0.1, "major_energy": 1.15, "line_energy": 0.55, "minor_energy": 0.26, "cell_energy": 0.16,
+		"floor": {"floor_color": Color("040208"), "floor_alpha": 0.6, "halo_width": 0.05, "major_energy": 1.15, "line_energy": 0.55, "minor_energy": 0.26, "cell_energy": 0.12,
 				"core_white": 0.45, "edge_energy": 2.0},
 		"path": Color("2ef2e0"), "path_energy": 2.2,
 		"marker": Color("ff36d8"), "marker_energy": 2.2,

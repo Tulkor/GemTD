@@ -38,6 +38,7 @@ extends Node
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
+##   --turmlicht=sockel|kontur|aus  eeveTD: Tower von Lampen im Sockel angeleuchtet, weiße Kontur oder nichts
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
@@ -73,6 +74,8 @@ func _ready() -> void:
 	FieldStyle.night = opts.has("nacht")
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
+	if opts.has("turmlicht"):
+		Tower.eeve_accent = "" if opts.turmlicht == "aus" else str(opts.turmlicht)
 	if opts.has("koop"):
 		var guest := opts.has("gast")
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
