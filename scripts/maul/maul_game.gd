@@ -46,6 +46,9 @@ var rules: Dictionary
 var levels: Array
 var map: MaulMap
 var board: MaulBoard
+var path_lights: PathLights  ## Lichtpfad entlang der Gegnerwege (Knopf „Lichtpfad“)
+var _own_routes: Array = []  ## Wege (PackedVector2Array) durchs eigene Gebiet, für den Lichtpfad
+var _other_routes: Array = []
 var effects: Effects
 var camera_rig: MaulCamera
 var hud: MaulHud
@@ -162,6 +165,9 @@ func _ready() -> void:
 	board.players = players.size()
 	board.map = map
 	add_child(board)
+	path_lights = PathLights.new(board, "shoppingmaul")
+	path_lights.visible = Display.path_lights
+	board.add_child(path_lights)
 	effects = Effects.new()
 	board.add_child(effects)
 	camera_rig = MaulCamera.new()
@@ -674,6 +680,8 @@ func _refresh_paths() -> void:
 	var zone: int = players[local_player].zone
 	var own := {}
 	var other := {}
+	_own_routes = []
+	_other_routes = []
 	for leg in all_legs():
 		var r := _route(leg[0], leg[1], "ground")
 		var mine := players.size() <= 1
@@ -683,6 +691,8 @@ func _refresh_paths() -> void:
 			mine = map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL))) == zone
 		for i in range(0, r.path.size(), 2):
 			(own if mine else other)[r.path[i]] = true
+		if not _own_routes.has(r.path) and not _other_routes.has(r.path):  # gleiche Abschnitte nur einmal beleuchten
+			(_own_routes if mine else _other_routes).append(r.path)
 	_own_path_pts = PackedVector2Array(own.keys())
 	_other_path_pts = PackedVector2Array(other.keys().filter(func(p): return not own.has(p)))
 	_show_paths()
@@ -702,6 +712,16 @@ func set_show_all_paths(on: bool) -> void:
 func _show_paths() -> void:
 	board.path_points = _own_path_pts + _other_path_pts if show_all_paths else _own_path_pts
 	board.refresh_path()
+	if path_lights != null:
+		path_lights.set_paths(_own_routes + _other_routes if show_all_paths else _own_routes)
+
+
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert.
+func set_path_lights(on: bool) -> void:
+	Display.set_path_lights(on)
+	path_lights.visible = on
+	if hud.lights_button != null:
+		hud.lights_button.set_pressed_no_signal(on)
 
 
 ## Würde ein Tower auf diesen Feldern einen der Wege versperren?
@@ -1701,6 +1721,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				set_speed(2.0)
 			KEY_3:
 				set_speed(4.0)
+			KEY_L:
+				set_path_lights(not path_lights.visible)
 			KEY_DELETE:
 				if selected != null:
 					submit({"type": "sell", "cell": selected.cell})

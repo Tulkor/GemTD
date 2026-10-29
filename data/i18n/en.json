@@ -2332,5 +2332,7 @@
 	"allein": "alone",
 	"schwarz": "black",
 	"sad": "sad",
-	"*seufz*": "*sigh*"
+	"*seufz*": "*sigh*",
+	"Lichter fliegen den Weg der Gegner entlang (Taste L).": "Lights fly along the enemies' path (key L).",
+	"Lichtpfad": "Light trail"
 }
