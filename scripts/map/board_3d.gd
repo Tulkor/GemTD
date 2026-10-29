@@ -589,16 +589,16 @@ func _rebuild_markers() -> void:
 
 
 ## Rand einer Zone (Maul-Maps) als dünne Neonlinie in der Farbe ihres Spielers.
-func _add_zone(r: Rect2i, col: Color) -> void:
+func _add_zone(r: Rect2i, col: Color, width := 0.12, energy := 2.4) -> void:
 	var a := Vector2(r.position) * CELL
 	var b := Vector2(r.end) * CELL
-	var mat := FieldStyle.line_material(col, 2.4)
+	var mat := FieldStyle.line_material(col, energy)
 	for side in [[a, Vector2(b.x, a.y)], [Vector2(b.x, a.y), b], [b, Vector2(a.x, b.y)], [Vector2(a.x, b.y), a]]:
 		var from: Vector2 = side[0]
 		var to: Vector2 = side[1]
 		var line := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(maxf(absf(to.x - from.x), 0.12), 0.02, maxf(absf(to.y - from.y), 0.12))
+		box.size = Vector3(maxf(absf(to.x - from.x), width), 0.02, maxf(absf(to.y - from.y), width))
 		line.mesh = box
 		line.material_override = mat
 		line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

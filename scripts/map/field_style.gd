@@ -39,13 +39,14 @@ const ENV_DEFAULT := {
 	"vignette": 0.45, "vignette_color": Color(0.12, 0.04, 0.22),
 }
 
-## Plakatwand: Bodentexturen statt Gras und Erde (selbst erzeugt, tools/rg_texturen.py).
+## Plakatwand: Bodentexturen statt Gras und Erde (selbst erzeugt, tools/rg_texturen.py): Pflaster mit Gras
+## in den Fugen auf den Bauflächen (Lukas, 2026-10-29), Splitt auf den Wegen und hier und da als Fleck.
 const POSTER_TEXTURES := {
-	"grass_a": "res://assets/textures/ground/concrete.jpg",
-	"grass_b": "res://assets/textures/ground/concrete.jpg",
+	"grass_a": "res://assets/textures/ground/cobble.jpg",
+	"grass_b": "res://assets/textures/ground/cobble.jpg",
 	"dirt": "res://assets/textures/ground/gravel.jpg",
-	"grass_a_normal": "res://assets/textures/ground/concrete_normal.jpg",
-	"grass_b_normal": "res://assets/textures/ground/concrete_normal.jpg",
+	"grass_a_normal": "res://assets/textures/ground/cobble_normal.jpg",
+	"grass_b_normal": "res://assets/textures/ground/cobble_normal.jpg",
 	"dirt_normal": "res://assets/textures/ground/gravel_normal.jpg",
 }
 
@@ -59,7 +60,8 @@ const STYLES := {
 		"ground_alpha": 0.0,
 		# Vulkan mischt in linearem Licht: Fläche durchsichtiger und Linien etwas schwächer,
 		# sonst wirkt der Boden heller als im alten Renderer
-		"floor": {"floor_alpha": 0.26, "major_energy": 1.6, "line_energy": 0.85},
+		"floor": {"floor_alpha": 0.1, "major_energy": 1.15, "line_energy": 0.55, "minor_energy": 0.26, "cell_energy": 0.16,
+				"core_white": 0.45, "edge_energy": 2.0},
 		"path": Color("2ef2e0"), "path_energy": 2.2,
 		"marker": Color("ff36d8"), "marker_energy": 2.2,
 		"rock": "glass",
@@ -127,7 +129,8 @@ const STYLES := {
 		"ground_alpha": 0.0,
 		"floor_lit": true,
 		"floor": {
-			"floor_color": Color("0f2a2c"), "floor_alpha": 1.0,
+			# durchgehend tiefgrün (Lukas, 2026-10-28)
+			"floor_color": Color("0c3322"), "floor_alpha": 1.0,
 			"line_color": Color("c9a36a"), "edge_color": Color("d8b97f"),
 			"line_energy": 1.0, "major_energy": 1.0, "minor_energy": 0.55, "cell_energy": 0.5,
 			"cell_alpha": 0.0, "minor_alpha": 0.22, "major_alpha": 0.9,
@@ -137,7 +140,7 @@ const STYLES := {
 			"lit_albedo": 1.0, "line_glow": 0.4, "floor_roughness": 0.55, "floor_specular": 0.25,
 			# warme Bodenleuchten in den Messingrauten
 			"floor_lamp": 3.5, "lamp_color": Color("ffbf70"), "lamp_size": 0.085, "lamp_radius": 1.0, "lamp_pool": 0.12,
-			"tint_shade": 0.55,
+			"tint_shade": 0.4,
 			"blocked_color": Color("071618"), "blocked_alpha": 1.0,
 			"zone_color": Color("b4553f"), "zone_alpha": 0.3, "zone_edge_energy": 1.0,
 			"zone_edge_color": Color("d8b97f"),
@@ -151,15 +154,15 @@ const STYLES := {
 		"contact_shadow": 0.55,
 		"hit_glow": 0.5,
 		"env": {
-			"sky_top": Color("061517"), "sky_horizon": Color("1d4446"), "ground_bottom": Color("061214"),
-			"ambient": Color("9fc8c0"), "ambient_energy": 0.38,
-			# Abendsonne, warm und schräg: Häuser werfen lange Schatten auf den Marmor,
-			# die Glanzlichter darauf sind messingfarben
-			"sun": Color("ffd9a0"), "sun_energy": 0.8, "sun_pitch": -34.0, "sun_yaw": -115.0, "sun_specular": 0.12,
-			"shadow_blur": 1.6, "shadow_opacity": 0.85,
-			"fill": Color("5fb0b0"), "fill_energy": 0.3, "fill_pitch": -25.0,
-			"glow_threshold": 1.1, "glow_intensity": 0.45,
-			"exposure": 0.85, "contrast": 1.05,
+			"sky_top": Color("030a0d"), "sky_horizon": Color("0e2428"), "ground_bottom": Color("030a0b"),
+			# Mondlicht (Lukas, 2026-10-28): kühles, schwaches Licht von schräg oben, die Häuser am Rand
+			# bleiben dunkel und heben sich nur mit Dächern und Kanten ab; die Bodenleuchten tragen das Licht
+			"ambient": Color("4d6c98"), "ambient_energy": 0.14,
+			"sun": Color("9fb8ec"), "sun_energy": 0.42, "sun_pitch": -40.0, "sun_yaw": -115.0, "sun_specular": 0.3,
+			"shadow_blur": 2.0, "shadow_opacity": 0.75,
+			"fill": Color("3a5a78"), "fill_energy": 0.2, "fill_pitch": -25.0,
+			"glow_threshold": 1.0, "glow_intensity": 0.5,
+			"exposure": 0.95, "contrast": 1.05,
 			"vignette": 0.4, "vignette_color": Color(0.02, 0.1, 0.11),
 			"ssao": 1.5, "ssil": 0.5,
 		},
@@ -184,8 +187,9 @@ const STYLES := {
 		"ground_alpha": 1.0,
 		"ground_textures": POSTER_TEXTURES,
 		"ground": {
-			"brightness": 0.74, "saturation": 0.5, "tint": Vector3(1.0, 1.0, 1.0),
+			"brightness": 0.62, "saturation": 0.75, "tint": Vector3(1.0, 1.0, 1.0),
 			"grass_tile": 3.0, "dirt_tile": 2.0, "detail_blur": 0.0, "grass_contrast": 1.0, "normal_strength": 0.9,
+			"vary": 0.0, "detail_normal": 0.0,
 		},
 		"floor": {
 			"floor_alpha": 0.0,

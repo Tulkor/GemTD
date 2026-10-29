@@ -19,6 +19,8 @@ uniform float detail_scale = 3.3;
 uniform float detail_blur = 0.0;
 /// Kontrast des Grases um seinen Mittelwert (1 = Foto, kleiner = ruhiger)
 uniform float grass_contrast = 1.0;
+/// 0 = Bauflächen-Textur genau einmal abtasten (Pflaster: gedrehte oder zweite Abtastung gäbe Doppelbilder)
+uniform float vary = 1.0;
 /// Erde-Anteil je Rasterfeld (0..1), ein Pixel pro Feld.
 uniform sampler2D splat : filter_linear, repeat_disable;
 /// Größe der Map in Einheiten.
@@ -93,6 +95,9 @@ const mat2 ROT = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8));
 
 vec3 sample_varied(sampler2D t, vec2 p, float n) {
 	vec3 a = texture(t, p, detail_blur).rgb;
+	if (vary <= 0.0) {
+		return a;
+	}
 	vec3 b = texture(t, ROT * p * 0.71 + vec2(0.37, 0.13), detail_blur).rgb;
 	return mix(a, b, smoothstep(0.3, 0.7, n));
 }
@@ -112,7 +117,7 @@ void fragment() {
 
 	// Grasarten: kleine, unregelmäßige Flecken (keine großen einfarbigen Flächen)
 	float g_mix = smoothstep(0.3, 0.7, fbm(p * 0.45 + vec2(3.7, 1.2)));
-	g_mix = 0.2 + 0.6 * g_mix;  // nie ganz eine Sorte: weiche, unauffällige Wechsel
+	g_mix = (0.2 + 0.6 * g_mix) * vary;  // nie ganz eine Sorte: weiche, unauffällige Wechsel
 	vec3 grass = mix(ga, gb * 1.15, g_mix);
 	if (grass_contrast < 1.0) {
 		// Mittelwert aus der kleinsten Mipmap-Stufe: ruhige Fläche, Struktur nur noch angedeutet

@@ -18,6 +18,14 @@ const HOUSES := [
 	["3story_slim", 1.7, 1.9, 1.5], ["3story_small", 1.7, 1.9, 1.5], ["4story", 1.8, 1.95, 1.2],
 	["2story_center", 1.7, 1.9, 1.2], ["building_skyscraper_b", 1.9, 2.0, 0.4],
 ]
+## Büsche an den Rändern der Wände und kleine Blumen auf dem Pflaster (Lukas, 2026-10-29): nur Schmuck,
+## ohne Kollision, die Wege der Gegner bleiben frei. [Modell, Größe von, Größe bis, Gewicht]
+const BUSHES := [
+	["bush_common", 0.45, 0.7, 3.0], ["bush_common_flowers", 0.45, 0.7, 2.0], ["hp_bush011", 0.4, 0.6, 1.0],
+]
+const FLOWERS := [["flower_3_group", 0.18, 0.28, 1.0], ["flower_4_group", 0.18, 0.28, 1.0]]
+const BUSH_SHARE := 0.3    ## Anteil der freien Wandfelder am Rand mit Busch
+const FLOWER_SHARE := 0.05 ## Anteil der Bauflächen-Felder mit Blumen
 const QUARTER := 12      ## Kantenlänge eines Viertels in Feldern
 const TOWN_SHARE := 0.5  ## Anteil der Viertel, die Stadt sind
 const TREE_TINT := Color(1.0, 1.0, 1.0)
@@ -85,6 +93,28 @@ func _ready() -> void:
 			var near_path: bool = not (blocked.call(a + Vector2i(-2, 0)) and blocked.call(a + Vector2i(3, 0))
 					and blocked.call(a + Vector2i(0, -2)) and blocked.call(a + Vector2i(0, 3)))
 			parts.get_or_add(N % TREES[i][0] + ("|1" if near_path else "|0"), []).append(Transform3D(b, Vector3(p.x, 0.0, p.y)))
+			for d in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				used[a + d] = true
+	# Büsche auf freien Wandfeldern direkt neben offenen Feldern, Blumen auf den Bauflächen
+	var open_near := func(c: Vector2i) -> bool:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if not blocked.call(c + d):
+				return true
+		return false
+	for y in map.height:
+		for x in map.width:
+			var c := Vector2i(x, y)
+			var p := board.cell_center(c) + Vector2(_rng.randf_range(-0.15, 0.15), _rng.randf_range(-0.15, 0.15))
+			if blocked.call(c):
+				if used.has(c) or not open_near.call(c) or _rng.randf() > BUSH_SHARE:
+					continue
+				var i := _pick(BUSHES)
+				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(BUSHES[i][1], BUSHES[i][2]))
+				parts.get_or_add(N % BUSHES[i][0] + "|1", []).append(Transform3D(b, Vector3(p.x, 0.0, p.y)))
+			elif map.get_tile(c) == MapData.FLOOR and _rng.randf() < FLOWER_SHARE:
+				var i := _pick(FLOWERS)
+				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(FLOWERS[i][1], FLOWERS[i][2]))
+				parts.get_or_add(N % FLOWERS[i][0] + "|0", []).append(Transform3D(b, Vector3(p.x, 0.0, p.y)))
 	for key in parts:
 		var k: PackedStringArray = key.split("|")
 		_add_multimesh(k[0], parts[key], k[1] == "1", k[0].contains("/nature/"))
