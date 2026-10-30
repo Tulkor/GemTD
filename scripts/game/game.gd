@@ -203,6 +203,7 @@ func _ready() -> void:
 		path_lights.visible = Display.path_lights
 		board.add_child(path_lights)
 		hud.add_lights_toggle(Display.path_lights, set_path_lights)
+		board.set_path_dots(not Display.path_lights)
 	if has_other_paths():
 		hud.add_paths_toggle(set_show_all_paths)
 		board.set_marker_lanes(_own_lanes())
@@ -412,10 +413,11 @@ func has_path_lights() -> bool:
 	return true
 
 
-## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert.
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert. Solange er läuft, ohne Wegpunkte am Boden.
 func set_path_lights(on: bool) -> void:
 	Display.set_path_lights(on)
 	path_lights.visible = on
+	board.set_path_dots(not on)
 
 
 func set_show_all_paths(on: bool) -> void:

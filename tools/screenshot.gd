@@ -130,6 +130,7 @@ func _ready() -> void:
 		node.hud.extra_chance_requested.emit()
 	if opts.has("lichtpfad") and (scene == "spiel" or scene == "maul"):
 		node.path_lights.visible = true
+		node.board.set_path_dots(false)
 		var lb: Button = node.hud.lights_button
 		lb.set_pressed_no_signal(true)
 		await _frames(30)

@@ -167,7 +167,9 @@ func _ready() -> void:
 	add_child(board)
 	path_lights = PathLights.new(board, "shoppingmaul")
 	path_lights.visible = Display.path_lights
+	path_lights.color_at = _path_light_color
 	board.add_child(path_lights)
+	board.set_path_dots(not Display.path_lights)
 	effects = Effects.new()
 	board.add_child(effects)
 	camera_rig = MaulCamera.new()
@@ -716,10 +718,20 @@ func _show_paths() -> void:
 		path_lights.set_paths(_own_routes + _other_routes if show_all_paths else _own_routes)
 
 
-## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert.
+## Lichter in der Farbe des Spielers, durch dessen Gebiet sie gerade fliegen (Spieler i besitzt Gebiet i,
+## Board3D.PLAYER_COLORS); außerhalb der Spielergebiete in Messing (PathLights.COLORS).
+func _path_light_color(p: Vector2) -> Color:
+	var z := map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL)))
+	if z < 0 or z >= players.size():
+		return Color(0, 0, 0, 0)
+	return Board3D.PLAYER_COLORS[z % Board3D.PLAYER_COLORS.size()]
+
+
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert. Solange er läuft, ohne Wegpunkte am Boden.
 func set_path_lights(on: bool) -> void:
 	Display.set_path_lights(on)
 	path_lights.visible = on
+	board.set_path_dots(not on)
 	if hud.lights_button != null:
 		hud.lights_button.set_pressed_no_signal(on)
 

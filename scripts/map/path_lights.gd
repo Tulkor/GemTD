@@ -3,19 +3,22 @@ extends Node3D
 ## Lichtpfad: Lichter fliegen im Abstand von INTERVAL Sekunden den Gegnerweg entlang (Umschalter
 ## „Lichtpfad“ im HUD, gespeichert in Display.path_lights). Jede Bahn ist eine Linie aus Punkten
 ## (Einheiten, X/Z); die Lichter werden nicht einzeln gespawnt, sondern aus der Zeit berechnet:
-## Licht k einer Bahn steht bei Strecke (t * SPEED) mod Abstand + k * Abstand.
+## Licht k einer Bahn steht bei Strecke (t * speed) mod Abstand + k * Abstand. Die Lichter fliegen so
+## schnell wie die Gegner des Modus bei 1× (SPEEDS).
 ## Ein Licht = leuchtender Kopf, ein paar kleiner werdende Schweif-Punkte dahinter und ein flacher
 ## Schein auf dem Boden, alles als MultiMesh (additiv, auf Papier deckend, unbeleuchtet), damit auch 12 Bahnen billig bleiben.
 ## Farben je Modus in COLORS, eine Map kann sie mit "path_lights": ["#rrggbb", …] überschreiben;
-## mehrere Farben wechseln sich ab.
+## mehrere Farben wechseln sich ab. Shopping Maul färbt über color_at nach dem Spieler des Gebiets.
 
-const INTERVAL := 0.5  ## Sekunden zwischen zwei Lichtern
-const SPEED := 4.0  ## Einheiten pro Sekunde (8 Felder)
+const INTERVAL := 1.25  ## Sekunden zwischen zwei Lichtern
+## Tempo je Modus in Einheiten (Towerbreiten) pro Sekunde: Median der Gegner-Tempi des Modus
+## (GemTD/eeveTD/Randgruppen: speed in data/enemies, Maul: data/maul/waves.json speed / 128).
+const SPEEDS := {"gemtd": 2.8, "eevetd": 3.1, "shoppingmaul": 2.7, "randgruppen": 2.5}
 const HOVER := 0.32  ## Flughöhe über dem Boden
 const BOB := 0.06  ## Auf und ab beim Fliegen
 const HEAD_SIZE := 0.62
-const TRAIL := 4  ## Schweif-Punkte hinter jedem Licht
-const TRAIL_GAP := 0.16  ## Abstand der Schweif-Punkte (Einheiten)
+const TRAIL := 9  ## Schweif-Punkte hinter jedem Licht
+const TRAIL_GAP := 0.13  ## Abstand der Schweif-Punkte (Einheiten)
 const GLOW_SIZE := 1.6  ## Schein auf dem Boden
 
 ## Farben je Modus (Session.game_kind), passend zum Spielfeld-Stil.
@@ -29,13 +32,17 @@ const COLORS := {
 ## Helligkeit je Spielfeld-Stil: Lichtpunkt, Schein auf dem Boden (Art déco blendet sonst mit Bloom,
 ## auf Papier wäre der Schein nur ein Fleck).
 const STRENGTH := {
-	FieldStyle.NEON: [1.0, 0.55], FieldStyle.DRUID: [1.0, 0.55], FieldStyle.DECO: [0.45, 0.25], FieldStyle.POSTER: [1.0, 0.0],
+	FieldStyle.NEON: [1.0, 0.55], FieldStyle.DRUID: [1.0, 0.55], FieldStyle.DECO: [0.8, 0.3], FieldStyle.POSTER: [1.0, 0.0],
 }
 
 var board: Board3D
+var speed := 2.8  ## Einheiten pro Sekunde (SPEEDS)
+## Optional: Farbe je Punkt (Vector2, Einheiten) statt der Modus-Farben, z. B. Spielerfarbe des Gebiets
+## (Shopping Maul). Gibt Color(0, 0, 0, 0) zurück, wo die Modus-Farbe gelten soll. Vor set_paths setzen.
+var color_at: Callable
 var _head_alpha := 1.0
 var _glow_alpha := 0.55
-var _lanes: Array = []  ## je Bahn {"pts": PackedVector3Array, "dist": PackedFloat32Array, "len": float}
+var _lanes: Array = []  ## je Bahn {"pts": PackedVector3Array, "dist": PackedFloat32Array, "len": float[, "cols": PackedColorArray]}
 var _colors: Array[Color] = []
 var _time := 0.0
 var _heads: MultiMeshInstance3D
@@ -46,6 +53,7 @@ var _glow: MultiMeshInstance3D
 func _init(b: Board3D, kind: String, map_colors: Array = []) -> void:
 	board = b
 	name = "PathLights"
+	speed = SPEEDS.get(kind, SPEEDS.gemtd)
 	var list: Array = map_colors if not map_colors.is_empty() else COLORS.get(kind, COLORS.gemtd)
 	for c in list:
 		_colors.append(Color(str(c)))
@@ -67,12 +75,18 @@ func set_paths(paths: Array) -> void:
 		if p.size() < 2:
 			continue
 		var pts := PackedVector3Array()
+		var cols := PackedColorArray()
 		for q in _smooth(p):
 			pts.append(Vector3(q.x, board.ground_y(q) + HOVER, q.y))
+			if color_at.is_valid():
+				cols.append(color_at.call(q))
 		var dist := PackedFloat32Array([0.0])
 		for i in range(1, pts.size()):
 			dist.append(dist[i - 1] + pts[i].distance_to(pts[i - 1]))
-		_lanes.append({"pts": pts, "dist": dist, "len": dist[dist.size() - 1]})
+		var lane := {"pts": pts, "dist": dist, "len": dist[dist.size() - 1]}
+		if not cols.is_empty():
+			lane.cols = cols
+		_lanes.append(lane)
 	var count := 0
 	for l in _lanes:
 		count += lights_on(l.len)
@@ -83,8 +97,13 @@ func set_paths(paths: Array) -> void:
 
 
 ## Anzahl Lichter auf einer Bahn der Länge len.
-static func lights_on(len: float) -> int:
-	return int(ceil(len / (SPEED * INTERVAL))) + 1
+func lights_on(len: float) -> int:
+	return int(ceil(len / spacing())) + 1
+
+
+## Abstand zweier Lichter (Einheiten).
+func spacing() -> float:
+	return speed * INTERVAL
 
 
 func lane_count() -> int:
@@ -103,8 +122,8 @@ func _process(delta: float) -> void:
 
 
 func _update() -> void:
-	var gap := SPEED * INTERVAL
-	var phase := fmod(_time * SPEED, gap)
+	var gap := spacing()
+	var phase := fmod(_time * speed, gap)
 	var n := 0
 	var hm := _heads.multimesh
 	var tm := _trail.multimesh
@@ -113,10 +132,10 @@ func _update() -> void:
 		var l: Dictionary = _lanes[li]
 		var cnt := lights_on(l.len)
 		# fortlaufende Nummer je Licht, damit die Farbe beim Weiterrücken am Licht hängen bleibt
-		var first := int(floor(_time * SPEED / gap))
+		var first := int(floor(_time * speed / gap))
 		for k in cnt:
 			var d: float = phase + k * gap
-			var col := _colors[posmod(first - k, _colors.size())]
+			var col := light_color(l, d, first - k)
 			# am Anfang ein- und am Ende ausblenden
 			var fade := clampf(minf(d, l.len - d) / 0.6, 0.0, 1.0)
 			var bob := sin(_time * 5.0 + d * 1.7) * BOB
@@ -134,12 +153,27 @@ func _update() -> void:
 			n += 1
 
 
-## Punkt bei Strecke d auf einer Bahn (Binärsuche über die aufsummierten Längen).
+## Farbe des Lichts Nummer id bei Strecke d: Farbe des Orts (color_at), sonst die Modus-Farben im Wechsel.
+func light_color(l: Dictionary, d: float, id: int) -> Color:
+	if l.has("cols"):
+		var own: Color = l.cols[_index(l, d)]
+		if own.a > 0.0:
+			return own
+	return _colors[posmod(id, _colors.size())]
+
+
+## Index des Punkts, an dem der Abschnitt bei Strecke d endet (Binärsuche über die aufsummierten Längen).
+func _index(l: Dictionary, d: float) -> int:
+	var dist: PackedFloat32Array = l.dist
+	return clampi(dist.bsearch(clampf(d, 0.0, l.len)), 1, dist.size() - 1)
+
+
+## Punkt bei Strecke d auf einer Bahn.
 func _at(l: Dictionary, d: float) -> Vector3:
 	var dist: PackedFloat32Array = l.dist
 	var pts: PackedVector3Array = l.pts
 	d = clampf(d, 0.0, l.len)
-	var i := clampi(dist.bsearch(d), 1, pts.size() - 1)
+	var i := _index(l, d)
 	var seg := dist[i] - dist[i - 1]
 	var t := 0.0 if seg <= 0.0 else (d - dist[i - 1]) / seg
 	return pts[i - 1].lerp(pts[i], t)

@@ -523,6 +523,12 @@ func refresh_path() -> void:
 		mm.set_instance_transform(i, Transform3D(Basis(), to_3d(path_points[i], 0.02 + ground_y(path_points[i]))))
 
 
+## Wegpunkte am Boden ein/aus (aus, solange der Lichtpfad läuft).
+func set_path_dots(on: bool) -> void:
+	if _path != null:
+		_path.visible = on
+
+
 func refresh_hover() -> void:
 	if _hover == null:
 		return
