@@ -81,33 +81,15 @@
 		"floating_cube_of_treachery": "kristall",
 		"essence_of_fire": "kristall",
 		"diamond_mine": "kristall",
-		"coral_atoll": {
-			"fehlt": "Koralle: kein freies Modell"
-		},
-		"coral_flower": {
-			"fehlt": "Koralle: kein freies Modell"
-		},
-		"coral_needle": {
-			"fehlt": "Koralle: kein freies Modell"
-		},
-		"tiny_coral": {
-			"fehlt": "Koralle: kein freies Modell"
-		},
-		"the_totally_uber_coral_of_absolute_gg": {
-			"fehlt": "Koralle: kein freies Modell"
-		},
-		"weak_pyramide": {
-			"fehlt": "Pyramide: selbst bauen (einfache Form)"
-		},
-		"pyramide": {
-			"fehlt": "Pyramide: selbst bauen (einfache Form)"
-		},
-		"mighty_pyramide": {
-			"fehlt": "Pyramide: selbst bauen (einfache Form)"
-		},
-		"ancient_pyramide": {
-			"fehlt": "Pyramide: selbst bauen (einfache Form)"
-		},
+		"coral_atoll": "pp_einzeln/orange_coral",
+		"coral_flower": "pp_einzeln/orange_coral",
+		"coral_needle": "pp_einzeln/orange_coral",
+		"tiny_coral": "pp_einzeln/orange_coral",
+		"the_totally_uber_coral_of_absolute_gg": "pp_einzeln/orange_coral",
+		"weak_pyramide": "pp_einzeln/step_pyramid",
+		"pyramide": "pp_einzeln/step_pyramid",
+		"mighty_pyramide": "pp_einzeln/step_pyramid",
+		"ancient_pyramide": "pp_einzeln/step_pyramid",
 		"small_geyser": {
 			"fehlt": "Geysir: Effekt statt Modell"
 		},
@@ -126,18 +108,14 @@
 		"natural_maelstrom": {
 			"fehlt": "Strudel: Effekt statt Modell"
 		},
-		"slowing_puddle": {
-			"fehlt": "Pfütze: flache Scheibe/Effekt"
-		},
+		"slowing_puddle": "eigen/pfuetze",
 		"lightning_field": {
 			"fehlt": "Blitzfeld: Effekt statt Modell"
 		},
 		"ball_lightning": {
 			"fehlt": "Kugelblitz: Effekt statt Modell"
 		},
-		"lightning_trap": {
-			"fehlt": "Blitzfalle: kein passendes Modell"
-		}
+		"lightning_trap": "eigen/blitzfalle"
 	},
 	"randgruppen": {
 		"abteilungsleiter": "q_modular_maenner/suit",
@@ -175,7 +153,9 @@
 		"leuchtreklame": "q_cyberpunk/sign_1",
 		"zuckerschock": "k_essen/donut_sprinkles",
 		"buehnennebel": {
-			"fehlt": "Nebelmaschine/Bühne: kein freies Modell"
+			"m": "eigen/buehne",
+			"fog": 1.0,
+			"fog_height": 0.14
 		},
 		"der_regisseur": "q_figuren/casual_bald",
 		"der_star": "q_figuren/kimono_female",
@@ -189,9 +169,7 @@
 		"gralsritter": "kk_abenteurer/knight",
 		"knappe": "q_figuren/knight_male",
 		"raufbold": "kk_abenteurer/barbarian",
-		"steinschleuder": {
-			"fehlt": "Schleuder/Katapult: kein freies Modell"
-		},
+		"steinschleuder": "eigen/steinschleuder",
 		"coupon_sammler": "q_fantasy_props/scroll_1",
 		"flohmarkt_profi": "k_fantasy_stadt/stall_red",
 		"mister_sonderpreis": "q_figuren/suit_male",
@@ -220,10 +198,7 @@
 		"shooter_profi": "q_zombie/characters_shaun",
 		"strategie_general": "q_figuren/soldier_female",
 		"der_obmann": "q_modular_maenner/farmer",
-		"gartenzwerg": {
-			"m": "q_figuren/goblin_male",
-			"not": "Goblin statt Gartenzwerg"
-		},
+		"gartenzwerg": "pp_einzeln/gnome",
 		"heckenschneider": "k_fantasy_stadt/hedge",
 		"hochsitz": "k_piraten/tower_watch",
 		"rasensprenger": {
@@ -241,16 +216,10 @@
 			"m": "kk_gemischt/rollerskate_a",
 			"not": "Rollschuh statt Schlittschuh"
 		},
-		"jongleur": {
-			"fehlt": "Jongleur: keine passende Figur"
-		},
+		"jongleur": "pp_einzeln/clown",
 		"kanonenkugel_mann": "k_piraten/cannon",
-		"schlangenbeschwoerer": {
-			"fehlt": "Schlange: kein freies Modell"
-		},
-		"trapezkuenstlerin": {
-			"fehlt": "Trapez: kein freies Modell"
-		},
+		"schlangenbeschwoerer": "pp_einzeln/cobra_jeremy",
+		"trapezkuenstlerin": "eigen/trapez",
 		"die_hausbesetzung": "haus",
 		"dosenwerfer": "q_modular_maenner/punk",
 		"garagenband": "kk_gemischt/guitar_a",
@@ -307,9 +276,7 @@
 		"h002": "k_essen/burger_cheese_double",
 		"hgtw": "kk_restaurant/stove_multi",
 		"o013": "k_essen/bag",
-		"o00M": {
-			"fehlt": "Clown: kein freies Modell"
-		},
+		"o00M": "pp_einzeln/clown",
 		"o01Q": "k_essen/sundae",
 		"o00N": "q_cyberpunk/computer_large",
 		"o02E": "q_ruinen/wall_double_broken",
@@ -327,23 +294,15 @@
 		"o027": "q_modular_maenner/worker",
 		"o028": "q_feldfruechte/palm_tree_3",
 		"o01G": "kk_halloween/shrine",
-		"o03D": {
-			"m": "k_weltraum/craft_cargo_a",
-			"not": "Raumschiff statt Mondrakete"
-		},
+		"o03D": "eigen/rakete",
 		"o00O": "k_supermarkt/display_fruit",
-		"o00P": {
-			"fehlt": "Ratte: kein freies Modell"
-		},
+		"o00P": "pp_einzeln/rat",
 		"n008": "haus",
 		"o011": "q_suesse_monster/mushroom",
 		"o00I": "res://assets/models/nature/plant_7_big.glb",
 		"o00Q": "q_modular_maenner/swat",
 		"o00R": "k_essen/can",
-		"o01R": {
-			"m": "q_monster/flying_armabee",
-			"not": "Käfer-Biene statt Kakerlake"
-		},
+		"o01R": "pp_einzeln/beetle",
 		"o00S": "q_figuren/old_classy_female",
 		"o02I": "kk_wald/bush_4_a_color1",
 		"o01F": "k_industrie/detail_tank",
@@ -372,12 +331,8 @@
 		"h01I": "res://assets/models/special/gold_ore.glb",
 		"h00A": "kk_dungeon/chest_gold",
 		"h00K": "k_fantasy_stadt/watermill",
-		"h00L": {
-			"fehlt": "Zapfsäule: kein freies Modell"
-		},
-		"h00O": {
-			"fehlt": "Bohrturm: kein freies Modell"
-		},
+		"h00L": "eigen/zapfsaeule",
+		"h00O": "eigen/bohrturm",
 		"h00N": "q_figuren/worker_male",
 		"h00M": "q_modular_maenner/beach",
 		"h00Q": "k_autos/truck",
@@ -423,9 +378,7 @@
 		"o02R": "q_cyberpunk/enemy_flying_gun",
 		"h01P": "k_moebel/cardboard_box_closed",
 		"h03O": "kk_brettspiel/container_a",
-		"h01N": {
-			"fehlt": "Briefkasten: kein freies Modell"
-		},
+		"h01N": "pp_einzeln/mailbox",
 		"h023": "kk_dungeon/box_stacked_gltf",
 		"h01O": "haus",
 		"h01R": "haus",
@@ -443,9 +396,7 @@
 		"h01Q": {
 			"fehlt": "Land: kein Wahrzeichen"
 		},
-		"h026": {
-			"fehlt": "Känguru: kein freies Modell"
-		},
+		"h026": "pp_einzeln/kangaroo",
 		"h028": "q_feldfruechte/palm_tree_2",
 		"h029": "q_feldfruechte/palm_tree_4",
 		"h02A": "q_suesse_monster/penguin",
@@ -530,7 +481,7 @@
 		"5": "q_figuren/knight_male",
 		"11": "res://assets/models/nature/statue_column_damaged.glb",
 		"17": "q_geschuetze/long_2",
-		"23": "kk_brettspiel/hourglass",
+		"23": "pp_einzeln/hour_glass",
 		"24": "q_suesse_monster/bee",
 		"28": "res://assets/models/scenery/mine_frame_1.glb",
 		"31": "q_geschuetze/gun",
@@ -555,23 +506,17 @@
 		},
 		"70": "q_tiere/wolf",
 		"71": "k_industrie/solar_panel_portrait_group",
-		"77": {
-			"fehlt": "Iglu: selbst bauen (Halbkugel)"
-		},
+		"77": "pp_einzeln/igloo",
 		"80": "res://assets/models/scenery/lightpost_single.glb",
 		"83": "q_monster/flying_ghost",
 		"84": "q_figuren/knight_golden_male",
 		"91": "kk_halloween/skull_candle",
-		"94": {
-			"fehlt": "Schlangen-Totem: selbst bauen"
-		},
+		"94": "pp_einzeln/snake",
 		"98": "q_tiere/husky",
 		"99": "k_weltraum/machine_wireless",
 		"100": "k_fantasy_stadt/fountain_round",
 		"101": "q_figuren/ninja_sand",
-		"102": {
-			"fehlt": "Spinne: nur CC-BY (Panther-One), Nennung nötig"
-		},
+		"102": "pp_einzeln/spider",
 		"107": {
 			"m": "res://assets/models/nature/campfire_pit.glb",
 			"flame": 0.5,
@@ -594,9 +539,7 @@
 		"139": "res://assets/models/enemies/dragon.glb",
 		"140": "q_figuren/viking_male",
 		"141": "q_geschuetze/gun_10",
-		"142": {
-			"fehlt": "Walross: kein freies Modell"
-		},
+		"142": "pp_einzeln/walrus",
 		"145": {
 			"fehlt": "Harpyie: kein freies Modell"
 		},
@@ -622,9 +565,7 @@
 		"170": "q_tiere/bull",
 		"183": "q_figuren/witch",
 		"186": "res://assets/models/scenery/mine_rocks_1.glb",
-		"190": {
-			"fehlt": "Eule: kein freies Modell"
-		},
+		"190": "pp_einzeln/owl_statue",
 		"192": "q_figuren/kimono_male",
 		"196": "res://assets/models/enemies/dragon.glb",
 		"197": "k_industrie/solar_panel_flat",
@@ -638,16 +579,12 @@
 			"flame_height": 0.7
 		},
 		"205": "res://assets/models/nature/statue_obelisk.glb",
-		"210": {
-			"fehlt": "Waage: selbst bauen"
-		},
+		"210": "eigen/waage",
 		"211": "q_figuren/pirate_male",
 		"212": "q_figuren/wizard",
 		"214": "kristall",
 		"215": "q_figuren/old_classy_male",
-		"216": {
-			"fehlt": "„It“: selbst bauen"
-		},
+		"216": "eigen/it",
 		"217": "q_geschuetze/bomber_1",
 		"219": "q_geschuetze/gear_cannon_1",
 		"220": "kristall",
@@ -661,10 +598,7 @@
 		"242": "q_tiere/shiba_inu",
 		"249": "q_monster/big_orc",
 		"253": "q_tiere/stag",
-		"254": {
-			"m": "q_monster/big_dino",
-			"not": "Dino statt Skink"
-		},
+		"254": "pp_einzeln/spotted_gecko",
 		"262": "kk_abenteurer/knight",
 		"266": "q_monster/flying_ghost",
 		"267": {
@@ -677,9 +611,7 @@
 			"flame": 0.5,
 			"flame_height": 0.7
 		},
-		"282": {
-			"fehlt": "Schildkröte: „Turtle“ von Heathal (OpenGameArt, CC0) hochladen"
-		},
+		"282": "pp_einzeln/turtle",
 		"288": "res://assets/models/special/platonic.glb",
 		"295": "q_monster/big_demon",
 		"296": "k_industrie/solar_panel_landscape_group",
@@ -723,9 +655,7 @@
 		"396": "res://assets/models/nature/flower_4_group.glb",
 		"399": "res://assets/models/nature/statue_obelisk.glb",
 		"400": "k_weltraum/machine_generator",
-		"401": {
-			"fehlt": "Hubschrauber: kein freies Modell"
-		},
+		"401": "pp_einzeln/helicopter_jeremy",
 		"405": "res://assets/models/nature/plant_7_big.glb",
 		"411": "res://assets/models/nature/flower_3_group.glb",
 		"414": "k_piraten/ship_ghost",
@@ -773,17 +703,11 @@
 		"525": "q_feldfruechte/palm_tree_3",
 		"526": "res://assets/models/scenery/gravestone_cross.glb",
 		"527": "kk_skelette/skeleton_mage",
-		"532": {
-			"fehlt": "Schildkröte: „Turtle“ von Heathal (OpenGameArt, CC0) hochladen"
-		},
-		"537": {
-			"fehlt": "Raubkatze: kein freies Modell"
-		},
+		"532": "pp_einzeln/turtle",
+		"537": "pp_einzeln/tiger",
 		"538": "res://assets/models/enemies/dragon.glb",
 		"539": "res://assets/models/nature/statue_obelisk.glb",
-		"544": {
-			"fehlt": "Rakete: kein passendes freies Modell"
-		},
+		"544": "eigen/rakete",
 		"554": "q_suesse_monster/demon",
 		"555": {
 			"m": "res://assets/models/nature/campfire_stones.glb",
@@ -795,9 +719,7 @@
 		"562": "kristall",
 		"564": "kk_halloween/floor_dirt_grave",
 		"566": "q_suesse_monster/yeti",
-		"570": {
-			"fehlt": "Spinne: nur CC-BY (Panther-One), Nennung nötig"
-		},
+		"570": "pp_einzeln/spider",
 		"571": "res://assets/models/nature/rock_medium_2.glb",
 		"575": "res://assets/models/nature/statue_head.glb",
 		"576": "q_geschuetze/teleporter1",
@@ -832,10 +754,7 @@
 		"666": "q_figuren/knight_golden_male",
 		"673": "res://assets/models/nature/plant_1.glb",
 		"680": "res://assets/models/nature/fern_1.glb",
-		"683": {
-			"m": "q_suesse_monster/panda",
-			"not": "Panda statt Eisbär"
-		},
+		"683": "pp_einzeln/polar_bear",
 		"684": "res://assets/models/nature/rock_tall_a.glb",
 		"990": "q_tiere/wolf",
 		"991": {

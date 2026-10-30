@@ -16,10 +16,10 @@ const HIT_TOWARD_CAMERA := 0.35
 ## Obergrenzen, damit späte Wellen mit vielen Towern nicht ruckeln.
 const MAX_EFFECTS := 160
 const MAX_SPRITES := 2500
-## Treffer leuchten kurz als echte Lichtquelle in ihrer Farbe. Wenige Lichter im Pool (jedes Licht kostet im
-## Compatibility-Renderer einen Zeichendurchgang mehr für alles, was es trifft); Treffer nahe an einem
-## leuchtenden Licht frischen dieses auf, statt ein neues zu nehmen.
-const MAX_LIGHTS := 8
+## Treffer leuchten kurz als echte Lichtquelle in ihrer Farbe. Forward+ rechnet Lichter gebündelt (Cluster),
+## trotzdem ein Pool mit Obergrenze; Treffer nahe an einem leuchtenden Licht frischen dieses auf,
+## statt ein neues zu nehmen.
+const MAX_LIGHTS := 24
 const LIGHT_TIME := 0.3
 const LIGHT_RANGE := 2.4
 const LIGHT_ENERGY := 4.0
@@ -28,7 +28,7 @@ const LIGHT_HEIGHT := 0.35
 ## Dazu ein Lichtschein flach auf dem Boden: der Neon-Boden von GemTD ist unbeleuchtet und nimmt kein Licht an.
 ## Beleuchtete Böden (Gras, Marmor) bekommen das echte Licht und nur einen schwächeren Schein (FieldStyle "hit_glow").
 const GLOW_SIZE := 3.2
-const GLOW_STRENGTH := 1.2
+const GLOW_STRENGTH := 1.6
 const GLOW_KEY := "glow"
 
 ## Treffer-Lichter an/aus (z. B. für schwache Rechner).
@@ -467,6 +467,11 @@ func _batch(key: String, d: Dictionary) -> Dictionary:
 	# Flach am Boden (Nova, Lichtschein): keine weichen Kanten, sonst blendet der Boden sie ganz aus
 	if bool(d.get("flat", false)) or str(d.get("kind", "")) == "nova":
 		mat.set_shader_parameter("soft", 0.0)
+	# Lichtschein am Boden ohne glühenden Kern (sonst ein weißer Fleck unter jedem Treffer)
+	if str(d.get("tex", "")) == GLOW_KEY:
+		mat.set_shader_parameter("vivid", 0.0)
+		mat.set_shader_parameter("hot", 0.0)
+		mat.set_shader_parameter("halo", 0.0)
 	if d.has("sheet"):
 		mat.set_shader_parameter("tiles", Vector2(float(d.get("cols", 1)), float(d.get("rows", 1))))
 	else:

@@ -4,7 +4,7 @@
 	"name_original": "Weak Pyramide",
 	"category": "eeve",
 	"color": "#c08a4a",
-	"model": "res://assets/models/crystals/crystal_11.glb",
+	"model": "res://assets/models/towers/pp_einzeln/step_pyramid.glb",
 	"damage_type": "physical",
 	"targets": "ground",
 	"eeve": {
@@ -38,5 +38,7 @@
 				}
 			]
 		}
-	]
+	],
+	"model_tint": false,
+	"model_solid": true
 }

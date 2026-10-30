@@ -63,6 +63,7 @@ var speed_buttons: Array[Button] = []
 var debug_option: OptionButton
 var debug_button: Button
 var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus (add_paths_toggle)
+var lights_button: Button = null  ## Lichtpfad ein/aus (add_lights_toggle)
 var _speed_row: HBoxContainer
 var debug_panel: PanelContainer
 var dps_meter: DpsMeter
@@ -227,6 +228,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			if recipe_book.visible or _main_button == null or _main_button.disabled:
 				return
 			option_chosen.emit(_main_index)
+		KEY_L:
+			if lights_button == null:
+				return
+			lights_button.button_pressed = not lights_button.button_pressed
 		_:
 			return
 	get_viewport().set_input_as_handled()
@@ -353,6 +358,19 @@ func add_paths_toggle(on_toggled: Callable) -> void:
 	paths_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
 	paths_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
 	paths_button.toggled.connect(on_toggled)
+
+
+## Umschalter links neben dem Tempo: Lichter fliegen den Gegnerweg entlang (PathLights).
+func add_lights_toggle(on: bool, on_toggled: Callable) -> void:
+	lights_button = _button("Lichtpfad", _speed_row.get_parent(), func(): pass)
+	_speed_row.get_parent().move_child(lights_button, _speed_row.get_index())
+	lights_button.toggle_mode = true
+	lights_button.focus_mode = Control.FOCUS_NONE
+	lights_button.tooltip_text = "Lichter fliegen den Weg der Gegner entlang (Taste L)."
+	lights_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	lights_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	lights_button.set_pressed_no_signal(on)
+	lights_button.toggled.connect(on_toggled)
 
 
 ## Panel-Überschrift: Großbuchstaben, fett.

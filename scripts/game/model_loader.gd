@@ -9,10 +9,14 @@ extends RefCounted
 static var _cache := {}
 static var _smooth_cache := {}  ## Mesh -> Mesh mit geglätteten Normalen (für Konturen)
 static var _outline_mats: Dictionary = {}  ## je Feld-Stil (FieldStyle) ein Kontur-Material
-## Konturfarbe und Leuchtkraft je Feld-Stil: Neon hellviolett leuchtend, Druidenhain dunkel wie Tusche, Art déco Messing.
+## Konturfarbe, Leuchtkraft und Dicke je Feld-Stil: Neon hellviolett leuchtend, Druidenhain ohne,
+## Art déco Messing, Plakatwand schwarz wie Filzstift (Lukas, 2026-10-29).
+## "druid_white": weiße Kontur der eeveTD-Tower zur Probe (Tower.eeve_accent "kontur").
 const OUTLINE_LOOK := {
 	"druid": [Color("1a2018"), 1.0, 0.0],
+	"druid_white": [Color("f4f0e0"), 1.0, 0.012],
 	"deco": [Color("c9a36a"), 1.0, 0.012],
+	"poster": [Color("0b0b0b"), 1.0, 0.022],
 }
 
 
@@ -182,6 +186,7 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 			for i in verts.size():
 				indices[i] = i
 		var sums := {}
+		var sizes := {}  ## Summe der Flächengrößen je Punkt, um gegenläufige Flächen zu erkennen
 		for t in range(0, indices.size() - 2, 3):
 			var a := verts[indices[t]]
 			var b := verts[indices[t + 1]]
@@ -191,11 +196,19 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 			for v in [a, b, c]:
 				var key: Vector3 = (v * 1000.0).round()
 				sums[key] = sums.get(key, Vector3.ZERO) + n
+				sizes[key] = float(sizes.get(key, 0.0)) + n.length()
+		var orig: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL] if arrays[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
 		var smooth := PackedVector3Array()
 		smooth.resize(verts.size())
 		for i in verts.size():
-			var sum: Vector3 = sums.get((verts[i] * 1000.0).round(), Vector3.UP)
-			smooth[i] = sum.normalized() if sum.length() > 0.0 else Vector3.UP
+			var key: Vector3 = (verts[i] * 1000.0).round()
+			var sum: Vector3 = sums.get(key, Vector3.UP)
+			# Dünne Flächen mit Vorder- und Rückseite (Schirmdächer, Planen) heben sich auf: dann die eigene
+			# Normale, sonst zeigt die Hülle in eine zufällige Richtung und deckt die Fläche ganz zu
+			if sum.length() < 0.25 * float(sizes.get(key, 0.0)):
+				smooth[i] = orig[i] if i < orig.size() else Vector3.ZERO
+			else:
+				smooth[i] = sum.normalized() if sum.length() > 0.0 else Vector3.UP
 		var keep := []
 		keep.resize(Mesh.ARRAY_MAX)
 		keep[Mesh.ARRAY_VERTEX] = verts
@@ -208,14 +221,16 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 ## Leuchtende Kontur um alle Meshes unter n (gleiche wie bei den Felsbrocken): je Mesh eine
 ## aufgeblähte Hülle als Kind. Das Material darunter muss Tiefe schreiben (opak oder DEPTH_DRAW_ALWAYS).
 ## false, wenn der aktuelle Feld-Stil keine Konturen zeichnet (Druidenhain).
-static func has_outline() -> bool:
-	var look: Array = OUTLINE_LOOK.get(FieldStyle.current_name(), [])
+static func has_outline(key := "") -> bool:
+	var look: Array = OUTLINE_LOOK.get(key if key != "" else FieldStyle.current_name(), [])
 	return look.is_empty() or float(look[2]) > 0.0
 
 
 ## Kontur-Material im aktuellen Feld-Stil (für eigene Hüllen, z. B. die Felsbrocken).
-static func outline_material() -> ShaderMaterial:
-	var key := FieldStyle.current_name()
+## key wählt einen Eintrag aus OUTLINE_LOOK statt des Feld-Stils.
+static func outline_material(key := "") -> ShaderMaterial:
+	if key == "":
+		key = FieldStyle.current_name()
 	if not _outline_mats.has(key):
 		var m := ShaderMaterial.new()
 		m.shader = preload("res://assets/shaders/outline.gdshader")
@@ -228,10 +243,10 @@ static func outline_material() -> ShaderMaterial:
 	return _outline_mats[key]
 
 
-static func add_outline(n: Node) -> void:
-	var outline := outline_material()
+static func add_outline(n: Node, key := "") -> void:
+	var outline := outline_material(key)
 	# Druidenhain: keine Kontur, die Modelle sollen natürlich schattiert wirken
-	if not has_outline():
+	if not has_outline(key):
 		return
 	var targets: Array[MeshInstance3D] = []
 	_collect_meshes(n, targets)

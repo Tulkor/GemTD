@@ -11,6 +11,12 @@ const MAX_DISTANCE := 90.0
 const EDGE_MARGIN := 6.0
 ## Ab so vielen Pixeln Mausweg gilt ein Rechtsklick als Ziehen und nicht als Klick.
 const DRAG_THRESHOLD := 6.0
+## So weit (Einheiten) darf das Bild über den Kartenrand hinausreichen (Wunsch von Lukas: Kamera auf das
+## Spielfeld und nur minimal außerhalb beschränkt, in allen Modi).
+const VIEW_MARGIN := 3.0
+## Strahlen am oberen Bildrand mindestens so steil nach unten rechnen: bei flacher Kamera träfen sie den
+## Boden erst am Horizont (Neigung -20°), der Bereich dahinter zählt nicht.
+const MIN_RAY_DOWN := 0.3
 
 var camera: Camera3D
 var target := Vector3.ZERO
@@ -18,6 +24,9 @@ var distance := 40.0
 var yaw := 0.0
 var pitch := deg_to_rad(-58.0)
 var bounds := Rect2(0, 0, 40, 40)
+## Sichtbaren Boden auf bounds (plus VIEW_MARGIN) begrenzen: weiter herauszoomen oder -schieben geht nicht.
+## Aus im Map-Editor (dort soll man die ganze Karte samt Rand sehen).
+var limit_view := true
 var _rotating := false
 var _right_down := false
 var _right_travel := 0.0
@@ -31,6 +40,7 @@ func _ready() -> void:
 	camera.far = 500.0
 	add_child(camera)
 	camera.make_current()
+	get_viewport().size_changed.connect(_apply)
 	_apply()
 
 
@@ -74,6 +84,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
+		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and UiUtil.mouse_over_ui(get_viewport()):
+			return  # über einem Fenster scrollt das Fenster, die Karte zoomt nicht mit
 		match event.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
 				distance = maxf(MIN_DISTANCE, distance * 0.9)
@@ -137,12 +149,68 @@ func _clamp_target() -> void:
 
 
 func _apply() -> void:
+	_place()
+	if limit_view:
+		_limit_view()
+
+
+func _place() -> void:
 	position = target
 	rotation = Vector3(pitch, yaw, 0)
 	if camera:
 		camera.position = Vector3(0, 0, distance)
 		# Bild nach links schieben, damit das Seitenpanel rechts nichts verdeckt
 		camera.h_offset = distance * 0.12
+
+
+## Zoom und Lage so begrenzen, dass der sichtbare Boden in bounds plus VIEW_MARGIN liegt. Die sichtbare
+## Fläche wächst linear mit distance (Ziel liegt auf dem Boden), deshalb reicht ein Schritt je Achse.
+func _limit_view() -> void:
+	var view := view_rect()
+	if view.size == Vector2.ZERO:
+		return
+	var room := bounds.grow(VIEW_MARGIN)
+	var f := minf(room.size.x / view.size.x, room.size.y / view.size.y)
+	if f < 1.0 and distance > MIN_DISTANCE:
+		var d := maxf(MIN_DISTANCE, distance * f)
+		var c := Vector2(target.x, target.z)
+		view = Rect2(c + (view.position - c) * d / distance, view.size * d / distance)
+		distance = d
+	var shift := Vector2.ZERO
+	for i in 2:
+		if view.size[i] > room.size[i]:
+			shift[i] = room.get_center()[i] - view.get_center()[i]
+		elif view.position[i] < room.position[i]:
+			shift[i] = room.position[i] - view.position[i]
+		elif view.end[i] > room.end[i]:
+			shift[i] = room.end[i] - view.end[i]
+	target += Vector3(shift.x, 0, shift.y)
+	_place()
+
+
+## Sichtbarer Boden (Ebene y = 0) als achsparalleles Rechteck um die Mitten der vier Bildränder (Kreuz durch die
+## Bildmitte). Die Ecken zählen nicht: oben ist das Bild schräg von oben viel breiter als unten, mit den Ecken
+## sähe man auf kleinen Karten nie die ganze Breite. Aus Lage, Blickwinkel und Seitenverhältnis gerechnet.
+func view_rect() -> Rect2:
+	if camera == null:
+		return Rect2()
+	var aspect := 16.0 / 9.0
+	if is_inside_tree():
+		var vp := get_viewport().get_visible_rect().size
+		if vp.y > 0.0:
+			aspect = vp.x / vp.y
+	var basis := Basis.from_euler(Vector3(pitch, yaw, 0))
+	var from := target + basis * Vector3(camera.h_offset, 0, distance)
+	var ty := tan(deg_to_rad(camera.fov) / 2.0)
+	var r := Rect2()
+	for i in 4:
+		var ndc: Vector2 = [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)][i]
+		var dir := basis * Vector3(ndc.x * ty * aspect, ndc.y * ty, -1.0)
+		dir.y = minf(dir.y, -MIN_RAY_DOWN * dir.length())
+		var hit := from + dir * (from.y / -dir.y)
+		var p := Vector2(hit.x, hit.z)
+		r = Rect2(p, Vector2.ZERO) if i == 0 else r.expand(p)
+	return r
 
 
 ## Skybox: sechs Bilder in der Reihenfolge +X, -X, +Y, -Y, +Z, -Z.
@@ -176,7 +244,8 @@ static func _sky() -> Sky:
 ## Licht und Himmel für eine 3D-Szene anlegen. Werte aus FieldStyle.env(), fehlende Schlüssel
 ## nehmen den Arcade-Stand (FieldStyle.ENV_DEFAULT). Gibt die Knoten zurück, damit ein Modus
 ## (z. B. eine Nachtversion) sie nachträglich ändern kann: {"env", "sun", "fill"}.
-static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
+## filter = Stil-Filter des Modus (StyleFilter) dazuhängen; Editoren lassen ihn weg, dort zählen echte Farben.
+static func add_environment(parent: Node, look: Dictionary = {}, filter := true) -> Dictionary:
 	if look.is_empty():
 		look = FieldStyle.env()
 	var env := Environment.new()
@@ -202,10 +271,13 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 			env.background_mode = Environment.BG_SKY
 			env.sky = sky
 	# Leuchten für helle (HDR) Flächen, z. B. die Neon-Wegpunkte
-	env.glow_enabled = true
+	env.glow_enabled = Display.q("glow")
 	env.glow_intensity = look.glow_intensity
 	env.glow_bloom = look.glow_bloom
 	env.glow_hdr_threshold = look.glow_threshold
+	# weicher, breiter Schein: zu den Standard-Stufen 3 und 5 auch 2 (eng) und 4 (mittel)
+	env.set_glow_level(1, 0.6)
+	env.set_glow_level(3, 0.8)
 	# Umgebungslicht: feste Farbe, oder mit "ambient_sky" > 0 anteilig vom Himmel (oben Himmelsfarbe,
 	# unten Bodenfarbe), dann sind Oberseiten heller als Flanken und Unterseiten
 	if look.ambient_sky > 0.0 and env.sky != null:
@@ -228,6 +300,26 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		env.fog_light_color = look.fog
 		env.fog_density = look.fog_density
 		env.fog_sky_affect = 0.0
+	# Forward+ (Vulkan): Umgebungsverdeckung (SSAO) dunkelt Fugen, Ecken und den Fuß der Tower ab,
+	# indirektes Licht (SSIL) trägt Farbe von hellen Flächen auf die Umgebung
+	if look.ssao > 0.0:
+		env.ssao_enabled = true
+		env.ssao_radius = look.ssao_radius
+		env.ssao_intensity = look.ssao
+		env.ssao_power = 1.5
+		env.ssao_light_affect = 0.15
+	if look.ssil > 0.0:
+		env.ssil_enabled = true
+		env.ssil_radius = 3.0
+		env.ssil_intensity = look.ssil
+	# Volumen-Nebel: Licht der Laternen und Treffer wird im Dunst sichtbar
+	if look.vol_fog > 0.0:
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = look.vol_fog
+		env.volumetric_fog_albedo = look.fog
+		env.volumetric_fog_length = 40.0
+		env.volumetric_fog_ambient_inject = 0.3
+		env.volumetric_fog_sky_affect = 0.0
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(look.sun_pitch), deg_to_rad(look.sun_yaw), 0)
 	sun.light_color = look.sun * tint
@@ -254,4 +346,55 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		fill.light_specular = 0.25
 		fill.shadow_enabled = false
 		parent.add_child(fill)
+	_add_outline(parent, look)
+	_add_post(parent, look)
+	if filter:
+		StyleFilter.attach(parent)
 	return {"env": env, "sun": sun, "fill": fill}
+
+
+## Leichte Kontur um alles Deckende (screen_outline.gdshader), Farbe und Stärke aus "outline_color"/"outline".
+static func _add_outline(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenOutline")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.outline <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_outline.gdshader")
+	mat.set_shader_parameter("color", look.outline_color)
+	mat.set_shader_parameter("strength", look.outline)
+	mat.render_priority = 0
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenOutline"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# deckt den ganzen Bildschirm, darf nie weggeschnitten werden
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)
+
+
+
+## Vignette über dem ganzen Bild (screen_post.gdshader), Stärke und Farbe aus "vignette"/"vignette_color".
+static func _add_post(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenPost")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.vignette <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_post.gdshader")
+	mat.set_shader_parameter("vignette", look.vignette)
+	mat.set_shader_parameter("vignette_color", look.vignette_color)
+	# ganz zuletzt, nach Effekten und Kontur
+	mat.render_priority = 100
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenPost"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)

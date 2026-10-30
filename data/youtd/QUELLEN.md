@@ -42,3 +42,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+- `beschreibungen.json`: englische Texte zu Fähigkeiten, Auren, Zaubern, Items und Towern aus der Release-Spieldatei von YouTD 2 (MIT, gleiche Quelle wie die Daten), geholt mit `tools/youtd/texte_holen.py`.

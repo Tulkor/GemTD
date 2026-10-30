@@ -13,6 +13,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.local/bin:$PATH"
+# Tests prüfen deutsche Texte; das Spiel startet sonst auf Englisch (Loc.DEFAULT)
+export GEMTD_SPRACHE="${GEMTD_SPRACHE:-de}"
 GODOT="${GODOT:-godot}"
 LOG_DIR="${LOG_DIR:-/tmp/gemtd-tests}"
 mkdir -p "$LOG_DIR"
@@ -186,6 +188,7 @@ pick_changed() {
       scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul youtd " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
       data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
+      scripts/map/path_lights.gd) t+="lichtpfad smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
       *.gd|*.tscn|*.tres|*.gdshader|project.godot|data/*) echo "schnell"; return ;;
     esac

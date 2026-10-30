@@ -43,6 +43,7 @@ var _sel_box: VBoxContainer
 var _banner: Label
 var _minimap: MaulMinimap
 var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
+var lights_button: Button = null  ## Lichtpfad ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
@@ -63,15 +64,22 @@ func _ready() -> void:
 	_build_selection()
 	_build_minimap()
 	_banner = UiUtil.label("", root, 20)
-	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_banner.offset_top = 64
-	_banner.offset_bottom = 94
+	# auf einem dunklen Schild, so schmal wie der Text: über hellem Marmor und Messing sonst schlecht lesbar
+	_banner.anchor_left = 0.5
+	_banner.anchor_right = 0.5
+	_banner.offset_top = 60
+	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.add_theme_stylebox_override("normal", UiTheme.panel(6.0, 0.88))
+	_banner.visible = false
 	_banner.add_theme_font_override("font", UiTheme.font(true))
 	_banner.add_theme_color_override("font_color", UiTheme.GOLD)
-	_banner.add_theme_color_override("font_shadow_color", UiTheme.CYAN)
+	# dunkle Kontur und Schatten: der Schriftzug steht über hellem Marmor und Messinglinien
+	_banner.add_theme_color_override("font_outline_color", UiTheme.BG)
+	_banner.add_theme_constant_override("outline_size", 8)
+	_banner.add_theme_color_override("font_shadow_color", Color(UiTheme.BG, 0.8))
 	_banner.add_theme_constant_override("shadow_offset_x", 2)
-	_banner.add_theme_constant_override("shadow_offset_y", 2)
+	_banner.add_theme_constant_override("shadow_offset_y", 3)
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -88,7 +96,7 @@ func _build_top_bar() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 22)
 	bar.add_child(row)
-	_level = _stat(row, "Level")
+	_level = _stat(row, "Welle")
 	_next = _stat(row, "Nächstes")
 	_timer = _stat(row, "Start in")
 	_gold = _stat(row, "Gold")
@@ -107,6 +115,14 @@ func _build_top_bar() -> void:
 	row.add_child(spacer)
 	_start_button = UiUtil.button("Jetzt starten", row, func(): game.submit({"type": "start_now"}))
 	UiTheme.accent_button(_start_button, UiTheme.GOLD, UiTheme.BAR)
+	lights_button = UiUtil.button("Lichtpfad", row, func(): pass)
+	lights_button.toggle_mode = true
+	lights_button.focus_mode = Control.FOCUS_NONE
+	lights_button.tooltip_text = "Lichter fliegen den Weg der Gegner entlang (Taste L)."
+	lights_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	lights_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	lights_button.set_pressed_no_signal(Display.path_lights)
+	lights_button.toggled.connect(func(on: bool): game.set_path_lights(on))
 	for f in [1.0, 2.0, 4.0]:
 		var b := UiUtil.button("%d×" % int(f), row, func(): game.set_speed(f))
 		b.toggle_mode = true
@@ -1051,6 +1067,11 @@ func refresh_live() -> void:
 
 func refresh_message() -> void:
 	_banner.text = game.message
+	_banner.visible = game.message != ""
+	# schmal halten: nach kürzerem Text wieder auf die Textbreite schrumpfen
+	var w := _banner.get_combined_minimum_size().x
+	_banner.offset_left = -w * 0.5
+	_banner.offset_right = w * 0.5
 
 
 # --- Filialwahl und Ende -------------------------------------------------------------

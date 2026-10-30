@@ -118,6 +118,7 @@ func snapshot() -> Dictionary:
 		"difficulty": g.difficulty,
 		"mode": g.mode,
 		"sandbox": g.sandbox,
+		"foreign_build": g.foreign_build,
 		"killed": g.enemies_killed,
 		"leaked": g.enemies_leaked,
 		"je": [g.je, g.je_min, g.je_max],
@@ -249,6 +250,7 @@ func apply_state(s: Dictionary) -> void:
 	g.difficulty = int(s.get("difficulty", g.difficulty))
 	g.mode = str(s.get("mode", g.mode))
 	g.sandbox = bool(s.get("sandbox", false))
+	g.foreign_build = bool(s.get("foreign_build", false))
 	g.enemies_killed = int(s.get("killed", 0))
 	g.enemies_leaked = int(s.get("leaked", 0))
 	var je: Array = s.get("je", [1.0, 1.0, 1.0])
@@ -287,7 +289,7 @@ func apply_state(s: Dictionary) -> void:
 	elif phase == MaulGame.Phase.COUNTDOWN and was_phase == MaulGame.Phase.WAVE:
 		_clear_enemies()
 		g.effects.clear()
-		g.show_message(tr("Level %d geschafft") % g.levels_done, 4.0)
+		g.show_message(tr("Welle %d geschafft") % g.levels_done, 4.0)
 	if was_phase == MaulGame.Phase.SETUP and phase != MaulGame.Phase.SETUP:
 		g.hud.refresh_setup()
 	if me.shop != "" and g.hud.setup_visible():

@@ -283,7 +283,7 @@ func view() -> Dictionary:
 	var kills_info := {"kills": kills, "rank": level, "bonus": 0.0, "per_rank": 1, "step": 0.0, "max": 0.0, "maxed": true,
 			"next_at": 0, "missing": 0, "next_bonus": 0.0, "progress": 0, "total_damage": total_damage}
 	return {"subtitle": "%s · %s · %s" % [YoutdData.element_name(str(yt.get("element", ""))), YoutdData.rarity_name(str(yt.get("rarity", ""))),
-			TowerStats.targets_text(target_mode())], "tiles": tiles, "kills": kills_info, "abilities": abilities, "description": ""}
+			TowerStats.targets_text(target_mode())], "tiles": tiles, "kills": kills_info, "abilities": abilities, "description": YoutdData.description("towers", yid)}
 
 
 ## Fähigkeiten des Towers mit Namen (aus YouTD 2, englisch wie die Tower-Namen), Auren, Zauber mit Abklingzeit
@@ -293,11 +293,11 @@ func ability_lines() -> Array:
 	for id in yt.get("abilities", []):
 		var a := YtAbilityData.ability(int(id))
 		if not a.is_empty():
-			out.append(tr("Fähigkeit: %s") % str(a.get("name", "")))
+			out.append(_with_text(tr("Fähigkeit: %s") % str(a.get("name", "")), "abilities", str(id)))
 	for id in yt.get("auras", []):
 		var a := YtAbilityData.aura(int(id))
 		if not a.is_empty() and not bool(a.get("hidden", false)) and str(a.get("name", "")) != "":
-			out.append(tr("Aura: %s (Umkreis %d)") % [str(a.name), int(a.get("range", 0))])
+			out.append(_with_text(tr("Aura: %s (Umkreis %d)") % [str(a.name), int(a.get("range", 0))], "auras", str(id)))
 	if core != null:
 		for ac in core.get_autocast_list():
 			var line := tr("Zauber: %s") % ac.get_autocast_name()
@@ -310,13 +310,19 @@ func ability_lines() -> Array:
 				parts.append(tr("von Hand"))
 			if not parts.is_empty():
 				line += " (" + ", ".join(parts) + ")"
-			out.append(line)
+			out.append(_with_text(line, "autocasts", str(ac.get_id())))
 		var board := core.on_tower_details()
 		if board != null:
 			for i in board.size():
 				if board.get_key(i) != "":
 					out.append("%s: %s" % [board.get_key(i), board.get_value(i)])
 	return out
+
+
+## Zeile mit der Beschreibung aus YouTD 2 darunter (falls vorhanden).
+static func _with_text(line: String, kind: String, id: String) -> String:
+	var text := YoutdData.description(kind, id)
+	return line + ("\n" + text if text != "" else "")
 
 
 ## Der Kern hat den Tower versetzt (Chrono Jumper): Modell mitnehmen.
