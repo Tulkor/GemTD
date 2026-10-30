@@ -36,7 +36,9 @@
 				{
 					"type": "stacking_damage",
 					"per_hit": 35.0,
-					"duration": 5.0
+					"duration": 5.0,
+					"death_damage": 500.0,
+					"death_radius": 5.86
 				}
 			]
 		}

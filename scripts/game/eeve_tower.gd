@@ -109,6 +109,7 @@ func _hp_cut(ab: Dictionary) -> void:
 		var challenge := str(Database.enemies.get(e.enemy_id, {}).get("eeve", {}).get("kind", "")) == "challenge"
 		var f := float(ab.get("factor_challenge", ab.factor)) if challenge else float(ab.factor)
 		e.last_hit_by = owner_player
+		e.last_tower = self
 		total_damage += e.take_raw_damage(e.hp * f)
 		if e.dead:
 			kills += 1
@@ -173,6 +174,7 @@ func _spell(e, dmg: float) -> void:
 	if e.dead:
 		return
 	e.last_hit_by = owner_player
+	e.last_tower = self
 	total_damage += e.take_damage(dmg * (1.0 + damage_bonus + kill_bonus()), "spells")
 	if e.dead:
 		kills += 1
@@ -187,6 +189,7 @@ func _orb(ab: Dictionary) -> bool:
 	var e = list[randi() % list.size()]
 	game.add_beam(position + Vector3(0, 1.1, 0), _hit_point(e), Color(str(ab.get("color", "#c8b0ff"))))
 	e.last_hit_by = owner_player
+	e.last_tower = self
 	total_damage += e.take_damage(float(ab.dps) * float(ab.get("every", 0.5)), "spells")
 	if e.dead:
 		kills += 1

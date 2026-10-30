@@ -14,10 +14,7 @@
 		"lumber": 1,
 		"from": "eeve_gold_mine",
 		"next": [],
-		"wc3": "h07D",
-		"todo": [
-			"Wohlstands-Aura: +55 % Kopfgeld für Tower im Umkreis 1200"
-		]
+		"wc3": "h07D"
 	},
 	"tiers": [
 		{
@@ -32,6 +29,11 @@
 					"type": "splash",
 					"radius": 0.47,
 					"factor": 0.4
+				},
+				{
+					"type": "bounty_aura",
+					"radius": 9.38,
+					"bonus": 0.55
 				}
 			]
 		}

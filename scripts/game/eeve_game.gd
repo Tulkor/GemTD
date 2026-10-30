@@ -531,7 +531,61 @@ func _start_wave() -> void:
 
 func _process_wave(delta: float) -> void:
 	clock += delta
+	_tick_props(delta)
 	super._process_wave(delta)
+
+
+## Wellen-Eigenschaften, die etwas tun (Werte in eeve.json → properties):
+## Unverwundbar schützt sich, sobald er Schaden nimmt; Tempo-Bremse bremst Tower in der Nähe;
+## Heiler heilt verletzte Bodengegner im Umkreis; Fesselnd fesselt einen Tower, der ihn in Reichweite hat.
+func _tick_props(delta: float) -> void:
+	var towers := all_towers()
+	for t in towers:
+		t.speed_malus = 0.0
+	for e in enemies:
+		if e.dead or not e.has_meta("eeve_props"):
+			continue
+		var cd: Dictionary = e.get_meta("eeve_props")
+		for id in cd:
+			cd[id] = maxf(float(cd[id]) - delta, 0.0)
+			var p := EeveWaves.prop(rules, id)
+			match id:
+				"invuln":
+					if cd[id] <= 0.0 and e.hp < e.max_hp:
+						e.invulnerable_time = float(p.get("duration", 4.5))
+						cd[id] = float(p.get("every", 10.0))
+				"ar_aura":
+					for t in towers:
+						if t.pos.distance_to(e.pos) <= float(p.get("radius", 3.52)):
+							t.speed_malus = maxf(t.speed_malus, float(p.get("malus", 0.45)))
+				"heal":
+					if cd[id] <= 0.0 and _heal_around(e, p):
+						cd[id] = float(p.get("every", 90.0))
+				"entang":
+					if cd[id] <= 0.0 and _entangle(e, towers, float(p.get("duration", 4.0))):
+						cd[id] = float(p.get("every", 15.0))
+
+
+## Heilt verletzte Bodengegner im Umkreis (auch sich selbst). false, wenn niemand verletzt war.
+func _heal_around(e: Enemy, p: Dictionary) -> bool:
+	var hurt := enemies_in_radius(e.pos, float(p.get("radius", 5.47))).filter(func(o): return not o.flying and o.hp < o.max_hp)
+	if hurt.is_empty():
+		return false
+	for o in hurt:
+		o.hp = minf(o.hp + float(p.get("amount", 225)), o.max_hp)
+	add_ring(e.pos, float(p.get("radius", 5.47)), Color("6dff8a"))
+	return true
+
+
+## Fesselt einen zufälligen Tower, der den Gegner in Reichweite hat. false, wenn keiner da ist.
+func _entangle(e: Enemy, towers: Array, duration: float) -> bool:
+	var near := towers.filter(func(t): return t.can_attack() and t.rooted_time <= 0.0 and t.in_range(e))
+	if near.is_empty():
+		return false
+	var t: Tower = near[randi() % near.size()]
+	t.rooted_time = duration
+	add_ring(t.pos, 0.8, Color("3f8f3a"))
+	return true
 
 
 func gold_income_factor(_wave: int) -> float:
@@ -571,6 +625,7 @@ func on_enemy_killed(e: Enemy) -> void:
 		if other.flying:
 			continue
 		other.last_hit_by = t.owner_player
+		other.last_tower = t
 		t.total_damage += other.take_damage(float(burn.damage), "spells")
 		if other.dead:
 			t.kills += 1
@@ -747,6 +802,13 @@ func _apply_enemy_difficulty(e: Enemy, g: Dictionary) -> void:
 		e.spell_factor = 0.0
 	if props.has("reduct"):
 		e.hit_reduction = float(EeveWaves.prop(rules, "reduct").get("reduction", 15))
+	# Eigenschaften mit eigenem Ablauf (_tick_props): Abklingzeit je Fähigkeit, 0 = bereit
+	var active := {}
+	for id in ["invuln", "ar_aura", "heal", "entang"]:
+		if props.has(id):
+			active[id] = 0.0
+	if not active.is_empty():
+		e.set_meta("eeve_props", active)
 
 
 ## Reihenplätze 2–4 einer Massenwelle starten ein Stück weiter vorn, damit sie nicht genau übereinander liegen.

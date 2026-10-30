@@ -15,7 +15,7 @@ const VERSION := 1
 const KEY := "GemTD:7f3c9a51-e0b4-4d2e-9c61-5b8d2a4f6e13"
 
 const ENEMY_FIELDS := ["slow_factor", "slow_time", "poison_dps", "poison_time", "armor_reduction",
-	"armor_reduction_time", "stun_time", "stacks", "stack_time"]
+	"armor_reduction_time", "stun_time", "stacks", "stack_time", "stack_boom", "invulnerable_time"]
 
 
 # --- Zustand eines Felds ---------------------------------------------------------

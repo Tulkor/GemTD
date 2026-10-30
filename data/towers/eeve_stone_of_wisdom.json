@@ -16,10 +16,7 @@
 		"next": [
 			"eeve_ancient_fountain_of_wisdom"
 		],
-		"wc3": "h02S",
-		"todo": [
-			"Aura der Weisheit: +45 % Erfahrung für Tower im Umkreis 1000"
-		]
+		"wc3": "h02S"
 	},
 	"tiers": [
 		{
@@ -34,6 +31,11 @@
 					"type": "splash",
 					"radius": 0.39,
 					"factor": 0.36
+				},
+				{
+					"type": "xp_aura",
+					"radius": 7.81,
+					"bonus": 0.45
 				}
 			]
 		}

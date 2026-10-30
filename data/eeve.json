@@ -74,11 +74,11 @@
 		{"id": "immune", "name": "Zauberimmun", "text": "nimmt keinen Zauberschaden", "hp": 0.85},
 		{"id": "reduct", "name": "Zäh", "text": "15 Schaden weniger pro Treffer", "hp": 0.75, "reduction": 15, "not": ["ground_mass", "air_mass"]},
 		{"id": "armor", "name": "Gepanzert", "text": "+20 Rüstung", "hp": 0.6, "armor": 20, "from_level": 9},
-		{"id": "invuln", "name": "Unverwundbar", "text": "alle 10 s für 4,5 s unverwundbar", "hp": 0.7, "not": ["air", "air_mass"], "enabled": false},
-		{"id": "ar_aura", "name": "Tempo-Bremse", "text": "−45 % Angriffstempo für Tower in 450 Reichweite", "hp": 0.72, "from_level": 11, "enabled": false},
+		{"id": "invuln", "name": "Unverwundbar", "text": "alle 10 s für 4,5 s unverwundbar", "hp": 0.7, "not": ["air", "air_mass"], "every": 10.0, "duration": 4.5},
+		{"id": "ar_aura", "name": "Tempo-Bremse", "text": "−45 % Angriffstempo für Tower in 450 Reichweite", "hp": 0.72, "from_level": 11, "radius": 3.52, "malus": 0.45},
 		{"id": "dr_aura", "name": "Schadens-Bremse", "text": "−45 % Schaden für Tower in 400 Reichweite", "hp": 0.72, "from_level": 8, "enabled": false},
-		{"id": "heal", "name": "Heiler", "text": "heilt Gegner in 700 Reichweite um 225, alle 90 s", "hp": 0.65, "only": ["ground"], "from_level": 11, "enabled": false},
-		{"id": "entang", "name": "Fesselnd", "text": "fesselt alle 15 s einen Tower 4 s lang", "hp": 0.7, "not": ["ground_mass", "air_mass", "boss"], "enabled": false},
+		{"id": "heal", "name": "Heiler", "text": "heilt Gegner in 700 Reichweite um 225, alle 90 s", "hp": 0.65, "only": ["ground"], "from_level": 11, "radius": 5.47, "amount": 225, "every": 90.0},
+		{"id": "entang", "name": "Fesselnd", "text": "fesselt alle 15 s einen Tower 4 s lang", "hp": 0.7, "not": ["ground_mass", "air_mass", "boss"], "every": 15.0, "duration": 4.0},
 		{"id": "evade", "name": "Ausweichend", "text": "35 % Ausweichen", "hp": 0.7, "enabled": false}
 	],
 	"damage_table": {
