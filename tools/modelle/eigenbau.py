@@ -116,17 +116,17 @@ def waage(b):  # YouTD Scales
         b.zyl(0.17, 0.03, "messing", (x, 0, z - 0.46), seiten=10)
 
 
-def it(b):  # YouTD „It“: formloses Dunkelwesen
-    b.kugel(0.42, "lila", (0, 0, 0.36), stufe=2, skal=(1.1, 0.95, 0.85))
-    b.kugel(0.26, "lila", (0.05, 0.05, 0.75), stufe=1, skal=(1, 0.9, 1.1))
-    for x in (-0.11, 0.11):
-        b.kugel(0.06, "auge", (x + 0.05, -0.25, 0.82))
-        b.kugel(0.03, "schwarz", (x + 0.05, -0.30, 0.82))
-    b.box((0.18, 0.02, 0.04), "schwarz", (0.05, -0.27, 0.68))
-    for i in range(7):
-        w = i * 2 * math.pi / 7
-        x, y = math.cos(w) * 0.42, math.sin(w) * 0.42
-        b.stab((x * 0.8, y * 0.8, 0.2), (x * 1.6, y * 1.6, 0.04 + 0.08 * (i % 2)), 0.06 - 0.005 * (i % 3), "lila_hell", 5)
+def it(b):  # YouTD „It“: Anspielung auf den Clown aus Stephen Kings Roman, nur Gully und roter Ballon
+    b.zyl(0.42, 0.06, "stein", (0, 0, 0.03), seiten=10)
+    b.zyl(0.3, 0.03, "metall_dunkel", (0, 0, 0.075), seiten=12)
+    b.zyl(0.27, 0.031, "schwarz", (0, 0, 0.076), seiten=12)
+    for x in (-0.18, -0.09, 0.0, 0.09, 0.18):
+        b.box((0.04, 0.5 - abs(x) * 1.2, 0.035), "metall_dunkel", (x, 0, 0.08))
+    b.kugel(0.03, "auge", (-0.05, -0.04, 0.1))
+    b.kugel(0.03, "auge", (0.05, -0.04, 0.1))
+    b.stab((0.02, 0.06, 0.09), (0.06, 0.04, 0.95), 0.006, "weiss", 4)
+    b.kugel(0.2, "rot", (0.06, 0.04, 1.14), stufe=2, skal=(1, 1, 1.18))
+    b.kegel(0.035, 0.05, "rot", (0.06, 0.04, 0.9), seiten=6)
 
 
 def rakete(b):  # YouTD Pocket Rocket
