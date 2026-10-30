@@ -14,6 +14,9 @@ extends Tower
 ##   Bestatter: corpses = gefressene Leichen der Contained Darkness, unleashed_until = Zeit als Unleashed Darkness.
 
 const SPELLS := ["nova_spell", "chain_spell", "wave_spell", "stun_spell", "flirt_spell"]
+## Art déco: Licht-Ebene nur für Tower-Modelle (Ebene 20) und Farbe des Tower-Lichts (warmes Messingweiß)
+const TOWER_LAYER := 1 << 19
+const TOWER_LIGHT := Color(1.0, 0.96, 0.9)
 
 var value := 0             ## Gold, das im Tower steckt (Kauf und Upgrades); Verkauf bringt 75 %
 var items: Array = []      ## eingelegte Items (Post, IKEO)
@@ -345,6 +348,9 @@ func _build_visual() -> void:
 			_visual.add_child(_gem)
 			if look.tint != "" and FieldStyle.current_name() == FieldStyle.DECO:
 				_deco_trim(ModelLoader.aabb(_gem, Transform3D()))
+			if FieldStyle.current_name() == FieldStyle.DECO:
+				ModelLoader.add_outline(_gem)
+				_add_tower_light(_gem)
 			_finish_visual()
 			return
 	_build_pillar(h)
@@ -440,6 +446,31 @@ func _deco_trim(box: AABB) -> void:
 		mi.position = part[1]
 		mi.material_override = brass
 		_visual.add_child(mi)
+
+
+## Art déco: unsichtbares Licht ohne Schatten, das nur den Tower selbst trifft (eigene Licht-Ebene), damit er
+## im dunklen Maul fast ganz ausgeleuchtet ist; Boden und Nachbarn bleiben unberührt (Lukas, 2026-10-30).
+func _add_tower_light(model: Node3D) -> void:
+	_set_layer(model)
+	var box := ModelLoader.aabb(model, Transform3D())
+	var top := box.position.y + box.size.y
+	for p in [Vector3(0.0, top + 0.3, 0.7), Vector3(0.0, top * 0.5, -0.6)]:
+		var light := OmniLight3D.new()
+		light.light_color = TOWER_LIGHT
+		light.light_energy = 0.75 if p.z > 0.0 else 0.3
+		light.omni_range = 1.8 + box.size.y
+		light.omni_attenuation = 0.6
+		light.shadow_enabled = false
+		light.light_cull_mask = TOWER_LAYER
+		light.position = p
+		_visual.add_child(light)
+
+
+static func _set_layer(n: Node) -> void:
+	if n is VisualInstance3D:
+		n.layers |= TOWER_LAYER
+	for c in n.get_children():
+		_set_layer(c)
 
 
 ## Modell: passendes aus data/tower_models.json (TowerModels), sonst Gebäude nach data/maul/models.json.
