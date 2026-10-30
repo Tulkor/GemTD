@@ -490,6 +490,8 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 	if placing != "":
 		if can_build_tower(placing, anchor):
 			submit({"type": "build", "id": placing, "cell": anchor})
+		elif anchor != NO_CELL and Board3D.footprint(anchor).any(func(f): return not map.can_build_for(f, local_player)):
+			board.flash_zones()
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if towers.has(a):

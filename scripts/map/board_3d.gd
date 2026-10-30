@@ -97,6 +97,16 @@ var _rock_outlines: Array = []  ## je Variante die Kontur-Hülle (oder null)
 var _path: MultiMeshInstance3D
 var _rock_shadows: MultiMeshInstance3D  ## Kontaktschatten unter den Steinen (oder null)
 var _markers: Node3D
+## Zonenrahmen als Lichtstrahlen: Ziel-Helligkeit, aktuelle (blendet über), Aufleuchten, Materialien
+const ZONE_BEAM_HEIGHT := 2.4
+const ZONE_FAINT := 0.15
+const ZONE_FADE_TIME := 2.5  ## Sekunden für das Ausblenden nach dem Start der ersten Welle
+const ZONE_FLASH_TIME := 1.6
+var zone_glow := 1.0
+var _zone_level := 1.0
+var _zone_flash := 0.0
+var _zone_shown := 1.0
+var _zone_mats: Array = []
 var _hover: MeshInstance3D
 var _hover_mat: StandardMaterial3D
 ## Aussehen nach dem Oberflächen-Stil beim Anlegen (FieldStyle.current()).
@@ -566,6 +576,7 @@ func marker_texts() -> Array:
 
 
 func _rebuild_markers() -> void:
+	_zone_mats.clear()
 	for c in _markers.get_children():
 		_markers.remove_child(c)
 		c.queue_free()
@@ -594,22 +605,73 @@ func _rebuild_markers() -> void:
 		_add_zone(z.rect, PLAYER_COLORS[z.player % PLAYER_COLORS.size()] if z.player >= 0 else style.marker)
 
 
-## Rand einer Zone (Maul-Maps) als dünne Neonlinie in der Farbe ihres Spielers.
+## Rand einer Zone (Maul-Maps) als Lichtstrahl in der Farbe ihres Spielers: heller Streifen am Boden
+## und ein Lichtvorhang darüber (zone_beam.gdshader). Die Seiten reichen um eine halbe Breite über die
+## Ecken hinaus, damit die Ecken voll ausgefüllt sind. Helligkeit über set_zone_glow/flash_zones.
 func _add_zone(r: Rect2i, col: Color, width := 0.12, energy := 2.4) -> void:
 	var a := Vector2(r.position) * CELL
 	var b := Vector2(r.end) * CELL
-	var mat := FieldStyle.line_material(col, energy)
-	for side in [[a, Vector2(b.x, a.y)], [Vector2(b.x, a.y), b], [b, Vector2(a.x, b.y)], [Vector2(a.x, b.y), a]]:
+	for side in [[a, Vector2(b.x, a.y)], [Vector2(b.x, a.y), b], [Vector2(a.x, b.y), b], [a, Vector2(a.x, b.y)]]:
 		var from: Vector2 = side[0]
 		var to: Vector2 = side[1]
-		var line := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = Vector3(maxf(absf(to.x - from.x), width), 0.02, maxf(absf(to.y - from.y), width))
-		line.mesh = box
-		line.material_override = mat
-		line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		line.position = Vector3((from.x + to.x) / 2.0, 0.03, (from.y + to.y) / 2.0)
-		_markers.add_child(line)
+		var along_z := absf(to.x - from.x) < 0.001
+		var side_len := from.distance_to(to)
+		var mid := (from + to) / 2.0
+		var strip := MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(side_len + width, width)
+		strip.mesh = plane
+		strip.material_override = _zone_material(col, energy, false, side_len)
+		strip.position = Vector3(mid.x, 0.03, mid.y)
+		var curtain := MeshInstance3D.new()
+		var quad := QuadMesh.new()
+		quad.size = Vector2(side_len, ZONE_BEAM_HEIGHT)
+		curtain.mesh = quad
+		curtain.material_override = _zone_material(col, energy, true, side_len)
+		curtain.position = Vector3(mid.x, ZONE_BEAM_HEIGHT / 2.0, mid.y)
+		for m: MeshInstance3D in [strip, curtain]:
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if along_z:
+				m.rotation.y = PI / 2.0
+			_markers.add_child(m)
+
+
+func _zone_material(col: Color, energy: float, curtain: bool, side_len: float) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/zone_beam.gdshader")
+	mat.set_shader_parameter("color", col)
+	mat.set_shader_parameter("energy", energy)
+	mat.set_shader_parameter("curtain", 1.0 if curtain else 0.0)
+	mat.set_shader_parameter("side_len", side_len)
+	mat.set_shader_parameter("intensity", _zone_shown)
+	_zone_mats.append(mat)
+	return mat
+
+
+## Helligkeit der Zonenrahmen (1 = voll wie vor der ersten Welle, ZONE_FAINT = nur leicht sichtbar); blendet weich über.
+func set_zone_glow(v: float) -> void:
+	if v == zone_glow:
+		return
+	zone_glow = v
+	set_process(true)
+
+
+## Zonenrahmen kurz hell aufleuchten lassen (Bauversuch außerhalb des eigenen Gebiets).
+func flash_zones() -> void:
+	_zone_flash = 1.0
+	set_process(true)
+
+
+func _process(delta: float) -> void:
+	_zone_level = move_toward(_zone_level, zone_glow, delta / ZONE_FADE_TIME)
+	_zone_flash = maxf(_zone_flash - delta / ZONE_FLASH_TIME, 0.0)
+	var shown := maxf(_zone_level, ease(_zone_flash, 0.5))
+	if not is_equal_approx(shown, _zone_shown):
+		_zone_shown = shown
+		for m: ShaderMaterial in _zone_mats:
+			m.set_shader_parameter("intensity", shown)
+	if _zone_level == zone_glow and _zone_flash == 0.0:
+		set_process(false)
 
 
 ## Wegpunkt als Neonröhren-Ring: nur die Kontur, mit überhelltem Kern, der im Glow leuchtet.

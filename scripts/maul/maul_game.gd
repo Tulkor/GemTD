@@ -269,6 +269,9 @@ func pl(p := -1) -> Player:
 func _process(delta: float) -> void:
 	if phase == Phase.SETUP:
 		return
+	# Gebietsrahmen ab dem ersten Level nur noch schwach (auch beim Gast, level kommt vom Host)
+	if level > 0:
+		board.set_zone_glow(Board3D.ZONE_FAINT)
 	if phase < Phase.GAME_OVER:
 		game_time += delta
 		play_time += delta / maxf(Engine.time_scale, 0.001)
@@ -1744,6 +1747,9 @@ func _on_click(keep := false) -> void:
 	var c := board.mouse_cell(camera_rig.camera)
 	if build_id != "":
 		var a := board.mouse_anchor(camera_rig.camera)
+		# außerhalb des eigenen Gebiets: Rahmen leuchten auf
+		if Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
+			board.flash_zones()
 		if submit({"type": "build", "tower": build_id, "cell": a}) and not keep:
 			build_id = ""
 			hud.refresh_shop()

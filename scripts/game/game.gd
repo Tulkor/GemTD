@@ -157,6 +157,10 @@ func _ready() -> void:
 	board.rocks = rocks
 	board.path_depth = path_depth
 	add_child(board)
+	# Stil-Filter (eeveTD/YouTD): im Spielfeld bleiben Tower und Gegner ungefiltert
+	var style_filter := get_node_or_null("StyleFilter") as StyleFilter
+	if style_filter != null:
+		style_filter.set_area(Rect2(0, 0, map.width * Board3D.CELL, map.height * Board3D.CELL))
 	effects = Effects.new()
 	board.add_child(effects)
 	camera_rig = CameraRig.new()
@@ -439,6 +443,9 @@ func _process(delta: float) -> void:
 	if phase < Phase.GAME_OVER:
 		play_time += delta / maxf(Engine.time_scale, 0.001)
 	_update_hover()
+	# Zonenrahmen (Maul-Maps, Randgruppen) ab der ersten Welle nur noch schwach, auch im Koop beim Gast
+	if phase == Phase.WAVE or wave_index > 0:
+		board.set_zone_glow(Board3D.ZONE_FAINT)
 	if phase == Phase.WAVE and not mirror:
 		_process_wave(delta)
 
