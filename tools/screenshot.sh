@@ -19,7 +19,7 @@ tools/godot_import.sh
 LOG=$(mktemp)
 xvfb-run -a -s "-screen 0 ${SIZE}x24" godot "${RENDER_ARGS[@]}" --resolution "$SIZE" --path . \
   res://tools/screenshot.tscn -- "${ARGS[@]}" >"$LOG" 2>&1 || true
-grep -E '^BILD|^TREFFER' "$LOG" || { echo "Kein Bild erzeugt:"; grep -E "ERROR|SCRIPT" "$LOG" | grep -v 'Parameter "m"' | head -15; rm -f "$LOG"; exit 1; }
+grep -E '^BILD|^TREFFER|^UI ' "$LOG" || { echo "Kein Bild erzeugt:"; grep -E "ERROR|SCRIPT" "$LOG" | grep -v 'Parameter "m"' | head -15; rm -f "$LOG"; exit 1; }
 # Zum Ansehen die verkleinerte Ansicht lesen (alle Winkel in einem Bild), die PNGs bleiben für Lukas.
 mapfile -t BILDER < <(grep '^BILD' "$LOG" | cut -c6-)
 # Gab es dasselbe Bild schon (gleicher Name, z. B. vor einer Änderung), sagt der Vergleich, ob und wo es sich

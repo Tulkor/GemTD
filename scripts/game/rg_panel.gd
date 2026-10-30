@@ -90,7 +90,7 @@ func _refresh_towers() -> void:
 		var b := UiUtil.button(text, _towers, func(): game.start_placement(id))
 		b.focus_mode = Control.FOCUS_NONE
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.clip_text = true
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # lange Namen (englisch) umbrechen statt abschneiden
 		b.custom_minimum_size = Vector2(256, 30)
 		b.add_theme_font_size_override("font_size", 12)
 		b.disabled = reasons[i] != "" and game.placing != id

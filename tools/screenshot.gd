@@ -33,6 +33,8 @@ extends Node
 ##   --frei                  Kamera nicht auf die Karte begrenzen (CameraRig.limit_view aus, z. B. Umgebung ansehen)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
+##   --ueberlappung          Oberfläche auf Überlappungen, Ränder und abgeschnittenen Text prüfen
+##                           (tools/ui_pruefung.gd): Zeilen "UI …", Fundstellen rot im Bild
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
@@ -176,6 +178,11 @@ func _ready() -> void:
 		if opts.has("treffer") and scene == "spiel":
 			await _wait_hit(node)
 		var img := get_viewport().get_texture().get_image()
+		if opts.has("ueberlappung"):
+			var found := UiPruefung.check(get_tree().root, img)
+			for line in found:
+				print(line)
+			print("UI-Prüfung: %d Funde" % found.size())
 		if opts.has("zuschnitt"):
 			var r := String(opts.zuschnitt).split(",")
 			img = img.get_region(Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3])))

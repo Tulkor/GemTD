@@ -5,6 +5,7 @@ extends Button
 ## In der Lobby kommen unter die Beschreibung Stimmen-Balken und Namen (set_votes).
 
 var mode_id := ""
+var compact := false  ## Beschreibung nur bei der gewählten Karte (Einzelspieler-Liste, damit alle Modi Platz haben)
 var _labels: Array[Label] = []
 var _name: Label
 var _hint: Label
@@ -90,6 +91,7 @@ func set_state(on: bool, enabled: bool, tag := "") -> void:
 	_players.text = Database.mode_players_text(mode_id)
 	_tag.text = tag.to_upper()
 	_tag.visible = tag != ""
+	_hint.visible = not compact or (on and enabled)
 	var dark := on and enabled
 	var main := DecoTheme.GOLD_DARK if dark else (DecoTheme.TEXT if enabled else DecoTheme.BORDER_2)
 	var soft := DecoTheme.GOLD_DARK if dark else (DecoTheme.BRASS_LIGHT if enabled else DecoTheme.BORDER_2)

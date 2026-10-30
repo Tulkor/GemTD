@@ -7,7 +7,12 @@ extends PanelContainer
 const SORTS := [["damage", "Sortieren: Schaden"], ["kills", "Sortieren: Kills"], ["name", "Sortieren: Name"]]
 
 var game  # game.gd
-var above: Control  ## sitzt darunter (Gegner-Fenster oder DPS-Meter)
+var above: Control:  ## sitzt darunter (Gegner-Fenster oder DPS-Meter)
+	set(v):
+		above = v
+		# Sofort nachziehen, wenn das Fenster darüber wächst (sonst liegt es einen Frame lang darüber)
+		if v != null:
+			v.item_rect_changed.connect(func(): offset_top = (above.get_rect().end.y if above.visible else above.offset_top) + 12)
 var limits: Array[Control] = []  ## endet darüber (Auswahlkarte unten, Mitspieler-Liste), solange die sichtbar sind
 var sort := "damage"
 var summary: Label
