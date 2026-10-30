@@ -198,6 +198,7 @@ func _execute(cmd: Dictionary) -> bool:
 		"setup":
 			if setup_done:
 				return false
+			take_foreign_build(cmd)
 			return _apply_setup(str(cmd.get("race", "")), int(cmd.get("difficulty", difficulty)))
 		"build":
 			return build_tower(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
@@ -490,7 +491,7 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 	if placing != "":
 		if can_build_tower(placing, anchor):
 			submit({"type": "build", "id": placing, "cell": anchor})
-		elif anchor != NO_CELL and Board3D.footprint(anchor).any(func(f): return not map.can_build_for(f, local_player)):
+		elif anchor != NO_CELL and Board3D.footprint(anchor).any(func(f): return not may_build_for(f, local_player)):
 			board.flash_zones()
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)

@@ -2332,6 +2332,12 @@
 	"schwarz": "black",
 	"sad": "sad",
 	"*seufz*": "*sigh*",
+	"Nur in einem Gebiet": "Only inside a territory",
+	"An: alle dürfen Tower auch in den Gebieten der anderen (und in leeren Gebieten) bauen und Einheiten dort aufstellen. Aus: nur im eigenen Gebiet.": "On: everyone may build towers and place units in other players' territories (and in empty ones) too. Off: only in your own territory.",
+	"Fremde Gebiete": "Other territories",
+	"Überall bauen": "Build anywhere",
+	"Nur eigenes Gebiet": "Own territory only",
+	"Jeder baut nur in seinem eigenen Gebiet.": "Everyone builds only in their own territory.",
 	"Lichter fliegen den Weg der Gegner entlang (Taste L).": "Lights fly along the enemies' path (key L).",
 	"Lichtpfad": "Light trail",
 	"Welle %d: %s": "Wave %d: %s",
@@ -2409,5 +2415,5 @@
 	"An": "On",
 	"Aus": "Off",
 	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD.",
-	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, auch außerhalb des eigenen Gebiets, alle Items": "Free building: towers of all shops, no requirements or tower limit, also outside your own area, all items"
+	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items"
 }

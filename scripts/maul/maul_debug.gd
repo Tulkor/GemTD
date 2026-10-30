@@ -76,7 +76,7 @@ func _ready() -> void:
 		game.choose_build(_tower_ids[i])
 		_tower.select(0))
 	_free = CheckBox.new()
-	_free.text = "Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, auch außerhalb des eigenen Gebiets, alle Items"
+	_free.text = "Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items"
 	_free.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_free.custom_minimum_size.x = 300
 	_free.focus_mode = Control.FOCUS_NONE

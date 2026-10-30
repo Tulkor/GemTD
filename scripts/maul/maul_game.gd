@@ -66,6 +66,7 @@ var local_player := 0
 var acting := 0
 var players: Array = []
 var sandbox := false        ## Option „Sandbox“: feste 800 XP (alles offen), Durchbrüche kosten keine Leben, keine XP
+var foreign_build := false  ## Option „Überall bauen“: Tower und Einheiten auch in den Gebieten der anderen
 var levels_done := 0
 ## Debug-Menü (maul_debug.gd): freies Bauen = Tower aller Filialen ohne Voraussetzungen und Towerlimit,
 ## alle Items ohne Laden. debug_xp: XP verändert, dann wird am Levelende nichts gespeichert.
@@ -204,8 +205,8 @@ func _ready() -> void:
 # --- Start ---------------------------------------------------------------------
 
 ## Nach der Filialwahl: Gold, Leben und Countdown bis Level 1. Im Koop startet der Host (Schwierigkeit,
-## Modus, Sandbox gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
-func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false) -> void:
+## Modus, Sandbox, Überall bauen gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
+func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false, foreign_on := false) -> void:
 	if mirror:
 		submit({"type": "shop", "shop": shop_id, "xp": players[local_player].xp})
 		return
@@ -214,6 +215,7 @@ func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := fal
 	difficulty = clampi(diff, 0, rules.get("difficulties", []).size() - 1)
 	mode = play_mode
 	sandbox = sandbox_on
+	foreign_build = foreign_on
 	var d := MaulData.difficulty(difficulty)
 	max_lives = int(d.get("lives", 150))
 	lives = max_lives
@@ -270,10 +272,10 @@ func _process(delta: float) -> void:
 	if phase == Phase.SETUP:
 		return
 	# Gebietsrahmen ab dem ersten Level nur noch schwach (auch beim Gast, level kommt vom Host);
-	# hell nur, solange die Gebietsgrenze gilt (freies Bauen im Debug-Menü hebt sie auf)
+	# hell nur, solange die Gebietsgrenze gilt (Option „Überall bauen“ hebt sie auf)
 	if level > 0:
 		board.set_zone_glow(Board3D.ZONE_FAINT)
-	board.set_zone_rule(not debug_free)
+	board.set_zone_rule(not foreign_build)
 	if phase < Phase.GAME_OVER:
 		game_time += delta
 		play_time += delta / maxf(Engine.time_scale, 0.001)
@@ -1057,6 +1059,11 @@ func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> S
 	return ""
 
 
+## Darf Spieler p in Gebiet z bauen und Einheiten aufstellen? Ohne „Überall bauen“ nur im eigenen.
+func may_use_zone(z: int, p: int) -> bool:
+	return z == players[p].zone or (foreign_build and z >= 0)
+
+
 ## Grund, warum Spieler p hier nicht bauen kann ("" = geht). check_path: Wege prüfen (teuer).
 func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> String:
 	var def := MaulData.tower(id)
@@ -1066,10 +1073,9 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 	if phase == Phase.SETUP or phase >= Phase.GAME_OVER:
 		return tr("Gerade kann nicht gebaut werden")
 	var cells := Board3D.footprint(a)
-	var zone: int = players[p].zone
 	for c in cells:
-		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or (map.zone_at(c) != zone and not debug_free):
-			return tr("Nur im eigenen Gebiet")
+		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or not may_use_zone(map.zone_at(c), p):
+			return tr("Nur im eigenen Gebiet") if not foreign_build else tr("Nur in einem Gebiet")
 		if map.is_marker_zone(c):
 			return tr("Zu nah am Wegpunkt")
 		if occupied.has(c):
@@ -1308,8 +1314,8 @@ func _execute(cmd: Dictionary) -> bool:
 			if u == null or u.owner_player != p:
 				return false
 			var at := Vector2(float(cmd.get("x", 0)), float(cmd.get("y", 0)))
-			if map.zone_at(Vector2i(floori(at.x / Board3D.CELL), floori(at.y / Board3D.CELL))) != players[p].zone:
-				_tell(p, tr("Nur im eigenen Gebiet"))
+			if not may_use_zone(map.zone_at(Vector2i(floori(at.x / Board3D.CELL), floori(at.y / Board3D.CELL))), p):
+				_tell(p, tr("Nur im eigenen Gebiet") if not foreign_build else tr("Nur in einem Gebiet"))
 				return false
 			u.post = at
 			return true
@@ -1750,7 +1756,7 @@ func _on_click(keep := false) -> void:
 	if build_id != "":
 		var a := board.mouse_anchor(camera_rig.camera)
 		# außerhalb des eigenen Gebiets: Rahmen leuchten auf
-		if not debug_free and Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
+		if not foreign_build and Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
 			board.flash_zones()
 		if submit({"type": "build", "tower": build_id, "cell": a}) and not keep:
 			build_id = ""

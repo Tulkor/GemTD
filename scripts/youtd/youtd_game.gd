@@ -253,6 +253,7 @@ func _execute(cmd: Dictionary) -> bool:
 			if setup_done:
 				return false
 			_apply_setup(cmd)
+			take_foreign_build(cmd)
 			return true
 		"research":
 			return research(str(cmd.get("element", "")))
@@ -533,7 +534,7 @@ func can_place(a: Vector2i, any_zone := false) -> bool:
 	if not setup_done or phase >= Phase.GAME_OVER:
 		return false
 	for c in Board3D.footprint(a):
-		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or map.can_build_for(c, acting)):
+		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or may_build_for(c)):
 			return false
 	# Maverick: Tower dürfen nicht direkt nebeneinander stehen
 	if not yp().get_builder().get_allow_adjacent_towers():
