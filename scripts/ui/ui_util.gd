@@ -20,6 +20,18 @@ static func wrap_label(text: String, parent: Node, width: float) -> Label:
 	return l
 
 
+## Steht die Maus über einem sichtbaren Fenster (Panel, Knopf, Liste)? Dann gehört das Mausrad dem Fenster und
+## nicht der Kamera. Durchsichtige Ebenen über dem Spielfeld zählen nicht.
+static func mouse_over_ui(vp: Viewport) -> bool:
+	var c := vp.gui_get_hovered_control()
+	while c != null:
+		if c is PanelContainer or c is Panel or c is BaseButton or c is ScrollContainer or c is ItemList \
+				or c is LineEdit or c is TextEdit or c is Range or c is Tree or c is RichTextLabel:
+			return true
+		c = c.get_parent() as Control
+	return false
+
+
 static func button(text: String, parent: Node, on_pressed: Callable) -> Button:
 	var b := Button.new()
 	b.text = text

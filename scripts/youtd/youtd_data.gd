@@ -51,6 +51,42 @@ static func item(id: String) -> Dictionary:
 	return items().get(id, {})
 
 
+## Englische Beschreibung aus YouTD 2 (data/youtd/beschreibungen.json, tools/youtd/texte_holen.py):
+## kind = "abilities", "auras", "autocasts", "items" oder "towers". "" = keine.
+static func description(kind: String, id: String) -> String:
+	return str((_file("beschreibungen") as Dictionary).get(kind, {}).get(id, ""))
+
+
+# --- Icons (gerendert von tools/youtd/icons.py) -----------------------------------
+
+static var _icons := {}
+
+
+static func _icon(key: String) -> Texture2D:
+	if key == "":
+		return null
+	if not _icons.has(key):
+		var path := "res://assets/youtd/icons/%s.png" % key
+		_icons[key] = load(path) if ResourceLoader.exists(path) else null
+	return _icons[key]
+
+
+## Icon eines Items (Modell aus den Paketen nach Stichwörtern im Namen).
+static func item_icon(id: String) -> Texture2D:
+	return _icon(str((_file("icons") as Dictionary).get("items", {}).get(id, "")))
+
+
+## Rolle eines Towers für die Symbole am Icon: {"attack": "single"|"mass"|"air", "util": ""|"cc"|"aura"|"eco"}.
+static func tower_roles(id: String) -> Dictionary:
+	return (_file("icons") as Dictionary).get("roles", {}).get(id, {})
+
+
+## Icon eines Towers: das Modell seiner Familie.
+static func tower_icon(id: String) -> Texture2D:
+	var fam := str(int(tower(id).get("family", 0)))
+	return _icon(str((_file("icons") as Dictionary).get("towers", {}).get(fam, "")))
+
+
 # --- Umrechnung ------------------------------------------------------------------
 
 ## WC3-Einheiten → Towerbreiten (128 = 1).

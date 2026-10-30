@@ -73,6 +73,9 @@ var alive := {}              ## "Bahn:Welle" (alive_key) -> noch lebende oder ko
 var waves_done := 0
 var xp_result := {}
 var youtd_panel: YoutdPanel
+var youtd_store: YoutdStore
+var _item_row: HFlowContainer  ## Item-Plätze auf der Auswahlkarte
+var _drag = null               ## gerade gezogene Daten (Item aus dem Lager)
 var scenery: EeveScenery
 var world: YtWorld           ## Laufzeit von YouTD 2 (Takt, Geschosse, Effekte)
 var _pending_load := {}      ## YouTD-Teil eines Spielstands, bis YtWorld steht
@@ -125,6 +128,20 @@ func _style_hud() -> void:
 	youtd_panel.game = self
 	hud.left_col.add_child(youtd_panel)
 	hud.left_col.move_child(youtd_panel, 0)
+	# Tower- und Item-Lager fest unten links
+	youtd_store = YoutdStore.new()
+	youtd_store.game = self
+	youtd_store.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	youtd_store.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	youtd_store.offset_left = 16
+	youtd_store.offset_bottom = -16
+	hud.root.add_child(youtd_store)
+	# Item-Plätze des gewählten Towers als Icons auf der Auswahlkarte (Ziehen ins Lager und zurück)
+	_item_row = HFlowContainer.new()
+	_item_row.add_theme_constant_override("h_separation", 3)
+	_item_row.add_theme_constant_override("v_separation", 3)
+	hud.info_left.add_child(_item_row)
+	hud.info_left.move_child(_item_row, hud.info_body.get_index())
 
 
 func mode_id() -> String:
@@ -173,7 +190,8 @@ func save_mode() -> String:
 # --- Koop (coop_sync.gd, youtd_coop.gd) ------------------------------------------------
 
 func coop_commands() -> Array:
-	return ["research", "roll", "build", "item_put", "item_use", "item_lock", "transmute", "next_wave", "player_setup"]
+	return ["research", "roll", "build", "item_put", "item_take", "item_use", "item_lock", "transmute", "oil_merge", "tower_merge",
+			"next_wave", "player_setup"]
 
 
 func new_tower() -> Tower:
@@ -254,6 +272,15 @@ func _execute(cmd: Dictionary) -> bool:
 			return true
 		"transmute":
 			return transmute(cmd.get("uids", []))
+		"oil_merge":
+			return merge_oils()
+		"tower_merge":
+			return merge_towers(str(cmd.get("rarity", "")))
+		"item_take":
+			var tt := tower_from_ref(cmd.get("tower", {}))
+			if not tt is YoutdTower or tt.owner_player != acting:
+				return false
+			return take_item(tt, int(cmd.get("index", -1)))
 		"next_wave":
 			if not setup_done or phase >= Phase.GAME_OVER or next_wave > max_wave():
 				return false
@@ -663,6 +690,66 @@ static func buff_lines(u: YtUnit) -> Array:
 	return out
 
 
+## Öle im Lager des handelnden Spielers, die „Öle kombinieren“ zusammenlegen kann (je Seltenheit 4 → 1 höher).
+func can_merge_oils() -> bool:
+	var r := YoutdCube.recipe("distill")
+	var oils := item_stash.filter(func(it): return it.get_type_name() == "oil")
+	for rarity in YoutdCube.RARITIES.size():
+		if not YoutdCube.autofill_rarity(r, oils, rarity).is_empty():
+			return true
+	return false
+
+
+## Alle Öle so oft wie möglich destillieren (Würfel-Rezept „Destillieren“), von gewöhnlich aufwärts, damit neue
+## Öle gleich weiter zusammengelegt werden.
+func merge_oils() -> bool:
+	var r := YoutdCube.recipe("distill")
+	var done := 0
+	for rarity in YoutdCube.RARITIES.size():
+		for _guard in 100:
+			var oils := item_stash.filter(func(it): return it.get_type_name() == "oil")
+			var list := YoutdCube.autofill_rarity(r, oils, rarity)
+			if list.is_empty() or not transmute(list.map(func(it): return it.get_uid())):
+				break
+			done += 1
+	return done > 0
+
+
+## Seltenheit, die „6 → 1“ gerade zusammenlegen kann (die niedrigste mit genug Towern im Lager): {from, to} oder {}.
+func merge_option() -> Dictionary:
+	if is_build_mode():
+		return {}
+	var need := int(rules.get("merge", {}).get("count", 6))
+	for ri in YoutdRoll.RARITIES.size() - 1:
+		var r: String = YoutdRoll.RARITIES[ri]
+		if stash.filter(func(id): return str(YoutdData.tower(id).get("rarity", "")) == r).size() >= need:
+			return {"from": r, "to": YoutdRoll.RARITIES[ri + 1]}
+	return {}
+
+
+## 6 Tower der Seltenheit rarity aus dem Lager (die ältesten) werden zu 1 zufälligen Tower der nächsten Seltenheit.
+func merge_towers(rarity: String) -> bool:
+	var ri := YoutdRoll.RARITIES.find(rarity)
+	if is_build_mode() or ri < 0 or ri >= YoutdRoll.RARITIES.size() - 1:
+		return false
+	var need := int(rules.get("merge", {}).get("count", 6))
+	var pick := stash.filter(func(id): return str(YoutdData.tower(id).get("rarity", "")) == rarity).slice(0, need)
+	if pick.size() < need:
+		return false
+	var id := YoutdRoll.merge_result(self, pick, YoutdRoll.RARITIES[ri + 1])
+	if id == "":
+		return false
+	var list: Array = stash
+	for p in pick:
+		list.erase(p)
+	list.append(id)
+	if pick.has(build_id):
+		build_id = ""
+	_note(tr("6 → 1: %s") % str(YoutdData.tower(id).get("name", id)))
+	_refresh_hud()
+	return true
+
+
 ## Name eines Items mit Ladungen, z. B. „Strange Item (3)“.
 func item_label(it: YtItem) -> String:
 	return it.get_display_name() + (" (%d)" % it.get_charges() if it.uses_charges() else "")
@@ -682,15 +769,15 @@ func stash_add(it: YtItem) -> void:
 	if not p.item_stash.has(it):
 		p.item_stash.append(it)
 	it.place = YtItem.Place.STASH
-	if youtd_panel != null:
-		youtd_panel.items_dirty()
+	if youtd_store != null:
+		youtd_store.items_dirty()
 
 
 func stash_remove(it: YtItem) -> void:
 	it.get_player().item_stash.erase(it)
 	it.place = YtItem.Place.NONE
-	if youtd_panel != null:
-		youtd_panel.items_dirty()
+	if youtd_store != null:
+		youtd_store.items_dirty()
 
 
 func stash_full(p: YtPlayer) -> bool:
@@ -1036,7 +1123,7 @@ func tower_options(t: Tower) -> Array:
 		var up := YoutdData.upgrade_of(yt.yid)
 		if up != "":
 			var cost := int(YoutdData.tower(up).cost) - int(YoutdData.tower(yt.yid).cost)
-			opts.append({"label": tr("Aufwerten: %s") % str(YoutdData.tower(up).get("name", up)), "action": "upgrade", "id": up, "tier": 0,
+			opts.append({"label": tr("Aufwerten"), "action": "upgrade", "id": up, "tier": 0,
 					"cost": cost, "reason": build_reason(up, yt)})
 	if yt.core != null:
 		var list := yt.autocasts()
@@ -1204,7 +1291,7 @@ func _box_select(_r: Rect2, _add := false) -> void:
 func _refresh_hud_local() -> void:
 	lives = ceili(portal)
 	hud.set_resources(mini(maxi(current_wave(), 1), maxi(waves.size(), 1)), maxi(waves.size(), 1), lives, gold, false)
-	hud.set_waves(_upcoming_waves(4))
+	hud.set_waves(_upcoming_waves(3))
 	hud.set_round_gems([], "")
 	if build_id != "" and phase < Phase.GAME_OVER:
 		var t := YoutdData.tower(build_id)
@@ -1225,21 +1312,22 @@ func _refresh_hud_local() -> void:
 	_refresh_selection()
 	if youtd_panel != null:
 		youtd_panel.refresh()
+	if youtd_store != null:
+		youtd_store.refresh()
 
 
 func _refresh_selection() -> void:
 	if selected == null or not is_instance_valid(selected) or not selected is YoutdTower:
+		_refresh_item_row(null)
 		hud.set_selection({})
 		hud.set_options([])
 		return
 	var yt := selected as YoutdTower
+	_refresh_item_row(yt)
 	var body := tr("Level %d · Erfahrung %d") % [yt.level, floori(yt.xp)]
 	var table := YoutdData.tower_exp_table()
 	if yt.level + 1 < table.size() and yt.level < max_tower_level():
 		body += tr(" (nächstes Level bei %d)") % int(table[yt.level + 1])
-	body += "\n" + tr("Items: %d / %d") % [yt.items.size(), yt.slots()]
-	for it in yt.items:
-		body += "\n  · " + item_label(it)
 	if not yt.oils.is_empty():
 		body += "\n" + tr("Öle: %s") % ", ".join(yt.oils.map(func(it): return it.get_display_name()))
 	var effects := buff_lines(yt.core)
@@ -1251,6 +1339,64 @@ func _refresh_selection() -> void:
 	hud.set_options_enabled(true)
 
 
+## Item-Plätze des Towers als Icons: belegte zieht man ins Lager, auf freie (und belegte) legt man Items aus dem Lager.
+func _refresh_item_row(yt: YoutdTower) -> void:
+	if _item_row == null:
+		return
+	for c in _item_row.get_children():
+		_item_row.remove_child(c)
+		c.queue_free()
+	_item_row.visible = yt != null
+	if yt == null:
+		return
+	var mine := yt.owner_player == local_player
+	var cap := int(YoutdData.rules().get("rarities", {}).get("item_slots_max", {}).get("unique", 6))
+	for k in maxi(cap, yt.slots()):
+		var s: YoutdSlot
+		if k >= yt.slots():
+			# wie in WC3 immer alle Felder: die, die der Tower nicht hat, dunkel
+			s = YoutdSlot.new(null, Color.TRANSPARENT, 40.0)
+			s.set_marked(false, true)
+			s.tooltip_text = tr("Dieser Tower hat nur %d Item-Plätze") % yt.slots()
+			_item_row.add_child(s)
+			continue
+		if k < yt.items.size():
+			var it: YtItem = yt.items[k]
+			var d := YoutdData.item(str(it.get_id()))
+			s = YoutdSlot.new(YoutdData.item_icon(str(it.get_id())), YoutdData.rarity_color(str(d.get("rarity", "common"))), 40.0)
+			s.set_count(str(it.get_charges()) if it.uses_charges() else "")
+			s.tooltip_text = YoutdPanel.item_tip_for(it) + ("\n" + tr("Ins Lager ziehen: herausnehmen") if mine else "")
+			if mine:
+				s.drag_data = {"tower_item": k, "tower": tower_ref(yt)}
+		else:
+			s = YoutdSlot.new(null, Color.TRANSPARENT, 40.0)
+			s.tooltip_text = tr("Freier Item-Platz: Item aus dem Lager hierher ziehen")
+		if mine:
+			s.accepts = func(data): return data is Dictionary and data.has("yt_item")
+			s.on_drop = func(data): submit({"type": "item_put", "tower": tower_ref(yt), "uid": int(data.yt_item)})
+		_item_row.add_child(s)
+	for it in yt.oils:
+		var o := YoutdSlot.new(YoutdData.item_icon(str(it.get_id())), Color.TRANSPARENT, 28.0)
+		o.tooltip_text = tr("Öl (wirkt dauerhaft): %s") % it.get_display_name()
+		_item_row.add_child(o)
+
+
+## Ein Item aus dem Lager, das nicht auf einem Feld landet, kommt in den Tower unter der Maus (wie in WC3).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_BEGIN:
+		_drag = get_viewport().gui_get_drag_data()
+	elif what == NOTIFICATION_DRAG_END:
+		var data = _drag
+		_drag = null
+		if get_viewport().gui_is_drag_successful() or not (data is Dictionary) or not data.has("yt_item"):
+			return
+		if board == null or camera_rig == null or UiUtil.mouse_over_ui(get_viewport()):
+			return
+		var a: Vector2i = occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL)
+		if towers.has(a):
+			submit({"type": "item_put", "tower": tower_ref(towers[a]), "uid": int(data.yt_item)})
+
+
 func _option_view(_t: Tower, o: Dictionary) -> Dictionary:
 	match str(o.action):
 		"sell":
@@ -1259,9 +1405,15 @@ func _option_view(_t: Tower, o: Dictionary) -> Dictionary:
 		"take_item":
 			return {"label": o.label, "style": "normal", "tooltip": tr("Item zurück ins Lager legen.")}
 	var sub := tr("%d Gold") % int(o.cost)
+	var tip: String = o.label
+	if str(o.action) == "upgrade":
+		tip = tr("Aufwerten zu %s") % str(YoutdData.tower(str(o.id)).get("name", o.id)) + "\n" + YoutdPanel.tower_tip(str(o.id))
 	if o.get("reason", "") != "":
-		sub += " · " + str(o.reason)
-	return {"label": o.label, "sub": sub, "style": "primary", "icon": "up", "disabled": o.get("reason", "") != "", "tooltip": o.label}
+		# geht noch nicht: kleiner Knopf mit dem Grund, wann es geht
+		sub = str(o.reason) + " · " + sub
+		return {"label": o.label, "sub": sub, "style": "normal", "icon": "up", "disabled": true, "tooltip": tip}
+	var label: String = o.label + " · " + sub if int(o.cost) > 0 else o.label
+	return {"label": label, "sub": sub, "style": "primary", "icon": "up", "tooltip": tip}
 
 
 func _upcoming_waves(count: int) -> Array:
