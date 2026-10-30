@@ -273,9 +273,12 @@ func _prepare_maul(game: Node) -> void:
 			game.hud._setup._build_cards()
 		if opts.has("profil"):
 			game.hud._setup._show_profile()
+		if opts.has("ueberall"):
+			game.hud._setup._foreign = true
+			game.hud._setup._refresh()
 		return
 	var shop: String = opts.filiale
-	game.start_game(shop, 1, "group", opts.has("sandbox"))
+	game.start_game(shop, 1, "group", opts.has("sandbox"), opts.has("ueberall"))
 	if opts.has("gold"):
 		game.players[0].gold = int(opts.gold)
 	var zone: Rect2i = game.map.zones[0].rect

@@ -2332,5 +2332,9 @@
 	"allein": "alone",
 	"schwarz": "black",
 	"sad": "sad",
-	"*seufz*": "*sigh*"
+	"*seufz*": "*sigh*",
+	"Nur in einem Gebiet": "Only inside a territory",
+	"An: alle dürfen Tower auch in den Gebieten der anderen (und in leeren Gebieten) bauen und Einheiten dort aufstellen. Aus: nur im eigenen Gebiet.": "On: everyone may build towers and place units in other players' territories (and in empty ones) too. Off: only in your own territory.",
+	"Fremde Gebiete": "Other territories",
+	"Überall bauen": "Build anywhere"
 }

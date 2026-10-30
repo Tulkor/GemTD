@@ -118,6 +118,7 @@ func snapshot() -> Dictionary:
 		"difficulty": g.difficulty,
 		"mode": g.mode,
 		"sandbox": g.sandbox,
+		"foreign_build": g.foreign_build,
 		"killed": g.enemies_killed,
 		"leaked": g.enemies_leaked,
 		"je": [g.je, g.je_min, g.je_max],
@@ -249,6 +250,7 @@ func apply_state(s: Dictionary) -> void:
 	g.difficulty = int(s.get("difficulty", g.difficulty))
 	g.mode = str(s.get("mode", g.mode))
 	g.sandbox = bool(s.get("sandbox", false))
+	g.foreign_build = bool(s.get("foreign_build", false))
 	g.enemies_killed = int(s.get("killed", 0))
 	g.enemies_leaked = int(s.get("leaked", 0))
 	var je: Array = s.get("je", [1.0, 1.0, 1.0])
