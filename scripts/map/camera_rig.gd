@@ -244,7 +244,8 @@ static func _sky() -> Sky:
 ## Licht und Himmel für eine 3D-Szene anlegen. Werte aus FieldStyle.env(), fehlende Schlüssel
 ## nehmen den Arcade-Stand (FieldStyle.ENV_DEFAULT). Gibt die Knoten zurück, damit ein Modus
 ## (z. B. eine Nachtversion) sie nachträglich ändern kann: {"env", "sun", "fill"}.
-static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
+## filter = Stil-Filter des Modus (StyleFilter) dazuhängen; Editoren lassen ihn weg, dort zählen echte Farben.
+static func add_environment(parent: Node, look: Dictionary = {}, filter := true) -> Dictionary:
 	if look.is_empty():
 		look = FieldStyle.env()
 	var env := Environment.new()
@@ -347,6 +348,8 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		parent.add_child(fill)
 	_add_outline(parent, look)
 	_add_post(parent, look)
+	if filter:
+		StyleFilter.attach(parent)
 	return {"env": env, "sun": sun, "fill": fill}
 
 

@@ -76,6 +76,13 @@ func _ready() -> void:
 		res.disabled = i == 1
 		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
 	ui_scale_slider = _ui_scale_row(grid)
+	# Bildfilter je Modus (StyleFilter): Retro in GemTD, Messing im Maul, Nebelwald in eeveTD/YouTD, warm in Randgruppen
+	var look := _option(tr("Stil-Filter"), grid)
+	look.add_item(tr("An"))
+	look.add_item(tr("Aus"))
+	look.select(0 if Display.style_filter else 1)
+	look.tooltip_text = tr("Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.")
+	look.item_selected.connect(func(i): Display.set_style_filter(i == 0))
 	VolumeRows.add(grid, DecoTheme.font(true) if deco else UiTheme.font(true), DecoTheme.BRASS_LIGHT if deco else UiTheme.CYAN)
 	var text := "Änderungen gelten sofort und bleiben gespeichert."
 	if in_game:

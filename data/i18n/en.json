@@ -2405,5 +2405,9 @@
 	"Gegen Flieger": "Anti-air",
 	"Kontrolle (verlangsamen, betäuben)": "Crowd control (slow, stun)",
 	"Aura für Tower in der Nähe": "Aura for nearby towers",
-	"Ökonomie (Gold, Erfahrung, Items)": "Economy (gold, experience, items)"
+	"Ökonomie (Gold, Erfahrung, Items)": "Economy (gold, experience, items)",
+	"Stil-Filter": "Style filter",
+	"An": "On",
+	"Aus": "Off",
+	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD."
 }

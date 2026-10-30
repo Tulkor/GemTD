@@ -250,6 +250,8 @@ static func env(name := "") -> Dictionary:
 	look.merge(style.get("env", {}), true)
 	if night:
 		look.merge(style.get("env_night", {}), true)
+	# Stimmung des Modus (StyleFilter): z. B. wärmeres Licht in Randgruppen TD, Nebel im Wald
+	look.merge(StyleFilter.light(name), true)
 	return look
 
 

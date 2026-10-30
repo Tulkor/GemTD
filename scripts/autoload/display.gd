@@ -13,6 +13,8 @@ const UI_SCALE_MIN := 0.5
 const UI_SCALE_MAX := 1.0
 var ui_scale := 1.0  ## Größe der ganzen Oberfläche, 0,5 bis 1,0 (3D-Ansicht bleibt gleich)
 var path_lights := false  ## Lichtpfad: Lichter fliegen den Gegnerweg entlang (PathLights, Knopf im HUD)
+var style_filter := true  ## Stil-Filter je Modus über dem 3D-Bild (StyleFilter), in den Einstellungen abschaltbar
+signal style_filter_changed(on: bool)
 var _fonts: Array[FontFile] = []  ## hält die Schriften im Cache, damit die Einstellungen aus _sharpen_fonts bleiben
 
 
@@ -23,6 +25,7 @@ func _ready() -> void:
 		resolution = cfg.get_value("display", "resolution", resolution)
 		ui_scale = clampf(float(cfg.get_value("display", "ui_scale", 1.0)), UI_SCALE_MIN, UI_SCALE_MAX)
 		path_lights = bool(cfg.get_value("display", "path_lights", false))
+		style_filter = bool(cfg.get_value("display", "style_filter", true))
 	_sharpen_fonts()
 	_apply()
 
@@ -47,6 +50,12 @@ func set_ui_scale(v: float) -> void:
 
 func set_path_lights(on: bool) -> void:
 	path_lights = on
+	_save()
+
+
+func set_style_filter(on: bool) -> void:
+	style_filter = on
+	style_filter_changed.emit(on)
 	_save()
 
 
@@ -88,4 +97,5 @@ func _save() -> void:
 	cfg.set_value("display", "resolution", resolution)
 	cfg.set_value("display", "ui_scale", ui_scale)
 	cfg.set_value("display", "path_lights", path_lights)
+	cfg.set_value("display", "style_filter", style_filter)
 	cfg.save(SETTINGS)

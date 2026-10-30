@@ -47,6 +47,7 @@ extends Node
 ##   --bonusfelder           eeveTD: Bonusfelder (Lava, Eis, Marmor) auslegen, drei davon unter Towern des Plans
 ##   --ende                  eeveTD: Endbildschirm mit Wertung (Sieg)
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
+##   --filter=aus|an         Stil-Filter des Modus ab- bzw. anschalten (ohne die Einstellung zu speichern)
 ##   --lichtpfad             Lichtpfad an (Lichter fliegen den Gegnerweg entlang, ohne die Einstellung zu speichern)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
@@ -75,6 +76,9 @@ func _ready() -> void:
 	if opts.has("rasse"):
 		Session.rg_choice = {"race": str(opts.rasse)}
 	FieldStyle.night = opts.has("nacht")
+	# Stil-Filter (StyleFilter) aus bzw. an, ohne die Einstellung zu speichern
+	if opts.has("filter"):
+		Display.style_filter = opts.filter != "aus"
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
 	if opts.has("turmlicht"):
