@@ -102,6 +102,7 @@ func _ready() -> void:
 	await _save_tests()
 	await _debug_tests()
 	await _coop_tests()
+	await _team_tests()
 	print("FERTIG mit %d Fehlern" % failures)
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -415,6 +416,98 @@ func _save_tests() -> void:
 		await get_tree().process_frame
 	check(loaded.phase == MaulGame.Phase.WAVE and loaded.level == 1, "Geladenes Spiel startet Level 1")
 	loaded.queue_free()
+	await get_tree().process_frame
+
+
+## Geldteilen, Konzernbonus, Teampunkte und Koop-Spielstand.
+func _team_tests() -> void:
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	var host: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(host)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(client)
+	await get_tree().process_frame
+	client.sync.command_sink = func(cmd): host.sync.receive(1, _wire(cmd))
+	var pump := func(): client.sync.apply_state(_wire(host.sync.snapshot()))
+	host.start_game("hm", 1, "group", false, false, true)
+	pump.call()
+	client.start_game("aldi", 0, "group")
+	pump.call()
+	check(client.share_gold, "Geldteilen kommt beim Mitspieler an")
+	check(host.players[0].team_points == 2 and host.players[1].team_points == 1, "Teampunkte: Host 2, Mitspieler 1")
+	check(client.players[1].team_points == 1, "Mitspieler sieht seinen Teampunkt")
+	# Geldteilen: Kopfgeld gleich verteilt, Rest bleibt im Topf
+	var g0: int = host.players[0].gold
+	var g1: int = host.players[1].gold
+	host._share_bounty(5)
+	check(host.players[0].gold == g0 + 2 and host.players[1].gold == g1 + 2 and host.gold_pot == 1, "Geldteilen: 5 Gold → je 2, 1 im Topf")
+	host._share_bounty(1)
+	check(host.players[0].gold == g0 + 3 and host.gold_pot == 0, "Topf wird ausgezahlt, sobald er reicht")
+	# Konzernbonus nur ohne Geldteilen: wer weniger trifft, bekommt mehr
+	check(is_equal_approx(host.income_factor(0), 1.0), "Mit Geldteilen kein Konzernbonus")
+	host.share_gold = false
+	host.players[0].level_kills = 10
+	host.players[1].level_kills = 2
+	check(is_equal_approx(host.income_factor(0), 1.1) and is_equal_approx(host.income_factor(1), 1.3), "Konzernbonus bei 2 Spielern: 110 %% / 130 %% (%.2f / %.2f)" % [host.income_factor(0), host.income_factor(1)])
+	host.share_gold = true
+	# Teampunkte einlösen (der Mitspieler über den Host)
+	host.lives = host.max_lives
+	client.submit({"type": "team", "use": "lives"})
+	check(host.players[1].team_points == 1, "Leben voll: kein Teampunkt verbraucht")
+	host.lives = host.max_lives - 25
+	client.submit({"type": "team", "use": "lives"})
+	check(host.lives == host.max_lives - 15 and host.players[1].team_points == 0, "Mitspieler löst +10 Leben ein")
+	check(not client.submit({"type": "team", "use": "winter"}) or host.winter_until < host.game_time, "ohne Teampunkt kein Winter")
+	check(host.submit({"type": "team", "use": "winter"}) and host.winter_factor() < 0.2, "Host löst Winter ein: Tempo ×%.1f" % host.winter_factor())
+	check(host.submit({"type": "team", "use": "sight"}) and host.players[0].team_points == 0, "Host löst Durchblick ein")
+	host.submit({"type": "start_now"})
+	for i in 20:
+		await get_tree().process_frame
+	var e: MaulEnemy = host.enemies[0] if not host.enemies.is_empty() else null
+	if e != null:
+		e.invisible = true
+		check(host.is_detected(e), "Durchblick: Unsichtbare angreifbar")
+		var before := e.traveled
+		for i in 10:
+			await get_tree().process_frame
+		var slow := e.traveled - before
+		host.winter_until = -1.0
+		before = e.traveled
+		for i in 10:
+			await get_tree().process_frame
+		check(slow < (e.traveled - before) * 0.5, "Winter bremst die Gegner (%.2f statt %.2f)" % [slow, e.traveled - before])
+	pump.call()
+	check(client.sight_until > client.game_time - 1.0, "Durchblick kommt beim Mitspieler an")
+	host.debug_jump_to_level(10)
+	host.spawn_queue.clear()
+	host._end_level()
+	check(host.players[0].team_points == 1 and host.players[1].team_points == 1, "Nach Level 10: +1 Teampunkt für alle")
+	# Koop speichern und laden: Stand vom Levelbeginn bzw. jetzt, Mitspieler behält seine eigenen XP
+	host.players[1].gold = 4321
+	var st: Dictionary = _wire(MaulSave.capture(host))
+	check(not st.is_empty(), "Koop-Spielstand erzeugt")
+	host.queue_free()
+	client.queue_free()
+	await get_tree().process_frame
+	Session.coop = {"role": "host", "player": 0, "names": ["Host", "Gast"]}
+	Session.load_state = st
+	var host2: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(host2)
+	Session.coop = {"role": "client", "player": 1, "names": ["Host", "Gast"]}
+	var client2: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(client2)
+	await get_tree().process_frame
+	client2.players[1].xp = 345
+	client2.sync.command_sink = func(cmd): host2.sync.receive(1, _wire(cmd))
+	client2.sync.apply_state(_wire(host2.sync.snapshot()))
+	check(host2.phase == MaulGame.Phase.COUNTDOWN and host2.shop_of(1) == "aldi" and host2.players[1].gold == 4321, "Koop geladen: Phase, Filiale und Gold des Mitspielers")
+	check(host2.share_gold and host2.players[1].team_points == 1, "Koop geladen: Geldteilen und Teampunkte")
+	check(not client2.hud.setup_visible() and client2.shop_of() == "aldi", "Mitspieler steigt ohne Filialwahl ein")
+	check(host2.players[1].xp == 345 and client2.players[1].xp == 345, "Mitspieler behält seine eigenen XP")
+	host2.queue_free()
+	client2.queue_free()
+	Session.coop = {}
 	await get_tree().process_frame
 
 
