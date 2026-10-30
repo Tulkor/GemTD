@@ -16,7 +16,7 @@ const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 96
 ## Befehle, die ein Mitspieler schicken darf (maul_game.gd → _execute)
 const COMMANDS := ["shop", "build", "sell", "upgrade", "speed", "reveal", "bonus", "research", "item", "item_sell",
-	"move_items", "copy", "summon", "drone", "module", "module_sell", "post", "deposit", "withdraw", "auto_deposit", "bank_upgrade"]
+	"move_items", "copy", "summon", "drone", "module", "module_sell", "post", "deposit", "withdraw", "auto_deposit", "bank_upgrade", "team", "xp"]
 ## Werte, die sich laufend ändern und allein keinen sofortigen Stand auslösen
 const LIVE_KEYS := ["live", "gt", "countdown"]
 
@@ -100,7 +100,7 @@ func snapshot() -> Dictionary:
 	var ps := []
 	for p in g.players:
 		ps.append({"name": p.name, "shop": p.shop, "gold": p.gold, "xp": p.xp, "bonus": p.bonus, "research": p.research,
-			"kills": p.kills, "reveal_until": p.reveal_until, "reveal_ready": p.reveal_ready,
+			"kills": p.kills, "reveal_until": p.reveal_until, "reveal_ready": p.reveal_ready, "team_points": p.team_points,
 			"bank": [p.account, p.auto_deposit, p.bank_level, ceilf(p.withdraw_in), p.emma_mined]})
 	var ts := []
 	var live := []
@@ -119,6 +119,8 @@ func snapshot() -> Dictionary:
 		"mode": g.mode,
 		"sandbox": g.sandbox,
 		"foreign_build": g.foreign_build,
+		"share_gold": g.share_gold,
+		"team_fx": [g.sight_until, g.winter_until],
 		"killed": g.enemies_killed,
 		"leaked": g.enemies_leaked,
 		"je": [g.je, g.je_min, g.je_max],
@@ -191,6 +193,7 @@ func apply_state(s: Dictionary) -> void:
 		p.kills = int(d.get("kills", 0))
 		p.reveal_until = float(d.get("reveal_until", -1.0))
 		p.reveal_ready = float(d.get("reveal_ready", 0.0))
+		p.team_points = int(d.get("team_points", 0))
 		var bank: Array = d.get("bank", [0, false, 0, 0.0, 0])
 		p.account = int(bank[0])
 		p.auto_deposit = bool(bank[1])
@@ -251,6 +254,10 @@ func apply_state(s: Dictionary) -> void:
 	g.mode = str(s.get("mode", g.mode))
 	g.sandbox = bool(s.get("sandbox", false))
 	g.foreign_build = bool(s.get("foreign_build", false))
+	g.share_gold = bool(s.get("share_gold", false))
+	var team_fx: Array = s.get("team_fx", [-1.0, -1.0])
+	g.sight_until = float(team_fx[0])
+	g.winter_until = float(team_fx[1])
 	g.enemies_killed = int(s.get("killed", 0))
 	g.enemies_leaked = int(s.get("leaked", 0))
 	var je: Array = s.get("je", [1.0, 1.0, 1.0])
@@ -271,8 +278,12 @@ func apply_state(s: Dictionary) -> void:
 		if _got_state:
 			g.show_message(str(note[1]))
 		_note_seen = int(note[0])
-	# XP: gehören diesem Rechner
-	if me.xp != xp_before and _got_state and not g.sandbox:
+	# XP: gehören diesem Rechner. Steigt der Mitspieler in eine laufende (geladene) Partie ein, meldet er dem
+	# Host seine eigenen XP, statt die aus dem Spielstand zu übernehmen.
+	if not host and not _got_state and int(s.get("phase", 0)) != MaulGame.Phase.SETUP and me.shop != "" and not g.sandbox:
+		me.xp = xp_before
+		send({"type": "xp", "xp": xp_before})
+	elif me.xp != xp_before and _got_state and not g.sandbox:
 		MaulXp.save_xp(me.xp)
 		g._announce_unlocks(xp_before, me.xp)
 	_got_state = true

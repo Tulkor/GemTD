@@ -75,7 +75,12 @@ var net_pos := Vector2.ZERO
 
 func _process(delta: float) -> void:
 	if game == null or not game.mirror:
+		# Winter (Teampunkt): nur das Lauftempo sinkt, Gift und Verlangsamung laufen normal ab
+		var base := speed
+		if game != null:
+			speed *= game.winter_factor()
 		super._process(delta)
+		speed = base
 		return
 	pos = net_pos if pos.distance_to(net_pos) > 3.0 else pos.lerp(net_pos, clampf(delta * 12.0, 0.0, 1.0))
 	_sync_position()

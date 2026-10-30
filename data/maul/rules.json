@@ -18,7 +18,7 @@
 	"regular_levels": 40,
 	"start_gold": 500,
 	"start_gold_red": 45,
-	"income": {"start": 185, "add": 38, "growth": 1.01, "boss_bonus": 50, "red_share": 0.2},
+	"income": {"start": 185, "add": 38, "growth": 1.01, "boss_bonus": 50, "red_share": 0.2, "rank_base": 5, "rank_step": 10},
 	"enemies_per_spawn": {"ground": [2, 1], "air": [5, 1], "boss": [1, 0]},
 	"player_factor": {"base": 0.5, "per_missing": 0.02, "max_players": 11, "steps_before": [36, 40, 41, 49], "step": 0.2},
 	"min_growth": 1.05,
@@ -32,6 +32,7 @@
 	"spawn_interval_group": 0.25,
 	"detect_shops": ["media_markt", "aldi", "mcdonalds"],
 	"reveal": {"duration": 30, "cooldown": 60},
+	"team_points": {"start": 1, "host": 1, "after_levels": [10, 20, 30], "lives": 10, "sight": 30, "winter": 10, "winter_slow": 0.9},
 	"level_40_text": "Die Gewerbeaufsicht ist besiegt! Jetzt kommen 10 Bonuslevel.",
 	"specials": {
 		"invisible": {"armor": -10},
