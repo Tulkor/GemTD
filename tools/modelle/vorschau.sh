@@ -4,13 +4,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export PATH="$HOME/.local/bin:$PATH"
+source tools/render_treiber.sh
 OUT=$1; shift
 TMP=$(mktemp -d)
 FILES=()
 for f in "$@"; do
   if [[ $f == --* ]]; then FILES+=("$f"); else FILES+=("$(realpath "$f")"); fi
 done
-xvfb-run -a -s "-screen 0 320x320x24" godot --rendering-driver opengl3 --resolution 320x320 --path . \
+xvfb-run -a -s "-screen 0 320x320x24" godot "${RENDER_ARGS[@]}" --resolution 320x320 --path . \
   -s tools/modelle/vorschau.gd -- "$TMP" "${FILES[@]}" 2>&1 | grep -E "^(BILD|FEHLER)" || true
 python3 -I - "$TMP" "$OUT" "$*" <<'PY'
 import os, sys

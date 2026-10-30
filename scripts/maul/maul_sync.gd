@@ -287,7 +287,7 @@ func apply_state(s: Dictionary) -> void:
 	elif phase == MaulGame.Phase.COUNTDOWN and was_phase == MaulGame.Phase.WAVE:
 		_clear_enemies()
 		g.effects.clear()
-		g.show_message(tr("Level %d geschafft") % g.levels_done, 4.0)
+		g.show_message(tr("Welle %d geschafft") % g.levels_done, 4.0)
 	if was_phase == MaulGame.Phase.SETUP and phase != MaulGame.Phase.SETUP:
 		g.hud.refresh_setup()
 	if me.shop != "" and g.hud.setup_visible():

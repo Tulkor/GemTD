@@ -15,3 +15,4 @@ Selbst erzeugt (kein Foto, frei wie CC0) mit `tools/rg_texturen.py`, für Randgr
 |---|---|
 | concrete.jpg (+ _normal) | heller Beton mit ein paar Steinen (Baufläche) |
 | gravel.jpg (+ _normal) | Splitt (Wege der Gegner) |
+| cobble.jpg (+ _normal) | Pflaster mit Gras in den Fugen (Baufläche Randgruppen TD), tools/rg_texturen.py |

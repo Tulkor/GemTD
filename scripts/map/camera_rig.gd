@@ -208,6 +208,9 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 	env.glow_intensity = look.glow_intensity
 	env.glow_bloom = look.glow_bloom
 	env.glow_hdr_threshold = look.glow_threshold
+	# weicher, breiter Schein: zu den Standard-Stufen 3 und 5 auch 2 (eng) und 4 (mittel)
+	env.set_glow_level(1, 0.6)
+	env.set_glow_level(3, 0.8)
 	# Umgebungslicht: feste Farbe, oder mit "ambient_sky" > 0 anteilig vom Himmel (oben Himmelsfarbe,
 	# unten Bodenfarbe), dann sind Oberseiten heller als Flanken und Unterseiten
 	if look.ambient_sky > 0.0 and env.sky != null:
@@ -230,6 +233,26 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		env.fog_light_color = look.fog
 		env.fog_density = look.fog_density
 		env.fog_sky_affect = 0.0
+	# Forward+ (Vulkan): Umgebungsverdeckung (SSAO) dunkelt Fugen, Ecken und den Fuß der Tower ab,
+	# indirektes Licht (SSIL) trägt Farbe von hellen Flächen auf die Umgebung
+	if look.ssao > 0.0:
+		env.ssao_enabled = true
+		env.ssao_radius = look.ssao_radius
+		env.ssao_intensity = look.ssao
+		env.ssao_power = 1.5
+		env.ssao_light_affect = 0.15
+	if look.ssil > 0.0:
+		env.ssil_enabled = true
+		env.ssil_radius = 3.0
+		env.ssil_intensity = look.ssil
+	# Volumen-Nebel: Licht der Laternen und Treffer wird im Dunst sichtbar
+	if look.vol_fog > 0.0:
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = look.vol_fog
+		env.volumetric_fog_albedo = look.fog
+		env.volumetric_fog_length = 40.0
+		env.volumetric_fog_ambient_inject = 0.3
+		env.volumetric_fog_sky_affect = 0.0
 	var sun := DirectionalLight3D.new()
 	sun.rotation = Vector3(deg_to_rad(look.sun_pitch), deg_to_rad(look.sun_yaw), 0)
 	sun.light_color = look.sun * tint
@@ -256,4 +279,53 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 		fill.light_specular = 0.25
 		fill.shadow_enabled = false
 		parent.add_child(fill)
+	_add_outline(parent, look)
+	_add_post(parent, look)
 	return {"env": env, "sun": sun, "fill": fill}
+
+
+## Leichte Kontur um alles Deckende (screen_outline.gdshader), Farbe und Stärke aus "outline_color"/"outline".
+static func _add_outline(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenOutline")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.outline <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_outline.gdshader")
+	mat.set_shader_parameter("color", look.outline_color)
+	mat.set_shader_parameter("strength", look.outline)
+	mat.render_priority = 0
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenOutline"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# deckt den ganzen Bildschirm, darf nie weggeschnitten werden
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)
+
+
+
+## Vignette über dem ganzen Bild (screen_post.gdshader), Stärke und Farbe aus "vignette"/"vignette_color".
+static func _add_post(parent: Node, look: Dictionary) -> void:
+	var old := parent.get_node_or_null("ScreenPost")
+	if old != null:
+		parent.remove_child(old)
+		old.queue_free()
+	if look.vignette <= 0.0:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/screen_post.gdshader")
+	mat.set_shader_parameter("vignette", look.vignette)
+	mat.set_shader_parameter("vignette_color", look.vignette_color)
+	# ganz zuletzt, nach Effekten und Kontur
+	mat.render_priority = 100
+	var quad := MeshInstance3D.new()
+	quad.name = "ScreenPost"
+	quad.mesh = QuadMesh.new()
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
+	parent.add_child(quad)
