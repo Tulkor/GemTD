@@ -58,7 +58,7 @@ static func snapshot(g) -> Dictionary:
 		if yt != null and yt.core != null:
 			ts["%d,%d" % [yt.cell.x, yt.cell.y]] = {"yid": yt.yid, "owner": yt.owner_player, "spent": yt.spent,
 				"items": yt.items.map(func(it): return _item(it)), "oils": yt.oils.map(func(it): return _item(it))}
-	return {"setup": [g.mode_index, g.length_index, g.difficulty, g.wave_seed], "portal": snappedf(g.portal, 0.01),
+	return {"setup": [g.mode_index, g.length_index, g.difficulty, g.wave_seed], "portal": snappedf(g.portal, 0.01), "foreign_build": g.foreign_build,
 		"next_wave": g.next_wave, "timer": ceili(maxf(g.next_wave_in, 0.0)), "waves_done": g.waves_done,
 		"alive": g.alive.duplicate(), "players": ps, "towers": ts}
 
@@ -93,6 +93,7 @@ static func apply(g, d: Dictionary) -> void:
 			g.waves.append(g._wave(i + 1))
 		g.hud.setup_debug(0, g.waves.size())
 	g._make_players()
+	g.foreign_build = bool(d.get("foreign_build", g.foreign_build))
 	g.portal = float(d.get("portal", g.portal))
 	g.next_wave = int(d.get("next_wave", g.next_wave))
 	g.next_wave_in = float(d.get("timer", g.next_wave_in))

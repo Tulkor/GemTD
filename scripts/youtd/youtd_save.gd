@@ -39,7 +39,7 @@ static func capture(g) -> Dictionary:
 			"base_hp": ye.base_hp, "armor": ye.base_armor, "armor_type": ye.armor_type, "specials": ye.specials.duplicate(),
 			"health": ye.core.get_health(), "traveled": ye.traveled, "final": ye.final_boss, "buffs": buffs_of(ye.core)})
 	return {
-		"mode": g.mode_index, "length": g.length_index, "difficulty": g.difficulty, "seed": g.wave_seed,
+		"mode": g.mode_index, "length": g.length_index, "difficulty": g.difficulty, "seed": g.wave_seed, "foreign_build": g.foreign_build,
 		"wave_rng": g.wave_rng.state, "roll_rng": g.roll_rng.state, "synced_rng": YtGlobals.synced_rng.state,
 		"portal": g.portal, "score": g.youtd_score, "next_wave": g.next_wave, "next_wave_in": g.next_wave_in,
 		"waves_done": g.waves_done, "alive": g.alive.duplicate(),
@@ -145,6 +145,7 @@ static func restore(g, d: Dictionary) -> void:
 	g.mode_index = int(d.get("mode", 0))
 	g.length_index = int(d.get("length", 1))
 	g.difficulty = int(d.get("difficulty", 2))
+	g.foreign_build = bool(d.get("foreign_build", false))
 	g.wave_seed = int(d.get("seed", 0))
 	g.wave_rng.seed = g.wave_seed
 	g.waves = []

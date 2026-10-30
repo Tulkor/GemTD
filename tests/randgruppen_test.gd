@@ -169,6 +169,20 @@ func _coop_tests(map: MapData) -> void:
 	var hz: Rect2i = map.zones[0].rect
 	client.submit({"type": "build", "id": tid, "cell": hz.position + Vector2i(6, 10)})
 	check(host.towers.size() == 1, "Gast baut nicht in der Zone des Hosts")
+	# „Überall bauen“ (Host): dann auch in der Zone des Hosts
+	host.foreign_build = true
+	pump.call()
+	check(client.foreign_build, "„Überall bauen“ kommt beim Gast an")
+	var foreign := none
+	for y in range(hz.position.y + 4, hz.end.y - 4, 2):
+		for x in range(hz.position.x + 2, hz.end.x - 2, 2):
+			if foreign == none and client.can_build_tower(tid, Vector2i(x, y)):
+				foreign = Vector2i(x, y)
+	client.submit({"type": "build", "id": tid, "cell": foreign})
+	pump.call()
+	check(foreign != none and host.towers.has(foreign) and host.towers[foreign].owner_player == 1, "mit „Überall bauen“ baut der Gast in der Zone des Hosts")
+	host.foreign_build = false
+	pump.call()
 	check(host.tower_options(t).is_empty(), "Host verkauft den Tower des Gasts nicht")
 	check(int(client.towers[cell].get_meta("spent", 0)) == cost, "Ausgegeben kommt beim Gast an")
 	# Level startet früher erst, wenn beide bereit sind

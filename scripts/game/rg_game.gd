@@ -198,6 +198,7 @@ func _execute(cmd: Dictionary) -> bool:
 		"setup":
 			if setup_done:
 				return false
+			take_foreign_build(cmd)
 			return _apply_setup(str(cmd.get("race", "")), int(cmd.get("difficulty", difficulty)))
 		"build":
 			return build_tower(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))

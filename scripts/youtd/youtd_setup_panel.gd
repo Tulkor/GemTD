@@ -12,6 +12,7 @@ var length := 1
 var difficulty := 2
 var wisdom: Array = []
 var builder := ""
+var foreign := false
 var _mode_text: Label
 var _builder_text: Label
 var _diff_text: Label
@@ -100,6 +101,8 @@ func _ready() -> void:
 			_update_text()))
 	_diff_text = UiUtil.wrap_label("", v, 700)
 	_diff_text.add_theme_color_override("font_color", UiTheme.DIM)
+	foreign = Session.foreign_build
+	host_only.append_array(SetupPanel.add_foreign_choice(self, v, true))
 
 	_wisdom_head = UiTheme.caption("", v)
 	var grid := GridContainer.new()
@@ -170,7 +173,7 @@ func _start() -> void:
 	YoutdProgress.set_wisdom(wisdom)
 	YoutdProgress.set_last_builder(builder)
 	game.submit({"type": "setup", "mode": mode, "length": length, "difficulty": difficulty, "seed": randi(), "wisdom": wisdom.duplicate(),
-			"builder": builder, "level": YoutdProgress.level()})
+			"builder": builder, "foreign": foreign, "level": YoutdProgress.level()})
 
 
 ## Mitspieler: eigene Weisheit und eigenen Baumeister an den Host schicken.

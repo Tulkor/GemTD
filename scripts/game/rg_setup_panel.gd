@@ -7,6 +7,7 @@ extends Control
 var game  # rg_game.gd
 var race_id := ""
 var difficulty := 2
+var foreign := false
 var _race_text: Label
 var _diff_text: Label
 var _panel: PanelContainer
@@ -20,6 +21,7 @@ func _ready() -> void:
 	var races: Array = game.rules.get("races", [])
 	race_id = str(Session.rg_choice.get("race", races[0].id if not races.is_empty() else ""))
 	difficulty = game.difficulty
+	foreign = Session.foreign_build
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,7 +80,9 @@ func _ready() -> void:
 	_diff_text.add_theme_color_override("font_color", UiTheme.DIM)
 	_update_text()
 
-	var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "race": race_id, "difficulty": difficulty}))
+	SetupPanel.add_foreign_choice(self, v, game.local_player == 0)
+
+	var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "race": race_id, "difficulty": difficulty, "foreign": foreign}))
 	go.custom_minimum_size.y = 50
 	go.add_theme_font_size_override("font_size", 20)
 	UiTheme.accent_button(go, UiTheme.GOLD, UiTheme.GOLD_DARK)

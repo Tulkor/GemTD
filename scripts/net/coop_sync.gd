@@ -146,6 +146,7 @@ func snapshot() -> Dictionary:
 		"setup": game.setup_done,
 		"difficulty": Session.difficulty,
 		"score_mode": game.score_mode,
+		"foreign_build": game.foreign_build,
 		"players": ps,
 		"towers": ts,
 		"rocks": rs,
@@ -268,6 +269,7 @@ func apply_state(s: Dictionary) -> void:
 		g.apply_coop_snapshot(s.mode)
 	if s.has("mstats") and g.has_method("apply_coop_stats"):
 		g.apply_coop_stats(s.mstats)
+	g.foreign_build = bool(s.get("foreign_build", false))
 	if s.get("setup", true) and not g.setup_done:
 		Session.difficulty = int(s.get("difficulty", Session.difficulty))
 		Session.score_mode = bool(s.get("score_mode", false))

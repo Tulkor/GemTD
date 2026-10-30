@@ -223,6 +223,14 @@ func can_build_for(c: Vector2i, p: int) -> bool:
 	return false
 
 
+## Index des Gebiets, in dem Feld c liegt (-1 = in keinem).
+func zone_index(c: Vector2i) -> int:
+	for i in zones.size():
+		if zones[i].rect.has_point(c):
+			return i
+	return -1
+
+
 func is_marker_zone(c: Vector2i) -> bool:
 	for p in all_waypoints():
 		if maxi(absi(p.x - c.x), absi(p.y - c.y)) <= marker_radius:
