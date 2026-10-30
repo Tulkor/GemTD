@@ -211,10 +211,11 @@ const STYLES := {
 		"hit_glow": 0.5,
 		"env": {
 			"sky_top": Color("9fb4c4"), "sky_horizon": Color("dcdcd4"), "ground_bottom": Color("6a6a64"),
-			"ambient": Color("c8ccd0"), "ambient_energy": 0.35, "ambient_sky": 0.5,
-			"sun": Color("fff1dc"), "sun_energy": 1.6, "sun_pitch": -48.0, "sun_yaw": -110.0,
+			# etwas gedämpfter als zuvor (Lukas, 2026-10-30: „weniger stark beleuchtet“)
+			"ambient": Color("c8ccd0"), "ambient_energy": 0.28, "ambient_sky": 0.5,
+			"sun": Color("fff1dc"), "sun_energy": 1.25, "sun_pitch": -48.0, "sun_yaw": -110.0,
 			"shadow_blur": 1.8, "shadow_opacity": 0.75,
-			"fill": Color("b0c0d0"), "fill_energy": 0.3, "fill_pitch": -30.0,
+			"fill": Color("b0c0d0"), "fill_energy": 0.22, "fill_pitch": -30.0,
 			"glow_threshold": 1.2, "glow_intensity": 0.35,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
 			"contrast": 1.04, "saturation": 0.95,
