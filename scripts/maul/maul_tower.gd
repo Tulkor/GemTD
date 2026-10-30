@@ -3,7 +3,8 @@ extends Tower
 ## Tower einer Filiale in Shopping Maul. Werte aus data/maul/shops.json (eine Stufe pro Tower,
 ## Upgrades sind eigene Tower mit "upgrade_from"). Schießt wie ein GemTD-Tower und wirkt dazu
 ## Zauber mit eigener Abklingzeit: Donnerschlag (nova_spell), Kettenblitz (chain_spell),
-## Schockwelle (wave_spell). Aussehen: Gebäude aus data/maul/models.json (Wände in der Filialfarbe),
+## Schockwelle (wave_spell), Blitzlicht/Neid (stun_spell: betäubt alle im Radius), Flirten (flirt_spell:
+## hält den stärksten Gegner in Reichweite fest). "life": Chance, beim Kill Leben zurückzuholen. Aussehen: Gebäude aus data/maul/models.json (Wände in der Filialfarbe),
 ## höher je teurer; ohne Modell eine Neon-Säule.
 ##
 ## Profi-Filialen (Etappe 2, Daten in pro.json):
@@ -12,7 +13,7 @@ extends Tower
 ##   Gärtnerei: water = Füllstand; Pflanzen greifen nur aktiv (ab 90 %, aus unter 75 %) und mit Wasser an.
 ##   Bestatter: corpses = gefressene Leichen der Contained Darkness, unleashed_until = Zeit als Unleashed Darkness.
 
-const SPELLS := ["nova_spell", "chain_spell", "wave_spell"]
+const SPELLS := ["nova_spell", "chain_spell", "wave_spell", "stun_spell", "flirt_spell"]
 
 var value := 0             ## Gold, das im Tower steckt (Kauf und Upgrades); Verkauf bringt 75 %
 var items: Array = []      ## eingelegte Items (Post, IKEO)
@@ -195,7 +196,7 @@ func _fire_plant(delta: float) -> void:
 	e.last_hit_by = owner_player
 	total_damage += e.take_spell_damage(dmg)
 	if e.dead:
-		kills += 1
+		_killed(e)
 	cooldown_left += cooldown()
 
 
@@ -260,7 +261,40 @@ func _cast(ab: Dictionary) -> bool:
 					_spell_hit(e, float(ab.damage) * bonus)
 			game.add_beam(Board3D.to_3d(pos, 0.3), Board3D.to_3d(end, 0.3), color.lerp(Color.WHITE, 0.5))
 			return true
+		"stun_spell":
+			var near: Array = game.enemies_in_radius(pos, float(ab.radius)).filter(func(e): return can_target(e))
+			if near.is_empty():
+				return false
+			for e in near:
+				e.apply_stun(_stun_time(e, ab))
+			game.add_ring(pos, float(ab.radius), Color.WHITE)
+			return true
+		"flirt_spell":
+			# der Gegner mit den meisten Lebenspunkten, der noch nicht festgehalten wird
+			var best = null
+			for e in game.find_targets_in(self, range_cells(), 99):
+				if e.stun_time <= 0.0 and (best == null or e.hp > best.hp):
+					best = e
+			if best == null:
+				return false
+			best.apply_stun(_stun_time(best, ab))
+			game.add_beam(position + Vector3(0, 1.0, 0), best.position, Color("#ff7ad9"))
+			return true
 	return false
+
+
+## Betäubungsdauer eines Zaubers: Bosse (Helden) kürzer.
+func _stun_time(e, ab: Dictionary) -> float:
+	var boss: bool = e.boss or e.armor_type == "hero"
+	return float(ab.get("boss_duration", ab.duration)) if boss else float(ab.duration)
+
+
+## Life (Fries Carver, Hellboy): Chance, beim Kill Leben zurückzuholen (wie AOX).
+func _killed(e) -> void:
+	super._killed(e)
+	var ab := ability("life")
+	if game != null and not ab.is_empty() and randf() < float(ab.chance):
+		game.kill_life(owner_player, e)
 
 
 func _spell_hit(e, dmg: float) -> void:
@@ -269,7 +303,7 @@ func _spell_hit(e, dmg: float) -> void:
 	e.last_hit_by = owner_player
 	total_damage += e.take_spell_damage(dmg)
 	if e.dead:
-		kills += 1
+		_killed(e)
 
 
 func info_text() -> String:

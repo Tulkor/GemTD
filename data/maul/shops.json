@@ -127,6 +127,14 @@
 							"radius": 3.12,
 							"dps": 76.0,
 							"targets": "both"
+						},
+						{
+							"type": "stun_spell",
+							"name": "Flash",
+							"radius": 3.91,
+							"duration": 3.0,
+							"boss_duration": 1.5,
+							"cooldown": 45.0
 						}
 					],
 					"hotkey": "A",
@@ -327,9 +335,7 @@
 					"build_time": 40
 				}
 			],
-			"todo": [
-				"Digital Camera: Flash (ACwb)"
-			]
+			"todo": []
 		},
 		{
 			"id": "hm",
@@ -402,7 +408,14 @@
 					"range": 8.59,
 					"targets": "ground",
 					"damage_type": "normal",
-					"abilities": [],
+					"abilities": [
+						{
+							"type": "flirt_spell",
+							"duration": 20.0,
+							"boss_duration": 5.0,
+							"cooldown": 120.0
+						}
+					],
 					"hotkey": "E",
 					"tooltip": "DMG: 230 dmg/s (0,1s) / RG: 1.100 / Special: Flirt, Only Ground!",
 					"build_time": 10
@@ -658,9 +671,7 @@
 					"build_time": 30
 				}
 			],
-			"todo": [
-				"Model: Flirten (Amls)"
-			]
+			"todo": []
 		},
 		{
 			"id": "obi",
@@ -1191,7 +1202,12 @@
 					"range": 32.81,
 					"targets": "both",
 					"damage_type": "chaos",
-					"abilities": [],
+					"abilities": [
+						{
+							"type": "life",
+							"chance": 0.1
+						}
+					],
 					"hotkey": "X",
 					"tooltip": "DMG: 4.290 dmg/s (0,2s) / RG: 4.200 / Special: 10% chance to create lifes",
 					"build_time": 60
@@ -1243,9 +1259,7 @@
 					"build_time": 40
 				}
 			],
-			"todo": [
-				"Fries Carver: Life (ACbh)"
-			]
+			"todo": []
 		},
 		{
 			"id": "aldi",
@@ -2030,7 +2044,14 @@
 					"range": 8.98,
 					"targets": "both",
 					"damage_type": "normal",
-					"abilities": [],
+					"abilities": [
+						{
+							"type": "flirt_spell",
+							"duration": 20.0,
+							"boss_duration": 5.0,
+							"cooldown": 120.0
+						}
+					],
 					"hotkey": "R",
 					"tooltip": "DMG: 825 dmg/s (0,4s) / RG: 1.150 / Special: Flirt",
 					"build_time": 15
@@ -2210,6 +2231,14 @@
 							"type": "slow",
 							"factor": 0.3,
 							"duration": 1.0
+						},
+						{
+							"type": "stun_spell",
+							"name": "Neid",
+							"radius": 3.91,
+							"duration": 1.0,
+							"boss_duration": 0.5,
+							"cooldown": 20.0
 						}
 					],
 					"hotkey": "X",
@@ -2272,10 +2301,7 @@
 					"build_time": 40
 				}
 			],
-			"todo": [
-				"Hood Babe: Flirten (Amls)",
-				"Karrera GT: Neid (ACwb)"
-			]
+			"todo": []
 		},
 		{
 			"id": "bank",
@@ -3021,7 +3047,14 @@
 					"range": 6.64,
 					"targets": "both",
 					"damage_type": "pierce",
-					"abilities": [],
+					"abilities": [
+						{
+							"type": "flirt_spell",
+							"duration": 30.0,
+							"boss_duration": 15.0,
+							"cooldown": 120.0
+						}
+					],
 					"hotkey": "A",
 					"tooltip": "DMG: 982 dmg/s (1,75s) / RG: 850 / Special: Flirt",
 					"build_time": 14
@@ -3232,9 +3265,7 @@
 					"build_time": 10
 				}
 			],
-			"todo": [
-				"Sexy Stripper: Flirten (Amls)"
-			]
+			"todo": []
 		},
 		{
 			"id": "cinemaxx",
@@ -3401,7 +3432,12 @@
 					"range": 4.3,
 					"targets": "both",
 					"damage_type": "pierce",
-					"abilities": [],
+					"abilities": [
+						{
+							"type": "life",
+							"chance": 0.1
+						}
+					],
 					"hotkey": "D",
 					"tooltip": "DMG: 1.650 dmg/s (0,1s) / RG: 550 / Special: 10% chance to create lifes",
 					"build_time": 35
@@ -3525,10 +3561,7 @@
 					"build_time": 5
 				}
 			],
-			"todo": [
-				"Hellboy: Life (ACbh)",
-				"Hellboy: Bond Of Death (Ambt)"
-			]
+			"todo": []
 		},
 		{
 			"id": "post",
@@ -4305,10 +4338,7 @@
 					"build_time": 45
 				}
 			],
-			"todo": [
-				"First Aid: Medicin 1 (AEar)",
-				"Second Aid: Medicin 2 (AEar)"
-			]
+			"todo": []
 		},
 		{
 			"id": "ikea",
@@ -4786,34 +4816,7 @@
 					"build_time": 10
 				}
 			],
-			"todo": [
-				"Irrigation Plant I: Wässern I (Arpm)",
-				"Camomile: Rache des Gärtners I AA (Afak)",
-				"Camomile: Rache des Gärtners I (Afak)",
-				"Irrigation Plant II: Wässern II (Arpm)",
-				"President Bush: Rache des Gärtners II AA (Afak)",
-				"President Bush: Rache des Gärtners II (Afak)",
-				"Irrigation Plant III: Wässern III (Arpm)",
-				"Underwater Cactus: Rache des Gärtners III AA (Afak)",
-				"Underwater Cactus: Rache des Gärtners III (Afak)",
-				"Irrigation Plant IV: Wässern IV (Arpm)",
-				"Palm: Rache des Gärtners IV AA (Afak)",
-				"Palm: Rache des Gärtners IV (Afak)",
-				"Irrigation Plant V: Wässern V (Arpm)",
-				"Ent: Rache des Gärtners V AA (Afak)",
-				"Ent: Rache des Gärtners V (Afak)",
-				"Irrigation Plant VI: Wässern VI (Arpm)",
-				"Toadstool: Rache des Gärtners VI AA (Afak)",
-				"Toadstool: Rache des Gärtners VI (Afak)",
-				"Irrigation Plant VII: Wässern VII (Arpm)",
-				"Alien Plant: Rache des Gärtners VII AA (Afak)",
-				"Alien Plant: Rache des Gärtners VII (Afak)",
-				"Irrigation Plant VIII: Wässern VIII (Arpm)",
-				"Flowerpot: Rache des Gärtners VIII AA (Afak)",
-				"Flowerpot: Rache des Gärtners VIII (Afak)",
-				"Weeds: Rache des Gärtners IX AA (Afak)",
-				"Weeds: Rache des Gärtners IX (Afak)"
-			]
+			"todo": []
 		},
 		{
 			"id": "fitness",
@@ -5220,24 +5223,7 @@
 					"build_time": 10
 				}
 			],
-			"todo": [
-				"Spare Time Death Cult: Bond Of Death (Ambt)",
-				"Graveyard: BI Bitchy Hellhound (ANcl)",
-				"Graveyard: BI Bonegun (ANcl)",
-				"Graveyard: BI Devil (ANcl)",
-				"Graveyard: BI Diablo (ANcl)",
-				"Graveyard: BI Wiz-O-Matic (ANcl)",
-				"Graveyard: BI Bony Bones (ANcl)",
-				"Graveyard: BI Disco Ghoul (ANcl)",
-				"Contained Darkness: BI Icy (ANcl)",
-				"Contained Darkness: Fleisch (Arai)",
-				"Dark Lord Club: Bond Of Death (Ambt)",
-				"Circle Of The Antichrist: Bond Of Death (Ambt)",
-				"Church Of Reversed Faith: Bond Of Death (Ambt)",
-				"US Government: Bond Of Death (Ambt)",
-				"Temple Of Anti-Love: Bond Of Death (Ambt)",
-				"I Love Lucifer Community: Bond Of Death (Ambt)"
-			]
+			"todo": []
 		},
 		{
 			"id": "waffenladen",
@@ -5336,9 +5322,7 @@
 					"build_time": 30
 				}
 			],
-			"todo": [
-				"Drone Charger: Recharge (AHab)"
-			]
+			"todo": []
 		}
 	],
 	"xpert": {
@@ -5808,12 +5792,6 @@
 				]
 			}
 		],
-		"todo": [
-			"Bunker: Bunker (Apxf)",
-			"Pigfarm: A061 (Agyd)",
-			"Tentacle: Tentacle?! (Afak)",
-			"SDI Uplink: Orbital defense uplink (ACbh)",
-			"SDI Uplink: Orbital uplink (Apxf)"
-		]
+		"todo": []
 	}
 }

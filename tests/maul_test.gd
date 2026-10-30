@@ -98,6 +98,7 @@ func _ready() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await _pro_tests()
+	await _ability_tests()
 	await _bank_tests()
 	await _save_tests()
 	await _debug_tests()
@@ -321,6 +322,54 @@ func _coop_tests() -> void:
 	host.queue_free()
 	client.queue_free()
 	Session.coop = {}
+	await get_tree().process_frame
+
+
+## Tower-Fähigkeiten: Flash/Neid, Flirten, Life, Bond Of Death (Hellboy); keine offenen "todo" mehr.
+func _ability_tests() -> void:
+	for s in MaulData.shops() + [MaulData.xpert()]:
+		check(s.get("todo", []).is_empty(), "Filiale %s: alle Fähigkeiten umgesetzt %s" % [s.id, s.get("todo", [])])
+	var game: MaulGame = load("res://scenes/maul_game.tscn").instantiate()
+	add_child(game)
+	await get_tree().process_frame
+	game.start_game("media_markt", 1, "group", true)
+	game.level = 1
+	var made := {}
+	for id in ["o004", "o008", "o02F", "o01Y"]:
+		var t := MaulTower.new()
+		t.owner_player = 0
+		game.board.add_child(t)
+		t.setup(game, Vector2i(20 + made.size() * 20, 20), id, 0)
+		game.towers[t.cell] = t
+		made[id] = t
+	for i in 2:
+		game._spawn(0)
+	var a = game.enemies[0]
+	var b = game.enemies[1]
+	var cam: MaulTower = made.o004
+	a.pos = cam.pos + Vector2(1, 0)
+	b.pos = cam.pos + Vector2(0, 1)
+	b.armor_type = "hero"
+	check(cam._cast(cam.ability("stun_spell")), "Flash gewirkt")
+	check(is_equal_approx(a.stun_time, 3.0) and is_equal_approx(b.stun_time, 1.5), "Flash: 3 s, Boss 1,5 s (%.1f/%.1f)" % [a.stun_time, b.stun_time])
+	var model: MaulTower = made.o008
+	a.stun_time = 0.0
+	b.stun_time = 0.0
+	b.armor_type = "medium"
+	a.pos = model.pos + Vector2(1, 0)
+	b.pos = model.pos + Vector2(0, 1)
+	a.hp = 100.0
+	b.hp = 500.0
+	check(model._cast(model.ability("flirt_spell")), "Flirten gewirkt")
+	check(is_equal_approx(b.stun_time, 20.0) and a.stun_time == 0.0, "Flirten hält den stärksten 20 s fest")
+	var fries: MaulTower = made.o02F
+	game.lives = game.max_lives - 100
+	var before: int = game.lives
+	for i in 300:
+		fries._killed(a)
+	check(game.lives > before and game.players[0].aok_lives <= 30, "Life: Leben zurück (%d), höchstens 30" % (game.lives - before))
+	check(game.cult_heal_at(made.o01Y.pos, 0) == 690.0, "Hellboy: Bond Of Death heilt 690/s")
+	game.queue_free()
 	await get_tree().process_frame
 
 

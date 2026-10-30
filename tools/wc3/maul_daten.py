@@ -206,6 +206,17 @@ def ability_json(aid, A, tower):
     base = a["base"]
     m = a["mods"]
     f = lambda k, d=0.0: float(m.get(k + "@1", d))
+    if base == "ACbh" and m.get("anam") == "Life":
+        # im Skript: Kill durch Fries Carver/Hellboy/Hilfsdrohne, Zufallszahl 1..10 == 7
+        return [{"type": "life", "chance": 0.1}]
+    if base == "ACwb":
+        # Flash (Digitalkamera), Neid (Karrera GT): betäubt alle Gegner im Radius, Helden kürzer
+        return [{"type": "stun_spell", "name": m.get("anam", aid), "radius": round(f("aare", 500) / TOWER, 2),
+                 "duration": f("adur"), "boss_duration": f("ahdu"), "cooldown": f("acdn")}]
+    if base == "Amls":
+        # Flirten: hält einen Gegner fest, Helden kürzer
+        return [{"type": "flirt_spell", "duration": f("adur", 20.0), "boss_duration": f("ahdu", 5.0),
+                 "cooldown": f("acdn", 120.0)}]
     if base == "ACbh":
         chance = f("Hbh1") / 100.0
         mult = f("Hbh2")
@@ -271,7 +282,20 @@ XPERT = {"id_de": "n000", "id_en": "n000", "name_de": "XPert", "name_en": "XPert
          "manager_builds": ["h00S", "h01L", "h01M", "h01U", "h022", "h02P", "h02U", "h03D", "h03V", "o02M", "o01J"]}
 
 
+# Fähigkeiten, die pro.json und die Spiellogik von Hand abbilden (nicht als "todo" melden)
+PRO_HANDLED = {
+    "AEar": "aok.auras (Medicin: Schadensaura)",
+    "Afak": "garden.plants (Rache des Gärtners)",
+    "Arpm": "garden.irrigation (Wässern)",
+    "ANcl": "undertaker.summons (Friedhof)",
+    "Arai": "undertaker.darkness (Fleisch)",
+    "Ambt": "undertaker.cults (Bond Of Death)",
+    "AHab": "drones (Recharge)",
+}
+
+
 def build_towers(rs, out):
+    overrides = json.load(open(os.path.join(os.path.dirname(out), "pro.json"), encoding="utf-8"))["overrides"]
     d = json.load(open(os.path.join(rs, "maulwork", "maul_towers.json"), encoding="utf-8"))
     o = json.load(open(os.path.join(rs, "maul544f", "objects.json"), encoding="utf-8"))
     A = {x["id"]: x for x in o["w3a"]}
@@ -302,7 +326,7 @@ def build_towers(rs, out):
                 ab = ability_json(aid, A, t)
                 if ab is None:
                     a = A.get(aid)
-                    if a and a["base"] not in ("AInv", "Aihn", "Ahar", "Aall", "Aloc", "Avul", "Apit", "Apiv",
+                    if a and a["base"] not in PRO_HANDLED and t["id"] not in overrides and a["base"] not in ("AInv", "Aihn", "Ahar", "Aall", "Aloc", "Avul", "Apit", "Apiv",
                                                    "Argd", "Aeth", "Aslo", "Aivs"):
                         todo.append("%s: %s (%s)" % (t["name"], a["mods"].get("anam", aid), a["base"]))
                     continue

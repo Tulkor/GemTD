@@ -900,6 +900,12 @@ static func ability_lines(d: Dictionary) -> Array:
 				out.append(_t("Kettenblitz: %s Schaden, %d Ziele, alle %s s") % [MaulHud.big(roundi(float(ab.damage))), int(ab.get("targets", 3)), _n(float(ab.cooldown))])
 			"wave_spell":
 				out.append(_t("Schockwelle: %s Schaden, alle %s s") % [MaulHud.big(roundi(float(ab.damage))), _n(float(ab.cooldown))])
+			"stun_spell":
+				out.append(_t("%s: betäubt alle Gegner im Radius %s für %s s (Bosse %s s), alle %s s") % [_t(str(ab.name)), _n(float(ab.radius)), _n(float(ab.duration)), _n(float(ab.boss_duration)), _n(float(ab.cooldown))])
+			"flirt_spell":
+				out.append(_t("Flirten: hält den stärksten Gegner %s s fest (Bosse %s s), alle %s s") % [_n(float(ab.duration)), _n(float(ab.boss_duration)), _n(float(ab.cooldown))])
+			"life":
+				out.append(_t("%d %% Chance pro Kill, Leben zurückzuholen") % roundi(float(ab.chance) * 100))
 	return out
 
 
