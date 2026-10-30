@@ -41,6 +41,25 @@ var _is_owned_by_tower: bool = false
 var _tower_family: int = -1
 var _tower_tier: int = -1
 
+## Buffs, deren Ereignis-Handler gerade laufen (innerster zuletzt). YtUnit.modify_property() erkennt daran, ob eine
+## Änderung zu einem Buff gehört (baut sich beim Laden selbst wieder auf) oder dauerhaft am Tower hängt (Spielstand).
+static var _running: Array = []
+
+
+## Gehört eine modify_property-Änderung an unit gerade zum Buff, der auf ihr liegt? Auslöser-Buffs von Towern und
+## Items ("…triggers_bt") zählen nicht: über sie laufen die eigenen Fähigkeiten, deren Zuwächse bleiben.
+static func changes_belong_to_buff(unit) -> bool:
+	if _running.is_empty():
+		return false
+	var b = _running[-1]
+	return is_instance_valid(b) and b._target == unit and not b._buff_type_name.ends_with("triggers_bt")
+
+
+func _call_handler(handler: Callable, event: YtEvent) -> void:
+	_running.append(self)
+	handler.call(event)
+	_running.pop_back()
+
 
 #########################
 ###     Built-in      ###
@@ -229,7 +248,7 @@ func _call_event_handler_list(event_type: YtEvent.Type, event: YtEvent):
 	var handler_list: Array = event_handler_map[event_type]
 
 	for handler in handler_list:
-		handler.call(event)
+		_call_handler(handler, event)
 
 
 # Convenience function to make an event with "_buff" variable set to self
@@ -310,7 +329,7 @@ func _on_unit_came_in_range(handler: Callable, unit: YtUnit):
 
 	var range_event: YtEvent = _make_buff_event(unit)
 
-	handler.call(range_event)
+	_call_handler(handler, range_event)
 
 
 func _on_timer_timeout():
@@ -407,7 +426,7 @@ func _on_periodic_event_timer_timeout(handler: Callable, timer: YtManualTimer):
 
 	var periodic_event: YtEvent = _make_buff_event(_target)
 	periodic_event._timer = timer
-	handler.call(periodic_event)
+	_call_handler(handler, periodic_event)
 
 
 #########################

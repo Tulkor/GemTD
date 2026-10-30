@@ -110,6 +110,8 @@ func _all_towers() -> void:
 	var manual := 0
 	var with_script := 0
 	var silent := []
+	var restored := 0
+	var lost := []
 	for start in range(0, ids.size(), BATCH):
 		var anchors := _anchors()
 		var batch: Array = ids.slice(start, start + BATCH)
@@ -147,8 +149,25 @@ func _all_towers() -> void:
 						casts += 1
 		await _run(1.0, 20, [])
 		_clear_creeps()
+		var st: Dictionary = YoutdSave.capture(game)
 		_clear_towers()
 		await get_tree().process_frame
+		# Spielstand-Rundlauf: jeder Tower kommt mit seinen Zählern und dauerhaften Werten zurück
+		var entries: Array = bytes_to_var(var_to_bytes(st)).towers
+		for td in entries:
+			YoutdSave._restore_tower(game, td)
+			var t2: YoutdTower = game.towers.get(td.cell)
+			if t2 == null or t2.core == null:
+				continue
+			restored += 1
+			var again: Dictionary = YoutdSave.script_state(t2.core._tower_behavior)
+			var same: bool = (td.script as Dictionary).keys().all(func(k): return str(again.get(k)) == str(td.script[k]))
+			var mods_ok: bool = str(t2.yt.get("script", "")) in YoutdSave.MODS_SKIP or (td.mods as Dictionary).keys().all(func(k): return absf(float(t2.core._own_mods.get(k, 0.0)) - float(td.mods[k])) < 0.0001)
+			if not same or not mods_ok:
+				lost.append("%s %s" % [t2.yid, str(t2.yt.get("script", ""))])
+		_clear_towers()
+		await get_tree().process_frame
+	check(restored >= 600 and lost.is_empty(), "Spielstand-Rundlauf: %d Tower geladen, abweichend: %s" % [restored, lost.slice(0, 10)])
 	check(with_script >= 560 and scripts.size() >= 210, "Tower mit Skript: %d, verschiedene Skripte: %d" % [with_script, scripts.size()])
 	check(dealt > attackers * 0.8, "angreifende Tower mit Schaden: %d von %d (ohne: %s)" % [dealt, attackers, silent.slice(0, 20)])
 	check(manual > 0 and casts > manual / 3, "Zauber von Hand: %d von %d ausgelöst" % [casts, manual])
