@@ -39,6 +39,8 @@ uniform float major_alpha = 1.0;
 uniform float major_double = 0.0;
 /// Helligkeit schlichter Felder (B-Kanal der Maske)
 uniform float plain_shade = 1.0;
+// Schachmuster: jede zweite Kachel (grid_cells x grid_cells Felder) um diesen Anteil dunkler (Shopping Maul)
+uniform float checker = 0.0;
 /// Rauten an den Kreuzungen der Hauptlinien, halbe Diagonale in Einheiten (0 = keine)
 uniform float diamond_size = 0.0;
 /// Marmor-Adern im Boden (0 = glatt)
@@ -175,6 +177,12 @@ void fragment() {
 		if (is_plain(c) < 0.5) {
 			// Gitterlinien: jede major_every-te hell, die übrigen gedämpft
 			vec2 go = g - grid_origin;
+			if (checker > 0.0) {
+				ivec2 k = ivec2(floor(go / grid_cells));
+				if (((k.x + k.y) & 1) == 1) {
+					col *= 1.0 - checker;
+				}
+			}
 			vec2 dc = abs(fract(go + 0.5) - 0.5) * cell;
 			vec4 cl = tube(min(dc.x, dc.y), line_width * 0.9, lc, line_energy * cell_energy, aa);
 			cl.a *= cell_alpha;
