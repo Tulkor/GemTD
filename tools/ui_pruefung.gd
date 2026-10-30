@@ -109,7 +109,7 @@ static func _cut_text(c: Control) -> String:
 	if c is Label:
 		var l := c as Label
 		if l.autowrap_mode == TextServer.AUTOWRAP_OFF:
-			var w := l.get_theme_font("font").get_multiline_string_size(l.text, l.horizontal_alignment, -1, l.get_theme_font_size("font_size")).x
+			var w := l.get_theme_font("font").get_multiline_string_size(_shown(l, l.text), l.horizontal_alignment, -1, l.get_theme_font_size("font_size")).x
 			if w > l.size.x + 2:
 				return "Breite %d > %d" % [w, l.size.x]
 		elif l.get_line_count() > l.get_visible_line_count() and l.max_lines_visible < 0:
@@ -117,13 +117,19 @@ static func _cut_text(c: Control) -> String:
 	elif c is Button:
 		var b := c as Button
 		if b.text != "" and b.autowrap_mode == TextServer.AUTOWRAP_OFF and (b.clip_text or b.text_overrun_behavior != TextServer.OVERRUN_NO_TRIMMING):
-			var w := b.get_theme_font("font").get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, b.get_theme_font_size("font_size")).x
+			var w := b.get_theme_font("font").get_string_size(_shown(b, b.text), HORIZONTAL_ALIGNMENT_LEFT, -1, b.get_theme_font_size("font_size")).x
 			var pad := b.get_theme_stylebox("normal").get_minimum_size().x
 			if b.icon:
 				pad += b.icon.get_width()
 			if w + pad > b.size.x + 2:
 				return "Knopf %d > %d" % [w + pad, b.size.x]
 	return ""
+
+
+## Text so, wie er angezeigt wird (übersetzt, ggf. in Großbuchstaben).
+static func _shown(c: Control, text: String) -> String:
+	var t := c.atr(text)
+	return t.to_upper() if c is Label and (c as Label).uppercase else t
 
 
 static func _screen_rect(c: Control) -> Rect2:
