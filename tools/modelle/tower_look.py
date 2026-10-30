@@ -21,5 +21,5 @@ def look(mode, key):
         return {}  # Kristall des Generators bleibt
     path = ref if ref.startswith("res://") else "res://assets/models/towers/%s.glb" % ref
     out = {"model": path, "model_tint": tint, "model_solid": not tint}
-    out.update({k: v[k] for k in ("flame", "flame_height", "hit_fx", "fog") if k in v})
+    out.update({k: v[k] for k in ("flame", "flame_height", "hit_fx", "fog", "fog_height") if k in v})
     return out

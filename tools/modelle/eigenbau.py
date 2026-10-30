@@ -32,9 +32,10 @@ FARBEN = {
     "lila_hell": (0.45, 0.18, 0.60), "auge": (1.0, 0.85, 0.20), "wasser": (0.20, 0.45, 0.75),
     "nebel": (0.85, 0.88, 0.92), "seil": (0.80, 0.70, 0.50), "gummi": (0.55, 0.10, 0.10),
     "kupfer": (0.72, 0.40, 0.20), "haut": (0.85, 0.60, 0.45), "haar": (0.35, 0.18, 0.08),
-    "trikot": (0.85, 0.15, 0.55), "trikot_rock": (0.95, 0.75, 0.90), "blitz": (0.55, 0.85, 1.00), "gruen": (0.15, 0.55, 0.25),
+    "trikot": (0.85, 0.15, 0.55), "holz_dunkel": (0.28, 0.16, 0.08), "rot_dunkel": (0.45, 0.04, 0.06),
+    "vorhang": (0.62, 0.06, 0.10), "lampe": (1.0, 0.85, 0.55), "trikot_rock": (0.95, 0.75, 0.90), "blitz": (0.55, 0.85, 1.00), "gruen": (0.15, 0.55, 0.25),
 }
-EMISSION = {"auge": 1.0, "blitz": 1.2}
+EMISSION = {"auge": 1.0, "blitz": 1.2, "lampe": 1.5}
 ALPHA = {"wasser": 0.75, "nebel": 0.6}
 
 
@@ -243,9 +244,26 @@ def steinschleuder(b):  # Randgruppen Steinschleuder
         b.kugel(0.05, "stein", (x, y, 0.07))
 
 
+def buehne(b):  # Randgruppen Bühnennebel: kleine Theaterbühne, der Nebel liegt als Effekt darauf ("fog")
+    b.box((1.0, 0.8, 0.14), "holz", (0, 0, 0.07))
+    b.box((1.02, 0.05, 0.15), "holz_dunkel", (0, -0.4, 0.075))
+    for i in range(5):
+        b.box((0.2, 0.62, 0.006), "holz_hell", (-0.4 + i * 0.2, 0.05, 0.143))
+    for x in (-0.48, 0.48):
+        b.box((0.06, 0.06, 0.9), "holz_dunkel", (x, 0.37, 0.59))
+    b.box((1.02, 0.08, 0.12), "rot_dunkel", (0, 0.37, 1.0))
+    b.box((0.92, 0.03, 0.84), "rot_dunkel", (0, 0.39, 0.56))
+    for i in range(10):  # Vorhang in Falten
+        x = -0.42 + i * 0.0933
+        b.zyl(0.05, 0.84, "vorhang", (x, 0.35, 0.56), seiten=6)
+    for x in (-0.36, -0.12, 0.12, 0.36):  # Rampenlichter vorne
+        b.box((0.08, 0.05, 0.04), "metall_dunkel", (x, -0.36, 0.16))
+        b.kugel(0.022, "lampe", (x, -0.385, 0.165))
+
+
 MODELLE = {
     "waage": waage, "it": it, "rakete": rakete, "pfuetze": pfuetze, "blitzfalle": blitzfalle,
-    "zapfsaeule": zapfsaeule, "bohrturm": bohrturm, "trapez": trapez, "steinschleuder": steinschleuder,
+    "zapfsaeule": zapfsaeule, "bohrturm": bohrturm, "trapez": trapez, "steinschleuder": steinschleuder, "buehne": buehne,
 }
 
 

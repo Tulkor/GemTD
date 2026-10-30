@@ -168,5 +168,5 @@ bei `q_fantasy_props` sind die Vertex-Farben entfernt.
 Selbst gebaut aus einfachen Formen mit `tools/modelle/eigenbau.py` (ein Modell = eine Funktion), eigene Arbeit,
 CC0: `waage` (YouTD Scales), `it` (YouTD It), `rakete` (YouTD Pocket Rocket), `pfuetze` (eeveTD Bremspfütze),
 `blitzfalle` (eeveTD Blitzfalle), `zapfsaeule` und `bohrturm` (Shopping Maul Arol Tankstelle), `trapez`
-und `steinschleuder` (Randgruppen TD). Bühnennebel ist kein Modell, sondern ein Nebeleffekt (`fog` in
+und `steinschleuder` (Randgruppen TD), `buehne` (Randgruppen Bühnennebel, darauf ein Nebeleffekt: `fog` in
 `data/tower_models.json`, `scripts/game/fog_fx.gd`).
