@@ -28,6 +28,9 @@ const OUTER := 24
 ## Boden außerhalb: so breit (Einheiten), etwas dunkler wie die gesperrten Felder der Karte.
 const FLOOR_MARGIN := 40.0
 const FLOOR_SHADE := 0.86
+## Erde mit Grasflecken unter jedem Baum (Wunsch von Lukas), im Park wachsen die Flächen zusammen.
+const SOIL_SHADER := "res://assets/shaders/tree_soil.gdshader"
+const SOIL_SIZE := 1.5  ## Durchmesser einer Fläche (Einheiten); Bäume stehen auf 2×2-Feldern = 1 Einheit
 
 var board: Board3D
 var map: MapData
@@ -53,6 +56,7 @@ func _ready() -> void:
 	for qy in range(q0, ceili((map.height + OUTER) / float(QUARTER))):
 		for qx in range(q0, ceili((map.width + OUTER) / float(QUARTER))):
 			town[Vector2i(qx, qy)] = _rng.randf() < TOWN_SHARE
+	var soil: Array[Vector2] = []  # Baumstandorte
 	var used := {}   # Felder unter Häusern
 	var parts := {}  # "pfad|schatten" -> [Transform3D]
 	# Häuser: ganze 4×4-Blöcke in Stadtvierteln, Front zur nächsten offenen Seite
@@ -88,6 +92,7 @@ func _ready() -> void:
 			var i := _pick(TREES)
 			var p := board.cell_center(a) + Vector2(0.5, 0.5) * Board3D.CELL \
 					+ Vector2(_rng.randf_range(-0.3, 0.3), _rng.randf_range(-0.3, 0.3))
+			soil.append(p)
 			var h := _rng.randf_range(TREES[i][1], TREES[i][2])
 			var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * h)
 			# Schatten nur nahe am Weg (sichtbar und günstig)
@@ -97,6 +102,29 @@ func _ready() -> void:
 	for key in parts:
 		var k: PackedStringArray = key.split("|")
 		_add_multimesh(k[0], parts[key], k[1] == "1", k[0].contains("/nature/"))
+	_add_soil(soil)
+
+
+## Runde Erdflächen unter den Bäumen, knapp über dem Boden und der Sperrfeld-Färbung (y 0.001).
+func _add_soil(at: Array[Vector2]) -> void:
+	var quad := PlaneMesh.new()
+	quad.size = Vector2.ONE * SOIL_SIZE
+	var mat := ShaderMaterial.new()
+	mat.shader = load(SOIL_SHADER)
+	mat.set_shader_parameter("dirt", load("res://assets/textures/ground/dirt.jpg"))
+	mat.set_shader_parameter("grass", load("res://assets/textures/ground/grass_a.jpg"))
+	quad.material = mat
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	mm.instance_count = at.size()
+	for i in at.size():
+		var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(0.85, 1.15))
+		mm.set_instance_transform(i, Transform3D(b, Vector3(at[i].x, 0.004, at[i].y)))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mmi)
 
 
 func _quarter(x: int, y: int) -> Vector2i:
