@@ -17,7 +17,7 @@ const NEEDS := {
 	"splash": ["secondary"], "bounce": ["secondary"], "multishot": ["multi"], "slow": ["slow"], "poison": ["poison"],
 	"crit": ["crit"], "air_bonus": ["air_bonus"], "armor_reduce": ["armor"], "stun": ["stun"], "gold_on_hit": ["gold"], "stacking_damage": ["stacks"],
 	"nova": ["nova"], "speed_aura": ["helper_speed"], "damage_aura": ["helper_damage"], "burn_aura": ["aura_damage"],
-	"slow_aura": ["slow"], "armor_aura": ["armor"], "wave_damage": ["wave_damage"], "cone": ["cone"],
+	"slow_aura": ["slow"], "armor_aura": ["armor"], "bounty_aura": ["bounty_aura"], "xp_aura": ["xp_aura"], "wave_damage": ["wave_damage"], "cone": ["cone"],
 	# eeveTD
 	"amplify": ["amplify"], "death_explosion": ["burn_mark", "explosion"], "chain": ["chain"], "rage": ["helper_damage"],
 	"hp_cut": ["hp_cut"], "pulse": ["cast"], "area_debuff": [],
@@ -392,6 +392,11 @@ func _probe(id: String, tier: int) -> void:
 				seen.helper_speed = true
 			if helper.damage_bonus > base_damage:
 				seen.helper_damage = true
+		# Kopfgeld- und Erfahrungs-Aura wirken auch auf den Tower selbst
+		if "bounty_bonus" in t and t.bounty_bonus > 0.0:
+			seen.bounty_aura = true
+		if "xp_bonus" in t and t.xp_bonus > 0.0:
+			seen.xp_aura = true
 		if detect_target != null and game.is_detected(detect_target):
 			seen.detect = true
 		_collect(t, seen, gold0)
@@ -559,7 +564,7 @@ func _why(k: String) -> String:
 		"multi": "kein Mehrfachschuss", "slow": "verlangsamt nicht", "poison": "vergiftet nicht", "crit": "kein kritischer Treffer", "air_bonus": "kein Zusatzschaden gegen Luft",
 		"armor": "senkt keine Rüstung", "stun": "betäubt nicht", "gold": "kein Gold", "stacks": "kein steigender Schaden",
 		"nova": "Nova trifft niemanden", "helper_speed": "Tempo-Aura kommt beim Nachbarn nicht an",
-		"helper_damage": "Schadens-Buff kommt beim Nachbarn nicht an", "aura_damage": "Brand-Aura macht keinen Schaden",
+		"helper_damage": "Schadens-Buff kommt beim Nachbarn nicht an", "aura_damage": "Brand-Aura macht keinen Schaden", "bounty_aura": "Kopfgeld-Aura wirkt nicht", "xp_aura": "Erfahrungs-Aura wirkt nicht",
 		"wave_damage": "Schaden steigt nicht mit der Welle", "cone": "Kegel trifft niemanden", "amplify": "Ertränken wirkt nicht",
 		"burn_mark": "Flammenrost markiert nicht", "explosion": "keine Explosion beim Tod", "chain": "Kettenblitz springt nicht",
 		"hp_cut": "Wolke nimmt keine Leben", "cast": "Zauber wird nie gewirkt", "cast_hits": "Zauber trifft niemanden",
