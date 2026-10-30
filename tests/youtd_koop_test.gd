@@ -121,13 +121,25 @@ func _save_tests() -> void:
 		bt.apply_custom_timed(bt_tower.core, t.core, 2, 40.0)
 		bt.apply_custom_timed(bt_tower.core, game.enemies[0].core, 1, 40.0)
 		bt_tower.autocasts()[0]._cooldown_timer.start(12.0)
+	# dritter Tower mit eigenem Zähler und dauerhaftem Wachstum (Bonk: grow_count, +Schaden je Wachsen)
+	var c: Vector2i = _anchor(game, 0, 2, true)
+	check(game.debug_place("200", c), "Bonk gesetzt")
+	var bonk: YoutdTower = game.towers.get(c)
+	var bonk_dmg0: float = bonk.mod("MOD_DAMAGE_ADD_PERC") if bonk != null else 0.0
+	if bonk != null:
+		for i in 3:
+			bonk.core._tower_behavior.periodic(null)
+		bonk.core.user_real2 = 4.5
+	var bonk_dmg: float = bonk.mod("MOD_DAMAGE_ADD_PERC") if bonk != null else 0.0
+	check(bonk_dmg > bonk_dmg0, "Bonk ist gewachsen (%.3f → %.3f)" % [bonk_dmg0, bonk_dmg])
+	var time0: float = YtWorld.get_time()
 	var enemy_id: int = game.enemies[0].net_id
 	var st: Dictionary = SaveGame.capture(game)
 	var want := {"gold": game.gold, "tomes": game.tomes, "nature": int(game.elements.get("nature", 0)), "level": t.level,
 		"enemies": game.enemies.size(), "next_wave": game.next_wave, "hp5": float(game.waves[5].hp), "stash": game.stash.duplicate(),
 		"dmg": t.mod("MOD_DAMAGE_ADD_PERC"), "alive": game.alive.duplicate(), "food": game.food_cap,
 		"items": game.item_stash.size()}
-	check(not st.is_empty() and st.has("mode") and (st.mode.towers as Array).size() == 2, "Stand mit YouTD-Teil erfasst")
+	check(not st.is_empty() and st.has("mode") and (st.mode.towers as Array).size() == 3, "Stand mit YouTD-Teil erfasst")
 	game.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -152,6 +164,12 @@ func _save_tests() -> void:
 	check(g2.enemies.size() == want.enemies and g2.enemies.all(func(e): return e is YoutdEnemy and e.core != null),
 		"Gegner mit Kern zurück: %d" % g2.enemies.size())
 	check(g2.alive == want.alive, "Wellenstand je Bahn")
+	check(YtWorld.get_time() >= time0, "Spielzeit läuft weiter (%.1f s)" % YtWorld.get_time())
+	var bonk2: YoutdTower = g2.towers.get(c)
+	var grow2: int = bonk2.core._tower_behavior.grow_count if bonk2 != null else -1
+	check(grow2 == 3, "Bonk-Zähler zurück (%d)" % grow2)
+	check(bonk2 != null and is_equal_approx(bonk2.mod("MOD_DAMAGE_ADD_PERC"), bonk_dmg), "Bonk-Wachstum wirkt wieder (%.3f)" % (bonk2.mod("MOD_DAMAGE_ADD_PERC") if bonk2 != null else 0.0))
+	check(bonk2 != null and is_equal_approx(bonk2.core.user_real2, 4.5), "user_real des Towers zurück")
 	if bname != "":
 		check(t2 != null and _has_buff(t2.core, bname, 2, b), "Buff mit Restzeit, Stufe und Verursacher am Tower zurück")
 		var e2 = g2.enemies.filter(func(e): return e.net_id == enemy_id)
