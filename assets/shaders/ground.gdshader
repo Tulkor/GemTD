@@ -21,7 +21,15 @@ uniform float detail_blur = 0.0;
 uniform float grass_contrast = 1.0;
 /// 0 = Bauflächen-Textur genau einmal abtasten (Pflaster: gedrehte oder zweite Abtastung gäbe Doppelbilder)
 uniform float vary = 1.0;
-/// Erde-Anteil je Rasterfeld (0..1), ein Pixel pro Feld.
+/// Straße statt Erde (Randgruppen TD): scharfer Rand, dunkler Belag aus der Erde-Textur, weiße Randlinien. 0 = aus
+uniform float road = 0.0;
+uniform float road_dark = 0.42;
+/// Wiese (Erde und Gras) auf gesperrten Feldern (G-Kanal der Splat-Textur), 0 = aus
+uniform float lawn = 0.0;
+uniform sampler2D lawn_grass : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D lawn_soil : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float lawn_tile = 2.6;
+/// Erde-Anteil je Rasterfeld (0..1) in R, gesperrte Felder in G, ein Pixel pro Feld.
 uniform sampler2D splat : filter_linear, repeat_disable;
 /// Größe der Map in Einheiten.
 uniform vec2 map_size = vec2(37.0, 37.0);
@@ -127,7 +135,8 @@ void fragment() {
 	vec3 grass_n = blend_normals(na, nb, g_mix);
 
 	// Erde: Splat-Wert plus ausfransender Rand
-	float w = texture(splat, p / map_size).r;
+	vec4 sp = texture(splat, p / map_size);
+	float w = sp.r;
 	float edge = fbm(p * 1.1 + vec2(11.0, 5.0)) - 0.5;
 	float d = smoothstep(0.4, 0.6, w + edge * 0.55);
 	// vereinzelt abgetretene Stellen im Gras
@@ -136,7 +145,31 @@ void fragment() {
 	// Übergang: Gras hält sich in den Senken der Erde (helle Erde zuerst sichtbar)
 	float dirt_h = dot(dt, vec3(0.33));
 	float blend = clamp((d - 0.5) * 2.5 + 0.5 + (dirt_h - 0.35) * 0.8 * (1.0 - abs(d * 2.0 - 1.0)), 0.0, 1.0);
+	if (lawn > 0.0) {
+		// Wiese: ruhiges Gras (gröbere Mipmap, wenig Kontrast) mit großen, weichen Erdflecken
+		vec2 lp = p / lawn_tile;
+		vec3 lg = texture(lawn_grass, lp, 1.5).rgb;
+		vec3 lg_mean = textureLod(lawn_grass, vec2(0.5), 10.0).rgb;
+		lg = mix(lg_mean, lg, 0.55);
+		vec3 ls = texture(lawn_soil, lp * 0.8, 1.0).rgb;
+		float soil = smoothstep(0.5, 0.68, fbm(p * 0.22 + vec2(13.0, 3.0)));
+		vec3 lawn_col = mix(lg, ls, soil * 0.85);
+		float lm = smoothstep(0.45, 0.55, sp.g) * lawn;
+		grass = mix(grass, lawn_col, lm);
+		grass_n = mix(grass_n, vec3(0.5, 0.5, 1.0), lm);
+	}
+	if (road > 0.0) {
+		// Straße: scharfe Kante ohne Ausfransen, Belag = abgedunkelte, entsättigte Erde-Textur
+		blend = smoothstep(0.47, 0.53, w);
+		dt = vec3(dot(dt, vec3(0.299, 0.587, 0.114))) * road_dark;
+	}
 	vec3 col = mix(grass, dt, blend);
+	if (road > 0.0) {
+		// weiße Randlinien knapp innerhalb der Straßenkante, leicht abgenutzt
+		float band = 1.0 - smoothstep(0.022, 0.032, abs(w - 0.6));
+		band *= 0.75 + 0.25 * noise(p * 9.0);
+		col = mix(col, vec3(0.85), band * road);
+	}
 	vec3 nrm = blend_normals(grass_n, nd, blend);
 	if (detail_normal > 0.0) {
 		// feine Lage: Grashalme bzw. Kiesel im Kleinen, auch nah an der Kamera nicht glatt

@@ -48,6 +48,9 @@ const POSTER_TEXTURES := {
 	"grass_a_normal": "res://assets/textures/ground/cobble_normal.jpg",
 	"grass_b_normal": "res://assets/textures/ground/cobble_normal.jpg",
 	"dirt_normal": "res://assets/textures/ground/gravel_normal.jpg",
+	# Wiese auf den gesperrten Feldern (Lukas, 2026-10-30): Gras und Erde wie in eeveTD
+	"lawn_grass": "res://assets/textures/ground/grass_a.jpg",
+	"lawn_soil": "res://assets/textures/ground/dirt.jpg",
 }
 
 ## Werte je Stil. "floor" sind Parameter für neon_floor.gdshader, "env" für CameraRig.add_environment.
@@ -192,6 +195,8 @@ const STYLES := {
 			"brightness": 0.62, "saturation": 0.75, "tint": Vector3(1.0, 1.0, 1.0),
 			"grass_tile": 3.0, "dirt_tile": 2.0, "detail_blur": 0.0, "grass_contrast": 1.0, "normal_strength": 0.9,
 			"vary": 0.0, "detail_normal": 0.0,
+			# Gegnerweg als Straße mit weißen Randlinien, gesperrte Felder als Wiese (Lukas, 2026-10-30)
+			"road": 1.0, "lawn": 1.0,
 		},
 		"floor": {
 			"floor_alpha": 0.0,
@@ -201,7 +206,7 @@ const STYLES := {
 			"edge_energy": 1.0, "core_white": 0.0, "halo_width": 0.004, "line_width": 0.012,
 			"zone_color": Color("e8372a"), "zone_alpha": 0.22, "zone_edge_energy": 0.9,
 			"zone_edge_color": Color("151515"),
-			"blocked_color": Color("5a5f55"), "blocked_alpha": 0.35,
+			"blocked_color": Color("5a5f55"), "blocked_alpha": 0.0,
 		},
 		"path": Color("e8372a"), "path_energy": 1.2,
 		"marker": Color("151515"), "marker_energy": 1.0,
@@ -211,10 +216,11 @@ const STYLES := {
 		"hit_glow": 0.5,
 		"env": {
 			"sky_top": Color("9fb4c4"), "sky_horizon": Color("dcdcd4"), "ground_bottom": Color("6a6a64"),
-			"ambient": Color("c8ccd0"), "ambient_energy": 0.35, "ambient_sky": 0.5,
-			"sun": Color("fff1dc"), "sun_energy": 1.6, "sun_pitch": -48.0, "sun_yaw": -110.0,
+			# etwas gedämpfter als zuvor (Lukas, 2026-10-30: „weniger stark beleuchtet“)
+			"ambient": Color("c8ccd0"), "ambient_energy": 0.28, "ambient_sky": 0.5,
+			"sun": Color("fff1dc"), "sun_energy": 1.25, "sun_pitch": -48.0, "sun_yaw": -110.0,
 			"shadow_blur": 1.8, "shadow_opacity": 0.75,
-			"fill": Color("b0c0d0"), "fill_energy": 0.3, "fill_pitch": -30.0,
+			"fill": Color("b0c0d0"), "fill_energy": 0.22, "fill_pitch": -30.0,
 			"glow_threshold": 1.2, "glow_intensity": 0.35,
 			"tonemap": Environment.TONE_MAPPER_ACES, "exposure": 0.9, "white": 6.0,
 			"contrast": 1.04, "saturation": 0.95,

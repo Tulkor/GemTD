@@ -366,7 +366,8 @@ func _rebuild_ground() -> void:
 			var a := clampf(1.0 - (dist[y * w + x] - DIRT_CORE) / DIRT_FADE, 0.0, 1.0)
 			if path_depth > 0.0:  # Schlucht: Erde nur unten, oben Gras bis an die Kante
 				a = 1.0 if is_sunken(Vector2i(x, y)) else 0.0
-			img.set_pixel(x, y, Color(a, a, a))
+			# G = gesperrtes Feld (Wiese in Randgruppen TD, Uniform lawn)
+			img.set_pixel(x, y, Color(a, 1.0 if map.get_tile(Vector2i(x, y)) == MapData.BLOCKED else 0.0, a))
 	_ground_mat.set_shader_parameter("splat", ImageTexture.create_from_image(img))
 
 
@@ -571,6 +572,10 @@ func set_marker_lanes(lanes: Array) -> void:
 		_rebuild_markers()
 
 
+## Beschriftungen über den Wegpunkten (Randgruppen TD ohne: dort reicht die Anzeige der Wege, Lukas 2026-10-30).
+var marker_labels := true
+
+
 ## Texte der Wegpunkt-Beschriftungen (für Tests).
 func marker_texts() -> Array:
 	return _markers.get_children().filter(func(n): return n is Label3D).map(func(n): return n.text)
@@ -699,7 +704,7 @@ func _add_marker(c: Vector2i, text: String, col: Color) -> void:
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.position = to_3d(cell_center(c), 0.04 + ground_y(cell_center(c)))
 	_markers.add_child(ring)
-	if text == "":
+	if text == "" or not marker_labels:
 		return
 	var label := Label3D.new()
 	label.text = text

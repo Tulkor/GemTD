@@ -33,9 +33,17 @@ const TOWN_SHARE := 0.5  ## Anteil der Viertel, die Stadt sind
 const TREE_TINT := Color(1.0, 1.0, 1.0)
 ## So viele Felder reicht die Stadt über den Kartenrand hinaus (Kamera zeigt höchstens CameraRig.VIEW_MARGIN).
 const OUTER := 24
-## Boden außerhalb: so breit (Einheiten), etwas dunkler wie die gesperrten Felder der Karte.
+## Boden außerhalb: so breit (Einheiten), Wiese wie die gesperrten Felder der Karte.
 const FLOOR_MARGIN := 40.0
-const FLOOR_SHADE := 0.86
+## Stadtviertel (Lukas, 2026-10-30): jedes Haus steht auf einem erhöhten Gehweg aus Pflaster mit Bordstein,
+## dazwischen Wiese (Boden-Shader, lawn); Bäume dort lockerer als im Park.
+const HOUSE_FIT := 0.8        ## Haus auf diesen Anteil verkleinert, der Rest des 4×4-Blocks ist Gehweg
+const CURB_HEIGHT := 0.06
+const STREET_TREES := 0.35    ## Anteil der freien Felder in Stadtvierteln mit Baum (Park 0.85)
+## Gestrichelte weiße Mittellinie auf dem Gegnerweg (der Weg selbst ist Straße im Boden-Shader, road).
+const DASH := 0.32
+const DASH_GAP := 0.32
+const DASH_WIDTH := 0.05
 ## Erde mit Grasflecken unter jedem Baum (Wunsch von Lukas), im Park wachsen die Flächen zusammen.
 const SOIL_SHADER := "res://assets/shaders/tree_soil.gdshader"
 const SOIL_SIZE := 1.5  ## Durchmesser einer Fläche (Einheiten); Bäume stehen auf 2×2-Feldern = 1 Einheit
@@ -65,6 +73,7 @@ func _ready() -> void:
 		for qx in range(q0, ceili((map.width + OUTER) / float(QUARTER))):
 			town[Vector2i(qx, qy)] = _rng.randf() < TOWN_SHARE
 	var soil: Array[Vector2] = []  # Baumstandorte
+	var walks: Array[Vector2] = []  # Mitten der Häuserblöcke (Gehweg)
 	var used := {}   # Felder unter Häusern
 	var parts := {}  # "pfad|schatten" -> [Transform3D]
 	# Häuser: ganze 4×4-Blöcke in Stadtvierteln, Front zur nächsten offenen Seite
@@ -82,11 +91,12 @@ func _ready() -> void:
 				for dx in 4:
 					used[Vector2i(x + dx, y + dy)] = true
 			var i := _pick(HOUSES)
-			var size := _rng.randf_range(HOUSES[i][1], HOUSES[i][2])
+			var size := _rng.randf_range(HOUSES[i][1], HOUSES[i][2]) * HOUSE_FIT
 			var center := board.cell_center(Vector2i(x, y)) + Vector2(1.5, 1.5) * Board3D.CELL
+			walks.append(center)
 			var rot := _facing(Vector2i(x, y), blocked)
 			var b := Basis(Vector3.UP, rot).scaled(Vector3.ONE * size)
-			parts.get_or_add(C % HOUSES[i][0] + "|1", []).append(Transform3D(b, Vector3(center.x, 0.0, center.y)))
+			parts.get_or_add(C % HOUSES[i][0] + "|1", []).append(Transform3D(b, Vector3(center.x, CURB_HEIGHT, center.y)))
 	# Bäume auf allen übrigen gesperrten 2×2-Blöcken, im Park dichter
 	for y in range(-OUTER, map.height + OUTER - 1, 2):
 		for x in range(-OUTER, map.width + OUTER - 1, 2):
@@ -95,7 +105,7 @@ func _ready() -> void:
 					and blocked.call(a + Vector2i(1, 1))):
 				continue
 			var park: bool = not town[_quarter(x, y)]
-			if _rng.randf() > (0.85 if park else 0.5):
+			if _rng.randf() > (0.85 if park else STREET_TREES):
 				continue
 			var i := _pick(TREES)
 			var p := board.cell_center(a) + Vector2(0.5, 0.5) * Board3D.CELL \
@@ -133,6 +143,93 @@ func _ready() -> void:
 		var k: PackedStringArray = key.split("|")
 		_add_multimesh(k[0], parts[key], k[1] == "1", k[0].contains("/nature/"))
 	_add_soil(soil)
+	_add_walks(walks)
+	_add_center_lines()
+
+
+## Gehwege: erhöhte Pflasterplatte mit Bordstein je Häuserblock. Bei Nachbarhäusern berühren sie sich und
+## bilden durchgehende Bürgersteige.
+func _add_walks(walks: Array[Vector2]) -> void:
+	var block := 4.0 * Board3D.CELL
+	var slab := BoxMesh.new()
+	slab.size = Vector3(block, CURB_HEIGHT, block)
+	var walk := StandardMaterial3D.new()
+	walk.albedo_texture = load("res://assets/textures/ground/cobble.jpg")
+	walk.normal_enabled = true
+	walk.normal_texture = load("res://assets/textures/ground/cobble_normal.jpg")
+	walk.uv1_triplanar = true
+	walk.uv1_world_triplanar = true
+	walk.uv1_scale = Vector3.ONE * 0.6
+	walk.albedo_color = Color(0.92, 0.9, 0.86)
+	walk.roughness = 0.9
+	slab.material = walk
+	_add_flat(slab, walks, CURB_HEIGHT / 2.0)
+	# Bordstein: heller Rand um die Platte
+	var curb := BoxMesh.new()
+	curb.size = Vector3(block + 0.04, CURB_HEIGHT * 0.9, block + 0.04)
+	var stone := StandardMaterial3D.new()
+	stone.albedo_color = Color(0.7, 0.7, 0.68)
+	stone.roughness = 0.85
+	curb.material = stone
+	_add_flat(curb, walks, CURB_HEIGHT * 0.45)
+
+
+## Gestrichelte Mittellinie entlang der Gegnerwege aller Bahnen; Abschnitte, die mehrere Bahnen teilen,
+## nur einmal. Ecken der Feldkette werden zu geraden Stücken zusammengefasst.
+func _add_center_lines() -> void:
+	var pf := Pathfinder.new(map)
+	var seen := {}
+	var xfs: Array[Transform3D] = []
+	for lane in map.lane_count():
+		var cells: Array[Vector2i] = pf.compute_path(lane)
+		var i := 0
+		while i < cells.size() - 1:
+			# geraden Lauf in gleicher Richtung sammeln
+			var dir := cells[i + 1] - cells[i]
+			var j := i + 1
+			while j < cells.size() - 1 and cells[j + 1] - cells[j] == dir:
+				j += 1
+			var key := [cells[i], cells[j]]
+			if not seen.has(key) and not seen.has([cells[j], cells[i]]):
+				seen[key] = true
+				var a := board.cell_center(cells[i])
+				var b := board.cell_center(cells[j])
+				var along := b - a
+				var n := floori(along.length() / (DASH + DASH_GAP))
+				var rot := Basis(Vector3.UP, atan2(-along.y, along.x))
+				for k in n:
+					var c := a + along.normalized() * ((k + 0.5) * (DASH + DASH_GAP))
+					xfs.append(Transform3D(rot, Vector3(c.x, 0.006, c.y)))
+			i = j
+	var quad := PlaneMesh.new()
+	quad.size = Vector2(DASH, DASH_WIDTH)
+	var white := StandardMaterial3D.new()
+	white.albedo_color = Color(0.85, 0.85, 0.83)
+	white.roughness = 0.8
+	quad.material = white
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	mm.instance_count = xfs.size()
+	for k in xfs.size():
+		mm.set_instance_transform(k, xfs[k])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mmi)
+
+
+func _add_flat(mesh: Mesh, at: Array[Vector2], y: float) -> void:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = at.size()
+	for i in at.size():
+		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(at[i].x, y, at[i].y)))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mmi)
 
 
 ## Runde Erdflächen unter den Bäumen, knapp über dem Boden und der Sperrfeld-Färbung (y 0.001).
@@ -161,17 +258,16 @@ func _quarter(x: int, y: int) -> Vector2i:
 	return Vector2i(floori(x / float(QUARTER)), floori(y / float(QUARTER)))
 
 
-## Boden um die Karte: derselbe Boden-Shader wie das Spielfeld (Beton), ohne Wege.
+## Boden um die Karte: derselbe Boden-Shader wie das Spielfeld (Wiese), ohne Wege.
 func _add_floor() -> void:
 	var size := Vector2(map.width, map.height) * Board3D.CELL
 	var floor := MeshInstance3D.new()
 	floor.mesh = EeveScenery.frame_mesh(size, FLOOR_MARGIN)
 	var mat: ShaderMaterial = board._ground_mat.duplicate()
 	var none := Image.create(1, 1, false, Image.FORMAT_RGBA8)
-	none.fill(Color.BLACK)
+	none.fill(Color(0, 1, 0))  # außerhalb: Wiese (G = gesperrt), kein Weg
 	mat.set_shader_parameter("splat", ImageTexture.create_from_image(none))
 	mat.set_shader_parameter("ground_alpha", 1.0)
-	mat.set_shader_parameter("brightness", float(mat.get_shader_parameter("brightness")) * FLOOR_SHADE)
 	floor.material_override = mat
 	floor.position = Vector3(size.x / 2.0, -0.02, size.y / 2.0)
 	floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

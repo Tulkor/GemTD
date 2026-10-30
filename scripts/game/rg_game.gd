@@ -42,6 +42,8 @@ func _ready() -> void:
 		for p in players:
 			p.gold = start_gold()
 		level_pause = float(rules.get("first_pause", 60))
+	board.marker_labels = false
+	board._rebuild_markers()
 	RgScenery.add_to(self)
 	_focus_own_zone()
 	_style_hud()
