@@ -57,14 +57,46 @@ static func instantiate(path: String, size := 1.0, tint: Material = null) -> Nod
 ## Figuren (Quaternius, KayKit) stehen sonst in T-Pose: Ruhe-Animation in Schleife abspielen, falls vorhanden.
 static func _play_idle(model: Node) -> void:
 	var players := model.find_children("*", "AnimationPlayer", true, false)
-	if players.is_empty():
+	if not players.is_empty():
+		var ap: AnimationPlayer = players[0]
+		for a in ap.get_animation_list():
+			if str(a).to_lower().ends_with("idle"):
+				ap.get_animation(a).loop_mode = Animation.LOOP_LINEAR
+				ap.play(a)
+				return
+	for sk in model.find_children("*", "Skeleton3D", true, false):
+		_lower_arms(sk)
+
+
+## Figuren ohne Ruhe-Animation (Universal Base Characters, KayKit-Skelette): Oberarme aus der T-Pose
+## schräg nach unten drehen. "Unten" = vom Kopf zum Becken, damit es bei jeder Achsenlage des Skeletts passt.
+static func _lower_arms(sk: Skeleton3D) -> void:
+	var head := -1
+	var hips := -1
+	var arms: Array[int] = []
+	for b in sk.get_bone_count():
+		var n := sk.get_bone_name(b).to_lower()
+		if head < 0 and n.contains("head"):
+			head = b
+		elif hips < 0 and (n.contains("pelvis") or n.contains("hips")):
+			hips = b
+		elif n.contains("upperarm") or n.begins_with("arm") or n == "upper_arm.l" or n == "upper_arm.r":
+			arms.append(b)
+	if head < 0 or hips < 0:
 		return
-	var ap: AnimationPlayer = players[0]
-	for a in ap.get_animation_list():
-		if str(a).to_lower().ends_with("idle"):
-			ap.get_animation(a).loop_mode = Animation.LOOP_LINEAR
-			ap.play(a)
-			return
+	var down := (sk.get_bone_global_rest(hips).origin - sk.get_bone_global_rest(head).origin).normalized()
+	for b in arms:
+		var kids := sk.get_bone_children(b)
+		if kids.is_empty():
+			continue
+		var g := sk.get_bone_global_rest(b)
+		var dir := (sk.get_bone_global_rest(kids[0]).origin - g.origin).normalized()
+		var side := (dir - down * dir.dot(down)).normalized()
+		var target := (down * 0.92 + side * 0.4).normalized()
+		var basis := Basis(Quaternion(dir, target)) * g.basis
+		var parent := sk.get_bone_parent(b)
+		var pb := sk.get_bone_global_rest(parent).basis if parent >= 0 else Basis()
+		sk.set_bone_pose_rotation(b, (pb.inverse() * basis).get_rotation_quaternion())
 
 
 ## Wie instantiate, aber auf eine Grundfläche skaliert: breiteste waagrechte Kante = width,
@@ -214,7 +246,14 @@ static func smooth_normals(mesh: Mesh) -> ArrayMesh:
 		keep[Mesh.ARRAY_VERTEX] = verts
 		keep[Mesh.ARRAY_NORMAL] = smooth
 		keep[Mesh.ARRAY_INDEX] = indices
-		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, keep)
+		# Figuren mit Skelett: Knochen mitnehmen, sonst steht die Kontur in T-Pose neben der Figur
+		var flags := 0
+		if arrays[Mesh.ARRAY_BONES] != null and arrays[Mesh.ARRAY_WEIGHTS] != null:
+			keep[Mesh.ARRAY_BONES] = arrays[Mesh.ARRAY_BONES]
+			keep[Mesh.ARRAY_WEIGHTS] = arrays[Mesh.ARRAY_WEIGHTS]
+			if keep[Mesh.ARRAY_BONES].size() == verts.size() * 8:
+				flags = Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, keep, [], {}, flags)
 	return out
 
 
@@ -259,6 +298,9 @@ static func add_outline(n: Node, key := "") -> void:
 		var hull := MeshInstance3D.new()
 		hull.mesh = _smooth_cache[mi.mesh]
 		hull.material_override = outline
+		if mi.skin != null:
+			hull.skin = mi.skin
+			hull.skeleton = NodePath("../" + str(mi.skeleton))
 		hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.add_child(hull)
 
