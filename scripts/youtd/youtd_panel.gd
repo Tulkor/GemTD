@@ -7,7 +7,7 @@ extends Control
 ## Würfel-Rezepte.
 
 const MSG_TIME := 6.0      ## so lange bleibt eine Meldung stehen (Sekunden, danach blendet sie aus)
-const MSG_TOP := 116.0     ## Abstand der Meldungen vom oberen Rand (unter dem Banner)
+const MSG_TOP := 132.0     ## Abstand der Meldungen vom oberen Rand (unter dem Banner)
 
 var game  # youtd_game.gd
 var hud: Hud

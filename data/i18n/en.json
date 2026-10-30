@@ -2419,5 +2419,21 @@
 	"An": "On",
 	"Aus": "Off",
 	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD.",
-	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items"
+	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items",
+	"Elemente erforschen": "Research elements",
+	"Schließen (Esc)": "Close (Esc)",
+	"Das Fenster geht von selbst auf, sobald die Bücher für ein neues Level reichen.": "This window opens by itself as soon as you have enough tomes for a new level.",
+	"%d Bücher": "%d tomes",
+	"Neuer Punkt frei: du kannst ein Element erforschen.": "New point available: you can research an element.",
+	"fertig": "maxed",
+	"Grünes Feld anklicken: das Rezept läuft sofort, die Zutaten nimmt das Spiel aus dem Lager (niedrigstes Level zuerst).": "Click a green field: the recipe runs right away, taking the ingredients from your stash (lowest level first).",
+	"Rechtsklick auf ein Item im Lager sperrt es für Rezepte.": "Right-click an item in the stash to lock it from recipes.",
+	"%d von %d %s": "%d of %d %s",
+	"Klick: jetzt ausführen": "Click: run now",
+	"Im Lager: %s": "In stash: %s",
+	"Welle %d schicken": "Send wave %d",
+	"Würfeln": "Roll",
+	"Rechtsklick: für Rezepte freigeben": "Right-click: unlock for recipes",
+	"Rechtsklick: für Rezepte sperren": "Right-click: lock from recipes",
+	"Bücher": "Tomes"
 }

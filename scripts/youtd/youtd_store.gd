@@ -5,10 +5,10 @@ extends PanelContainer
 ## Auswahlkarte) und von dort zurück ins Lager. Im Kopf des Tower-Lagers „Würfeln“ und „6 → 1“, im Item-Lager
 ## „Öle kombinieren“. Die Würfel-Rezepte stehen im Fenster „Rezepte“ (youtd_panel.gd).
 
-const COLS := 7
+const COLS := 4
 const SLOT := 40.0
-const ROWS_TOWERS := 2
-const ROWS_ITEMS := 3
+const ROWS_TOWERS := 5
+const ROWS_ITEMS := 6
 
 ## Welche Teile offen sind (bleibt für die Sitzung, auch in der nächsten Partie)
 static var open := {"towers": true, "items": true}
@@ -65,18 +65,20 @@ func _part(id: String, v: VBoxContainer) -> VBoxContainer:
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(26, 22)
 	b.add_theme_font_size_override("font_size", 13)
+	# Knöpfe des Lagers in eigener Zeile unter dem Titel (das Lager ist nur 4 Felder breit)
+	var tools := HBoxContainer.new()
+	tools.add_theme_constant_override("separation", 4)
+	v.add_child(tools)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	v.add_child(box)
-	_parts[id] = {"head": title, "toggle": b, "box": box, "row": head}
+	_parts[id] = {"head": title, "toggle": b, "box": box, "row": head, "tools": tools}
 	return box
 
 
-## Kleiner Knopf in der Kopfzeile, links vom Auf-/Zuklappen.
+## Kleiner Knopf in der Zeile unter dem Titel.
 func _head_button(id: String, text: String, on_pressed: Callable) -> Button:
-	var row: HBoxContainer = _parts[id].row
-	var b := UiUtil.button(text, row, on_pressed)
-	row.move_child(b, row.get_child_count() - 2)
+	var b := UiUtil.button(text, _parts[id].tools, on_pressed)
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size.y = 24
 	b.add_theme_font_size_override("font_size", 12)
