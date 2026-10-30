@@ -10,9 +10,8 @@ extends Node
 ##   Laternen behalten ihre Farbe; Dunst hinten und am vorderen Rand, Filmkorn.
 ## - Plakatwand (Randgruppen TD): warmes Spätnachmittagslicht (Licht immer), Filter tönt leicht bernsteinfarben.
 ## Der Filter lässt sich in den Einstellungen abschalten (Display.style_filter), das Licht bleibt.
-## Normal liegt er als CanvasLayer -1 über dem fertigen Bild. Mit "keep_tall" (eeveTD, YouTD) läuft er stattdessen
-## in der 3D-Szene vor den Effekten (style_filter_3d.gdshader) und lässt alles aus, was im Spielfeld über dem
-## Boden steht (Tower, Gegner): die stechen dann aus dem ausgewaschenen Wald heraus. Spielfeld über set_area().
+## Er liegt als CanvasLayer -1 über dem fertigen Bild. "keep_sat" (eeveTD, YouTD) lässt kräftig farbige Pixel
+## (Tower, Gegner, Effekte) ungefiltert, damit sie aus dem ausgewaschenen Wald herausstechen.
 ## Kosten: ein Bildschirm-Durchgang mit höchstens 7 Texturzugriffen.
 
 ## Werte je FieldStyle-Name, mit "_night" für die Nachtversion (sonst gilt der Tag).
@@ -41,11 +40,10 @@ const LOOKS := {
 			"shadow_tint": Color(0.4, 0.54, 0.5), "highlight_tint": Color(0.5, 0.52, 0.48), "split": 0.25,
 			"saturation": 0.68, "contrast": 1.06, "brightness": 0.95,
 			"hue_target": 0.09, "hue_width": 0.1, "hue_sat": 1.25, "hue_gain": 1.1,
-			"grain": 0.035,
+			"grain": 0.035, "keep_sat": 0.3,
 			"haze_color": Color(0.36, 0.42, 0.4), "haze": 0.32, "haze_reach": 0.5, "haze_low": 0.2,
 			"edge_color": Color(0.01, 0.03, 0.03), "edge": 0.4,
 		},
-		"keep_tall": true,
 		"light": {"fog": Color("a0aa98"), "fog_density": 0.006, "saturation": 0.85},
 	},
 	FieldStyle.DRUID + "_night": {
@@ -54,11 +52,10 @@ const LOOKS := {
 			"saturation": 0.62, "contrast": 1.08, "brightness": 0.97,
 			# Laternen (Goldorange) bleiben warm und leuchten heraus
 			"hue_target": 0.09, "hue_width": 0.12, "hue_sat": 1.35, "hue_gain": 1.15,
-			"grain": 0.04,
+			"grain": 0.04, "keep_sat": 0.3,
 			"haze_color": Color(0.11, 0.16, 0.18), "haze": 0.45, "haze_reach": 0.55, "haze_low": 0.3,
 			"edge_color": Color(0.0, 0.02, 0.03), "edge": 0.5,
 		},
-		"keep_tall": true,
 		# dichterer, grünlicher Nebel zwischen den Bäumen
 		"light": {"fog": Color("17262a"), "fog_density": 0.022},
 	},
@@ -94,69 +91,41 @@ static func light(name := "") -> Dictionary:
 ## Filter in die Szene hängen (ersetzt einen alten, z. B. nach dem Wechsel Tag/Nacht).
 static func attach(parent: Node) -> StyleFilter:
 	var old := parent.get_node_or_null("StyleFilter")
-	var area := Rect2()
 	if old != null:
-		area = old._area
 		parent.remove_child(old)
 		old.queue_free()
-	var l := look()
-	if l.get("grade", {}).is_empty():
+	var grade: Dictionary = look().get("grade", {})
+	if grade.is_empty():
 		return null
 	var f := StyleFilter.new()
 	f.name = "StyleFilter"
-	f._grade = l.grade
-	f._keep_tall = bool(l.get("keep_tall", false))
-	f._area = area
+	f._grade = grade
 	parent.add_child(f)
 	return f
 
 
 var _grade: Dictionary
-var _keep_tall := false
-var _area := Rect2()  ## Spielfeld in Welt-Einheiten (x, z), nur für keep_tall
-var _mat: ShaderMaterial
-var _view: Node  ## CanvasLayer oder MeshInstance3D, wird beim Abschalten versteckt
+var _layer: CanvasLayer
 
 
 func _ready() -> void:
-	_mat = ShaderMaterial.new()
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/style_filter.gdshader")
 	for k in _grade:
-		_mat.set_shader_parameter(k, _grade[k])
-	if _keep_tall:
-		_mat.shader = preload("res://assets/shaders/style_filter_3d.gdshader")
-		# als Erstes im durchsichtigen Durchgang: liest das deckende Bild, Effekte kommen danach
-		_mat.render_priority = -128
-		var quad := MeshInstance3D.new()
-		quad.name = "Grade"
-		quad.mesh = QuadMesh.new()
-		quad.material_override = _mat
-		quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		quad.custom_aabb = AABB(Vector3(-500, -50, -500), Vector3(1000, 100, 1000))
-		_view = quad
-		set_area(_area)
-	else:
-		_mat.shader = preload("res://assets/shaders/style_filter.gdshader")
-		# unter der Oberfläche (HUD ab Ebene 0), über dem 3D-Bild
-		var layer := CanvasLayer.new()
-		layer.layer = -1
-		var rect := ColorRect.new()
-		rect.name = "Grade"
-		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		rect.material = _mat
-		layer.add_child(rect)
-		_view = layer
-	add_child(_view)
-	_view.visible = Display.style_filter
+		mat.set_shader_parameter(k, _grade[k])
+	# unter der Oberfläche (HUD ab Ebene 0), über dem 3D-Bild
+	_layer = CanvasLayer.new()
+	_layer.layer = -1
+	var rect := ColorRect.new()
+	rect.name = "Grade"
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rect.material = mat
+	_layer.add_child(rect)
+	add_child(_layer)
+	_layer.visible = Display.style_filter
 	Display.style_filter_changed.connect(_on_changed)
 
 
-## Spielfeld (Welt x/z), in dem hohe Dinge ungefiltert bleiben (nur keep_tall).
-func set_area(r: Rect2) -> void:
-	_area = r
-	if _mat != null:
-		_mat.set_shader_parameter("area", Vector4(r.position.x, r.position.y, r.size.x, r.size.y))
-
-
 func _on_changed(on: bool) -> void:
-	_view.visible = on
+	_layer.visible = on

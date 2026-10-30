@@ -1,5 +1,4 @@
-// Farbkorrektur des Stil-Filters (StyleFilter), gemeinsam für style_filter.gdshader (über dem fertigen Bild)
-// und style_filter_3d.gdshader (vor den durchsichtigen Effekten, Tower ausgenommen). Erwartet sRGB-Werte 0..1.
+// Farbkorrektur des Stil-Filters (StyleFilter, style_filter.gdshader). Erwartet sRGB-Werte 0..1.
 
 /// Gesamtstärke (0 = Bild unverändert)
 uniform float strength : hint_range(0.0, 1.0) = 1.0;

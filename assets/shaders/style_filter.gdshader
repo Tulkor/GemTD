@@ -10,6 +10,11 @@ uniform sampler2D screen : hint_screen_texture, filter_linear, repeat_disable;
 uniform float sharpen = 0.0;
 /// Farbsäume zum Rand hin in Pixeln (Rot nach außen, Blau nach innen)
 uniform float chroma = 0.0;
+/// Pixel ab dieser Sättigung (Tower, Gegner, Effekte) bleiben ungefiltert und werden um keep_gain aufgehellt
+/// (0 = aus); weich über keep_soft
+uniform float keep_sat = 0.0;
+uniform float keep_soft = 0.2;
+uniform float keep_gain = 1.08;
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
@@ -27,5 +32,11 @@ void fragment() {
 		c += (c - n * 0.25) * sharpen;
 	}
 	c = grade_screen(grade_color(c), uv, FRAGCOORD.xy, px.y / px.x, TIME);
+	if (keep_sat > 0.0) {
+		// nur kräftige und nicht zu dunkle Farben: der graue Stein der Sockel und der Wald werden normal gefiltert
+		vec3 hsv = rgb2hsv(base);
+		float keep = smoothstep(keep_sat, keep_sat + keep_soft, hsv.y) * smoothstep(0.15, 0.35, hsv.z);
+		c = mix(c, base * keep_gain, keep);
+	}
 	COLOR = vec4(mix(base, c, strength), 1.0);
 }

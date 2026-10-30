@@ -103,6 +103,7 @@ const ZONE_FAINT := 0.15
 const ZONE_FADE_TIME := 2.5  ## Sekunden für das Ausblenden nach dem Start der ersten Welle
 const ZONE_FLASH_TIME := 1.6
 var zone_glow := 1.0
+var zone_rule := true  ## gilt die Gebietsgrenze? Ohne bleiben die Rahmen schwach und leuchten nie auf
 var _zone_level := 1.0
 var _zone_flash := 0.0
 var _zone_shown := 1.0
@@ -656,21 +657,32 @@ func set_zone_glow(v: float) -> void:
 	set_process(true)
 
 
+## Gilt die Gebietsgrenze (nur im eigenen Gebiet bauen)? Ohne bleiben die Rahmen schwach.
+func set_zone_rule(on: bool) -> void:
+	if on == zone_rule:
+		return
+	zone_rule = on
+	set_process(true)
+
+
 ## Zonenrahmen kurz hell aufleuchten lassen (Bauversuch außerhalb des eigenen Gebiets).
 func flash_zones() -> void:
+	if not zone_rule:
+		return
 	_zone_flash = 1.0
 	set_process(true)
 
 
 func _process(delta: float) -> void:
-	_zone_level = move_toward(_zone_level, zone_glow, delta / ZONE_FADE_TIME)
+	var target := zone_glow if zone_rule else minf(zone_glow, ZONE_FAINT)
+	_zone_level = move_toward(_zone_level, target, delta / ZONE_FADE_TIME)
 	_zone_flash = maxf(_zone_flash - delta / ZONE_FLASH_TIME, 0.0)
 	var shown := maxf(_zone_level, ease(_zone_flash, 0.5))
 	if not is_equal_approx(shown, _zone_shown):
 		_zone_shown = shown
 		for m: ShaderMaterial in _zone_mats:
 			m.set_shader_parameter("intensity", shown)
-	if _zone_level == zone_glow and _zone_flash == 0.0:
+	if _zone_level == target and _zone_flash == 0.0:
 		set_process(false)
 
 

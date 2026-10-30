@@ -1107,7 +1107,6 @@
 	"Tower bauen": "Build tower",
 	"Tower einer beliebigen Filiale (auch Upgrades, XP- und Ultimate-Tower) zum Setzen wählen, schaltet freies Bauen ein": "Pick a tower from any shop (including upgrades, XP and ultimate towers) to place; turns on free building",
 	"– wählen –": "– choose –",
-	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items",
 	"Läuft gerade ein Level, verschwinden seine Gegner und das gewählte startet sofort. Im Countdown kommt es als nächstes.": "If a level is running, its enemies vanish and the chosen one starts immediately. During the countdown it comes next.",
 	"Keine besonderen Fähigkeiten": "No special abilities",
 	"Server-Adresse ungültig": "Invalid server address",
@@ -2409,5 +2408,6 @@
 	"Stil-Filter": "Style filter",
 	"An": "On",
 	"Aus": "Off",
-	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD."
+	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD.",
+	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, auch außerhalb des eigenen Gebiets, alle Items": "Free building: towers of all shops, no requirements or tower limit, also outside your own area, all items"
 }

@@ -269,9 +269,11 @@ func pl(p := -1) -> Player:
 func _process(delta: float) -> void:
 	if phase == Phase.SETUP:
 		return
-	# Gebietsrahmen ab dem ersten Level nur noch schwach (auch beim Gast, level kommt vom Host)
+	# Gebietsrahmen ab dem ersten Level nur noch schwach (auch beim Gast, level kommt vom Host);
+	# hell nur, solange die Gebietsgrenze gilt (freies Bauen im Debug-Menü hebt sie auf)
 	if level > 0:
 		board.set_zone_glow(Board3D.ZONE_FAINT)
+	board.set_zone_rule(not debug_free)
 	if phase < Phase.GAME_OVER:
 		game_time += delta
 		play_time += delta / maxf(Engine.time_scale, 0.001)
@@ -1066,7 +1068,7 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 	var cells := Board3D.footprint(a)
 	var zone: int = players[p].zone
 	for c in cells:
-		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or map.zone_at(c) != zone:
+		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or (map.zone_at(c) != zone and not debug_free):
 			return tr("Nur im eigenen Gebiet")
 		if map.is_marker_zone(c):
 			return tr("Zu nah am Wegpunkt")
@@ -1748,7 +1750,7 @@ func _on_click(keep := false) -> void:
 	if build_id != "":
 		var a := board.mouse_anchor(camera_rig.camera)
 		# außerhalb des eigenen Gebiets: Rahmen leuchten auf
-		if Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
+		if not debug_free and Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
 			board.flash_zones()
 		if submit({"type": "build", "tower": build_id, "cell": a}) and not keep:
 			build_id = ""
