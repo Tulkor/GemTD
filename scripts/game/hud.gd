@@ -371,6 +371,23 @@ func add_lights_toggle(on: bool, on_toggled: Callable) -> void:
 	lights_button.toggled.connect(on_toggled)
 
 
+## Wert in der Leiste oben für einen Modus (YouTD: Bücher, Food), rechts neben Gold. Liefert das Wert-Label.
+func add_bar_chip(caption: String, color := UiTheme.TEXT) -> Label:
+	var h := extra_chance_button.get_parent()
+	var l := _chip(caption, h, color)
+	h.move_child(l.get_parent().get_parent(), extra_chance_button.get_index())
+	return l
+
+
+## Knopf in der Leiste oben für einen Modus: left = hinter den Werten, sonst links neben dem Tempo.
+func add_bar_button(text: String, on_pressed: Callable, left := true) -> Button:
+	var h := extra_chance_button.get_parent()
+	var b := _button(text, h, on_pressed)
+	b.focus_mode = Control.FOCUS_NONE
+	h.move_child(b, extra_chance_button.get_index() if left else _speed_row.get_index())
+	return b
+
+
 ## Panel-Überschrift: Großbuchstaben, fett.
 func _panel_title(l: Label) -> Label:
 	return UiTheme.heading(l)

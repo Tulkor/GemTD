@@ -302,6 +302,20 @@ func _store() -> void:
 	check(not game.can_merge_oils(), "danach nichts mehr zu kombinieren")
 	await get_tree().process_frame
 	check(game.youtd_store._items.get_child_count() >= game.item_stash.size(), "Item-Lager zeigt Felder")
+	# Fenster „Rezepte“ in der Mitte: ein freies Feld führt das Rezept sofort aus; Elemente schließt es wieder
+	for i in 2:
+		game.stash_add(YtItem.make(int(oils[i % oils.size()]), p))
+	var panel: YoutdPanel = game.youtd_panel
+	panel.open_window("recipes")
+	var cells: Array = panel._rec_grid.get_children().filter(func(c): return c is Button and not c.disabled)
+	check(panel.is_open("recipes") and cells.size() == 2, "Rezepte: Neu brauen gewöhnlich und ungewöhnlich ausführbar (%d)" % cells.size())
+	var before: int = game.item_stash.size()
+	if not cells.is_empty():
+		(cells[0] as Button).pressed.emit()
+	check(game.item_stash.size() == before - 1, "Rezept „Neu brauen“ per Klick: 2 Öle → 1 (Lager %d → %d)" % [before, game.item_stash.size()])
+	panel.open_window("elements")
+	check(panel.is_open("elements") and not panel.is_open("recipes"), "neues Fenster in der Mitte schließt das alte")
+	panel.close_windows()
 	for it in game.item_stash.duplicate():
 		game.stash_remove(it)
 		it.queue_free()

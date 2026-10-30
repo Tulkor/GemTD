@@ -39,7 +39,7 @@ extends Node
 ##   --rasse=kleingarten     Randgruppen TD (--map=randgruppen): Rasse für das Bild, --bauen=N Bauvorschau Tower N
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
-##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
+##   --rezepte, --elemente   YouTD: Fenster „Rezepte“ bzw. „Elemente“ in der Mitte öffnen (sonst bleiben beide zu)
 ##   --turmlicht=sockel|kontur|aus  eeveTD: Tower von Lampen im Sockel angeleuchtet, weiße Kontur oder nichts
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
@@ -656,8 +656,11 @@ func _prepare_youtd(game: Node) -> void:
 	Engine.time_scale = 1.0
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
-	if opts.has("wuerfel") and game.youtd_store != null:
-		game.youtd_store.set_cube(true)
+	if game.youtd_panel != null:
+		game.youtd_panel.close_windows()
+		for w in [["rezepte", "recipes"], ["elemente", "elements"]]:
+			if opts.has(w[0]):
+				game.youtd_panel.open_window(w[1])
 	game._refresh_hud()
 	await _frames(3)
 
