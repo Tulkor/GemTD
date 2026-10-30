@@ -158,6 +158,13 @@ func race_towers(p := -1) -> Array:
 func _make_setup_panel() -> Control:
 	var setup := RgSetupPanel.new()
 	setup.game = self
+	# Das Startfenster ist breit und deckt sonst die linke Spalte halb zu; sie zeigt dasselbe (Rasse, Wellen)
+	var sync_left := func():
+		if is_instance_valid(hud) and is_instance_valid(hud.left_col):
+			hud.left_col.visible = not (setup.is_inside_tree() and setup.visible)
+	setup.visibility_changed.connect(sync_left)
+	setup.tree_entered.connect(sync_left)
+	setup.tree_exited.connect(sync_left)
 	return setup
 
 

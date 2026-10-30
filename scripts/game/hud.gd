@@ -86,6 +86,8 @@ var oneshot_label: Label
 
 var pinned_panel: PanelContainer
 var waves_panel: PanelContainer
+var _has_waves := false
+var _waves_yield := false  ## Auswahlkarte bräuchte den Platz unten links: Wellen und Rezepte so lange ausblenden
 var waves_box: VBoxContainer
 var _waves: Array = []
 var pinned_box: VBoxContainer
@@ -398,6 +400,7 @@ func _build_pinned() -> void:
 	left.add_theme_constant_override("separation", 12)
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(left)
+	left.resized.connect(func(): _recenter.call_deferred())
 	waves_panel = PanelContainer.new()
 	waves_panel.add_theme_stylebox_override("panel", UiTheme.panel(12.0, 0.94))
 	left.add_child(waves_panel)
@@ -560,6 +563,7 @@ func _build_debug() -> void:
 	debug_panel.custom_minimum_size.x = 320
 	debug_panel.add_theme_stylebox_override("panel", UiTheme.panel(14.0))
 	root.add_child(debug_panel)
+	debug_panel.visibility_changed.connect(func(): _recenter.call_deferred())
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	debug_panel.add_child(v)
@@ -999,9 +1003,12 @@ func _two_line(b: Button, title: String, sub: String, icon: Texture2D = null) ->
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(v)
+	# Lange Namen (Items wie „Ultraheißer zOMG-Höllenmaschine“) umbrechen, der Knopf wächst mit
 	var t := UiUtil.label(title, v, 15)
-	t.clip_text = true
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.custom_minimum_size.x = 120
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.minimum_size_changed.connect(func(): b.custom_minimum_size.y = maxf(54.0, v.get_combined_minimum_size().y + 12.0))
 	var g := UiUtil.label(sub, v, 13)
 	g.add_theme_color_override("font_color", UiTheme.COIN)
 	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1234,7 +1241,8 @@ func set_waves(waves: Array) -> void:
 			st.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		var d := UiUtil.label(w.detail, v, 12)
 		d.add_theme_color_override("font_color", UiTheme.MUTED)
-	waves_panel.visible = not waves.is_empty()
+	_has_waves = not waves.is_empty()
+	waves_panel.visible = _has_waves and not _waves_yield
 
 
 func show_message(text: String) -> void:
@@ -1553,7 +1561,7 @@ func _refresh_pinned() -> void:
 	for id in Session.pinned_recipes:
 		if Database.towers.has(id):
 			pinned_box.add_child(RecipeBook.card(id, owned, _on_pins_changed, true, owned_now))
-	pinned_panel.visible = not Session.pinned_recipes.is_empty()
+	pinned_panel.visible = not Session.pinned_recipes.is_empty() and not _waves_yield
 
 
 func _update_layout() -> void:
@@ -1575,6 +1583,48 @@ func _update_layout() -> void:
 	_recenter.call_deferred()
 
 
+## Linke Spalte (Modus-Seitenleiste, nächste Wellen, Rezepte) und Auswahlkarte unten dürfen sich nicht
+## überdecken: Passt die Karte rechts neben die Spalte, rückt sie dorthin, sonst blenden sich
+## nächste Wellen und angepinnte Rezepte aus, solange die Karte offen ist.
+func _avoid_left_col(left: float, right_edge: float, s: Vector2) -> float:
+	var card_top := root.size.y - 16.0 - s.y
+	var yield_now := false
+	if bottom.visible and left_col.visible:
+		var col_w := left_col.size.x
+		var y := left_col.position.y
+		var sep := float(left_col.get_theme_constant("separation"))
+		var ends_low := false
+		for ch in left_col.get_children():
+			var shown: bool = ch.visible or (ch == waves_panel and _has_waves) \
+				or (ch == pinned_panel and not Session.pinned_recipes.is_empty())
+			if not shown:
+				continue
+			# Echte Höhe (umbrochene Texte sind höher als ihr Minimum); ausgeblendete mit der zuletzt gesehenen,
+			# sonst schaltet das Ein- und Ausblenden hin und her
+			var hgt: float = (ch as Control).size.y if ch.visible else float(ch.get_meta("last_h", 0.0))
+			if ch.visible:
+				ch.set_meta("last_h", hgt)
+				ch.set_meta("last_w", (ch as Control).size.x)
+			col_w = maxf(col_w, float(ch.get_meta("last_w", 0.0)))
+			y += maxf(hgt, (ch as Control).get_combined_minimum_size().y)
+			if y > card_top:
+				ends_low = true
+				if ch != waves_panel and ch != pinned_panel:
+					break  # Modus-Seitenleiste selbst ist zu hoch: Karte muss ausweichen
+			y += sep
+		var col_right := left_col.position.x + col_w + 12.0
+		if ends_low:
+			if right_edge - col_right >= s.x:
+				left = maxf(left, col_right)
+			else:
+				yield_now = true
+	if yield_now != _waves_yield:
+		_waves_yield = yield_now
+		waves_panel.visible = _has_waves and not _waves_yield
+		pinned_panel.visible = not Session.pinned_recipes.is_empty() and not _waves_yield
+	return left
+
+
 ## Banner und Auswahlkarte bleiben mittig und passen sich dem Inhalt an (auch beim Schrumpfen).
 func _recenter() -> void:
 	for c in [banner, bottom]:
@@ -1587,9 +1637,16 @@ func _recenter() -> void:
 			var w := root.size.x
 			var right_edge := w - 16.0 - tower_list.custom_minimum_size.x - 12.0
 			var left := minf(w / 2.0 - s.x / 2.0, maxf(16.0, right_edge - s.x))
+			left = _avoid_left_col(left, right_edge, s)
 			c.offset_left = left - w / 2.0
 			c.offset_right = c.offset_left + s.x
 			c.offset_top = -16 - s.y
 			c.offset_bottom = -16
 		else:
 			c.offset_bottom = c.offset_top + s.y
+			# Offenes Debug-Fenster rechts oben nicht berühren: Banner dann nach links rücken
+			if debug_panel != null and debug_panel.visible:
+				var limit := debug_panel.position.x - 12.0 - root.size.x / 2.0
+				if c.offset_right > limit:
+					c.offset_left -= c.offset_right - limit
+					c.offset_right = limit

@@ -115,7 +115,9 @@ func _build_hub() -> void:
 	title.add_theme_font_override("font", DecoTheme.display_font(16))
 	title.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.BG, Color.TRANSPARENT, 0, 0, 30))
 	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var sub := UiUtil.label("◆  " + tr("Drei Tower Defense in einem: GemTD, eeveTD, Shopping Maul").to_upper() + "  ◆", v, 15)
+	# Untertitel aus data/modes.json, damit neue Modi von selbst dazukommen
+	var names := Database.modes.filter(func(m): return bool(m.get("ready", false))).map(func(m): return str(m.get("name", m.id)))
+	var sub := UiUtil.label("◆  " + (tr("Tower Defense in einem:") + " " + ", ".join(names)).to_upper() + "  ◆", v, 15)
 	sub.add_theme_color_override("font_color", DecoTheme.GOLD)
 	sub.add_theme_font_override("font", DecoTheme._variant(DecoTheme.FONT, 0.3, 4))
 	sub.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.BG, Color.TRANSPARENT, 0, 0, 16))
@@ -126,14 +128,19 @@ func _build_hub() -> void:
 	var tiles := HBoxContainer.new()
 	tiles.add_theme_constant_override("separation", 40)
 	center.add_child(tiles)
-	_tile(tiles, "Einzelspieler", "Allein spielen. Du wählst den TD-Modus (GemTD, eeveTD, Shopping Maul) und die Map, dann geht es los.",
+	_tile(tiles, "Einzelspieler", "Allein spielen. Du wählst den TD-Modus und die Map, dann geht es los.",
 		1, true, func(): show_page("single"))
 	net_tile = _tile(tiles, "Mehrspieler", "Sitzung hosten oder per IP beitreten. In der Lobby stimmt ihr gemeinsam über den Modus ab.",
 		3, false, func(): show_page("lobby"))
 	net_tile_text = net_tile.get_meta("text")
+	# Fußleiste in zwei Gruppen; ist das Fenster zu schmal (16:10, 4:3), rutscht die rechte Gruppe in eine zweite Zeile
+	var foot_flow := HFlowContainer.new()
+	foot_flow.add_theme_constant_override("h_separation", 10)
+	foot_flow.add_theme_constant_override("v_separation", 10)
+	v.add_child(foot_flow)
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 10)
-	v.add_child(foot)
+	foot_flow.add_child(foot)
 	_foot_button("Spiel laden", foot, func(): loader.show())
 	_foot_button("Profil", foot, func(): show_page("profile"))
 	_foot_button("Run-History", foot, func(): show_page("history"))
@@ -141,9 +148,11 @@ func _build_hub() -> void:
 	_foot_button("Tower-Editor", foot, _open_tower_editor)
 	_foot_button("Einstellungen", foot, _open_settings)
 	_foot_button("Mitwirkende", foot, func(): show_page("credits"))
-	var fill := Control.new()
-	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	foot.add_child(fill)
+	foot = HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 10)
+	foot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.alignment = BoxContainer.ALIGNMENT_END
+	foot_flow.add_child(foot)
 	var version := UiUtil.label(CreditsPanel.version_text(), foot, 14)
 	version.add_theme_color_override("font_color", DecoTheme.MUTED)
 	version.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -273,13 +282,23 @@ func _build_single(v: VBoxContainer) -> void:
 
 	var left := _column(body, 300)
 	DecoTheme.caption("I · Modus", left)
+	# Nur die gewählte Karte zeigt ihre Beschreibung; reicht die Höhe trotzdem nicht, scrollt die Liste.
+	var mode_scroll := ScrollContainer.new()
+	mode_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mode_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left.add_child(mode_scroll)
+	var mode_list := VBoxContainer.new()
+	mode_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mode_list.add_theme_constant_override("separation", 12)
+	mode_scroll.add_child(mode_list)
 	for m in Database.modes:
-		var card := ModeCard.new(m, Vector2(300, 140))
+		var card := ModeCard.new(m, Vector2(300, 0))
+		card.compact = true
 		var id: String = card.mode_id
 		card.pressed.connect(func():
 			Session.game_kind = id
 			_fill_maps())
-		left.add_child(card)
+		mode_list.add_child(card)
 		mode_cards.append(card)
 
 	var mid := _column(body, 0)
@@ -433,7 +452,9 @@ func _map_card(i: int) -> Button:
 	v.add_child(preview)
 	var name_label := UiUtil.label(tr(shown_maps[i].name).to_upper(), v, 17)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	# Lange Namen („Schlucht (zufällige Steine)“) umbrechen statt abkürzen; die Karte wächst mit
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size.x = 226
 	name_label.add_theme_font_override("font", DecoTheme._variant(DecoTheme.FONT, 0.35, 2))
 	var info := ""
 	var short := ""
@@ -456,6 +477,8 @@ func _map_card(i: int) -> Button:
 	l.add_theme_color_override("font_color", DecoTheme.MUTED)
 	b.set_meta("info", info.replace(" · ", "\n").replace("\n\n", "\n"))
 	b.custom_minimum_size.y = 150 + 24 + 6 * 2 + 24 + 20
+	v.minimum_size_changed.connect(func():
+		b.custom_minimum_size.y = maxf(150 + 24 + 6 * 2 + 24 + 20, v.get_combined_minimum_size().y + 24))
 	b.pressed.connect(func():
 		selected = i
 		_update_selection())
