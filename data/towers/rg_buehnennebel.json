@@ -3,10 +3,9 @@
 	"name": "Bühnennebel",
 	"category": "randgruppen",
 	"color": "#d070ff",
-	"model": "res://assets/models/city/3story_balcony.glb",
+	"model": "res://assets/models/towers/eigen/buehne.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.54,
 	"damage_type": "normal",
 	"targets": "both",
 	"rg": {
@@ -36,5 +35,7 @@
 				}
 			]
 		}
-	]
+	],
+	"fog": 1.0,
+	"fog_height": 0.14
 }

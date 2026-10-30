@@ -705,6 +705,11 @@ func _build_visual() -> void:
 			_gem.position.y = base_h
 			_visual.add_child(_gem)
 	var size := width
+	if _gem == null and float(def.get("fog", 0.0)) > 0.0:
+		# Nur Nebel (Bühnennebel): kein Kristall auf dem Sockel
+		_gem = Node3D.new()
+		_gem.position.y = base_h
+		_visual.add_child(_gem)
 	if _gem == null:
 		var oct := MeshInstance3D.new()
 		oct.mesh = _gem_mesh()
@@ -722,7 +727,23 @@ func _build_visual() -> void:
 		elif eeve_accent == "sockel":
 			_add_corner_lights(foot, base_h)
 	_add_flame(_gem)
+	_add_fog(foot, base_h)
 	_finish_visual()
+
+
+## "fog": Bodennebel über dem Sockel bzw. auf "fog_height" des Modells, Größe in Towerbreiten.
+func _add_fog(foot: float, base_h: float) -> void:
+	var size := float(def.get("fog", 0.0))
+	if size <= 0.0:
+		return
+	var fog := FogFx.make(size * foot, Color(0.95, 0.92, 1.0).lerp(color, 0.3))
+	fog.position.y = base_h
+	# "fog_height": Anteil der Modellhöhe, auf dem der Nebel liegt (Bühnenboden), wie "flame_height"
+	if def.has("fog_height") and _gem:
+		var box := ModelLoader.aabb(_gem, Transform3D())
+		if box.size.y > 0.0:
+			fog.position = Vector3(box.get_center().x, box.position.y + box.size.y * float(def.fog_height), box.get_center().z)
+	_visual.add_child(fog)
 
 
 ## Vier kleine Lampen in den Sockelecken, jede mit einem Spot schräg nach oben auf den Tower.

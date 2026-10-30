@@ -7,6 +7,7 @@ cobra_jeremy
 gnome
 helicopter
 helicopter_jeremy
+hour_glass
 igloo
 kangaroo
 lion
@@ -14,8 +15,10 @@ mailbox
 newt
 orange_coral
 owl
+owl_statue
 polar_bear
 rat
+snake
 spider
 spotted_gecko
 step_pyramid

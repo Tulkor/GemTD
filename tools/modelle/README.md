@@ -37,3 +37,6 @@ je Paket in `fix_for`), entfernt nicht mehr gebrauchte und listet die Tower ohne
 `eeve_daten.py` und `rg_daten.py` neu laufen lassen; Maul (`maul_tower.gd`) und YouTD (`youtd_tower.gd`) lesen
 die Datei über `TowerModels.look()` zur Laufzeit. Figuren spielen ihre Ruhe-Animation (`ModelLoader._play_idle`),
 Modelle aus `assets/models/towers/` drehen sich nicht.
+
+Eigene Modelle für Tower ohne freies Modell: `python3 -I tools/modelle/eigenbau.py [--nur=waage]` baut sie aus
+einfachen Formen nach `assets/models/pakete/eigen/` (eine Funktion je Modell, braucht trimesh und scipy).

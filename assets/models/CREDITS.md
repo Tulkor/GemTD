@@ -152,6 +152,9 @@ bekannt ist, gilt hier CC-BY (Nennung). `polar_bear.glb` ist `black_bear.glb` mi
 - `pakete/pp_einzeln/tiger.glb`: Tiger by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/5A3w06FXUup)
 - `pakete/pp_einzeln/turtle.glb`: Turtle by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/c6n73UnGEP4)
 - `pakete/pp_einzeln/walrus.glb`: Walrus by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/2ivrvruGzxc)
+- `pakete/pp_einzeln/hour_glass.glb`: Hour Glass by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza, von Lukas hochgeladen (2026-10-30); Flächennormalen ergänzt
+- `pakete/pp_einzeln/snake.glb`: Snake by Quaternius, CC0, via Poly Pizza, von Lukas hochgeladen (2026-10-30), mit Animationen (Attack, Idle, Jump, Walk)
+- `pakete/pp_einzeln/owl_statue.glb`: "Low Poly Owl" (STL), CC0 laut Lukas, von Lukas hochgeladen (2026-10-30); auf 4000 Dreiecke vereinfacht, Steinfarbe ergänzt. Urheber und Link werden nachgetragen.
 
 ## Tower-Modelle `towers/` (CC0, aus `pp_einzeln` CC-BY wie oben, 2026-10-28)
 
@@ -159,3 +162,11 @@ Kopien einzelner Modelle aus der Bibliothek `pakete/` (gleicher Unterordner = gl
 wie oben), geholt mit `tools/modelle/tower_modelle.py` nach der Zuordnung in `data/tower_models.json`.
 Nur die Ruhe-Animation bleibt; bei `q_figuren` ist die Hautfarbe, bei `q_feldfruechte` die Helligkeit korrigiert,
 bei `q_fantasy_props` sind die Vertex-Farben entfernt.
+
+## Eigene Modelle `pakete/eigen/` (CC0, 2026-10-30)
+
+Selbst gebaut aus einfachen Formen mit `tools/modelle/eigenbau.py` (ein Modell = eine Funktion), eigene Arbeit,
+CC0: `waage` (YouTD Scales), `it` (YouTD It), `rakete` (YouTD Pocket Rocket), `pfuetze` (eeveTD Bremspfütze),
+`blitzfalle` (eeveTD Blitzfalle), `zapfsaeule` und `bohrturm` (Shopping Maul Arol Tankstelle), `trapez`
+und `steinschleuder` (Randgruppen TD), `buehne` (Randgruppen Bühnennebel, darauf ein Nebeleffekt: `fog` in
+`data/tower_models.json`, `scripts/game/fog_fx.gd`).
