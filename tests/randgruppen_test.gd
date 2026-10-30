@@ -200,6 +200,18 @@ func _coop_tests(map: MapData) -> void:
 		frames += 1
 	pump.call()
 	check(client.enemies.size() == host.enemies.size() and client.enemies.size() > 0, "Gegner gespiegelt: %d" % client.enemies.size())
+	# Geldteilen (Host): Kopfgeld gleich an beide, egal wer trifft
+	host.share_gold = true
+	pump.call()
+	check(client.share_gold, "Geldteilen kommt beim Gast an")
+	var e: Enemy = host.enemies[0]
+	e.bounty = 4
+	e.last_hit_by = 1
+	var g0: int = host.players[0].gold
+	var g1: int = host.players[1].gold
+	host.on_enemy_killed(e)
+	check(host.players[0].gold == g0 + 2 and host.players[1].gold == g1 + 2, "Geldteilen: 4 Kopfgeld → je 2 (%d/%d)" % [host.players[0].gold - g0, host.players[1].gold - g1])
+	check(bool(host.save_extra().get("share", false)), "Geldteilen im Spielstand")
 	host.queue_free()
 	client.queue_free()
 	Session.coop = {}

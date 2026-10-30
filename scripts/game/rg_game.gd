@@ -15,6 +15,7 @@ const LANE_GAP := 0.45  ## Sekunden zwischen zwei Runden von Gegnern; eine Runde
 var rules: Dictionary = {}
 var difficulty := 2         ## Index in rules.difficulties
 var level_pause := 0.0      ## Sekunden bis zum nächsten Level (nur Phase BUILD)
+var share_gold := false     ## Option „Geldteilen“ (Host): Kopfgeld jedes Kills gleich an alle
 var placing := ""           ## Tower, der gerade gesetzt wird (Knopf in der Seitenleiste), "" = keiner
 ## Was jedem Spieler allein gehört, je Spielernummer (siehe rp()): Rasse, Holz, letzte Meldungen.
 var rg_players: Array = []
@@ -201,6 +202,8 @@ func _execute(cmd: Dictionary) -> bool:
 			if setup_done:
 				return false
 			take_foreign_build(cmd)
+			if acting == 0 and cmd.has("share"):
+				share_gold = bool(cmd.share)
 			return _apply_setup(str(cmd.get("race", "")), int(cmd.get("difficulty", difficulty)))
 		"build":
 			return build_tower(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
@@ -238,7 +241,7 @@ func _apply_setup(race_id: String, diff: int) -> bool:
 		difficulty = clampi(diff, 0, (rules.get("difficulties", []) as Array).size() - 1)
 		_apply_lives()
 	if acting == local_player:
-		Session.rg_choice = {"race": race_id, "difficulty": difficulty}
+		Session.rg_choice = {"race": race_id, "difficulty": difficulty, "share": share_gold}
 	_check_setup()
 	_refresh_hud()
 	return true
@@ -364,6 +367,13 @@ func is_final_boss_wave() -> bool:
 
 func gold_income_factor(_wave: int) -> float:
 	return 1.0
+
+
+## Geldteilen: das Kopfgeld geht an alle zu gleichen Teilen (earn_gold ohne Spieler teilt mit Bruchteilen).
+func on_enemy_killed(e: Enemy) -> void:
+	if share_gold:
+		e.last_hit_by = -1
+	super.on_enemy_killed(e)
 
 
 func _note(text: String, p := -1) -> void:
@@ -603,7 +613,7 @@ func _upcoming_waves(count: int) -> Array:
 # --- Spielstand (save_game.gd) ---------------------------------------------------------------
 
 func save_extra() -> Dictionary:
-	return {"difficulty": difficulty, "pause": level_pause, "players": rg_players.duplicate(true),
+	return {"difficulty": difficulty, "pause": level_pause, "players": rg_players.duplicate(true), "share": share_gold,
 		"spent": all_towers().map(func(t): return int(t.get_meta("spent", 0)))}
 
 
@@ -612,6 +622,7 @@ func load_extra(d: Dictionary, made: Array) -> void:
 		return
 	difficulty = int(d.get("difficulty", difficulty))
 	level_pause = float(d.get("pause", level_pause))
+	share_gold = bool(d.get("share", false))
 	rg_players = []
 	for ps in d.get("players", []):
 		rg_players.append({"race": str(ps.get("race", "")), "lumber": int(ps.get("lumber", 0)), "log": ps.get("log", []),
@@ -636,11 +647,12 @@ func coop_snapshot() -> Dictionary:
 	for t in all_towers():
 		spent["%d,%d" % [t.cell.x, t.cell.y]] = int(t.get_meta("spent", 0))
 	return {"difficulty": difficulty, "pause": ceili(maxf(level_pause, 0.0)), "players": rg_players.duplicate(true),
-		"spent": spent}
+		"spent": spent, "share": share_gold}
 
 
 func apply_coop_snapshot(d: Dictionary) -> void:
 	difficulty = int(d.get("difficulty", difficulty))
+	share_gold = bool(d.get("share", share_gold))
 	level_pause = float(d.get("pause", level_pause))
 	var ps: Array = d.get("players", [])
 	if not ps.is_empty():

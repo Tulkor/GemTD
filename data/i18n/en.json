@@ -2439,5 +2439,8 @@
 	"An: das Kopfgeld aller Kills kommt in einen Topf und wird gleich an alle verteilt, das Einkommen ist für alle gleich. Aus: Kopfgeld bekommt, wer trifft, dafür gleicht der Konzernbonus das Einkommen nach Kills aus.": "On: the bounty of every kill goes into a pot that is split evenly, and everyone gets the same income. Off: the bounty goes to whoever lands the kill, and the corporate bonus balances income by kills.",
 	"Teampunkte": "Team points",
 	"Geldteilen": "Share gold",
-	"Koop: speichert die Partie für alle. Laden über „Spiel laden“, die Mitspieler steigen in der Lobby wieder ein.": "Co-op: saves the match for everyone. Load it via “Load game”, your teammates rejoin in the lobby."
+	"Koop: speichert die Partie für alle. Laden über „Spiel laden“, die Mitspieler steigen in der Lobby wieder ein.": "Co-op: saves the match for everyone. Load it via “Load game”, your teammates rejoin in the lobby.",
+	"Jeder für sich": "Every man for himself",
+	"Das Kopfgeld bekommt, wessen Tower den Gegner erledigt.": "The bounty goes to whoever's tower lands the kill.",
+	"Das Kopfgeld jedes Kills wird gleich an alle verteilt.": "The bounty of every kill is split evenly between everyone."
 }
