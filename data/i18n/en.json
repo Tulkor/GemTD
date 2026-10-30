@@ -2332,5 +2332,9 @@
 	"allein": "alone",
 	"schwarz": "black",
 	"sad": "sad",
-	"*seufz*": "*sigh*"
+	"*seufz*": "*sigh*",
+	"Grafik": "Graphics",
+	"Niedrig": "Low",
+	"Hoch": "High",
+	"Niedrig: harte Schatten, ohne Leuchten, Kantenglättung, Treffer- und Laternenlichter. Für schwächere Grafikkarten.": "Low: hard shadows, no glow, anti-aliasing, hit or lantern lights. For weaker graphics cards."
 }

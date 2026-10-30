@@ -202,7 +202,7 @@ static func add_environment(parent: Node, look: Dictionary = {}) -> Dictionary:
 			env.background_mode = Environment.BG_SKY
 			env.sky = sky
 	# Leuchten für helle (HDR) Flächen, z. B. die Neon-Wegpunkte
-	env.glow_enabled = true
+	env.glow_enabled = Display.q("glow")
 	env.glow_intensity = look.glow_intensity
 	env.glow_bloom = look.glow_bloom
 	env.glow_hdr_threshold = look.glow_threshold

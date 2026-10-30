@@ -49,6 +49,9 @@ extends Node
 ##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
 ##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Werte-Boni schon vorher gewählt (z. B. fürs Infofenster),
 ##                           --angebot=flask:ruby,execute,ability:silver diese Boni (Bonus-ID[:Tower]) als Karten
+##   --messen=S              statt eines Bildes S Sekunden Leistung messen (Bildzeit, Skriptzeit, Draw Calls,
+##                           Objekte, Lichter, Knoten), Ausgabe Zeilen MESSUNG; tools/leistung.sh fasst mehrere zusammen
+##   --grafik=0|1|2          Grafikqualität Niedrig/Mittel/Hoch (Standard Hoch; Xvfb würde sonst als Software-Grafik Niedrig wählen)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -70,6 +73,8 @@ func _ready() -> void:
 	Session.skip_setup = not opts.has("einstellungen")
 	if opts.has("rasse"):
 		Session.rg_choice = {"race": str(opts.rasse)}
+	Display.quality = int(opts.get("grafik", Display.HIGH))
+	Display.apply_quality()
 	FieldStyle.night = opts.has("nacht")
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
@@ -140,6 +145,12 @@ func _ready() -> void:
 			node.hud.open_leave_confirm()
 		if str(opts.spielmenue) == "einstellungen":
 			node.hud.settings_panel.open()
+	if opts.has("messen"):
+		if scene == "spiel":
+			_camera(node, angles[0])
+		await _measure(float(opts.messen))
+		get_tree().quit()
+		return
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)
@@ -181,6 +192,99 @@ func _fake_lobby(menu: Node) -> void:
 		lobby.fields[uids[i]] = int(list[i])
 	Net.players_changed.emit()
 	await _frames(5)
+
+
+## --messen: S Sekunden lang je Bild die Leistungswerte sammeln, dann Mittel, 95-%-Wert und Höchstwert ausgeben.
+func _measure(seconds: float) -> void:
+	await _frames(10)
+	var keys := {
+		"bild_ms": -1,
+		"prozess_ms": Performance.TIME_PROCESS,
+		"physik_ms": Performance.TIME_PHYSICS_PROCESS,
+		"draw_calls": Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME,
+		"objekte": Performance.RENDER_TOTAL_OBJECTS_IN_FRAME,
+		"dreiecke": Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME,
+		"knoten": Performance.OBJECT_NODE_COUNT,
+	}
+	var rows := {}
+	for k in keys:
+		rows[k] = []
+	var t := 0.0
+	var last := Time.get_ticks_usec()
+	while t < seconds:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		var dt := (now - last) / 1000.0
+		last = now
+		t += dt / 1000.0
+		for k in keys:
+			var v: float = dt if keys[k] < 0 else Performance.get_monitor(keys[k])
+			if k.ends_with("_ms") and keys[k] >= 0:
+				v *= 1000.0
+			rows[k].append(v)
+	var counts := {"lichter": 0, "lichter_schatten": 0, "partikel": 0, "multimesh": 0, "multimesh_inst": 0, "gegner": 0, "tower": 0}
+	for n in _all_nodes(get_tree().root):
+		if n is Light3D and n.is_visible_in_tree():
+			counts.lichter += 1
+			if n.shadow_enabled:
+				counts.lichter_schatten += 1
+		elif (n is GPUParticles3D or n is CPUParticles3D) and n.is_visible_in_tree() and n.emitting:
+			counts.partikel += 1
+		elif n is MultiMeshInstance3D and n.is_visible_in_tree() and n.multimesh:
+			counts.multimesh += 1
+			counts.multimesh_inst += n.multimesh.visible_instance_count if n.multimesh.visible_instance_count >= 0 else n.multimesh.instance_count
+		if n is Enemy:
+			counts.gegner += 1
+		elif n is Tower:
+			counts.tower += 1
+	# größte Dreiecks-Verbraucher (Mesh x Anzahl), ohne Sichtbarkeitsprüfung der Kamera
+	var geo := {}
+	for n in _all_nodes(get_tree().root):
+		var mesh: Mesh = null
+		var count := 1
+		if n is MeshInstance3D and n.is_visible_in_tree():
+			mesh = n.mesh
+		elif n is MultiMeshInstance3D and n.is_visible_in_tree() and n.multimesh:
+			mesh = n.multimesh.mesh
+			count = n.multimesh.visible_instance_count if n.multimesh.visible_instance_count >= 0 else n.multimesh.instance_count
+		if mesh == null or count == 0:
+			continue
+		var name: String = mesh.resource_path.get_file() if mesh.resource_path != "" else (mesh.resource_name if mesh.resource_name != "" else "%s/%s" % [n.get_parent().name, n.name])
+		var e: Array = geo.get_or_add(name, [0, 0, _tris(mesh), n is MultiMeshInstance3D])
+		e[0] += count
+		e[1] += count * e[2]
+	var top := geo.keys()
+	top.sort_custom(func(a, b): return geo[a][1] > geo[b][1])
+	for k in top.slice(0, int(opts.get("geometrie", "8"))):
+		print("MESSUNG geometrie %s: %d x %d = %d Dreiecke%s" % [k, geo[k][0], geo[k][2], geo[k][1], " (MultiMesh)" if geo[k][3] else ""])
+	var frames: int = rows.bild_ms.size()
+	print("MESSUNG bilder=%d sekunden=%.1f fps=%.1f" % [frames, t, frames / maxf(t, 0.001)])
+	for k in keys:
+		var a: Array = rows[k].duplicate()
+		a.sort()
+		var sum := 0.0
+		for v in a:
+			sum += v
+		print("MESSUNG %s mittel=%.2f p95=%.2f max=%.2f" % [k, sum / a.size(), a[int(a.size() * 0.95)], a[-1]])
+	print("MESSUNG anzahl %s" % " ".join(counts.keys().map(func(k): return "%s=%d" % [k, counts[k]])))
+
+
+func _tris(mesh: Mesh) -> int:
+	if mesh is ArrayMesh or mesh is PrimitiveMesh:
+		var sum := 0
+		for i in mesh.get_surface_count():
+			var arr := mesh.surface_get_arrays(i)
+			var idx = arr[Mesh.ARRAY_INDEX]
+			sum += (idx.size() if idx != null and idx.size() > 0 else arr[Mesh.ARRAY_VERTEX].size()) / 3
+		return sum
+	return 0
+
+
+func _all_nodes(n: Node) -> Array:
+	var out := [n]
+	for c in n.get_children():
+		out.append_array(_all_nodes(c))
+	return out
 
 
 func _frames(n: int) -> void:

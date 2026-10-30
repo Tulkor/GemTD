@@ -75,6 +75,12 @@ func _ready() -> void:
 		Display.set_fullscreen(i == 1)
 		res.disabled = i == 1
 		res.tooltip_text = tr("Im Vollbild gilt die Auflösung des Bildschirms.") if i == 1 else "")
+	var gfx := _option(tr("Grafik"), grid)
+	for n in Display.QUALITY_NAMES:
+		gfx.add_item(tr(n))
+	gfx.select(Display.quality)
+	gfx.tooltip_text = tr("Niedrig: harte Schatten, ohne Leuchten, Kantenglättung, Treffer- und Laternenlichter. Für schwächere Grafikkarten.")
+	gfx.item_selected.connect(Display.set_quality)
 	ui_scale_slider = _ui_scale_row(grid)
 	VolumeRows.add(grid, DecoTheme.font(true) if deco else UiTheme.font(true), DecoTheme.BRASS_LIGHT if deco else UiTheme.CYAN)
 	var text := "Änderungen gelten sofort und bleiben gespeichert."

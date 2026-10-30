@@ -71,6 +71,7 @@ var _ground_day := []   ## [tint, brightness] des Spielfeldbodens am Tag
 var _forest_mats := []  ## [Material, Tagesfarbe] der Bäume und Büsche
 var _prop_mats := {}    ## [Originalmaterial, Tönung] -> abgedunkelte Kopie (Friedhof)
 var _lights: Array[OmniLight3D] = []
+var _shadow_mmis: Array[MultiMeshInstance3D] = []  ## Bäume nah am Rand mit Schatten (Grafik „Niedrig“: ohne)
 var _pools: Array[MeshInstance3D] = []
 var _glass_mat: StandardMaterial3D
 var _fireflies: CPUParticles3D
@@ -107,6 +108,11 @@ func _ready() -> void:
 	_add_fireflies()
 	# Laternen beleuchten Tower und Gegner, den Boden nur über ihren Lichtfleck (Ebene 2 ausgenommen)
 	board._ground.layers = 2
+	_apply(FieldStyle.night)
+	Display.quality_changed.connect(_on_quality_changed)
+
+
+func _on_quality_changed() -> void:
 	_apply(FieldStyle.night)
 
 
@@ -152,8 +158,13 @@ func _apply(on: bool) -> void:
 	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
 	for m in _forest_mats:
 		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
+	# Grafik „Niedrig“: Laternen ohne echtes Licht (jedes Licht zeichnet die Modelle in seiner Nähe noch einmal),
+	# der Lichtfleck am Boden bleibt; Bäume ohne Schatten
+	var low := Display.quality == Display.LOW
 	for l in _lights:
-		l.visible = on
+		l.visible = on and not low
+	for m in _shadow_mmis:
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if low else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	for p in _pools:
 		p.visible = on
 	_glass_mat.emission_energy_multiplier = 3.2 if on else 0.35
@@ -420,6 +431,8 @@ func _add_multimesh(path: String, xfs: Array, shadows: bool) -> void:
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if shadows:
+		_shadow_mmis.append(mmi)
 	add_child(mmi)
 
 
