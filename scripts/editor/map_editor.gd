@@ -45,6 +45,7 @@ func _ready() -> void:
 	board.grid_strength = 0.25
 	add_child(board)
 	camera_rig = CameraRig.new()
+	camera_rig.limit_view = false
 	add_child(camera_rig)
 	_build_ui()
 	_sync_fields()

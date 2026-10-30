@@ -172,7 +172,7 @@ func _add_forest_floor() -> void:
 	var size := _size()
 	var floor := MeshInstance3D.new()
 	if board.path_depth > 0.0:
-		floor.mesh = _frame_mesh(size)
+		floor.mesh = frame_mesh(size, FLOOR_MARGIN)
 	else:
 		var plane := PlaneMesh.new()
 		plane.size = size + Vector2.ONE * FLOOR_MARGIN * 2.0
@@ -191,9 +191,9 @@ func _add_forest_floor() -> void:
 	add_child(floor)
 
 
-## Waldboden nur als Rahmen um die Karte (Schlucht: unter der Karte darf nichts den abgesenkten Weg verdecken).
-func _frame_mesh(size: Vector2) -> ArrayMesh:
-	var m := FLOOR_MARGIN
+## Boden nur als Rahmen der Breite m um die Karte (Schlucht: unter der Karte darf nichts den abgesenkten Weg
+## verdecken; auch für Randgruppen TD).
+static func frame_mesh(size: Vector2, m: float) -> ArrayMesh:
 	var o := size / 2.0  # Mitte, das Mesh liegt wie die Fläche um die Kartenmitte
 	var rects := [Rect2(-m, -m, size.x + 2 * m, m), Rect2(-m, size.y, size.x + 2 * m, m),
 			Rect2(-m, 0, m, size.y), Rect2(size.x, 0, m, size.y)]

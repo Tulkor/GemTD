@@ -411,8 +411,21 @@ func _ready() -> void:
 	check(tl.towers()[0] == listed[0] and tl.rows[listed[0].get_instance_id()].button.get_index() == 0, "Tower-Liste sortiert nach Kills")
 	listed[0].kills -= 1000
 	tl.sort = "damage"
+	var rig: CameraRig = game.camera_rig
+	rig.target = Vector3(rig.bounds.get_center().x, 0, rig.bounds.get_center().y)
+	rig._apply()
 	tl.focus(listed[0])
-	check(Vector2(game.camera_rig.target.x, game.camera_rig.target.z).distance_to(Vector2(listed[0].position.x, listed[0].position.z)) < 0.5, "Doppelklick fährt die Kamera zum Tower")
+	var tower_at := Vector2(listed[0].position.x, listed[0].position.z)
+	# am Kartenrand hält die Begrenzung die Kamera etwas vor dem Tower an, er bleibt aber im Bild
+	check(Vector2(rig.target.x, rig.target.z).distance_to(tower_at) < 0.5 or rig.view_rect().grow(-1.0).has_point(tower_at),
+			"Doppelklick fährt die Kamera zum Tower")
+	# Kamera bleibt auf der Karte: ganz herausgezoomt in die Ecke geschoben zeigt sie höchstens den Rand
+	rig.distance = CameraRig.MAX_DISTANCE
+	rig.target = Vector3(-50, 0, -50)
+	rig._apply()
+	var room := rig.bounds.grow(CameraRig.VIEW_MARGIN + 0.01)
+	var view := rig.view_rect()
+	check(room.encloses(view) and view.size.x > 1.0, "Kamera zeigt höchstens %.0f Einheiten neben der Karte (Bild %s)" % [CameraRig.VIEW_MARGIN, view])
 	# Kombinierbare Tower sind hellblau unterstrichen: dafür kurz die Tower zu Zutaten eines Rezepts machen
 	var combo_def := {}
 	for sid in Database.special_ids():

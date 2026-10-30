@@ -28,7 +28,9 @@ extends Node
 ##   --items                 eeveTD: Marktplatz (Feld 32,76), Lager mit Items, Höllenkohlenbecken (44,76) mit zwei Items;
 ##                           --auswahl wählt es, --lagerwahl=N wählt Item N im Lager, --markt öffnet das Marktplatz-Fenster
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
-##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
+##   --punkt=x,y             Kamera auf dieses Feld richten (nah, auch schraeg/oben/seite)
+##   --abstand=N|max         Kameraabstand für schraeg/oben/seite (max = weitester Zoom, Rand der Karte prüfen)
+##   --frei                  Kamera nicht auf die Karte begrenzen (CameraRig.limit_view aus, z. B. Umgebung ansehen)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
@@ -597,6 +599,13 @@ func _camera(game: Node, w: String) -> void:
 			rig.target = Board3D.to_3d(focus)
 		_:
 			pass
+	if w != "nah" and opts.has("punkt"):
+		var p := String(opts.punkt).split(",")
+		rig.target = Board3D.to_3d(Vector2(int(p[0]), int(p[1])) * Board3D.CELL)
+	rig.limit_view = not opts.has("frei")
+	if opts.has("abstand") and w != "nah":
+		rig.distance = CameraRig.MAX_DISTANCE if str(opts.abstand) == "max" else float(opts.abstand)
+	rig._clamp_target()
 	rig._apply()
 
 

@@ -4,6 +4,8 @@ extends Node3D
 ## (Wunsch von Lukas: „ein Gemisch aus Bäumen und Gebäuden“). Die Karte wird in Viertel von QUARTER Feldern
 ## geteilt, jedes ist Stadt oder Park; in der Stadt stehen Häuser dort, wo ein ganzer 4×4-Block gesperrt ist,
 ## der Rest wird mit Bäumen aufgefüllt. Rein optisch, fester Zufallsstartwert: bei allen Spielern gleich.
+## Außerhalb der Karte geht die Stadt OUTER Felder weit weiter (Boden, Häuser, Bäume), damit man beim
+## weitesten Zoom am Rand nicht ins Leere schaut (wie der Wald in eeveTD).
 
 const N := "res://assets/models/nature/%s.glb"
 const C := "res://assets/models/city/%s.glb"
@@ -21,6 +23,11 @@ const HOUSES := [
 const QUARTER := 12      ## Kantenlänge eines Viertels in Feldern
 const TOWN_SHARE := 0.5  ## Anteil der Viertel, die Stadt sind
 const TREE_TINT := Color(1.0, 1.0, 1.0)
+## So viele Felder reicht die Stadt über den Kartenrand hinaus (Kamera zeigt höchstens CameraRig.VIEW_MARGIN).
+const OUTER := 24
+## Boden außerhalb: so breit (Einheiten), etwas dunkler wie die gesperrten Felder der Karte.
+const FLOOR_MARGIN := 40.0
+const FLOOR_SHADE := 0.86
 
 var board: Board3D
 var map: MapData
@@ -40,16 +47,18 @@ func _ready() -> void:
 	_rng.seed = 7041
 	var blocked := func(c: Vector2i) -> bool:
 		return c.x < 0 or c.y < 0 or c.x >= map.width or c.y >= map.height or map.get_tile(c) == MapData.BLOCKED
+	_add_floor()
 	var town := {}
-	for qy in ceili(map.height / float(QUARTER)):
-		for qx in ceili(map.width / float(QUARTER)):
+	var q0 := -ceili(OUTER / float(QUARTER))
+	for qy in range(q0, ceili((map.height + OUTER) / float(QUARTER))):
+		for qx in range(q0, ceili((map.width + OUTER) / float(QUARTER))):
 			town[Vector2i(qx, qy)] = _rng.randf() < TOWN_SHARE
 	var used := {}   # Felder unter Häusern
 	var parts := {}  # "pfad|schatten" -> [Transform3D]
 	# Häuser: ganze 4×4-Blöcke in Stadtvierteln, Front zur nächsten offenen Seite
-	for y in range(0, map.height - 3, 4):
-		for x in range(0, map.width - 3, 4):
-			if not town[Vector2i(x / QUARTER, y / QUARTER)]:
+	for y in range(-OUTER, map.height + OUTER - 3, 4):
+		for x in range(-OUTER, map.width + OUTER - 3, 4):
+			if not town[_quarter(x, y)]:
 				continue
 			var full := true
 			for dy in 4:
@@ -67,13 +76,13 @@ func _ready() -> void:
 			var b := Basis(Vector3.UP, rot).scaled(Vector3.ONE * size)
 			parts.get_or_add(C % HOUSES[i][0] + "|1", []).append(Transform3D(b, Vector3(center.x, 0.0, center.y)))
 	# Bäume auf allen übrigen gesperrten 2×2-Blöcken, im Park dichter
-	for y in range(0, map.height - 1, 2):
-		for x in range(0, map.width - 1, 2):
+	for y in range(-OUTER, map.height + OUTER - 1, 2):
+		for x in range(-OUTER, map.width + OUTER - 1, 2):
 			var a := Vector2i(x, y)
 			if used.has(a) or not (blocked.call(a) and blocked.call(a + Vector2i(1, 0)) and blocked.call(a + Vector2i(0, 1))
 					and blocked.call(a + Vector2i(1, 1))):
 				continue
-			var park: bool = not town[Vector2i(x / QUARTER, y / QUARTER)]
+			var park: bool = not town[_quarter(x, y)]
 			if _rng.randf() > (0.85 if park else 0.5):
 				continue
 			var i := _pick(TREES)
@@ -88,6 +97,27 @@ func _ready() -> void:
 	for key in parts:
 		var k: PackedStringArray = key.split("|")
 		_add_multimesh(k[0], parts[key], k[1] == "1", k[0].contains("/nature/"))
+
+
+func _quarter(x: int, y: int) -> Vector2i:
+	return Vector2i(floori(x / float(QUARTER)), floori(y / float(QUARTER)))
+
+
+## Boden um die Karte: derselbe Boden-Shader wie das Spielfeld (Beton), ohne Wege.
+func _add_floor() -> void:
+	var size := Vector2(map.width, map.height) * Board3D.CELL
+	var floor := MeshInstance3D.new()
+	floor.mesh = EeveScenery.frame_mesh(size, FLOOR_MARGIN)
+	var mat: ShaderMaterial = board._ground_mat.duplicate()
+	var none := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	none.fill(Color.BLACK)
+	mat.set_shader_parameter("splat", ImageTexture.create_from_image(none))
+	mat.set_shader_parameter("ground_alpha", 1.0)
+	mat.set_shader_parameter("brightness", float(mat.get_shader_parameter("brightness")) * FLOOR_SHADE)
+	floor.material_override = mat
+	floor.position = Vector3(size.x / 2.0, -0.02, size.y / 2.0)
+	floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(floor)
 
 
 ## Drehung eines Hauses mit Anker a, sodass die Front (−Z des Modells nach +Z gedreht) zur nächsten offenen Seite zeigt.
