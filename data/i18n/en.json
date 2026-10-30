@@ -2419,5 +2419,15 @@
 	"An": "On",
 	"Aus": "Off",
 	"Bildfilter passend zum Modus: Retro-Synthwave in GemTD, Messing-Glanz in Shopping Maul, Nebelwald in eeveTD und YouTD, warme Töne in Randgruppen TD.": "Image filter matching the mode: retro synthwave in GemTD, brass shine in Shopping Maul, misty forest in eeveTD and YouTD, warm tones in Randgruppen TD.",
-	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items"
+	"Freies Bauen: Tower aller Filialen, ohne Voraussetzungen und Towerlimit, alle Items": "Free building: towers of all shops, no requirements or tower limit, all items",
+	"Kopfgeld-Aura (Tower)": "Bounty aura (tower)",
+	"Erfahrungs-Aura (Tower)": "Experience aura (tower)",
+	"Steigender Schaden": "Stacking damage",
+	"Aura: +%d%% Kopfgeld für Tower im Radius %.1f": "Aura: +%d%% bounty for towers within radius %.1f",
+	"Aura: +%d%% Erfahrung für Tower im Radius %.1f": "Aura: +%d%% experience for towers within radius %.1f",
+	"Jeder Treffer auf dasselbe Ziel macht %d Schaden mehr als der letzte (%.0fs)": "Each hit on the same target deals %d more damage than the last (%.0fs)",
+	"; stirbt es dabei, explodiert es für %d Zauberschaden im Radius %.1f": "; if it dies meanwhile, it explodes for %d spell damage within radius %.1f",
+	"Schaden mehr je Treffer": "Extra damage per hit",
+	"Explosion beim Tod (0 = keine)": "Explosion on death (0 = none)",
+	"Explosionsradius (Towerbreiten)": "Explosion radius (tower widths)"
 }

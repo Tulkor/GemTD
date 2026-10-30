@@ -1450,13 +1450,24 @@ func _update_auras() -> void:
 		t.damage_bonus = 0.0
 		t.speed_source = ""
 		t.damage_source = ""
+		t.bounty_bonus = 0.0
+		t.xp_bonus = 0.0
 	for src in all_towers():
 		for ab in src.abilities():
 			var type := str(ab.get("type", ""))
-			if type != "speed_aura" and type != "damage_aura":
+			if not type in ["speed_aura", "damage_aura", "bounty_aura", "xp_aura"]:
 				continue
 			for t in all_towers():
-				if t == src or t.pos.distance_to(src.pos) > float(ab.radius):
+				if t.pos.distance_to(src.pos) > float(ab.radius):
+					continue
+				# Kopfgeld und Erfahrung wirken wie in Warcraft 3 auch auf den Tower selbst, gleiche Auren zählen nicht doppelt
+				if type == "bounty_aura":
+					t.bounty_bonus = maxf(t.bounty_bonus, float(ab.bonus))
+					continue
+				if type == "xp_aura":
+					t.xp_bonus = maxf(t.xp_bonus, float(ab.bonus))
+					continue
+				if t == src:
 					continue
 				if type == "speed_aura" and float(ab.bonus) > t.speed_bonus:
 					t.speed_bonus = float(ab.bonus)
@@ -1708,8 +1719,9 @@ func add_beam(from: Vector3, to: Vector3, col: Color, fx: String = "") -> void:
 
 func on_enemy_killed(e: Enemy) -> void:
 	enemies_killed += 1
-	# Kopfgeld bekommt der Spieler, dessen Tower zuletzt getroffen hat
-	earn_gold(e.bounty * (rogue.gold_factor(e.last_hit_by) if rogue != null else 1.0), e.last_hit_by)
+	# Kopfgeld bekommt der Spieler, dessen Tower zuletzt getroffen hat, mit dessen Kopfgeld-Aura
+	var aura := float(e.last_tower.bounty_bonus) if is_instance_valid(e.last_tower) else 0.0
+	earn_gold(e.bounty * (1.0 + aura) * (rogue.gold_factor(e.last_hit_by) if rogue != null else 1.0), e.last_hit_by)
 	if rogue != null:
 		rogue.on_kill(e)
 	if e.final_boss:
@@ -1721,7 +1733,29 @@ func on_enemy_killed(e: Enemy) -> void:
 			score += e.score_value
 			st.points += e.score_value
 	_remove_enemy(e)
+	if e.stack_time > 0.0 and not e.stack_boom.is_empty():
+		_stack_boom(e)
 	_refresh_hud()
+
+
+## Geisterplatte: Gegner, die mit ihren Stapeln sterben, explodieren und treffen alle Gegner im Umkreis.
+## Wer dabei selbst mit Stapeln stirbt, explodiert ebenfalls (Kettenreaktion).
+func _stack_boom(e: Enemy) -> void:
+	var boom: Dictionary = e.stack_boom
+	e.stack_boom = {}
+	var t = e.stack_source if is_instance_valid(e.stack_source) else null
+	var radius := float(boom.radius)
+	if t != null:
+		add_beam(Board3D.to_3d(e.pos, 0.1), Board3D.to_3d(e.pos, 1.5), Color.WHITE, "n:%s:%d:%s" % [t.tower_id, t.tier, radius])
+	for other in enemies_in_radius(e.pos, radius):
+		if t == null:
+			other.take_damage(float(boom.damage), "spells")
+			continue
+		other.last_hit_by = t.owner_player
+		other.last_tower = t
+		t.total_damage += other.take_damage(float(boom.damage), "spells")
+		if other.dead:
+			t.kills += 1
 
 
 func on_enemy_leaked(e: Enemy) -> void:

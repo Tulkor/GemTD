@@ -55,6 +55,7 @@ var poison_dps := 0.0
 var poison_time := 0.0
 var poison_source = null  ## Tower, dem der Giftschaden gutgeschrieben wird
 var last_hit_by := -1     ## Spieler, dessen Tower zuletzt Schaden gemacht hat (bekommt das Kopfgeld)
+var last_tower = null     ## dieser Tower (eeveTD-Kopfgeld-Aura wirkt auf seine Kills)
 var armor_reduction := 0.0
 var armor_reduction_time := 0.0
 var stun_time := 0.0
@@ -62,6 +63,9 @@ var stacks := 0.0
 var crit_mark := 0.0      ## Roguelike (Diamantstaub): so viel mehr Chance, kritisch getroffen zu werden
 var damage_taken := 1.0   ## Roguelike (Opalnebel): Faktor auf jeden Schaden
 var stack_time := 0.0
+var stack_boom := {}      ## Geisterplatte: Explosion beim Tod, solange stack_time läuft ({damage, radius})
+var stack_source = null   ## Tower, der die Stapel gesetzt hat (bekommt den Explosionsschaden gutgeschrieben)
+var invulnerable_time := 0.0  ## eeveTD-Eigenschaft Unverwundbar: so lange kein Schaden
 
 ## Mehrspieler: Nummer für den Abgleich, und ob dieser Gegner nur das Feld eines Mitspielers zeigt.
 var net_id := 0
@@ -147,6 +151,7 @@ func _process(delta: float) -> void:
 	if poison_time > 0.0:
 		if is_instance_valid(poison_source):
 			last_hit_by = poison_source.owner_player
+			last_tower = poison_source
 		var dealt := take_raw_damage(poison_dps * minf(poison_time, delta))
 		poison_time -= delta
 		if is_instance_valid(poison_source):
@@ -159,6 +164,8 @@ func _process(delta: float) -> void:
 		stack_time -= delta
 		if stack_time <= 0.0:
 			stacks = 0.0
+	if invulnerable_time > 0.0:
+		invulnerable_time -= delta
 	# Wo kein Tower hinreicht, gibt es nichts zu sehen: dort laufen Gegner schneller (weniger Wartezeit).
 	# In kleinen Schritten, damit sie keine Reichweite (z. B. eine Falle) überspringen; wer hineinläuft,
 	# hält genau am Rand an und geht den Rest des Bilds normal schnell. Ohne die genaue Stelle stünde er
@@ -372,7 +379,7 @@ func take_damage(amount: float, damage_type := "") -> float:
 
 ## Schaden ohne Rüstung (Gift, Brand-Auren).
 func take_raw_damage(amount: float) -> float:
-	if dead:
+	if dead or invulnerable_time > 0.0:
 		return 0.0
 	amount *= damage_taken
 	var dealt := minf(amount, hp)
@@ -406,9 +413,13 @@ func apply_stun(duration: float) -> void:
 
 
 ## Steigender Zusatzschaden pro Treffer (Geisterplatte). Gibt den Bonus dieses Treffers zurück.
-func add_stack(per_hit: float, duration: float) -> float:
+## boom: Explosion, wenn der Gegner stirbt, solange die Stapel noch wirken ({damage, radius}, leer = keine).
+func add_stack(per_hit: float, duration: float, boom := {}, source = null) -> float:
 	stacks += per_hit
 	stack_time = duration
+	if not boom.is_empty():
+		stack_boom = boom
+		stack_source = source
 	return stacks
 
 
@@ -574,6 +585,8 @@ func _update_visual() -> void:
 		tint = tint.lerp(Color("5dade2"), 0.5)
 	if stun_time > 0.0:
 		tint = tint.lerp(Color.WHITE, 0.5)
+	if invulnerable_time > 0.0:
+		tint = tint.lerp(Color("ffd84a"), 0.6)
 	_body_mat.albedo_color = tint
 	if _anim != null:
 		_animate()

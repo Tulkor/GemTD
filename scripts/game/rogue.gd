@@ -460,6 +460,7 @@ func _deal(t, e, amount: float) -> void:
 		return
 	if t != null and is_instance_valid(t):
 		e.last_hit_by = t.owner_player
+		e.last_tower = t
 		t.total_damage += e.take_raw_damage(amount)
 		if e.dead:
 			t.kills += 1

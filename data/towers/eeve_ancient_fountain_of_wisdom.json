@@ -14,10 +14,7 @@
 		"lumber": 1,
 		"from": "eeve_stone_of_wisdom",
 		"next": [],
-		"wc3": "h01G",
-		"todo": [
-			"Aura der großen Weisheit: +70 % Erfahrung für Tower im Umkreis 1200"
-		]
+		"wc3": "h01G"
 	},
 	"tiers": [
 		{
@@ -32,6 +29,11 @@
 					"type": "splash",
 					"radius": 0.47,
 					"factor": 0.4
+				},
+				{
+					"type": "xp_aura",
+					"radius": 9.38,
+					"bonus": 0.7
 				}
 			]
 		}
