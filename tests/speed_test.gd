@@ -31,12 +31,16 @@ func _ready() -> void:
 		if only != "" and id != only:
 			continue
 		var tier: int = (Database.towers[id].get("tiers", []) as Array).size() - 1
+		# Zufall (Krit, Nova mit Chance) läuft bei anderem Tempo anders ab: ein Lauf allein schwankt um ±10 %
+		var n := runs
+		if (Database.tower_tier(id, tier).get("abilities", []) as Array).any(func(ab): return ab.has("chance")):
+			n = maxi(runs, 4)
 		var dmg := []
 		for s in SPEEDS:
 			var total := 0.0
-			for r in runs:
+			for r in n:
 				total += await _run(id, tier, s, r)
-			dmg.append(total / runs)
+			dmg.append(total / n)
 		var line := "%-20s" % id
 		var worst := 0.0
 		for i in SPEEDS.size():

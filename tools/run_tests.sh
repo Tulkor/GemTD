@@ -171,6 +171,7 @@ pick_changed() {
       tests/*_test.*)
         n=$(basename "$f"); resolve "${n%_test.*}"
         [ -z "$STEM" ] || { test_info "$STEM"; t+="$NAME "; } ;;
+      tests/lib/*) t+="towgemtd toweeve towrg towmaul " ;;
       tools/*.gd|tools/*.tscn) ;;  # werden von "skripte" geladen
       tools/relay/*) t+="relay " ;;
       tools/balance_editor/*|tools/balance_anwenden.py) t+="balanceeditor " ;;
@@ -178,17 +179,18 @@ pick_changed() {
       tools/*|docs/*|*.md|data/i18n/*) ;;
       data/sfx.json|assets/sounds/*|scripts/autoload/sfx.gd) t+="sound smoke " ;;
       data/fx/*|assets/fx/*|assets/shaders/fx_*|scripts/game/fx_*|scripts/game/effects.gd) t+="smoke geschosse treffer eeve maul youtd " ;;
-      scripts/maul/*|data/maul/*|scenes/maul*) t+="maul " ;;
+      scripts/maul/*|data/maul/*|scenes/maul*) t+="maul towmaul " ;;
       scripts/game/tower.gd|scripts/game/enemy.gd|scripts/game/abilities.gd) t+="faehigkeiten geschosse treffer smoke eeve " ;;
-      scripts/game/eeve*|data/eeve.json|data/eeve_items.json|data/*/eeve_*|scenes/eeve*|scripts/ui/item_icon.gd) t+="eeve eeveitems faehigkeiten " ;;
-      scripts/game/rg_*|data/randgruppen.json|data/*/rg_*|data/maps/randgruppen.json|scenes/rg_*) t+="randgruppen " ;;
+      scripts/game/eeve*|data/eeve.json|data/eeve_items.json|data/*/eeve_*|scenes/eeve*|scripts/ui/item_icon.gd) t+="eeve eeveitems faehigkeiten toweeve " ;;
+      scripts/game/rg_*|data/randgruppen.json|data/*/rg_*|data/maps/randgruppen.json|scenes/rg_*) t+="randgruppen towrg " ;;
       scripts/youtd/*|data/youtd/*|data/maps/youtd.json|scenes/youtd*) t+="youtd ytfaehig ytitems ytkoop " ;;
       scripts/ui/lobby*) t+="lobby gemischt " ;;
       scripts/net/*|scripts/autoload/net.gd) t+="netz sitzung koop lobby gemischt relay " ;;
       scripts/game/rogue*|data/roguelike.json) t+="roguelike smoke " ;;
       scripts/game/profile.gd|scripts/game/run_stats.gd|scripts/ui/profile_panel.gd) t+="profil smoke eeve maul youtd " ;;
       scripts/game/save_game.gd|scripts/game/run_history.gd|scripts/autoload/session.gd) t+="smoke sitzung " ;;
-      data/towers/*|data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
+      data/towers/*) t+="smoke towgemtd toweeve towrg " ;;
+      data/enemies/*|data/waves/*|data/balance.json|data/maps/*) t+="smoke " ;;
       scripts/map/path_lights.gd) t+="lichtpfad smoke " ;;
       scripts/ui/*|scripts/game/hud.gd|scripts/game/*panel*|scripts/editor/*) t+="smoke " ;;
       *.gd|*.tscn|*.tres|*.gdshader|project.godot|data/*) echo "schnell"; return ;;

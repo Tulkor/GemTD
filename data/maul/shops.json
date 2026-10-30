@@ -1419,11 +1419,6 @@
 					"damage_type": "pierce",
 					"abilities": [
 						{
-							"type": "splash",
-							"radius": 1.37,
-							"factor": 0.5
-						},
-						{
 							"type": "burn_aura",
 							"radius": 7.03,
 							"dps": 80.0,
@@ -2983,11 +2978,6 @@
 					"targets": "both",
 					"damage_type": "normal",
 					"abilities": [
-						{
-							"type": "splash",
-							"radius": 0.78,
-							"factor": 0.5
-						},
 						{
 							"type": "nova_spell",
 							"damage": 48.0,
