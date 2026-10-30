@@ -3,10 +3,9 @@
 	"name": "Trapezkünstlerin",
 	"category": "randgruppen",
 	"color": "#ffd060",
-	"model": "res://assets/models/city/2story_balcony.glb",
+	"model": "res://assets/models/towers/eigen/trapez.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.51,
 	"damage_type": "pierce",
 	"targets": "both",
 	"rg": {
