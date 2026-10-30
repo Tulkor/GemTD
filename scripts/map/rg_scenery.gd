@@ -31,13 +31,14 @@ const FLOWER_SHARE := 0.05 ## Anteil der Bauflächen-Felder mit Blumen
 const QUARTER := 12      ## Kantenlänge eines Viertels in Feldern
 const TOWN_SHARE := 0.5  ## Anteil der Viertel, die Stadt sind
 const TREE_TINT := Color(1.0, 1.0, 1.0)
-## Durchmesser des Gras- und Erdflecks unter jedem Baum (tree_patch.gdshader), damit Bäume nicht im Pflaster stehen
-const PATCH_SIZE := 1.9
 ## So viele Felder reicht die Stadt über den Kartenrand hinaus (Kamera zeigt höchstens CameraRig.VIEW_MARGIN).
 const OUTER := 24
 ## Boden außerhalb: so breit (Einheiten), etwas dunkler wie die gesperrten Felder der Karte.
 const FLOOR_MARGIN := 40.0
 const FLOOR_SHADE := 0.86
+## Erde mit Grasflecken unter jedem Baum (Wunsch von Lukas), im Park wachsen die Flächen zusammen.
+const SOIL_SHADER := "res://assets/shaders/tree_soil.gdshader"
+const SOIL_SIZE := 1.5  ## Durchmesser einer Fläche (Einheiten); Bäume stehen auf 2×2-Feldern = 1 Einheit
 
 var board: Board3D
 var map: MapData
@@ -63,6 +64,7 @@ func _ready() -> void:
 	for qy in range(q0, ceili((map.height + OUTER) / float(QUARTER))):
 		for qx in range(q0, ceili((map.width + OUTER) / float(QUARTER))):
 			town[Vector2i(qx, qy)] = _rng.randf() < TOWN_SHARE
+	var soil: Array[Vector2] = []  # Baumstandorte
 	var used := {}   # Felder unter Häusern
 	var parts := {}  # "pfad|schatten" -> [Transform3D]
 	# Häuser: ganze 4×4-Blöcke in Stadtvierteln, Front zur nächsten offenen Seite
@@ -86,7 +88,6 @@ func _ready() -> void:
 			var b := Basis(Vector3.UP, rot).scaled(Vector3.ONE * size)
 			parts.get_or_add(C % HOUSES[i][0] + "|1", []).append(Transform3D(b, Vector3(center.x, 0.0, center.y)))
 	# Bäume auf allen übrigen gesperrten 2×2-Blöcken, im Park dichter
-	var patches: Array = []
 	for y in range(-OUTER, map.height + OUTER - 1, 2):
 		for x in range(-OUTER, map.width + OUTER - 1, 2):
 			var a := Vector2i(x, y)
@@ -99,14 +100,13 @@ func _ready() -> void:
 			var i := _pick(TREES)
 			var p := board.cell_center(a) + Vector2(0.5, 0.5) * Board3D.CELL \
 					+ Vector2(_rng.randf_range(-0.3, 0.3), _rng.randf_range(-0.3, 0.3))
+			soil.append(p)
 			var h := _rng.randf_range(TREES[i][1], TREES[i][2])
 			var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * h)
 			# Schatten nur nahe am Weg (sichtbar und günstig)
 			var near_path: bool = not (blocked.call(a + Vector2i(-2, 0)) and blocked.call(a + Vector2i(3, 0))
 					and blocked.call(a + Vector2i(0, -2)) and blocked.call(a + Vector2i(0, 3)))
 			parts.get_or_add(N % TREES[i][0] + ("|1" if near_path else "|0"), []).append(Transform3D(b, Vector3(p.x, 0.0, p.y)))
-			patches.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * PATCH_SIZE * _rng.randf_range(0.85, 1.15)),
-					Vector3(p.x, 0.006, p.y)))
 			for d in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
 				used[a + d] = true
 	# Büsche auf freien Wandfeldern direkt neben offenen Feldern, Blumen auf den Bauflächen
@@ -132,27 +132,25 @@ func _ready() -> void:
 	for key in parts:
 		var k: PackedStringArray = key.split("|")
 		_add_multimesh(k[0], parts[key], k[1] == "1", k[0].contains("/nature/"))
-	_add_patches(patches)
+	_add_soil(soil)
 
 
-## Gras- und Erdflecken unter den Bäumen, eine MultiMesh aus flachen Scheiben.
-func _add_patches(xfs: Array) -> void:
-	if xfs.is_empty():
-		return
-	var plane := PlaneMesh.new()
-	plane.size = Vector2.ONE
+## Runde Erdflächen unter den Bäumen, knapp über dem Boden und der Sperrfeld-Färbung (y 0.001).
+func _add_soil(at: Array[Vector2]) -> void:
+	var quad := PlaneMesh.new()
+	quad.size = Vector2.ONE * SOIL_SIZE
 	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://assets/shaders/tree_patch.gdshader")
-	mat.set_shader_parameter("grass", load("res://assets/textures/ground/grass_a.jpg"))
+	mat.shader = load(SOIL_SHADER)
 	mat.set_shader_parameter("dirt", load("res://assets/textures/ground/dirt.jpg"))
-	mat.render_priority = -1
-	plane.material = mat
+	mat.set_shader_parameter("grass", load("res://assets/textures/ground/grass_a.jpg"))
+	quad.material = mat
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = plane
-	mm.instance_count = xfs.size()
-	for i in xfs.size():
-		mm.set_instance_transform(i, xfs[i])
+	mm.mesh = quad
+	mm.instance_count = at.size()
+	for i in at.size():
+		var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(0.85, 1.15))
+		mm.set_instance_transform(i, Transform3D(b, Vector3(at[i].x, 0.004, at[i].y)))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
