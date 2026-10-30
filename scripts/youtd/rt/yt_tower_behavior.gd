@@ -12,6 +12,9 @@ extends Node
 var tower: YtTower
 var _stats: Dictionary = {}
 
+## Beim Laden eines Spielstands: eigene Zähler des Skripts, die init() vor on_create() einsetzt (YoutdSave).
+static var pending_state: Dictionary = {}
+
 
 #########################
 ###       Public      ###
@@ -50,6 +53,8 @@ func init(tower_arg: YtTower, preceding_tower: YtTower):
 		var autocast: YtAutocast = YtAutocast.make(int(autocast_id), self)
 		tower.add_autocast(autocast)
 
+	if not pending_state.is_empty():
+		YoutdSave.set_script_state(self, pending_state)
 	on_create(preceding_tower)
 
 

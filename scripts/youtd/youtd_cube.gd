@@ -37,6 +37,13 @@ static func autofill(r: Dictionary, list: Array) -> Array:
 	return []
 
 
+## Freie Zutaten einer Seltenheit im Lager: [normale Items, Öle/Verbrauch] (gesperrte zählen nicht).
+static func count(list: Array, rarity: int) -> Array:
+	var pool := list.filter(func(it): return _rarity(it) == rarity and not it.get_horadric_lock_is_enabled())
+	return [pool.filter(func(it): return it.get_type_name() == "regular").size(),
+			pool.filter(func(it): return ["oil", "consumable"].has(it.get_type_name())).size()]
+
+
 static func autofill_rarity(r: Dictionary, list: Array, rarity: int) -> Array:
 	var result_rarity: int = rarity + int(r.get("rarity_change", 0))
 	if result_rarity < 0 or result_rarity >= RARITIES.size():

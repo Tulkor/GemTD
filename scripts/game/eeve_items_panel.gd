@@ -71,7 +71,7 @@ func _ready() -> void:
 	_use = UiUtil.button("", v, _on_use)
 	_use.focus_mode = Control.FOCUS_NONE
 	_use.custom_minimum_size.y = 34
-	_use.clip_text = true
+	_use.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # lange Itemnamen umbrechen statt abschneiden
 	UiTheme.accent_button(_use, UiTheme.GOLD, UiTheme.GOLD_DARK)
 	_hint = UiUtil.wrap_label("", v, 250)
 	_hint.add_theme_font_size_override("font_size", 12)

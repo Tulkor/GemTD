@@ -20,6 +20,7 @@ var _xp: Label
 var _value: Label
 var _lives: Label
 var _diff: Label
+var _team: Label
 var _start_button: Button
 var _speed_buttons: Array = []
 
@@ -107,6 +108,10 @@ func _build_top_bar() -> void:
 	_xp.mouse_filter = Control.MOUSE_FILTER_PASS
 	_value = _stat(row, "Towerwert")
 	_lives = _stat(row, "Leben")
+	_team = _stat(row, "Teampunkte")
+	_team.add_theme_color_override("font_color", UiTheme.CYAN)
+	_team.tooltip_text = "Einlösen in der Zentrale: +10 Leben, Durchblick (30 s alle Unsichtbaren angreifbar) oder Winter (10 s alle Gegner 90 % langsamer). Neue gibt es nach Level 10, 20 und 30."
+	_team.mouse_filter = Control.MOUSE_FILTER_PASS
 	_diff = _stat(row, "Diff")
 	_diff.tooltip_text = "Selbstanpassung: wer wenig durchlässt, bekommt stärkere Gegner."
 	_diff.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -184,10 +189,11 @@ func _build_menu() -> void:
 	var resume := UiUtil.button("Weiterspielen", box, func(): panel.hide())
 	UiTheme.accent_button(resume, UiTheme.GOLD, UiTheme.BAR)
 	UiUtil.button("Einstellungen", box, func(): settings_panel.open())
-	if game.sync == null:
+	if not game.mirror:
 		var save := UiUtil.button("Speichern und verlassen", box, _save_and_leave)
-		save.tooltip_text = "Mitten im Level wird der Stand vom Levelbeginn gespeichert."
+		save.tooltip_text = "Mitten im Level wird der Stand vom Levelbeginn gespeichert." if game.sync == null else "Koop: speichert die Partie für alle. Laden über „Spiel laden“, die Mitspieler steigen in der Lobby wieder ein."
 		_save_button = save
+	if game.sync == null:
 		UiUtil.button("Neu starten", box, func():
 			Session.save_id = ""
 			Session.goto(Session.MAUL))
@@ -208,9 +214,10 @@ func toggle_menu() -> void:
 			_save_button.disabled = MaulSave.capture(game).is_empty()
 
 
-## Einzelspiel speichern (maul_save.gd) und zurück ins Hauptmenü.
+## Spiel speichern (maul_save.gd; im Koop der Host für alle) und zurück ins Hauptmenü.
 func _save_and_leave() -> void:
-	if MaulSave.save(game):
+	var ok := MaulSave.save_coop(game) if game.sync != null else MaulSave.save(game)
+	if ok:
 		Session.goto(Session.MAIN_MENU)
 	else:
 		_save_button.text = tr("Speichern fehlgeschlagen")
@@ -369,6 +376,32 @@ func _build_bank(me: MaulGame.Player) -> void:
 		l.add_theme_color_override("font_color", UiTheme.COIN)
 
 
+## Teampunkte einlösen (wirkt fürs ganze Team, maul_game.gd → _use_team_point).
+func _build_team(me: MaulGame.Player) -> void:
+	var tp: Dictionary = MaulData.rules().team_points
+	UiTheme.caption(tr("Teampunkte: %d") % me.team_points, _main_box)
+	var active := []
+	if game.sight_until > game.game_time:
+		active.append(tr("Durchblick %d s") % ceili(game.sight_until - game.game_time))
+	if game.winter_until > game.game_time:
+		active.append(tr("Winter %d s") % ceili(game.winter_until - game.game_time))
+	if not active.is_empty():
+		var l := UiUtil.label(", ".join(active), _main_box, 13)
+		l.add_theme_color_override("font_color", UiTheme.CYAN)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	_main_box.add_child(row)
+	var running := game.phase == MaulGame.Phase.COUNTDOWN or game.phase == MaulGame.Phase.WAVE
+	for e in [["lives", tr("+%d Leben") % int(tp.lives), tr("Nur wenn Leben fehlen, höchstens bis zum Maximum.")],
+			["sight", tr("Durchblick"), tr("%d s lang sind alle Unsichtbaren für alle angreifbar.") % int(tp.sight)],
+			["winter", tr("Winter"), tr("%d s lang laufen alle Gegner %d %% langsamer.") % [int(tp.winter), roundi(float(tp.winter_slow) * 100.0)]]]:
+		var use: String = e[0]
+		var b := UiUtil.button(e[1], row, func(): game.submit({"type": "team", "use": use}))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.tooltip_text = e[2]
+		b.disabled = me.team_points <= 0 or not running or (use == "lives" and game.lives >= game.max_lives)
+
+
 ## Reiter Zentrale (Hauptgebäude): Bonus-Upgrade (+5 % Schaden je Stufe) oder Rabatt (5 % zurück),
 ## beim TOI die Forschung, dazu die eigene Erfahrung.
 func _build_main() -> void:
@@ -377,6 +410,7 @@ func _build_main() -> void:
 	var p := game.local_player
 	var me: MaulGame.Player = game.players[p]
 	UiTheme.title(UiUtil.label("Hauptgebäude", _main_box), 20)
+	_build_team(me)
 	var shop := MaulData.shop(me.shop)
 	var kind := str(shop.get("bonus", ""))
 	var cfg: Dictionary = MaulData.pro().bonus
@@ -892,6 +926,8 @@ static func ability_lines(d: Dictionary) -> Array:
 				out.append(_t("Flächenschaden %d %% (Radius %s)") % [roundi(float(ab.factor) * 100), _n(float(ab.radius))])
 			"multishot":
 				out.append(_t("Trifft %d Ziele") % int(ab.targets))
+			"air_bonus":
+				out.append(_t("%s-facher Schaden gegen Luft") % _n(float(ab.multiplier)))
 			"detect":
 				out.append(_t("Enttarnt Unsichtbare (Radius %s)") % _n(float(ab.radius)))
 			"nova_spell":
@@ -900,6 +936,12 @@ static func ability_lines(d: Dictionary) -> Array:
 				out.append(_t("Kettenblitz: %s Schaden, %d Ziele, alle %s s") % [MaulHud.big(roundi(float(ab.damage))), int(ab.get("targets", 3)), _n(float(ab.cooldown))])
 			"wave_spell":
 				out.append(_t("Schockwelle: %s Schaden, alle %s s") % [MaulHud.big(roundi(float(ab.damage))), _n(float(ab.cooldown))])
+			"stun_spell":
+				out.append(_t("%s: betäubt alle Gegner im Radius %s für %s s (Bosse %s s), alle %s s") % [_t(str(ab.name)), _n(float(ab.radius)), _n(float(ab.duration)), _n(float(ab.boss_duration)), _n(float(ab.cooldown))])
+			"flirt_spell":
+				out.append(_t("Flirten: hält den stärksten Gegner %s s fest (Bosse %s s), alle %s s") % [_n(float(ab.duration)), _n(float(ab.boss_duration)), _n(float(ab.cooldown))])
+			"life":
+				out.append(_t("%d %% Chance pro Kill, Leben zurückzuholen") % roundi(float(ab.chance) * 100))
 	return out
 
 
@@ -1033,6 +1075,7 @@ func refresh() -> void:
 	_value.text = MaulHud.big(game.tower_value())
 	_lives.text = "%d / %d" % [game.lives, game.max_lives]
 	_lives.add_theme_color_override("font_color", UiTheme.HAVE if game.lives * 3 > game.max_lives else UiTheme.MISSING)
+	_team.text = str(game.players[game.local_player].team_points)
 	_diff.text = "%d %%" % roundi(game.je * 100.0)
 	refresh_live()
 	refresh_shop()

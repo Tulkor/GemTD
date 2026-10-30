@@ -18,6 +18,9 @@ const SCHEMA := {
 	"gold_on_hit": {"label": "Gold bei Treffer", "params": {"chance": 0.05, "gold": 1}},
 	"speed_aura": {"label": "Tempo-Aura (Tower)", "params": {"radius": 3.0, "bonus": 0.15}},
 	"damage_aura": {"label": "Schadens-Aura (Tower)", "params": {"radius": 3.0, "bonus": 0.15}},
+	"bounty_aura": {"label": "Kopfgeld-Aura (Tower)", "params": {"radius": 7.8, "bonus": 0.33}},
+	"xp_aura": {"label": "Erfahrungs-Aura (Tower)", "params": {"radius": 7.8, "bonus": 0.45}},
+	"stacking_damage": {"label": "Steigender Schaden", "params": {"per_hit": 35.0, "duration": 5.0, "death_damage": 0.0, "death_radius": 5.9}},
 	"burn_aura": {"label": "Brand-Aura (Gegner)", "params": {"radius": 2.0, "dps": 20.0}},
 	"slow_aura": {"label": "Verlangsamungs-Aura (Gegner)", "params": {"radius": 2.0, "factor": 0.3}},
 	"armor_aura": {"label": "Rüstungs-Aura (Gegner)", "params": {"radius": 2.0, "amount": 3.0}},
@@ -46,6 +49,9 @@ const PARAM_LABELS := {
 	"count": "Anzahl",
 	"angle": "Winkel (°)",
 	"reach": "Flugweite (Towerbreiten)",
+	"per_hit": "Schaden mehr je Treffer",
+	"death_damage": "Explosion beim Tod (0 = keine)",
+	"death_radius": "Explosionsradius (Towerbreiten)",
 }
 
 
@@ -95,6 +101,15 @@ static func describe(ab: Dictionary) -> String:
 			return str(TranslationServer.translate("Aura: +%d%% Angriffstempo für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
 		"damage_aura":
 			return str(TranslationServer.translate("Aura: +%d%% Schaden für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
+		"bounty_aura":
+			return str(TranslationServer.translate("Aura: +%d%% Kopfgeld für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
+		"xp_aura":
+			return str(TranslationServer.translate("Aura: +%d%% Erfahrung für Tower im Radius %.1f")) % [float(ab.bonus) * 100, float(ab.radius)]
+		"stacking_damage":
+			var text := str(TranslationServer.translate(str(ab.text))) if ab.has("text") else str(TranslationServer.translate("Jeder Treffer auf dasselbe Ziel macht %d Schaden mehr als der letzte (%.0fs)")) % [int(ab.per_hit), float(ab.duration)]
+			if float(ab.get("death_damage", 0.0)) > 0.0:
+				text += str(TranslationServer.translate("; stirbt es dabei, explodiert es für %d Zauberschaden im Radius %.1f")) % [int(ab.death_damage), float(ab.death_radius)]
+			return text
 		"burn_aura":
 			return str(TranslationServer.translate("Verbrennt Gegner im Radius %.1f: %.0f Schaden/s")) % [float(ab.radius), float(ab.dps)]
 		"slow_aura":

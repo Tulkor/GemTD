@@ -33,11 +33,12 @@ class Player:
 	var xp := 10              ## Erfahrung in Zehnteln (10 = 1,0 XP)
 	var xp_pot := 0.0
 	var research := {}        ## TOI: Forschung → Stufe
-	var aok_lives := 0        ## AOX: in diesem Level zurückgeholte Leben
+	var aok_lives := 0        ## AOX/Life: in diesem Level durch Kills zurückgeholte Leben
 	var account := 0          ## Konto (maul_bank.gd)
 	var auto_deposit := false ## am Levelende alles Gold aufs Konto
 	var bank_level := 0       ## Bank-Upgrade im Hauptgebäude (0–3)
 	var withdraw_in := 0.0    ## laufende Überweisung: Sekunden bis zur Auszahlung (0 = keine)
+	var team_points := 0      ## Teampunkte: einlösen für Leben, Durchblick oder Winter (rules.json → team_points)
 	var emma_mined := 0       ## Tante Emma: von der Stammkundin geholtes Gold
 	var emma_timer := 0.0
 	var away := false
@@ -67,6 +68,11 @@ var acting := 0
 var players: Array = []
 var sandbox := false        ## Option „Sandbox“: feste 800 XP (alles offen), Durchbrüche kosten keine Leben, keine XP
 var foreign_build := false  ## Option „Überall bauen“: Tower und Einheiten auch in den Gebieten der anderen
+## Option „Geldteilen“: Kopfgeld in einen Topf, gleich an alle verteilt; dafür kein Konzernbonus aufs Einkommen
+var share_gold := false
+var gold_pot := 0           ## Geldteilen: Rest, der noch nicht durch die Spielerzahl teilbar war
+var sight_until := -1.0     ## Teampunkt „Durchblick“: alle Unsichtbaren angreifbar bis zu dieser Spielzeit
+var winter_until := -1.0    ## Teampunkt „Winter“: alle Gegner langsamer bis zu dieser Spielzeit
 var levels_done := 0
 ## Debug-Menü (maul_debug.gd): freies Bauen = Tower aller Filialen ohne Voraussetzungen und Towerlimit,
 ## alle Items ohne Laden. debug_xp: XP verändert, dann wird am Levelende nichts gespeichert.
@@ -190,7 +196,8 @@ func _ready() -> void:
 	hud.show_setup()
 	var saved: Dictionary = Session.load_state
 	Session.load_state = {}
-	if coop_info.is_empty() and not saved.is_empty():
+	if not mirror and not saved.is_empty():
+		# Einzelspiel oder gespeicherter Koop (der Host lädt, die Mitspieler bekommen den Stand über maul_sync.gd)
 		MaulSave.apply(self, saved)
 	elif coop_info.is_empty():
 		Session.save_id = ""
@@ -205,8 +212,8 @@ func _ready() -> void:
 # --- Start ---------------------------------------------------------------------
 
 ## Nach der Filialwahl: Gold, Leben und Countdown bis Level 1. Im Koop startet der Host (Schwierigkeit,
-## Modus, Sandbox, Überall bauen gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
-func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false, foreign_on := false) -> void:
+## Modus, Sandbox, Überall bauen, Geldteilen gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
+func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false, foreign_on := false, share_on := false) -> void:
 	if mirror:
 		submit({"type": "shop", "shop": shop_id, "xp": players[local_player].xp})
 		return
@@ -216,6 +223,8 @@ func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := fal
 	mode = play_mode
 	sandbox = sandbox_on
 	foreign_build = foreign_on
+	share_gold = share_on
+	gold_pot = 0
 	var d := MaulData.difficulty(difficulty)
 	max_lives = int(d.get("lives", 150))
 	lives = max_lives
@@ -228,6 +237,7 @@ func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := fal
 	for i in m:
 		var pl: Player = players[i]
 		pl.gold = int(rules.start_gold) / m + (int(rules.start_gold_red) if i == 0 else 0)
+		pl.team_points = int(rules.team_points.start) + (int(rules.team_points.host) if i == 0 else 0)
 		if sandbox:
 			pl.xp = int(MaulXp.cfg().get("sandbox", 8000))
 	countdown = float(rules.first_delay_many if m >= 4 else rules.first_delay)
@@ -359,7 +369,7 @@ func _start_level(n: int) -> void:
 	if n > levels.size():
 		_finish(Phase.VICTORY)
 		return
-	if sync == null:
+	if not mirror:
 		level_save = MaulSave.state(self)
 	level = n
 	var lv := level_def(n)
@@ -552,11 +562,19 @@ func _end_level() -> void:
 	if n == 10 or n == 20 or n == 30:
 		income_pot += int(inc.boss_bonus)
 	var m := players.size()
+	var my_income := 0
 	for i in m:
-		var share := income_pot / m
+		var share := floori(income_pot / m * income_factor(i))
 		if i == 0:
 			share += floori(income_pot * float(inc.red_share) / m)
 		players[i].gold += share
+		if i == local_player:
+			my_income = share
+	# Teampunkte nach Level 10, 20 und 30
+	var team_bonus := (rules.team_points.after_levels as Array).has(float(n))  # JSON-Zahlen sind float
+	if team_bonus:
+		for pl in players:
+			pl.team_points += 1
 	# Obo: jede Runde −1 % Towerwert
 	for t in towers.values():
 		if shop_of(t.owner_player) == "obi":
@@ -573,9 +591,27 @@ func _end_level() -> void:
 		show_message(tr(str(rules.get("level_40_text", ""))), 8.0)
 	else:
 		countdown = float(rules.level_delay)
-		var done_text: String = tr("Welle %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
+		var done_text: String = tr("Welle %d geschafft: +%d Gold") % [n, my_income]
+		if not is_equal_approx(income_factor(local_player), 1.0):
+			done_text += " " + tr("(Konzernbonus %d %%)") % roundi(income_factor(local_player) * 100.0)
+		if team_bonus:
+			done_text += "\n" + tr("+1 Teampunkt für alle")
 		show_message(done_text + ("\n" + bank_text if bank_text != "" else ""), 4.0)
 	_refresh_hud()
+
+
+## Konzernbonus (ohne Geldteilen, ab 2 Spielern): Platz p nach Kills im Level verändert das Einkommen,
+## (100 − 5·m + Platz·10·m/(m − 1)) %, wer am wenigsten trifft, bekommt am meisten (bei 4 Spielern 93–133 %).
+func income_factor(p: int) -> float:
+	var m := players.size()
+	if share_gold or m < 2:
+		return 1.0
+	var rank := 1
+	for o in players:
+		if o.level_kills > players[p].level_kills:
+			rank += 1
+	var inc: Dictionary = rules.income
+	return (100.0 - float(inc.rank_base) * m + rank * float(inc.rank_step) * m / (m - 1)) / 100.0
 
 
 func _finish(p: Phase) -> void:
@@ -806,17 +842,15 @@ func _repath_enemies(cells: Array[Vector2i]) -> void:
 func on_enemy_killed(e) -> void:
 	enemies_killed += 1
 	var p: int = e.last_hit_by if e.last_hit_by >= 0 and e.last_hit_by < players.size() else 0
-	players[p].gold += int(e.bounty)
+	if share_gold:
+		_share_bounty(int(e.bounty))
+	else:
+		players[p].gold += int(e.bounty)
 	players[p].kills += 1
 	players[p].level_kills += 1
-	# AOX: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
-	var aok: Dictionary = MaulData.pro().aok
-	if players[p].shop == "aok" and lives < max_lives and randf() < float(aok.life_chance):
-		var room: int = int(aok.life_max_per_level) - players[p].aok_lives
-		var gain := mini(maxi(e.leak_cost / 2, 1), room)
-		if gain > 0:
-			players[p].aok_lives += gain
-			gain_lives(gain)
+	# AOX: 10 % Chance, Leben zurückzuholen (Tower mit "Life" würfeln selbst, MaulTower._killed)
+	if players[p].shop == "aok" and randf() < float(MaulData.pro().aok.life_chance):
+		kill_life(p, e)
 	# Contained Darkness frisst Leichen in der Nähe, nach 5 wird sie für 30 s zur Unleashed Darkness
 	var dk: Dictionary = MaulData.pro().undertaker.darkness
 	for t in towers.values():
@@ -829,6 +863,29 @@ func on_enemy_killed(e) -> void:
 					hud.refresh_selection()
 	_remove_enemy(e)
 	_refresh_hud()
+
+
+## Geldteilen: Kopfgeld in den Topf, ausgezahlt wird, sobald jeder gleich viel bekommt.
+func _share_bounty(amount: int) -> void:
+	gold_pot += amount
+	var m := players.size()
+	var each := gold_pot / m
+	if each <= 0:
+		return
+	for pl in players:
+		pl.gold += each
+	gold_pot -= each * m
+
+
+## Leben durch einen Kill zurückholen (AOX, Life): die Hälfte der Leckkosten, höchstens 30 pro Level und Spieler.
+func kill_life(p: int, e) -> void:
+	if lives >= max_lives or p < 0 or p >= players.size():
+		return
+	var room: int = int(MaulData.pro().aok.life_max_per_level) - players[p].aok_lives
+	var gain := mini(maxi(e.leak_cost / 2, 1), room)
+	if gain > 0:
+		players[p].aok_lives += gain
+		gain_lives(gain)
 
 
 func gain_lives(n: int) -> void:
@@ -919,7 +976,7 @@ func free_stretch(_e) -> Array:
 func is_detected(e) -> bool:
 	if not e.invisible:
 		return true
-	if e.detected_until > game_time:
+	if e.detected_until > game_time or sight_until > game_time:
 		return true
 	for p in players:
 		if MaulData.rules().detect_shops.has(p.shop) or p.reveal_until > game_time:
@@ -1233,6 +1290,13 @@ func _execute(cmd: Dictionary) -> bool:
 			return true
 		"deposit", "withdraw", "auto_deposit", "bank_upgrade":
 			return MaulBank.execute(self, p, str(cmd.type))
+		"team":
+			return _use_team_point(p, str(cmd.get("use", "")))
+		"xp":
+			# Koop-Mitspieler steigt in einen gespeicherten Koop ein: seine XP gehören seinem Rechner
+			if not sandbox:
+				players[p].xp = clampi(int(cmd.get("xp", players[p].xp)), 0, int(MaulXp.cfg().get("max", 9999)))
+			return true
 		"bonus":
 			var me: Player = players[p]
 			var kind := str(MaulData.shop(me.shop).get("bonus", ""))
@@ -1340,6 +1404,40 @@ func _execute(cmd: Dictionary) -> bool:
 			u.post = at
 			return true
 	return false
+
+
+## Teampunkt einlösen: "lives" +10 Leben (nur wenn welche fehlen), "sight" Durchblick 30 s,
+## "winter" Winter 10 s (alle Gegner −90 % Tempo). Wirkt fürs ganze Team.
+func _use_team_point(p: int, use: String) -> bool:
+	var me: Player = players[p]
+	if me.team_points <= 0 or phase >= Phase.GAME_OVER:
+		return false
+	var tp: Dictionary = rules.team_points
+	var text := ""
+	match use:
+		"lives":
+			if lives >= max_lives:
+				_tell(p, tr("Die Leben sind schon voll"))
+				return false
+			gain_lives(int(tp.lives))
+			text = tr("%s löst einen Teampunkt ein: +%d Leben") % [me.name, int(tp.lives)]
+		"sight":
+			sight_until = maxf(sight_until, game_time) + float(tp.sight)
+			text = tr("%s löst einen Teampunkt ein: Durchblick für %d s") % [me.name, int(tp.sight)]
+		"winter":
+			winter_until = maxf(winter_until, game_time) + float(tp.winter)
+			text = tr("%s löst einen Teampunkt ein: Winter für %d s") % [me.name, int(tp.winter)]
+		_:
+			return false
+	me.team_points -= 1
+	for i in players.size():
+		_tell(i, text)
+	return true
+
+
+## Winter (Teampunkt): Faktor aufs Tempo aller Gegner.
+func winter_factor() -> float:
+	return 1.0 - float(rules.team_points.winter_slow) if winter_until > game_time else 1.0
 
 
 ## Meldung an Spieler p: lokal sofort, an Mitspieler über den nächsten Stand (maul_sync.gd → notes).

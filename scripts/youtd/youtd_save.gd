@@ -4,8 +4,17 @@ extends RefCounted
 ## dem Seed neu, dazu die Zufallszustände; je Spieler Bücher, Food, Elemente, Lager, Baumeister und Weisheit;
 ## Tower mit Erfahrung, Kills, Mana, Items, Ölen und Abklingzeiten der Zauber; Gegner mit Leben, Bahn und Strecke;
 ## auf beiden die laufenden Buffs mit Zeitlimit (Stufe, Restzeit, Verursacher, Zähler). Dauerhafte Buffs (Auren,
-## Item- und Tower-Auslöser) bauen Tower und Items beim Laden selbst wieder auf. Was Tower-Skripte sonst nur in sich
-## tragen (eigene Zähler), geht verloren.
+## Item- und Tower-Auslöser) bauen Tower und Items beim Laden selbst wieder auf. Dazu je Tower die eigenen Zähler
+## des Skripts (script_state), user_int/user_real des Towers, seine Größe und die dauerhaften Wertänderungen
+## (YtUnit._own_mods: Wachstum, Sammeln, Upgrade-Übernahme) sowie die Spielzeit, an der Ticks und Zeitstempel hängen.
+
+## Skript-Variablen, die nicht in den Stand gehören: sie zählen Dinge, die ein Laden nicht übersteht (fliegende
+## Geschosse, Wards, Stapel bis zum Ende eines await), oder ein Buff setzt sie beim Wiederanlegen selbst.
+const SCRIPT_SKIP := {"planar_gate": ["falcon_count"], "wild_warbeast": ["devour_count"], "witch_doctor": ["active_ward_count"],
+	"village_witch": ["current_soul_split_stacks"], "scales": ["lightmare_is_active"], "harby": ["is_awake"]}
+## Tower, deren eigene Wertänderungen nur bis zum Ende eines await gelten: nach dem Laden ist der Bonus vorbei.
+const MODS_SKIP := ["rundown_iron_sentry", "village_witch"]
+const UNIT_FIELDS := ["user_int", "user_int2", "user_int3", "user_real", "user_real2", "user_real3"]
 
 const PLAYER_FIELDS := ["tomes", "food_cap", "can_reroll", "score", "range_bonus", "tower_exp_bonus", "element_max_bonus",
 	"tower_max_bonus", "level_at_start", "builder_wisdom_multiplier", "income_rate", "interest_rate"]
@@ -29,7 +38,9 @@ static func capture(g) -> Dictionary:
 			"kills": yt.core._kill_count, "dmg": yt.core._damage_dealt_total, "best": yt.core._best_hit,
 			"mana": yt.core.get_mana(), "items": yt.items.map(func(it): return item_dict(it)),
 			"oils": yt.oils.map(func(it): return item_dict(it)), "buffs": buffs_of(yt.core),
-			"cds": yt.autocasts().map(func(ac): return ac.get_remaining_cooldown())})
+			"cds": yt.autocasts().map(func(ac): return ac.get_remaining_cooldown()),
+			"script": script_state(yt.core._tower_behavior), "unit": UNIT_FIELDS.map(func(f): return yt.core.get(f)),
+			"scale": yt.core._unit_scale, "mods": yt.core._own_mods.duplicate()})
 	var es := []
 	for e in g.enemies:
 		var ye := e as YoutdEnemy
@@ -42,10 +53,60 @@ static func capture(g) -> Dictionary:
 		"mode": g.mode_index, "length": g.length_index, "difficulty": g.difficulty, "seed": g.wave_seed, "foreign_build": g.foreign_build,
 		"wave_rng": g.wave_rng.state, "roll_rng": g.roll_rng.state, "synced_rng": YtGlobals.synced_rng.state,
 		"portal": g.portal, "score": g.youtd_score, "next_wave": g.next_wave, "next_wave_in": g.next_wave_in,
-		"waves_done": g.waves_done, "alive": g.alive.duplicate(),
+		"waves_done": g.waves_done, "alive": g.alive.duplicate(), "time": YtWorld.get_time(),
 		"spawners": g.spawners.map(func(s): return {"level": int(s.wave.level), "index": s.index, "timer": s.timer, "lane": s.get("lane", 0)}),
 		"players": ps, "towers": ts, "enemies": es,
 	}
+
+
+## Eigene Variablen eines Tower-Skripts mit einfachen Werten (Zahlen, Schalter, Texte, Listen/Tabellen daraus).
+## Verweise auf Knoten, Buff-Typen und Geschosse bauen die Skripte selbst; Effekt-Nummern gelten nur bis zum Laden.
+static func script_state(beh: YtTowerBehavior) -> Dictionary:
+	var out := {}
+	if beh == null:
+		return out
+	var skip: Array = SCRIPT_SKIP.get(_script_name(beh), [])
+	for prop in beh.get_property_list():
+		if not (prop.usage & PROPERTY_USAGE_SCRIPT_VARIABLE):
+			continue
+		var n: String = prop.name
+		if n == "tower" or n == "_stats" or n in skip or "effect" in n or n.ends_with("_in_progress"):
+			continue
+		var v = beh.get(n)
+		if _plain(v):
+			out[n] = v.duplicate(true) if v is Array or v is Dictionary else v
+	return out
+
+
+static func set_script_state(beh: YtTowerBehavior, state: Dictionary) -> void:
+	for n in state:
+		var cur = beh.get(n)
+		var v = state[n]
+		if cur is Array and v is Array:
+			cur.assign(v)  # Typisierte Arrays behalten ihren Typ
+		elif cur is Dictionary and v is Dictionary:
+			cur.clear()
+			cur.merge(v)
+		elif cur == null or typeof(cur) == typeof(v) or (cur is float and v is int):
+			beh.set(n, v)
+
+
+static func _script_name(beh: Object) -> String:
+	var sc: Script = beh.get_script()
+	return sc.resource_path.get_file().get_basename() if sc != null else ""
+
+
+static func _plain(v) -> bool:
+	match typeof(v):
+		TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING, TYPE_VECTOR2, TYPE_VECTOR2I, TYPE_VECTOR3:
+			return true
+		TYPE_ARRAY:
+			if (v as Array).get_typed_builtin() == TYPE_OBJECT:
+				return false
+			return (v as Array).all(func(x): return _plain(x))
+		TYPE_DICTIONARY:
+			return (v as Dictionary).keys().all(func(x): return _plain(x)) and (v as Dictionary).values().all(func(x): return _plain(x))
+	return false
 
 
 ## Buffs mit Zeitlimit einer Einheit: [Typ, Verursacher, Stufe, Restzeit, Dauer, Stapel, user_int×3, user_real×3].
@@ -156,6 +217,8 @@ static func restore(g, d: Dictionary) -> void:
 	g.roll_rng.state = int(d.get("roll_rng", g.roll_rng.state))
 	YtGlobals.synced_rng.seed = g.wave_seed * 17 + 3
 	YtGlobals.synced_rng.state = int(d.get("synced_rng", YtGlobals.synced_rng.state))
+	if YtWorld.node != null:
+		YtWorld.node.time = float(d.get("time", YtWorld.node.time))
 	Session.set_meta("youtd_choice", {"mode": g.mode_index, "length": g.length_index, "difficulty": g.difficulty})
 	g._make_players()
 	var pls: Array = d.get("players", [])
@@ -227,7 +290,9 @@ static func _restore_tower(g, d: Dictionary) -> void:
 	t.cell = cell
 	t.owner_player = g.acting
 	g.board.add_child(t)
+	YtTowerBehavior.pending_state = d.get("script", {})
 	t.set_youtd(yid)
+	YtTowerBehavior.pending_state = {}
 	g._register(t)
 	g.acting = before
 	t.spent = int(d.get("spent", 0))
@@ -241,6 +306,20 @@ static func _restore_tower(g, d: Dictionary) -> void:
 		var it := make_item(idd, p)
 		if it != null:
 			it.add_to_tower(core)
+	var unit: Array = d.get("unit", [])
+	for i in mini(unit.size(), UNIT_FIELDS.size()):
+		core.set(UNIT_FIELDS[i], unit[i])
+	if d.has("script") and core._tower_behavior != null:
+		set_script_state(core._tower_behavior, d.script)  # falls on_create einen Zähler zurückgesetzt hat
+	if float(d.get("scale", 1.0)) != core._unit_scale:
+		core.set_unit_scale(float(d.scale))
+	# Dauerhafte Wertänderungen: was Aufbau und Items schon wieder gesetzt haben, nur bis zum gespeicherten Stand ergänzen
+	if not _script_name(core._tower_behavior) in MODS_SKIP:
+		var mods: Dictionary = d.get("mods", {})
+		for k in mods:
+			var diff := float(mods[k]) - float(core._own_mods.get(k, 0.0))
+			if absf(diff) > 0.000001:
+				core.modify_property(k, diff)
 	core.set_mana(float(d.get("mana", 0.0)))
 	# Abklingzeiten der Zauber (Tower und Items, gleiche Reihenfolge wie beim Speichern)
 	var cds: Array = d.get("cds", [])

@@ -8,6 +8,7 @@ var game  # rg_game.gd
 var race_id := ""
 var difficulty := 2
 var foreign := false
+var share := false
 var _race_text: Label
 var _diff_text: Label
 var _panel: PanelContainer
@@ -22,6 +23,7 @@ func _ready() -> void:
 	race_id = str(Session.rg_choice.get("race", races[0].id if not races.is_empty() else ""))
 	difficulty = game.difficulty
 	foreign = Session.foreign_build
+	share = bool(Session.rg_choice.get("share", false))
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -82,7 +84,20 @@ func _ready() -> void:
 
 	SetupPanel.add_foreign_choice(self, v, game.local_player == 0)
 
-	var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "race": race_id, "difficulty": difficulty, "foreign": foreign}))
+	# Kopfgeld wie die Option „Geldteilen“ in Shopping Maul; wählt der Host
+	UiTheme.caption("Kopfgeld", v)
+	var sh := HBoxContainer.new()
+	sh.add_theme_constant_override("separation", 6)
+	v.add_child(sh)
+	group = ButtonGroup.new()
+	for m in [[false, "Jeder für sich", "Das Kopfgeld bekommt, wessen Tower den Gegner erledigt."],
+			[true, "Geldteilen", "Das Kopfgeld jedes Kills wird gleich an alle verteilt."]]:
+		var on: bool = m[0]
+		var b := _toggle(str(m[1]), sh, group, on == share, func(): share = on)
+		b.tooltip_text = str(m[2])
+		b.disabled = game.local_player != 0
+
+	var go := UiUtil.button("Los geht's", v, func(): game.submit({"type": "setup", "race": race_id, "difficulty": difficulty, "foreign": foreign, "share": share}))
 	go.custom_minimum_size.y = 50
 	go.add_theme_font_size_override("font_size", 20)
 	UiTheme.accent_button(go, UiTheme.GOLD, UiTheme.GOLD_DARK)

@@ -33,13 +33,15 @@ extends Node
 ##   --frei                  Kamera nicht auf die Karte begrenzen (CameraRig.limit_view aus, z. B. Umgebung ansehen)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
+##   --ueberlappung          Oberfläche auf Überlappungen, Ränder und abgeschnittenen Text prüfen
+##                           (tools/ui_pruefung.gd): Zeilen "UI …", Fundstellen rot im Bild
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
 ##   --mitspieler=Anna,Ben   als Mehrspieler-Host mit diesen erfundenen Mitspielern (Liste „Mitspieler“ unten rechts)
 ##   --koop=Name1,Name2      als Koop-Partie mit diesen Spielern (ohne Netz), --gast = Bild aus Sicht von Spieler 2
 ##   --rasse=kleingarten     Randgruppen TD (--map=randgruppen): Rasse für das Bild, --bauen=N Bauvorschau Tower N
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
-##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
+##   --rezepte, --elemente   YouTD: Fenster „Rezepte“ bzw. „Elemente“ in der Mitte öffnen (sonst bleiben beide zu)
 ##   --turmlicht=sockel|kontur|aus  eeveTD: Tower von Lampen im Sockel angeleuchtet, weiße Kontur oder nichts
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
@@ -176,6 +178,11 @@ func _ready() -> void:
 		if opts.has("treffer") and scene == "spiel":
 			await _wait_hit(node)
 		var img := get_viewport().get_texture().get_image()
+		if opts.has("ueberlappung"):
+			var found := UiPruefung.check(get_tree().root, img)
+			for line in found:
+				print(line)
+			print("UI-Prüfung: %d Funde" % found.size())
 		if opts.has("zuschnitt"):
 			var r := String(opts.zuschnitt).split(",")
 			img = img.get_region(Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3])))
@@ -656,8 +663,11 @@ func _prepare_youtd(game: Node) -> void:
 	Engine.time_scale = 1.0
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
-	if opts.has("wuerfel") and game.youtd_store != null:
-		game.youtd_store.set_cube(true)
+	if game.youtd_panel != null:
+		game.youtd_panel.close_windows()
+		for w in [["rezepte", "recipes"], ["elemente", "elements"]]:
+			if opts.has(w[0]):
+				game.youtd_panel.open_window(w[1])
 	game._refresh_hud()
 	await _frames(3)
 

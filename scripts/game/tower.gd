@@ -65,6 +65,10 @@ var damage_bonus := 0.0  ## von Schadens-Auren anderer Tower
 var speed_source := ""   ## Name des Towers, dessen Tempo-Aura gerade wirkt (fürs Infofenster)
 var damage_source := ""  ## Name des Towers, dessen Schadens-Aura gerade wirkt
 var xp_factor := 1.0     ## Kills zählen so viel für die Kill-Ränge (eeveTD: schwarzer Marmor = 2)
+var bounty_bonus := 0.0  ## Kopfgeld-Aura (eeveTD-Minen): so viel mehr Gold für Kills dieses Towers
+var xp_bonus := 0.0      ## Erfahrungs-Aura (eeveTD-Weisheit): Kills zählen um so viel mehr
+var speed_malus := 0.0   ## eeveTD-Gegner mit Tempo-Bremse: so viel weniger Angriffstempo (0.45 = −45 %)
+var rooted_time := 0.0   ## eeveTD-Gegner Fesselnd: so lange greift der Tower nicht an
 ## Roguelike-Boni des Besitzers (rogue.gd), Zuschläge wie 0.2 = +20 %
 var rogue_damage := 0.0
 var rogue_speed := 0.0
@@ -189,12 +193,12 @@ func kill_bonus() -> float:
 	var kr: Dictionary = Database.balance.get("kill_rank", {})
 	if kr.is_empty():
 		return 0.0
-	var ranks := floori(kills * xp_factor / float(kr.get("kills_per_rank", 10)))
+	var ranks := floori(kills * (xp_factor + xp_bonus) / float(kr.get("kills_per_rank", 10)))
 	return minf(ranks * float(kr.get("bonus_per_rank", 0.1)), float(kr.get("max_bonus", 1.2)))
 
 
 func cooldown() -> float:
-	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus + rogue_speed)
+	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus + rogue_speed) / maxf(1.0 - speed_malus, 0.1)
 
 
 # --- Kampf -------------------------------------------------------------------
@@ -205,6 +209,9 @@ func _process(delta: float) -> void:
 	if game == null or game.mirror or not game.is_wave_running():
 		return
 	_apply_enemy_auras(delta)
+	if rooted_time > 0.0:
+		rooted_time -= delta
+		return
 	if not can_attack():
 		return
 	# höchstens ein Frame Rückstand, sonst feuert ein Tower nach langer Pause mehrfach hintereinander
@@ -245,9 +252,10 @@ func _apply_enemy_auras(delta: float) -> void:
 			match type:
 				"burn_aura":
 					e.last_hit_by = owner_player
+					e.last_tower = self
 					total_damage += e.take_raw_damage(float(ab.dps) * delta)
 					if e.dead:
-						kills += 1
+						_killed(e)
 				"slow_aura":
 					e.apply_slow(float(ab.factor), 0.25)
 				"armor_aura":
@@ -331,15 +339,22 @@ func _hit(e, dmg: float) -> void:
 			"gold_on_hit":
 				game.add_gold(int(ab.get("gold", 0)) + floori(float(ab.get("gold_per_wave", 0)) * game.current_wave()), owner_player)
 			"stacking_damage":
-				dmg += e.add_stack(float(ab.per_hit), float(ab.duration))
+				var boom := {"damage": float(ab.death_damage), "radius": float(ab.get("death_radius", 2.0))} if float(ab.get("death_damage", 0.0)) > 0.0 else {}
+				dmg += e.add_stack(float(ab.per_hit), float(ab.duration), boom, self)
 			"nova":
 				_nova(e, ab)
 	e.last_hit_by = owner_player
+	e.last_tower = self
 	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
-		kills += 1
+		_killed(e)
 	if not rogue_fx.is_empty() and game.rogue != null:
 		game.rogue.on_hit(self, e)
+
+
+## Ein Gegner ist durch diesen Tower gestorben (Modi hängen hier Kill-Effekte an).
+func _killed(_e) -> void:
+	kills += 1
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
@@ -488,9 +503,10 @@ func _cone(target_pos: Vector2, ab: Dictionary, dmg: float, target) -> void:
 			continue
 		if spell:
 			other.last_hit_by = owner_player
+			other.last_tower = self
 			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus() + rogue_damage), "spells")
 			if other.dead:
-				kills += 1
+				_killed(other)
 		else:
 			_hit(other, dmg)
 	# Umriss des Kegels kurz aufblitzen lassen
@@ -519,9 +535,10 @@ func _nova(target, ab: Dictionary) -> void:
 		if ab.has("slow"):
 			other.apply_slow(float(ab.slow), 3.0)
 		other.last_hit_by = owner_player
+		other.last_tower = self
 		total_damage += other.take_damage(float(ab.damage) * (1.0 + kill_bonus()), "spells")
 		if other.dead:
-			kills += 1
+			_killed(other)
 	game.add_beam(Board3D.to_3d(center, 0.1), Board3D.to_3d(center, 1.5), Color.WHITE, "n:%s:%d:%s" % [tower_id, tier, float(ab.get("radius", 2.0))])
 
 

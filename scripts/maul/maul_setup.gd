@@ -2,7 +2,7 @@ class_name MaulSetup
 extends ColorRect
 ## Vor Level 1: Schwierigkeit, Modus und Filiale wählen („Filiale eröffnen“).
 ## Zwei Reiter: die 11 Standard-Filialen und die 9 Profi-Filialen (ab 25 XP und nur mit Speziallevels).
-## Im Koop wählt der Host Schwierigkeit, Modus, Sandbox und „Überall bauen“, jeder Mitspieler nur seine Filiale.
+## Im Koop wählt der Host Schwierigkeit, Modus, Sandbox, „Überall bauen“ und Geldteilen, jeder Mitspieler nur seine Filiale.
 
 const CARD_WIDTH := 236.0
 
@@ -13,6 +13,7 @@ var _difficulty := 1
 var _mode := "group"
 var _sandbox := false
 var _foreign := false
+var _share := false
 var _waiting := false      ## Mitspieler hat gewählt, der Host hat noch nicht gestartet
 var _cards := {}
 var _diff_buttons: Array = []
@@ -20,6 +21,7 @@ var _mode_buttons: Array = []
 var _kind_buttons := {}
 var _sandbox_button: Button
 var _foreign_button: Button
+var _share_button: Button
 var _grid: GridContainer
 var _detail: Label
 var _xp: Label
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_mode = str(last.get("mode", _mode))
 	_sandbox = bool(last.get("sandbox", _sandbox))
 	_foreign = bool(last.get("foreign", _foreign))
+	_share = bool(last.get("share", _share))
 	_kind = str(last.get("kind", _kind))
 	_shop = str(last.get("shop", _shop))
 	var center := CenterContainer.new()
@@ -101,6 +104,13 @@ func _ready() -> void:
 			_foreign = not _foreign
 			_refresh())
 		_foreign_button.tooltip_text = "An: alle dürfen Tower auch in den Gebieten der anderen (und in leeren Gebieten) bauen und Einheiten dort aufstellen. Aus: nur im eigenen Gebiet."
+		var share_box := VBoxContainer.new()
+		opts.add_child(share_box)
+		DecoTheme.caption("Kopfgeld", share_box)
+		_share_button = _toggle("Geldteilen", share_box, func():
+			_share = not _share
+			_refresh())
+		_share_button.tooltip_text = "An: das Kopfgeld aller Kills kommt in einen Topf und wird gleich an alle verteilt, das Einkommen ist für alle gleich. Aus: Kopfgeld bekommt, wer trifft, dafür gleicht der Konzernbonus das Einkommen nach Kills aus."
 	else:
 		var info := UiUtil.wrap_label("Koop: der Host wählt Schwierigkeit und Modus, jeder eröffnet seine eigene Filiale in seinem Gebiet. Die Leben sind gemeinsam.", box, CARD_WIDTH * 4 + 30)
 		info.add_theme_color_override("font_color", DecoTheme.CYAN)
@@ -241,7 +251,7 @@ func _pro_open() -> bool:
 func refresh() -> void:
 	if _waiting and game.phase != MaulGame.Phase.SETUP:
 		_waiting = false
-		game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign)
+		game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign, _share)
 	_refresh()
 
 
@@ -257,6 +267,8 @@ func _refresh() -> void:
 		_sandbox_button.set_pressed_no_signal(_sandbox)
 	if _foreign_button != null:
 		_foreign_button.set_pressed_no_signal(_foreign)
+	if _share_button != null:
+		_share_button.set_pressed_no_signal(_share)
 	for k in _kind_buttons:
 		_kind_buttons[k].set_pressed_no_signal(k == _kind)
 	var pro_open := _pro_open()
@@ -318,5 +330,5 @@ func _start() -> void:
 		_waiting = true
 		_refresh()
 		return
-	Session.maul_choice = {"shop": _shop, "kind": _kind, "difficulty": _difficulty, "mode": _mode, "sandbox": _sandbox, "foreign": _foreign}
-	game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign)
+	Session.maul_choice = {"shop": _shop, "kind": _kind, "difficulty": _difficulty, "mode": _mode, "sandbox": _sandbox, "foreign": _foreign, "share": _share}
+	game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign, _share)

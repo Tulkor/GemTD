@@ -124,10 +124,11 @@ func _style_hud() -> void:
 	hud.chance_value.get_parent().get_parent().hide()
 	hud.path_value.get_parent().get_parent().hide()
 	hud.pinned_panel.hide()
+	hud.extra_chance_button.hide()
+	# Linke Spalte (nächste Wellen) entfällt: die Wellen stehen im Tooltip des Wellen-Knopfs oben
+	hud.left_col.hide()
 	youtd_panel = YoutdPanel.new()
 	youtd_panel.game = self
-	hud.left_col.add_child(youtd_panel)
-	hud.left_col.move_child(youtd_panel, 0)
 	# Tower- und Item-Lager fest unten links
 	youtd_store = YoutdStore.new()
 	youtd_store.game = self
@@ -136,6 +137,10 @@ func _style_hud() -> void:
 	youtd_store.offset_left = 16
 	youtd_store.offset_bottom = -16
 	hud.root.add_child(youtd_store)
+	hud.root.move_child(youtd_store, hud.recipe_book.get_index())
+	# Fenster in der Mitte über den Lagern, aber unter Spielmenü und Endbildschirm
+	hud.root.add_child(youtd_panel)
+	hud.root.move_child(youtd_panel, hud.recipe_book.get_index())
 	# Item-Plätze des gewählten Towers als Icons auf der Auswahlkarte (Ziehen ins Lager und zurück)
 	_item_row = HFlowContainer.new()
 	_item_row.add_theme_constant_override("h_separation", 3)
@@ -1297,7 +1302,6 @@ func _box_select(_r: Rect2, _add := false) -> void:
 func _refresh_hud_local() -> void:
 	lives = ceili(portal)
 	hud.set_resources(mini(maxi(current_wave(), 1), maxi(waves.size(), 1)), maxi(waves.size(), 1), lives, gold, false)
-	hud.set_waves(_upcoming_waves(3))
 	hud.set_round_gems([], "")
 	if build_id != "" and phase < Phase.GAME_OVER:
 		var t := YoutdData.tower(build_id)

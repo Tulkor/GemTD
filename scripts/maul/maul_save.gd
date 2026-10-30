@@ -1,9 +1,11 @@
 class_name MaulSave
 extends RefCounted
-## Spielstand für Shopping Maul (Einzelspiel), über save_game.gd verschlüsselt in user://saves/.
+## Spielstand für Shopping Maul (Einzelspiel und Koop), über save_game.gd verschlüsselt in user://saves/.
 ## Gespeichert wird immer zwischen zwei Leveln: im Countdown der Stand von jetzt, mitten im Level der Stand
 ## von dessen Beginn (maul_game.gd merkt ihn sich in _start_level). Geladen geht es mit dem Countdown weiter.
 ## Spieler und Tower nimmt der Koop-Stand (maul_sync.gd snapshot/apply_state) mit, dazu was nur der Host rechnet.
+## Koop speichert der Host (save_coop) wie game.gd: Laden über „Spiel laden“ hostet die Sitzung, jeder bekommt
+## beim Einstieg seine alte Spielernummer (Net._load_coop), maul_game.gd lädt den Stand beim Host.
 
 const MODE := "shoppingmaul"
 const RESUME_COUNTDOWN := 15.0
@@ -43,6 +45,7 @@ static func state(g: MaulGame) -> Dictionary:
 		"prev_budget": g.prev_budget,
 		"play_time": g.play_time,
 		"xp_start": g.xp_start,
+		"gold_pot": g.gold_pot,
 	}
 
 
@@ -68,6 +71,18 @@ static func save(g: MaulGame) -> bool:
 	if Session.save_id == "":
 		Session.save_id = SaveGame.new_id()
 	return SaveGame.write({"id": Session.save_id, "kind": "single", "mode": MODE, "meta": meta_for(g), "state": st})
+
+
+## Koop (Host): die ganze Partie speichern, Spielernummern bleiben an den Spieler-IDs der Sitzung.
+static func save_coop(g: MaulGame) -> bool:
+	var st := capture(g)
+	if st.is_empty():
+		return false
+	var names: Array = g.players.map(func(p): return p.name)
+	var meta := meta_for(g)
+	meta.players = names
+	return SaveGame.write({"id": str(Net.session.get("id", SaveGame.new_id())), "kind": "coop", "mode": MODE,
+		"meta": meta, "map": {"name": "Shopping Maul"}, "host_uid": Net.uid, "coop": Net.session.get("coop", []), "state": st})
 
 
 ## Stand in ein frisch aufgebautes Spiel (Karte, Board, HUD stehen, Phase SETUP).
@@ -101,6 +116,7 @@ static func apply(g: MaulGame, s: Dictionary) -> void:
 	g.prev_budget = float(s.get("prev_budget", 0.0))
 	g.play_time = float(s.get("play_time", 0.0))
 	g.xp_start = int(s.get("xp_start", me.xp))
+	g.gold_pot = int(s.get("gold_pot", 0))
 	g.level_save = state(g)
 	g._refresh_paths()
 	g._refresh_hud()

@@ -188,7 +188,7 @@
 	},
 	"undertaker": {
 		"summons": {"o034": ["u000", "u001", "u002", "u003", "u004", "u005", "u006"], "h01B": ["u007"]},
-		"cults": {"o030": 5, "o033": 30, "o035": 65, "o037": 145, "o038": 320, "o039": 690, "o03A": 1300},
+		"cults": {"o030": 5, "o033": 30, "o035": 65, "o037": 145, "o038": 320, "o039": 690, "o03A": 1300, "o01Y": 690},
 		"cult_radius": 7.81,
 		"leash": 7.0,
 		"darkness": {"tower": "h01B", "corpses": 5, "radius": 5.47, "duration": 30, "damage": 7766, "cooldown": 0.5, "range": 7.81, "targets": "both"}
@@ -215,6 +215,9 @@
 		"leash": 7.0
 	},
 	"overrides": {
+		"h005": {"targets": "both", "abilities": [{"type": "stun", "chance": 0.1, "duration": 0.33}, {"type": "air_bonus", "multiplier": 10.0}]},
+		"o00C": {"targets": "ground"},
+		"h00Y": {"targets": "ground"},
 		"h00S": {"targets": "ground", "abilities": [{"type": "burn_aura", "radius": 3.91, "dps": 18.0, "targets": "ground"}]},
 		"h01M": {"damage": [160, 160], "cooldown": 0.1, "range": 3.91, "targets": "both"},
 		"h01U": {"damage": [1500, 1500], "cooldown": 1.0, "range": 7.81, "targets": "ground", "abilities": [{"type": "poison", "dps": 1500.0, "duration": 3.0}]},

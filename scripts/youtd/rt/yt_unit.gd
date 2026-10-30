@@ -84,6 +84,9 @@ var _level: int = 0
 var _buff_map: Dictionary
 var _buff_list: Array[YtBuff] = []
 var _direct_modifier_list: Array
+## Summe der modify_property-Änderungen außerhalb fremder Buffs je Typ (Wachstum, Fähigkeiten, Items): kommt in den
+## Spielstand, beim Laden gleicht YoutdSave die Differenz aus.
+var _own_mods: Dictionary = {}
 var _base_health: float = 100.0
 var _health: float = 0.0
 var _lowest_health: float = 0.0
@@ -586,6 +589,8 @@ func kill_instantly(target: YtUnit):
 # NOTE: unit.modifyProperty() in JASS
 func modify_property(mod_type: YtModificationType.enm, value: float):
 	_modify_property_internal(mod_type, value, 1)
+	if not YtBuff.changes_belong_to_buff(self):
+		_own_mods[mod_type] = _own_mods.get(mod_type, 0.0) + value
 
 
 # Adds modifier directly to unit. YtModifier will

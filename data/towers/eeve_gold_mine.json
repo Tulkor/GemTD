@@ -16,10 +16,7 @@
 		"next": [
 			"eeve_diamond_mine"
 		],
-		"wc3": "h07E",
-		"todo": [
-			"Goldene Aura: +33 % Kopfgeld für Tower im Umkreis 1000"
-		]
+		"wc3": "h07E"
 	},
 	"tiers": [
 		{
@@ -34,6 +31,11 @@
 					"type": "splash",
 					"radius": 0.39,
 					"factor": 0.4
+				},
+				{
+					"type": "bounty_aura",
+					"radius": 7.81,
+					"bonus": 0.33
 				}
 			]
 		}

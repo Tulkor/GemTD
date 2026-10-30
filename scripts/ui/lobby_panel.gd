@@ -37,7 +37,8 @@ var _map_paths: Array = []
 var _map_path := ""
 var _mode_buttons: Array[Button] = []
 var _vote_caption: Label
-var _vote_row: HBoxContainer
+const VOTE_CARD_W := 270.0  ## längster Modusname (Randgruppen) passt bei 28 px ohne Trennung
+var _vote_row: GridContainer
 var _vote_cards: Array[ModeCard] = []
 var _summary: Label
 var _summary_panel: PanelContainer
@@ -200,11 +201,15 @@ func _ready() -> void:
 	right.add_theme_constant_override("separation", 16)
 	body.add_child(right)
 	_vote_caption = DecoTheme.caption("Modus abstimmen · Klick = deine Stimme", right)
-	_vote_row = HBoxContainer.new()
-	_vote_row.add_theme_constant_override("separation", 14)
+	# Raster statt Reihe: fünf Karten passen bei 16:9 nicht nebeneinander, ohne dass die Namen brechen.
+	# Spaltenzahl folgt der Breite, Zeilen gleichmäßig gefüllt (3 + 2 statt 4 + 1).
+	_vote_row = GridContainer.new()
+	_vote_row.add_theme_constant_override("h_separation", 14)
+	_vote_row.add_theme_constant_override("v_separation", 14)
 	right.add_child(_vote_row)
+	right.resized.connect(func(): _fit_vote_columns(right.size.x))
 	for m in Database.modes:
-		var card := ModeCard.new(m, Vector2(250, 250))
+		var card := ModeCard.new(m, Vector2(VOTE_CARD_W, 150))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # breite Fenster: Karten teilen sich die Breite
 		var id: String = card.mode_id
 		card.pressed.connect(func(): Net.vote("" if Net.my_vote() == id else id))
@@ -246,6 +251,14 @@ func _ready() -> void:
 	Net.session_changed.connect(_refresh)
 	visibility_changed.connect(_refresh)
 	_refresh()
+
+
+## Spalten der Abstimmungskarten für die verfügbare Breite, Zeilen möglichst gleich voll.
+func _fit_vote_columns(width: float) -> void:
+	var n := _vote_cards.size()
+	var most := clampi(int((width + 14.0) / (VOTE_CARD_W + 14.0)), 1, maxi(n, 1))
+	var rows := ceili(float(n) / most)
+	_vote_row.columns = ceili(float(n) / rows)
 
 
 ## Wählt der Modus, der gerade vorne liegt, seine Karte selbst (needs_map false, z. B. Shopping Maul)?

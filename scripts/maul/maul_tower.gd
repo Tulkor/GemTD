@@ -3,7 +3,8 @@ extends Tower
 ## Tower einer Filiale in Shopping Maul. Werte aus data/maul/shops.json (eine Stufe pro Tower,
 ## Upgrades sind eigene Tower mit "upgrade_from"). Schießt wie ein GemTD-Tower und wirkt dazu
 ## Zauber mit eigener Abklingzeit: Donnerschlag (nova_spell), Kettenblitz (chain_spell),
-## Schockwelle (wave_spell). Aussehen: Gebäude aus data/maul/models.json (Wände in der Filialfarbe),
+## Schockwelle (wave_spell), Blitzlicht/Neid (stun_spell: betäubt alle im Radius), Flirten (flirt_spell:
+## hält den stärksten Gegner in Reichweite fest). "life": Chance, beim Kill Leben zurückzuholen. Aussehen: Gebäude aus data/maul/models.json (Wände in der Filialfarbe),
 ## höher je teurer; ohne Modell eine Neon-Säule.
 ##
 ## Profi-Filialen (Etappe 2, Daten in pro.json):
@@ -12,7 +13,10 @@ extends Tower
 ##   Gärtnerei: water = Füllstand; Pflanzen greifen nur aktiv (ab 90 %, aus unter 75 %) und mit Wasser an.
 ##   Bestatter: corpses = gefressene Leichen der Contained Darkness, unleashed_until = Zeit als Unleashed Darkness.
 
-const SPELLS := ["nova_spell", "chain_spell", "wave_spell"]
+const SPELLS := ["nova_spell", "chain_spell", "wave_spell", "stun_spell", "flirt_spell"]
+## Art déco: Licht-Ebene nur für Tower-Modelle (Ebene 20) und Farbe des Tower-Lichts (warmes Messingweiß)
+const TOWER_LAYER := 1 << 19
+const TOWER_LIGHT := Color(1.0, 0.96, 0.9)
 
 var value := 0             ## Gold, das im Tower steckt (Kauf und Upgrades); Verkauf bringt 75 %
 var items: Array = []      ## eingelegte Items (Post, IKEO)
@@ -195,7 +199,7 @@ func _fire_plant(delta: float) -> void:
 	e.last_hit_by = owner_player
 	total_damage += e.take_spell_damage(dmg)
 	if e.dead:
-		kills += 1
+		_killed(e)
 	cooldown_left += cooldown()
 
 
@@ -260,7 +264,40 @@ func _cast(ab: Dictionary) -> bool:
 					_spell_hit(e, float(ab.damage) * bonus)
 			game.add_beam(Board3D.to_3d(pos, 0.3), Board3D.to_3d(end, 0.3), color.lerp(Color.WHITE, 0.5))
 			return true
+		"stun_spell":
+			var near: Array = game.enemies_in_radius(pos, float(ab.radius)).filter(func(e): return can_target(e))
+			if near.is_empty():
+				return false
+			for e in near:
+				e.apply_stun(_stun_time(e, ab))
+			game.add_ring(pos, float(ab.radius), Color.WHITE)
+			return true
+		"flirt_spell":
+			# der Gegner mit den meisten Lebenspunkten, der noch nicht festgehalten wird
+			var best = null
+			for e in game.find_targets_in(self, range_cells(), 99):
+				if e.stun_time <= 0.0 and (best == null or e.hp > best.hp):
+					best = e
+			if best == null:
+				return false
+			best.apply_stun(_stun_time(best, ab))
+			game.add_beam(position + Vector3(0, 1.0, 0), best.position, Color("#ff7ad9"))
+			return true
 	return false
+
+
+## Betäubungsdauer eines Zaubers: Bosse (Helden) kürzer.
+func _stun_time(e, ab: Dictionary) -> float:
+	var boss: bool = e.boss or e.armor_type == "hero"
+	return float(ab.get("boss_duration", ab.duration)) if boss else float(ab.duration)
+
+
+## Life (Fries Carver, Hellboy): Chance, beim Kill Leben zurückzuholen (wie AOX).
+func _killed(e) -> void:
+	super._killed(e)
+	var ab := ability("life")
+	if game != null and not ab.is_empty() and randf() < float(ab.chance):
+		game.kill_life(owner_player, e)
 
 
 func _spell_hit(e, dmg: float) -> void:
@@ -269,7 +306,7 @@ func _spell_hit(e, dmg: float) -> void:
 	e.last_hit_by = owner_player
 	total_damage += e.take_spell_damage(dmg)
 	if e.dead:
-		kills += 1
+		_killed(e)
 
 
 func info_text() -> String:
@@ -311,6 +348,9 @@ func _build_visual() -> void:
 			_visual.add_child(_gem)
 			if look.tint != "" and FieldStyle.current_name() == FieldStyle.DECO:
 				_deco_trim(ModelLoader.aabb(_gem, Transform3D()))
+			if FieldStyle.current_name() == FieldStyle.DECO:
+				ModelLoader.add_outline(_gem)
+				_add_tower_light(_gem)
 			_finish_visual()
 			return
 	_build_pillar(h)
@@ -406,6 +446,31 @@ func _deco_trim(box: AABB) -> void:
 		mi.position = part[1]
 		mi.material_override = brass
 		_visual.add_child(mi)
+
+
+## Art déco: unsichtbares Licht ohne Schatten, das nur den Tower selbst trifft (eigene Licht-Ebene), damit er
+## im dunklen Maul fast ganz ausgeleuchtet ist; Boden und Nachbarn bleiben unberührt (Lukas, 2026-10-30).
+func _add_tower_light(model: Node3D) -> void:
+	_set_layer(model)
+	var box := ModelLoader.aabb(model, Transform3D())
+	var top := box.position.y + box.size.y
+	for p in [Vector3(0.0, top + 0.3, 0.7), Vector3(0.0, top * 0.5, -0.6)]:
+		var light := OmniLight3D.new()
+		light.light_color = TOWER_LIGHT
+		light.light_energy = 0.75 if p.z > 0.0 else 0.3
+		light.omni_range = 1.8 + box.size.y
+		light.omni_attenuation = 0.6
+		light.shadow_enabled = false
+		light.light_cull_mask = TOWER_LAYER
+		light.position = p
+		_visual.add_child(light)
+
+
+static func _set_layer(n: Node) -> void:
+	if n is VisualInstance3D:
+		n.layers |= TOWER_LAYER
+	for c in n.get_children():
+		_set_layer(c)
 
 
 ## Modell: passendes aus data/tower_models.json (TowerModels), sonst Gebäude nach data/maul/models.json.
