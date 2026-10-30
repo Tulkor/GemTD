@@ -41,6 +41,7 @@ var lives := 50
 var start_gold := 0
 ## Zufallselemente beim Spielstart. random_rocks: Anzahl Steine, seed: -1 = jedes Mal anders.
 var variance := {"random_rocks": 0, "seed": -1}
+var path_lights: Array = []  ## Farben des Lichtpfads ("#rrggbb"), leer = Farben des Modus (PathLights.COLORS)
 
 
 static func create_empty(w: int, h: int) -> MapData:
@@ -92,6 +93,7 @@ static func from_dict(d: Dictionary) -> MapData:
 	m.lives = int(d.get("lives", 50))
 	m.start_gold = int(d.get("start_gold", 0))
 	m.variance = d.get("variance", {"random_rocks": 0, "seed": -1})
+	m.path_lights = d.get("path_lights", [])
 	if int(d.get("format", 1)) < FORMAT:
 		m._upscale()
 	return m
@@ -138,6 +140,8 @@ func to_dict() -> Dictionary:
 	}
 	if game != "" and game != "gemtd":
 		d.game = game
+	if not path_lights.is_empty():
+		d.path_lights = path_lights
 	if spawn_player >= 0:
 		d.spawn_player = spawn_player
 	if not lanes.is_empty():

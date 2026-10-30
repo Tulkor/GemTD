@@ -2333,6 +2333,8 @@
 	"schwarz": "black",
 	"sad": "sad",
 	"*seufz*": "*sigh*",
+	"Lichter fliegen den Weg der Gegner entlang (Taste L).": "Lights fly along the enemies' path (key L).",
+	"Lichtpfad": "Light trail",
 	"Welle %d: %s": "Wave %d: %s",
 	"Welle %d geschafft: +%d Gold": "Wave %d cleared: +%d gold",
 	"Welle %d geschafft": "Wave %d cleared",

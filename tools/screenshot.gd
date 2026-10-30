@@ -45,6 +45,7 @@ extends Node
 ##   --bonusfelder           eeveTD: Bonusfelder (Lava, Eis, Marmor) auslegen, drei davon unter Towern des Plans
 ##   --ende                  eeveTD: Endbildschirm mit Wertung (Sieg)
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
+##   --lichtpfad             Lichtpfad an (Lichter fliegen den Gegnerweg entlang, ohne die Einstellung zu speichern)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
 ##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
@@ -130,6 +131,12 @@ func _ready() -> void:
 		angles = String(opts.get("winkel", "schraeg")).split(",")
 	if opts.has("extra") and scene == "spiel":
 		node.hud.extra_chance_requested.emit()
+	if opts.has("lichtpfad") and (scene == "spiel" or scene == "maul"):
+		node.path_lights.visible = true
+		node.board.set_path_dots(false)
+		var lb: Button = node.hud.lights_button
+		lb.set_pressed_no_signal(true)
+		await _frames(30)
 	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
 		if scene == "maul":
 			node.hud.toggle_debug()

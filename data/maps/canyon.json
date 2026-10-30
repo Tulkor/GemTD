@@ -2,6 +2,7 @@
 	"format": 2,
 	"id": "canyon",
 	"name": "Schlucht (zufällige Steine)",
+	"path_lights": ["ffb03a", "b070ff"],
 	"width": 74,
 	"height": 74,
 	"tiles": [

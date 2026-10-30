@@ -20,6 +20,7 @@ var lane_paths: Array = []
 var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
+var path_lights: PathLights  ## Lichtpfad entlang der Gegnerwege (Knopf „Lichtpfad“)
 var path_depth := 0.0  ## Laufweg ("_"-Felder) so tief als Schlucht unter den Bauflächen (Board3D.path_depth)
 var camera_rig: CameraRig
 var effects: Effects
@@ -197,6 +198,12 @@ func _ready() -> void:
 		lives += n
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
+	if has_path_lights():
+		path_lights = PathLights.new(board, map.game if map.game != "" else Session.game_kind, map.path_lights)
+		path_lights.visible = Display.path_lights
+		board.add_child(path_lights)
+		hud.add_lights_toggle(Display.path_lights, set_path_lights)
+		board.set_path_dots(not Display.path_lights)
 	if has_other_paths():
 		hud.add_paths_toggle(set_show_all_paths)
 		board.set_marker_lanes(_own_lanes())
@@ -383,6 +390,8 @@ func _update_paths() -> void:
 	air_path = lane_paths[0].air
 	board.path_points = dots + others if show_all_paths else dots
 	board.refresh_path()
+	if path_lights != null:
+		path_lights.set_paths(range(lane_paths.size()).filter(func(i): return show_all_paths or _own_lane(i)).map(func(i): return lane_paths[i].ground))
 
 
 ## Im Mehrspieler gehören Bahnen mit Spielernummer einem Spieler; anfangs zeigt das Feld nur die
@@ -397,6 +406,18 @@ func _own_lanes() -> Array:
 
 func has_other_paths() -> bool:
 	return range(map.lane_count()).any(func(i): return not _own_lane(i))
+
+
+## Lichtpfad (Knopf „Lichtpfad“) in diesem Modus? YouTD hat einen festen Weg und braucht ihn nicht.
+func has_path_lights() -> bool:
+	return true
+
+
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert. Solange er läuft, ohne Wegpunkte am Boden.
+func set_path_lights(on: bool) -> void:
+	Display.set_path_lights(on)
+	path_lights.visible = on
+	board.set_path_dots(not on)
 
 
 func set_show_all_paths(on: bool) -> void:

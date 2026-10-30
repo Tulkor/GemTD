@@ -43,6 +43,7 @@ var _sel_box: VBoxContainer
 var _banner: Label
 var _minimap: MaulMinimap
 var paths_button: Button = null  ## Mehrspieler: Wege der Mitspieler ein/aus
+var lights_button: Button = null  ## Lichtpfad ein/aus
 var _setup: MaulSetup
 var _game_over: Control
 var _menu: Control
@@ -114,6 +115,14 @@ func _build_top_bar() -> void:
 	row.add_child(spacer)
 	_start_button = UiUtil.button("Jetzt starten", row, func(): game.submit({"type": "start_now"}))
 	UiTheme.accent_button(_start_button, UiTheme.GOLD, UiTheme.BAR)
+	lights_button = UiUtil.button("Lichtpfad", row, func(): pass)
+	lights_button.toggle_mode = true
+	lights_button.focus_mode = Control.FOCUS_NONE
+	lights_button.tooltip_text = "Lichter fliegen den Weg der Gegner entlang (Taste L)."
+	lights_button.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.CYAN, UiTheme.CYAN, 0, 2))
+	lights_button.add_theme_color_override("font_pressed_color", UiTheme.GOLD_DARK)
+	lights_button.set_pressed_no_signal(Display.path_lights)
+	lights_button.toggled.connect(func(on: bool): game.set_path_lights(on))
 	for f in [1.0, 2.0, 4.0]:
 		var b := UiUtil.button("%d×" % int(f), row, func(): game.set_speed(f))
 		b.toggle_mode = true

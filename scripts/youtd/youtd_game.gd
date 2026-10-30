@@ -1112,6 +1112,11 @@ func _update_paths() -> void:
 	super._update_paths()
 
 
+## Fester Weg in der Schlucht: kein Lichtpfad (Wunsch von Lukas).
+func has_path_lights() -> bool:
+	return false
+
+
 # --- Tower-Optionen --------------------------------------------------------------
 
 func tower_options(t: Tower) -> Array:
