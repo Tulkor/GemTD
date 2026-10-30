@@ -13,7 +13,7 @@ var mode_cards: Array[ModeCard] = []
 var settings: Control
 var lobby: LobbyPanel
 var loader: LoadPanel
-var net_tile: Button
+var net_tile: Wc3Button
 var net_tile_text: Label
 var history: RunHistoryPanel
 var map_caption: Label
@@ -26,6 +26,12 @@ var history_page: Control
 var profile: ProfilePanel
 var profile_page: Control
 var credits_page: Control
+var hub: Control
+var hub_bg: Wc3MenuBg
+var hub_tip: Label
+var hub_buttons: Array[Wc3Button] = []
+
+const SHADE := preload("res://scripts/ui/wc3_shade.gdshader")
 
 
 func _ready() -> void:
@@ -86,6 +92,9 @@ func _ready() -> void:
 ## Seite zeigen: "" = Hub, "single" = Einzelspieler, "history" = Run-History, "profile" = Profil,
 ## "credits" = Mitwirkende, "lobby" = Mehrspieler.
 func show_page(page: String) -> void:
+	hub.visible = page == ""
+	hub_bg.visible = page == ""
+	hub_bg.process_mode = Node.PROCESS_MODE_INHERIT if hub_bg.visible else Node.PROCESS_MODE_DISABLED
 	single_page.visible = page == "single"
 	credits_page.visible = page == "credits"
 	history_page.visible = page == "history"
@@ -99,137 +108,159 @@ func show_page(page: String) -> void:
 		_update_selection()
 
 
+## Hub im Warcraft-III-Stil (Wc3Theme, Lukas 2026-10-30): 3D-Nachtszene, Logo links oben, Steinsäule mit Knöpfen
+## rechts, darunter links eine Hinweiszeile zum Knopf unter der Maus. Hotkeys wie in WC3 (heller Buchstabe).
 func _build_hub() -> void:
-	var bg := DecoBackdrop.new()
-	bg.rays = true
-	bg.rays_from = Vector2(0.5, 0.17)
-	add_child(bg)
-	var margin := _margin(self)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 10)
-	margin.add_child(v)
-	v.add_child(_gap(20))
-	# Titel auf Petrol, damit die Strahlen dahinter verschwinden
-	var title := DecoTheme.title(UiUtil.label("TD Hub", v, 92))
-	title.uppercase = true
-	title.add_theme_font_override("font", DecoTheme.display_font(16))
-	title.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.BG, Color.TRANSPARENT, 0, 0, 30))
-	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	# Untertitel aus data/modes.json, damit neue Modi von selbst dazukommen
+	hub_bg = Wc3MenuBg.new()
+	add_child(hub_bg)
+	hub = Control.new()
+	hub.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(hub)
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.material = ShaderMaterial.new()
+	shade.material.shader = SHADE
+	hub.add_child(shade)
+	# Linke Spalte: Logo, Untertitel, Modi; so breit, wie neben der Säule Platz ist
+	var left := VBoxContainer.new()
+	left.anchor_bottom = 1.0
+	left.anchor_right = 1.0
+	left.offset_left = 60
+	left.offset_top = 14
+	left.offset_right = -(420 + 66 + 40)
+	left.offset_bottom = -40
+	left.add_theme_constant_override("separation", 6)
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hub.add_child(left)
+	var logo := Wc3Logo.new()
+	logo.custom_minimum_size.x = 0
+	logo.size_flags_horizontal = Control.SIZE_FILL
+	var logo_box := CenterContainer.new()
+	logo_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(logo_box)
+	logo_box.add_child(logo)
+	logo_box.resized.connect(func(): logo.custom_minimum_size.x = minf(logo_box.size.x, 640))
+	# Anzahl und Namen der Modi aus data/modes.json, damit neue Modi von selbst dazukommen
 	var names := Database.modes.filter(func(m): return bool(m.get("ready", false))).map(func(m): return str(m.get("name", m.id)))
-	var sub := UiUtil.label("◆  " + (tr("Tower Defense in einem:") + " " + ", ".join(names)).to_upper() + "  ◆", v, 15)
-	sub.add_theme_color_override("font_color", DecoTheme.GOLD)
-	sub.add_theme_font_override("font", DecoTheme._variant(DecoTheme.FONT, 0.3, 4))
-	sub.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.BG, Color.TRANSPARENT, 0, 0, 16))
-	sub.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var center := CenterContainer.new()
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	v.add_child(center)
-	var tiles := HBoxContainer.new()
-	tiles.add_theme_constant_override("separation", 40)
-	center.add_child(tiles)
-	_tile(tiles, "Einzelspieler", "Allein spielen. Du wählst den TD-Modus und die Map, dann geht es los.",
-		1, true, func(): show_page("single"))
-	net_tile = _tile(tiles, "Mehrspieler", "Sitzung hosten oder per IP beitreten. In der Lobby stimmt ihr gemeinsam über den Modus ab.",
-		3, false, func(): show_page("lobby"))
-	net_tile_text = net_tile.get_meta("text")
-	# Fußleiste in zwei Gruppen; ist das Fenster zu schmal (16:10, 4:3), rutscht die rechte Gruppe in eine zweite Zeile
-	var foot_flow := HFlowContainer.new()
-	foot_flow.add_theme_constant_override("h_separation", 10)
-	foot_flow.add_theme_constant_override("v_separation", 10)
-	v.add_child(foot_flow)
+	var count_words := ["Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben", "Acht", "Neun"]
+	var count := tr(count_words[clampi(names.size() - 2, 0, count_words.size() - 1)]) if names.size() >= 2 else str(names.size())
+	var rule := HBoxContainer.new()
+	rule.alignment = BoxContainer.ALIGNMENT_CENTER
+	rule.add_theme_constant_override("separation", 12)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(rule)
+	rule.add_child(_rule_line())
+	Wc3Theme.label("◆  " + tr("%s Tower-Defense-Spiele") % count + "  ◆", rule, 19, Wc3Theme.CREAM, 5)
+	rule.add_child(_rule_line())
+	var modes := Wc3Theme.label(" · ".join(names), left, 15, Wc3Theme.MODES, 3)
+	modes.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	modes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(spacer)
+	hub_tip = Wc3Theme.label("", left, 17, Wc3Theme.CREAM, 1)
+	hub_tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hub_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Unten links: Version, bei offener Sitzung die Zahl der Verbundenen
 	var foot := HBoxContainer.new()
-	foot.add_theme_constant_override("separation", 10)
-	foot_flow.add_child(foot)
-	_foot_button("Spiel laden", foot, func(): loader.show())
-	_foot_button("Profil", foot, func(): show_page("profile"))
-	_foot_button("Run-History", foot, func(): show_page("history"))
-	_foot_button("Map-Editor", foot, _open_map_editor)
-	_foot_button("Tower-Editor", foot, _open_tower_editor)
-	_foot_button("Einstellungen", foot, _open_settings)
-	_foot_button("Mitwirkende", foot, func(): show_page("credits"))
-	foot = HBoxContainer.new()
-	foot.add_theme_constant_override("separation", 10)
-	foot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	foot.alignment = BoxContainer.ALIGNMENT_END
-	foot_flow.add_child(foot)
-	var version := UiUtil.label(CreditsPanel.version_text(), foot, 14)
-	version.add_theme_color_override("font_color", DecoTheme.MUTED)
-	version.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var reload := _foot_button("Daten neu laden", foot, _reload)
-	reload.tooltip_text = "JSON-Dateien unter data/ neu einlesen"
-	_foot_button("Beenden", foot, func(): get_tree().quit())
+	foot.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	foot.offset_left = 24
+	foot.offset_top = -38
+	foot.add_theme_constant_override("separation", 18)
+	hub.add_child(foot)
+	Wc3Theme.label(CreditsPanel.version_text(), foot, 14, Wc3Theme.MUTED, 1)
+	net_tile_text = Wc3Theme.label("", foot, 14, Wc3Theme.HAVE, 1)
+	# Säule rechts, senkrecht mittig
+	var pillar := Wc3Pillar.new()
+	pillar.anchor_left = 1.0
+	pillar.anchor_right = 1.0
+	pillar.anchor_top = 0.5
+	pillar.anchor_bottom = 0.5
+	pillar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	pillar.grow_vertical = Control.GROW_DIRECTION_BOTH
+	pillar.offset_right = -66
+	pillar.offset_left = -66 - 420
+	hub.add_child(pillar)
+	hub_buttons.clear()
+	hub_buttons.append(pillar.button("Einzelspieler", true, "Allein spielen, Modus und Map wählen und den Weg verteidigen.", func(): show_page("single")))
+	net_tile = pillar.button("Mehrspieler", true, "Sitzung hosten oder per IP beitreten. In der Lobby stimmt ihr gemeinsam über den Modus ab.", func(): show_page("lobby"))
+	hub_buttons.append(net_tile)
+	hub_buttons.append(pillar.button("Spiel laden", true, "Einen gespeicherten Spielstand fortsetzen.", func(): loader.show()))
+	pillar.separator()
+	var row := pillar.row()
+	hub_buttons.append(pillar.button("Profil", false, "Erfahrung, Rekorde und Werte aus allen Modi.", func(): show_page("profile"), row))
+	hub_buttons.append(pillar.button("Run-History", false, "Frühere Läufe ansehen und eine Map nochmal spielen.", func(): show_page("history"), row))
+	row = pillar.row()
+	hub_buttons.append(pillar.button("Map-Editor", false, "Eigene Maps bauen und bearbeiten.", _open_map_editor, row))
+	hub_buttons.append(pillar.button("Tower-Editor", false, "Tower und ihre Fähigkeiten bearbeiten.", _open_tower_editor, row))
+	pillar.separator()
+	hub_buttons.append(pillar.button("Einstellungen", false, "Anzeige, Grafik und Sprache einstellen.", _open_settings))
+	hub_buttons.append(pillar.button("Mitwirkende", false, "Wer am Spiel mitgewirkt hat, mit allen Lizenzen.", func(): show_page("credits")))
+	hub_buttons.append(pillar.button("Daten neu laden", false, "JSON-Dateien unter data/ neu einlesen", _reload))
+	hub_buttons.append(pillar.button("Beenden", true, "Das Spiel beenden.", func(): get_tree().quit()))
+	for b in hub_buttons:
+		b.mouse_entered.connect(func(): hub_tip.text = tr(b.description))
+		b.mouse_exited.connect(_reset_tip)
+	_assign_hotkeys()
+	_reset_tip()
 
 
-## Große Kachel im Hub: filled = helles Messing mit dunkler Schrift (Achteck), sonst doppelter Messingrahmen.
-## Oben gems Rauten als Umriss.
-func _tile(parent: Node, text: String, desc: String, gems: int, filled: bool, on_pressed: Callable) -> Button:
-	var b := Button.new()
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(470, 260)
-	b.pressed.connect(on_pressed)
-	parent.add_child(b)
-	var ink := DecoTheme.GOLD_DARK if filled else DecoTheme.TEXT
-	for k in ["normal", "hover", "pressed"]:
-		var s: DecoBox
-		if filled:
-			s = DecoTheme.frame(DecoTheme.BRASS_LIGHT, Color.TRANSPARENT, Color.TRANSPARENT, 20)
-			if k == "hover":
-				s.bg = DecoTheme.BRASS_LIGHT.lightened(0.12)
-			elif k == "pressed":
-				s.bg = DecoTheme.BRASS_LIGHT.darkened(0.1)
-		else:
-			s = DecoTheme.frame(Color.TRANSPARENT, DecoTheme.GOLD, DecoTheme.GOLD)
-			if k == "hover":
-				s.bg = DecoTheme.PANEL
-				s.line = DecoTheme.BRASS_LIGHT
-			elif k == "pressed":
-				s.bg = DecoTheme.PANEL_2
-		b.add_theme_stylebox_override(k, s)
-	var v := VBoxContainer.new()
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 34
-	v.offset_top = 30
-	v.offset_right = -34
-	v.offset_bottom = -24
-	v.add_theme_constant_override("separation", 14)
-	b.add_child(v)
-	var icons := HBoxContainer.new()
-	icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icons.add_theme_constant_override("separation", 6)
-	icons.custom_minimum_size.y = 36
-	v.add_child(icons)
-	for i in gems:
-		var g := GemIcon.new()
-		g.color = ink if filled else DecoTheme.GOLD
-		g.lines = filled
-		g.custom_minimum_size = Vector2(60, 36) if filled else Vector2(30, 36)
-		icons.add_child(g)
-	var t := DecoTheme.title(UiUtil.label(text, v, 40))
-	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	t.add_theme_font_override("font", DecoTheme.display_font(5))
-	t.add_theme_color_override("font_color", ink)
-	var d := UiUtil.wrap_label(desc, v, 400)
-	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	d.add_theme_font_size_override("font_size", 17)
-	d.add_theme_color_override("font_color", ink if filled else DecoTheme.BRASS_LIGHT)
-	if filled:
-		d.add_theme_font_override("font", DecoTheme.font(true))
-	var extra := UiUtil.label("", v, 15)
-	extra.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	extra.add_theme_color_override("font_color", DecoTheme.HAVE)
-	b.set_meta("text", extra)
-	return b
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and not hub_buttons.is_empty():
+		_assign_hotkeys()
+		_reset_tip()
 
 
-func _foot_button(text: String, parent: Node, on_pressed: Callable) -> Button:
-	var b := UiUtil.button(text, parent, on_pressed)
-	b.custom_minimum_size.y = 42
-	b.text = tr(text).to_upper()
-	b.add_theme_font_size_override("font_size", 14)
-	b.add_theme_font_override("font", DecoTheme._variant(DecoTheme.FONT, 0.3, 2))
-	return b
+func _rule_line() -> Control:
+	var line := ColorRect.new()
+	line.color = Wc3Theme.GOLD
+	line.custom_minimum_size = Vector2(110, 2)
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return line
+
+
+func _reset_tip() -> void:
+	hub_tip.text = tr(hub_buttons[0].description)
+
+
+## Hotkey je Knopf: erster freier Wortanfang im übersetzten Text, sonst der erste freie Buchstabe.
+func _assign_hotkeys() -> void:
+	var used := {}
+	for b: Wc3Button in hub_buttons:
+		var text := b.shown_text()
+		b.hotkey = -1
+		var picks: Array[int] = []
+		for i in text.length():
+			if (i == 0 or text[i - 1] in [" ", "-"]) and text[i].to_upper() != text[i].to_lower():
+				picks.append(i)
+		for i in text.length():
+			if text[i].to_upper() != text[i].to_lower() and not i in picks:
+				picks.append(i)
+		for i in picks:
+			var key := text[i].to_upper()
+			if not used.has(key):
+				used[key] = b
+				b.hotkey = i
+				break
+		b.queue_redraw()
+
+
+## Hotkey gedrückt: nur im Hub ohne offenes Fenster darüber.
+func _hub_hotkey(event: InputEventKey) -> bool:
+	if not hub.visible or settings.visible or loader.visible or lobby.visible:
+		return false
+	if event.ctrl_pressed or event.alt_pressed or event.meta_pressed or event.unicode == 0:
+		return false
+	var key := String.chr(event.unicode).to_upper()
+	for b: Wc3Button in hub_buttons:
+		if b.hotkey >= 0 and b.shown_text()[b.hotkey].to_upper() == key and not b.disabled:
+			b.pressed.emit()
+			return true
+	return false
 
 
 func _margin(parent: Node) -> MarginContainer:
@@ -382,6 +413,9 @@ func _open_settings() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and _hub_hotkey(event):
+		get_viewport().set_input_as_handled()
+		return
 	if not (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 		return
 	if settings.visible:
@@ -534,7 +568,7 @@ func _play() -> void:
 
 
 func _update_net_tile() -> void:
-	net_tile_text.text = tr("%d verbunden") % (Net.players.size() + 1) if Net.is_active() else ""
+	net_tile_text.text = ("◆ " + tr("%d verbunden") % (Net.players.size() + 1)) if Net.is_active() else ""
 	net_tile_text.visible = Net.is_active()
 
 
@@ -581,22 +615,3 @@ func _open_map_editor() -> void:
 
 func _open_tower_editor() -> void:
 	Session.goto(Session.TOWER_EDITOR)
-
-
-## Raute als Umriss auf den Hub-Kacheln, lines: mit Strichen links und rechts (Art déco).
-class GemIcon extends Control:
-	var color := Color.WHITE
-	var lines := false
-
-	func _ready() -> void:
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	func _draw() -> void:
-		var h := size.y
-		var m := size.x / 2
-		var r := h * 0.45
-		var pts := PackedVector2Array([Vector2(m, h / 2 - r), Vector2(m + r * 0.8, h / 2), Vector2(m, h / 2 + r), Vector2(m - r * 0.8, h / 2), Vector2(m, h / 2 - r)])
-		draw_polyline(pts, color, 2.5, true)
-		if lines:
-			draw_line(Vector2(0, h / 2), Vector2(m - r * 0.8 - 3, h / 2), color, 2.0)
-			draw_line(Vector2(m + r * 0.8 + 3, h / 2), Vector2(size.x, h / 2), color, 2.0)

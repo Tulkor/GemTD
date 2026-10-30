@@ -65,7 +65,8 @@
 			"title": "Texturen",
 			"entries": [
 				{"name": "Bodenfotos", "by": "Samuel Ramos, Palani Selvam, Dimas H (Unsplash)", "license": "Unsplash-Lizenz", "url": "https://unsplash.com/license"},
-				{"name": "Sternenhimmel, erzeugt mit Space 3D", "by": "wwwtyro", "license": "Unlicense", "url": "https://github.com/wwwtyro/space-3d"}
+				{"name": "Sternenhimmel, erzeugt mit Space 3D", "by": "wwwtyro", "license": "Unlicense", "url": "https://github.com/wwwtyro/space-3d"},
+				{"name": "Nachthimmel im Hauptmenü (Skybox), Mondtextur", "by": "Lukas", "license": "CC0"}
 			]
 		},
 		{
@@ -81,7 +82,8 @@
 				{"name": "Limelight", "by": "Eben Sorkin", "license": "SIL OFL 1.1"},
 				{"name": "Federo", "by": "Cyreal", "license": "SIL OFL 1.1"},
 				{"name": "Uncial Antiqua", "by": "Astigmatic", "license": "SIL OFL 1.1"},
-				{"name": "Alegreya", "by": "Huerta Tipográfica", "license": "SIL OFL 1.1"}
+				{"name": "Alegreya", "by": "Huerta Tipográfica", "license": "SIL OFL 1.1"},
+				{"name": "Cinzel, Cinzel Decorative", "by": "Natanael Gama", "license": "SIL OFL 1.1"}
 			]
 		}
 	]
