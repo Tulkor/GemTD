@@ -13,6 +13,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.local/bin:$PATH"
+# Tests prüfen deutsche Texte; das Spiel startet sonst auf Englisch (Loc.DEFAULT)
+export GEMTD_SPRACHE="${GEMTD_SPRACHE:-de}"
 GODOT="${GODOT:-godot}"
 LOG_DIR="${LOG_DIR:-/tmp/gemtd-tests}"
 mkdir -p "$LOG_DIR"

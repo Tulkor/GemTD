@@ -146,7 +146,7 @@ func _build_cards() -> void:
 	_cards.clear()
 	for s in MaulData.shops():
 		if str(s.kind) == _kind:
-			_add_card(str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), DecoTheme.GOLD), str(s.bonus))
+			_add_card(str(s.id), str(s.name), tr(str(s.get("text", ""))), Color.from_string(str(s.color), DecoTheme.GOLD), str(s.bonus))
 	if _kind == "pro":
 		_add_card("random_pro", tr("Profi-Zufall"), tr("Eine der 9 Profi-Filialen"), DecoTheme.PURPLE_LIGHT, "")
 	else:
@@ -197,9 +197,10 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 
 ## Kartentext: bei Profi-Filialen nur die Besonderheiten (die Werte stehen im Tooltip).
 func _short(text: String) -> String:
-	var i := text.find("Besonderheiten:")
-	if _kind == "pro" and i >= 0:
-		return text.substr(i + 15).replace(" / ", " ").strip_edges()
+	for key in ["Besonderheiten:", "Special:"]:
+		var i := text.find(key)
+		if _kind == "pro" and i >= 0:
+			return text.substr(i + key.length()).replace(" / ", " ").strip_edges()
 	return text.replace("Reichweite:", tr("Reichweite")).replace("  ", " ")
 
 
