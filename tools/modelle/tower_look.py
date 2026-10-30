@@ -14,10 +14,12 @@ def look(mode, key):
         return {}
     if isinstance(v, str):
         v = {"m": v}
+    if "fog" in v and not v.get("m"):
+        return {"model": "", "fog": v["fog"]}  # nur Nebeleffekt, kein Modell
     ref, tint = v.get("m", ""), bool(v.get("tint", False))
     if ref in ("", "kristall"):
         return {}  # Kristall des Generators bleibt
     path = ref if ref.startswith("res://") else "res://assets/models/towers/%s.glb" % ref
     out = {"model": path, "model_tint": tint, "model_solid": not tint}
-    out.update({k: v[k] for k in ("flame", "flame_height", "hit_fx") if k in v})
+    out.update({k: v[k] for k in ("flame", "flame_height", "hit_fx", "fog") if k in v})
     return out

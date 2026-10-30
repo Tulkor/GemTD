@@ -152,7 +152,9 @@
 		"grillanzuender": "kk_restaurant/stove_single",
 		"leuchtreklame": "q_cyberpunk/sign_1",
 		"zuckerschock": "k_essen/donut_sprinkles",
-		"buehnennebel": "eigen/buehnennebel",
+		"buehnennebel": {
+			"fog": 1.0
+		},
 		"der_regisseur": "q_figuren/casual_bald",
 		"der_star": "q_figuren/kimono_female",
 		"intrigantin": "q_figuren/witch",

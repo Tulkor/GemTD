@@ -31,7 +31,8 @@ FARBEN = {
     "gelb": (0.95, 0.75, 0.10), "schwarz": (0.06, 0.06, 0.07), "lila": (0.20, 0.06, 0.28),
     "lila_hell": (0.45, 0.18, 0.60), "auge": (1.0, 0.85, 0.20), "wasser": (0.20, 0.45, 0.75),
     "nebel": (0.85, 0.88, 0.92), "seil": (0.80, 0.70, 0.50), "gummi": (0.55, 0.10, 0.10),
-    "kupfer": (0.72, 0.40, 0.20), "blitz": (0.55, 0.85, 1.00), "gruen": (0.15, 0.55, 0.25),
+    "kupfer": (0.72, 0.40, 0.20), "haut": (0.85, 0.60, 0.45), "haar": (0.35, 0.18, 0.08),
+    "trikot": (0.85, 0.15, 0.55), "trikot_rock": (0.95, 0.75, 0.90), "blitz": (0.55, 0.85, 1.00), "gruen": (0.15, 0.55, 0.25),
 }
 EMISSION = {"auge": 1.0, "blitz": 1.2}
 ALPHA = {"wasser": 0.75, "nebel": 0.6}
@@ -199,16 +200,34 @@ def bohrturm(b):  # Shopping Maul Oil Well
     b.box((0.3, 0.2, 0.2), "schwarz", (-0.25, 0.25, 0.16))
 
 
-def trapez(b):  # Randgruppen Trapezkünstlerin
+def trapez(b):  # Randgruppen Trapezkünstlerin: Gestell mit Artistin, die an der Stange hängt
+    top, bar = 1.75, 1.08
     for x in (-0.55, 0.55):
-        b.stab((x - 0.15, 0.2, 0), (x, 0, 1.5), 0.03, "rot", 6)
-        b.stab((x - 0.15, -0.2, 0), (x, 0, 1.5), 0.03, "rot", 6)
-    b.stab((-0.62, 0, 1.5), (0.62, 0, 1.5), 0.035, "gelb", 6)
-    b.stab((-0.22, 0, 1.5), (-0.22, 0, 0.8), 0.008, "seil", 4)
-    b.stab((0.22, 0, 1.5), (0.22, 0, 0.8), 0.008, "seil", 4)
-    b.stab((-0.25, 0, 0.8), (0.25, 0, 0.8), 0.022, "holz_hell", 6)
+        b.stab((x - 0.15, 0.2, 0), (x, 0, top), 0.03, "rot", 6)
+        b.stab((x - 0.15, -0.2, 0), (x, 0, top), 0.03, "rot", 6)
+    b.stab((-0.62, 0, top), (0.62, 0, top), 0.035, "gelb", 6)
+    b.stab((-0.22, 0, top), (-0.22, 0, bar), 0.008, "seil", 4)
+    b.stab((0.22, 0, top), (0.22, 0, bar), 0.008, "seil", 4)
+    b.stab((-0.25, 0, bar), (0.25, 0, bar), 0.022, "holz_hell", 6)
     b.zyl(0.7, 0.03, "rot", (0, 0, 0.015), seiten=12)
     b.zyl(0.5, 0.032, "gelb", (0, 0, 0.017), seiten=12)
+    # Artistin: Hände an der Stange, Arme nach oben, Trikot, Beine geschlossen mit gestreckten Füßen
+    sh, hip = 0.86, 0.6
+    for x in (-0.07, 0.07):
+        b.stab((x * 1.3, 0, bar), (x, 0, sh), 0.022, "haut", 5)
+        b.kugel(0.025, "haut", (x * 1.3, 0, bar))
+    b.kugel(0.085, "haut", (0, 0, sh + 0.05), stufe=2, skal=(0.9, 0.95, 1.05))
+    b.kugel(0.09, "haar", (0, 0.025, sh + 0.08), stufe=2, skal=(0.95, 0.9, 1.0))
+    b.kugel(0.045, "haar", (0, 0.09, sh + 0.13))
+    torso = cr.cylinder(radius=0.075, height=sh - hip, sections=8)
+    torso.apply_scale((1.0, 0.7, 1.0))
+    b.add(torso, "trikot", (0, 0, (sh + hip) / 2))
+    b.kugel(0.08, "trikot", (0, 0, hip), skal=(1.0, 0.75, 0.6))
+    b.zyl(0.11, 0.035, "trikot_rock", (0, 0, hip - 0.01), seiten=10)
+    for x in (-0.035, 0.035):
+        b.stab((x, 0, hip), (x * 0.8, 0.02, hip - 0.28), 0.028, "haut", 5)
+        b.stab((x * 0.8, 0.02, hip - 0.28), (x * 0.6, -0.01, hip - 0.52), 0.022, "haut", 5)
+        b.kegel(0.022, 0.06, "trikot", (x * 0.6, -0.01, hip - 0.58), seiten=5, rot=tf.rotation_matrix(math.pi, [1, 0, 0]))
 
 
 def steinschleuder(b):  # Randgruppen Steinschleuder
@@ -224,23 +243,9 @@ def steinschleuder(b):  # Randgruppen Steinschleuder
         b.kugel(0.05, "stein", (x, y, 0.07))
 
 
-def buehnennebel(b):  # Randgruppen Bühnennebel: Nebelmaschine auf Bühnenpodest
-    b.box((1.0, 0.8, 0.15), "holz", (0, 0, 0.075))
-    b.box((0.4, 0.28, 0.24), "metall_dunkel", (-0.15, 0, 0.27))
-    b.box((0.06, 0.06, 0.06), "rot", (-0.05, -0.14, 0.32))
-    b.zyl(0.05, 0.16, "metall", (0.1, 0, 0.27), rot=tf.rotation_matrix(math.pi / 2, [0, 1, 0]))
-    for i, (x, y, z, r) in enumerate(((0.3, 0, 0.3, 0.14), (0.45, 0.08, 0.36, 0.18), (0.38, -0.12, 0.42, 0.15),
-                                      (0.2, 0.15, 0.45, 0.12), (0.5, -0.05, 0.52, 0.16))):
-        b.kugel(r, "nebel", (x, y, z))
-    for x in (-0.42, 0.42):
-        b.stab((x, 0.33, 0.15), (x, 0.33, 0.8), 0.02, "metall_dunkel", 5)
-        b.zyl(0.06, 0.1, "schwarz", (x, 0.28, 0.82), rot=tf.rotation_matrix(0.6, [1, 0, 0]))
-
-
 MODELLE = {
     "waage": waage, "it": it, "rakete": rakete, "pfuetze": pfuetze, "blitzfalle": blitzfalle,
     "zapfsaeule": zapfsaeule, "bohrturm": bohrturm, "trapez": trapez, "steinschleuder": steinschleuder,
-    "buehnennebel": buehnennebel,
 }
 
 

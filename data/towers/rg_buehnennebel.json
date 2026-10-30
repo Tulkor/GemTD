@@ -3,7 +3,7 @@
 	"name": "Bühnennebel",
 	"category": "randgruppen",
 	"color": "#d070ff",
-	"model": "res://assets/models/towers/eigen/buehnennebel.glb",
+	"model": "",
 	"model_tint": false,
 	"model_solid": true,
 	"damage_type": "normal",
@@ -35,5 +35,6 @@
 				}
 			]
 		}
-	]
+	],
+	"fog": 1.0
 }

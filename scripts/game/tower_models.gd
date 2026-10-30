@@ -9,7 +9,7 @@ const CRYSTAL := "res://assets/models/crystals/crystal_13.glb"
 static var _data: Dictionary = {}
 
 
-## Werte für die Tower-Definition ("model", "model_tint", "model_solid", optional "flame", "flame_height", "hit_fx")
+## Werte für die Tower-Definition ("model", "model_tint", "model_solid", optional "flame", "flame_height", "hit_fx", "fog")
 ## oder leer, wenn der Modus für key kein Modell hat ("fehlt", "haus" oder kein Eintrag).
 static func look(mode: String, key: String) -> Dictionary:
 	if _data.is_empty():
@@ -22,6 +22,8 @@ static func look(mode: String, key: String) -> Dictionary:
 		return {}
 	if v is String:
 		v = {"m": v}
+	if v.has("fog") and str(v.get("m", "")) == "":
+		return {"model": "", "fog": v["fog"]}  # nur Nebeleffekt, kein Modell
 	var ref := str(v.get("m", ""))
 	var tint := bool(v.get("tint", false))
 	if ref == "" or ref == "kristall":
@@ -29,7 +31,7 @@ static func look(mode: String, key: String) -> Dictionary:
 		tint = true
 	var path := ref if ref.begins_with("res://") else "res://assets/models/towers/%s.glb" % ref
 	var out := {"model": path, "model_tint": tint, "model_solid": not tint}
-	for k in ["flame", "flame_height", "hit_fx"]:
+	for k in ["flame", "flame_height", "hit_fx", "fog"]:
 		if v.has(k):
 			out[k] = v[k]
 	return out
