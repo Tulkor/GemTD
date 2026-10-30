@@ -1676,13 +1676,25 @@ func idle_speed_factor() -> float:
 
 
 func find_targets(t: Tower, count: int) -> Array:
+	if count == 1:
+		# häufigster Fall ohne Lambda, Zwischenliste und Sortieren: der am weitesten gelaufene Gegner in Reichweite
+		var best = null
+		for e in enemies:
+			if not e.dead and (best == null or e.traveled > best.traveled) and t.can_target(e) and t.in_range(e):
+				best = e
+		return [] if best == null else [best]
 	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and t.in_range(e))
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
 
 func enemies_in_radius(p: Vector2, radius: float) -> Array:
-	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
+	var out := []
+	var r2 := radius * radius
+	for e in enemies:
+		if not e.dead and e.pos.distance_squared_to(p) <= r2:
+			out.append(e)
+	return out
 
 
 ## fx: Schuss-/Treffer-Effekt, siehe effects.gd

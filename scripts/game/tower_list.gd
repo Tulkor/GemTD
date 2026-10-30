@@ -147,7 +147,9 @@ func refresh() -> void:
 		r.kills.text = "✖ %d" % t.kills if t.can_attack() else "–"
 		r.damage.text = DpsMeter._fmt(t.total_damage) if t.can_attack() else tr("Aura")
 		var on: bool = sel == t
-		r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, UiTheme.CYAN if on else Color.TRANSPARENT, 0, 2, 4))
+		if r.on != on:   # neuer Rahmen nur bei Wechsel der Auswahl, sonst baut jede Zeile alle 0,5 s ihr Layout neu
+			r.on = on
+			r.button.add_theme_stylebox_override("normal", UiTheme.box(UiTheme.PANEL_2 if on else UiTheme.BAR, UiTheme.CYAN if on else Color.TRANSPARENT, 0, 2, 4))
 		if r.combinable != combinable.has(t):
 			r.combinable = combinable.has(t)
 			r.name.set_meta("combinable", r.combinable)
@@ -223,7 +225,7 @@ func _row(t) -> Dictionary:
 	d.add_theme_color_override("font_color", UiTheme.COIN)
 	for c in h.get_children():
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return {"button": b, "gem": gem, "name": n, "kills": k, "damage": d, "combinable": false}
+	return {"button": b, "gem": gem, "name": n, "kills": k, "damage": d, "combinable": false, "on": null}
 
 
 ## Kombinierbar: Name hellblau unterstrichen, so breit wie der sichtbare Text.
