@@ -1,0 +1,3058 @@
+{
+	"_info": "Erzeugt von tools/youtd/icons.py; Bilder unter res://assets/youtd/icons/<key>.png",
+	"items": {
+		"1": "kristall_d8c8a0",
+		"10": "kk_abenteurer_shield_round_color",
+		"100": "kristall_4f7bff",
+		"1001": "q_fantasy_props_potion_1",
+		"1002": "q_fantasy_props_potion_1",
+		"1003": "q_fantasy_props_potion_1",
+		"1004": "q_fantasy_props_potion_2",
+		"1005": "q_fantasy_props_potion_2",
+		"1006": "q_fantasy_props_potion_2",
+		"1007": "q_fantasy_props_potion_4",
+		"1008": "q_fantasy_props_potion_4",
+		"1009": "q_fantasy_props_potion_4",
+		"101": "kk_abenteurer_shield_round_color",
+		"1010": "kk_dungeon_bottle_a_green_gltf",
+		"1011": "kk_dungeon_bottle_a_green_gltf",
+		"1012": "kk_dungeon_bottle_a_green_gltf",
+		"1013": "kk_dungeon_bottle_b_brown_gltf",
+		"1014": "kk_dungeon_bottle_b_brown_gltf",
+		"1015": "kk_dungeon_bottle_b_brown_gltf",
+		"1016": "kk_dungeon_bottle_c_green_gltf",
+		"1017": "kk_dungeon_bottle_c_green_gltf",
+		"1018": "q_fantasy_props_potion_4",
+		"1019": "q_fantasy_props_potion_4",
+		"102": "q_fantasy_props_anvil_log",
+		"1020": "kk_dungeon_bottle_c_green_gltf",
+		"1021": "kk_dungeon_bottle_c_green_gltf",
+		"1022": "q_fantasy_props_small_bottle",
+		"1023": "q_fantasy_props_small_bottle",
+		"1024": "q_fantasy_props_small_bottle",
+		"103": "kk_gemischt_idol_a",
+		"104": "kristall_ffe060",
+		"105": "kristall_d8c8a0",
+		"106": "kristall_d8c8a0",
+		"107": "q_figuren_knight_male",
+		"108": "kristall_d8c8a0",
+		"109": "q_feldfruechte_flower_1",
+		"11": "k_blaster_grenade_a",
+		"110": "q_fantasy_props_scroll_1",
+		"111": "q_fantasy_props_scroll_1",
+		"112": "kristall_4f7bff",
+		"113": "kristall_d8c8a0",
+		"114": "q_fantasy_props_anvil_log",
+		"115": "kk_gemischt_idol_a",
+		"116": "kk_abenteurer_shield_spikes_color",
+		"117": "kk_abenteurer_shield_spikes_color",
+		"118": "kk_abenteurer_shield_spikes_color",
+		"119": "kristall_d8c8a0",
+		"12": "kristall_d8c8a0",
+		"120": "kk_abenteurer_shield_round_color",
+		"121": "kk_abenteurer_wand",
+		"122": "q_fantasy_props_coin_pile",
+		"123": "q_figuren_knight_male",
+		"124": "q_fantasy_props_scroll_1",
+		"125": "kristall_d8c8a0",
+		"126": "q_fantasy_props_anvil_log",
+		"127": "kristall_d8c8a0",
+		"128": "kk_stadt_dumpster",
+		"129": "kk_abenteurer_staff",
+		"13": "q_ruinen_bear_trap_open",
+		"130": "k_essen_egg",
+		"131": "kristall_4f7bff",
+		"132": "kk_abenteurer_dagger",
+		"133": "kristall_d8c8a0",
+		"134": "kk_halloween_skull",
+		"135": "kk_abenteurer_spellbook_closed",
+		"136": "q_fantasy_props_pickaxe_bronze",
+		"137": "kristall_d8c8a0",
+		"138": "kristall_d8c8a0",
+		"139": "q_fantasy_props_coin_pile",
+		"14": "q_fantasy_props_anvil",
+		"140": "kk_gemischt_chain_shackle",
+		"141": "q_fantasy_props_key_gold",
+		"142": "kristall_e8504a",
+		"143": "kk_abenteurer_dagger",
+		"144": "q_fantasy_props_scroll_1",
+		"145": "kristall_4fd35a",
+		"146": "kk_gemischt_idol_a",
+		"147": "kristall_d8c8a0",
+		"148": "q_zombie_spear",
+		"149": "kk_gemischt_idol_a",
+		"15": "kk_abenteurer_spellbook_closed",
+		"150": "kk_abenteurer_shield_spikes_color",
+		"151": "k_essen_pot_stew",
+		"152": "kk_abenteurer_spellbook_closed",
+		"153": "q_fantasy_props_coin_pile",
+		"154": "q_waffen_sniper_rifle_2",
+		"155": "kk_abenteurer_axe_2handed",
+		"156": "q_fantasy_props_scroll_1",
+		"157": "kk_gemischt_idol_a",
+		"158": "q_fantasy_props_pickaxe_bronze",
+		"159": "q_fantasy_props_anvil_log",
+		"16": "kk_abenteurer_dagger",
+		"160": "kk_abenteurer_shield_spikes_color",
+		"161": "q_figuren_knight_male",
+		"162": "kk_abenteurer_dagger",
+		"163": "kk_halloween_skull",
+		"164": "kk_halloween_skull",
+		"165": "kk_abenteurer_spellbook_closed",
+		"166": "kk_abenteurer_wand",
+		"167": "kk_dungeon_keg_decorated_gltf",
+		"168": "kristall_d8c8a0",
+		"169": "kk_abenteurer_staff",
+		"17": "kk_dungeon_torch_lit_gltf",
+		"170": "kristall_d8c8a0",
+		"171": "kk_abenteurer_sword_2handed_color",
+		"172": "kk_abenteurer_shield_spikes_color",
+		"173": "q_waffen_sniper_rifle_2",
+		"174": "kristall_4fd35a",
+		"175": "q_fantasy_props_small_bottle",
+		"176": "kristall_d8c8a0",
+		"177": "kk_abenteurer_shield_round_color",
+		"178": "q_zombie_spear",
+		"179": "kristall_d8c8a0",
+		"18": "kk_abenteurer_dagger",
+		"180": "kk_abenteurer_spellbook_closed",
+		"181": "kk_gemischt_chain_shackle",
+		"182": "kristall_d8c8a0",
+		"183": "kristall_4fd35a",
+		"184": "kk_abenteurer_shield_spikes_color",
+		"185": "q_waffen_sniper_rifle_2",
+		"186": "q_fantasy_props_small_bottle",
+		"187": "kk_abenteurer_staff",
+		"188": "q_tiere_horse",
+		"189": "kk_abenteurer_crossbow_2handed",
+		"19": "q_fantasy_props_bag",
+		"190": "kristall_e8504a",
+		"191": "kristall_e8504a",
+		"192": "kristall_8a5ad0",
+		"193": "kk_abenteurer_staff",
+		"194": "kk_halloween_skull",
+		"195": "q_fantasy_props_small_bottle",
+		"196": "kk_abenteurer_shield_round_color",
+		"197": "q_fantasy_props_anvil_log",
+		"198": "q_monster_big_frog",
+		"199": "kk_abenteurer_wand",
+		"2": "kk_abenteurer_shield_round_color",
+		"20": "kk_abenteurer_shield_round_color",
+		"200": "kk_abenteurer_spellbook_closed",
+		"2001": "kk_abenteurer_spellbook_closed",
+		"2002": "q_feldfruechte_flower_1",
+		"2003": "q_suesse_monster_chicken",
+		"2004": "q_fantasy_props_stall_cart_empty",
+		"2005": "q_suesse_monster_pig",
+		"2006": "kk_abenteurer_spellbook_closed",
+		"2007": "kk_abenteurer_spellbook_closed",
+		"2008": "q_figuren_knight_male",
+		"201": "q_fantasy_props_anvil",
+		"202": "kk_halloween_skull",
+		"203": "kk_abenteurer_sword_2handed_color",
+		"204": "kk_abenteurer_staff",
+		"205": "kk_abenteurer_sword_2handed_color",
+		"206": "kristall_d8c8a0",
+		"207": "k_blaster_grenade_a",
+		"208": "q_waffen_revolver_2",
+		"209": "kk_abenteurer_shield_round_color",
+		"21": "q_zombie_spear",
+		"210": "kristall_8a5ad0",
+		"211": "kk_abenteurer_axe_2handed",
+		"212": "kristall_d8c8a0",
+		"213": "kk_abenteurer_shield_spikes_color",
+		"214": "kk_abenteurer_shield_spikes_color",
+		"215": "q_waffen_revolver_2",
+		"216": "kristall_4f7bff",
+		"217": "kk_abenteurer_spellbook_closed",
+		"218": "kk_abenteurer_staff",
+		"219": "q_fantasy_props_anvil_log",
+		"22": "kk_abenteurer_shield_spikes_color",
+		"222": "kk_abenteurer_spellbook_closed",
+		"223": "kk_gemischt_chain_shackle",
+		"224": "kk_abenteurer_shield_spikes_color",
+		"225": "kk_abenteurer_arrow_bow_bundle",
+		"226": "q_fantasy_props_anvil_log",
+		"227": "kristall_4f7bff",
+		"228": "q_fantasy_props_key_gold",
+		"229": "kk_abenteurer_dagger",
+		"23": "q_fantasy_props_small_bottle",
+		"230": "kristall_d8c8a0",
+		"231": "q_fantasy_props_coin_pile",
+		"232": "q_fantasy_props_coin_pile",
+		"233": "kristall_d8c8a0",
+		"234": "kristall_d8c8a0",
+		"235": "kk_abenteurer_staff",
+		"236": "kk_abenteurer_spellbook_closed",
+		"237": "q_fantasy_props_anvil_log",
+		"238": "kk_abenteurer_spellbook_closed",
+		"239": "kk_abenteurer_spellbook_closed",
+		"24": "kk_abenteurer_shield_spikes_color",
+		"240": "q_figuren_knight_male",
+		"241": "k_blaster_grenade_a",
+		"242": "q_figuren_knight_male",
+		"243": "q_fantasy_props_anvil_log",
+		"244": "q_figuren_knight_male",
+		"245": "kristall_d8c8a0",
+		"246": "kk_abenteurer_shield_round_color",
+		"247": "kristall_8a5ad0",
+		"248": "q_fantasy_props_coin_pile",
+		"249": "q_zombie_spear",
+		"25": "kk_abenteurer_staff",
+		"250": "kk_abenteurer_sword_2handed_color",
+		"251": "q_fantasy_props_scroll_1",
+		"252": "kk_abenteurer_axe_2handed",
+		"253": "k_fantasy_stadt_banner_red",
+		"254": "kk_gemischt_idol_a",
+		"255": "kristall_ffe060",
+		"256": "q_monster_flying_dragon",
+		"257": "q_waffen_revolver_2",
+		"258": "q_zombie_spear",
+		"259": "kk_abenteurer_sword_2handed_color",
+		"26": "kk_gemischt_chain_shackle",
+		"260": "kk_abenteurer_arrow_bow_bundle",
+		"261": "kk_halloween_skull",
+		"262": "q_fantasy_props_anvil",
+		"263": "kk_abenteurer_axe_2handed",
+		"264": "q_zombie_spear",
+		"265": "kristall_d8c8a0",
+		"266": "kk_abenteurer_bow_with_string",
+		"267": "kk_abenteurer_arrow_bow_bundle",
+		"268": "kristall_8a5ad0",
+		"269": "k_blaster_grenade_a",
+		"27": "kk_abenteurer_shield_round_color",
+		"270": "kk_abenteurer_sword_2handed_color",
+		"271": "kk_abenteurer_shield_round_color",
+		"272": "q_fantasy_props_scroll_1",
+		"273": "q_fantasy_props_scroll_1",
+		"274": "q_ruinen_bear_trap_open",
+		"275": "q_fantasy_props_anvil_log",
+		"276": "kk_abenteurer_shield_round_color",
+		"277": "kk_abenteurer_arrow_bow_bundle",
+		"278": "kristall_d8c8a0",
+		"279": "q_fantasy_props_anvil_log",
+		"28": "kk_halloween_skull",
+		"280": "q_fantasy_props_anvil",
+		"281": "kk_abenteurer_staff",
+		"282": "q_fantasy_props_coin_pile",
+		"283": "kk_gemischt_chain_shackle",
+		"284": "kk_abenteurer_dagger",
+		"285": "kk_abenteurer_shield_spikes_color",
+		"29": "q_fantasy_props_scroll_1",
+		"3": "kk_abenteurer_shield_round_color",
+		"30": "kk_abenteurer_spellbook_closed",
+		"31": "kk_abenteurer_shield_round_color",
+		"32": "q_monster_flying_dragon",
+		"33": "q_waffen_revolver_2",
+		"34": "kk_abenteurer_shield_round_color",
+		"35": "kk_halloween_skull",
+		"36": "kk_abenteurer_staff",
+		"37": "q_bauernhof_sheep",
+		"38": "q_fantasy_props_scroll_1",
+		"39": "k_essen_meat_cooked",
+		"4": "q_monster_flying_dragon",
+		"40": "kristall_d8c8a0",
+		"41": "kk_gemischt_idol_a",
+		"42": "kk_abenteurer_shield_spikes_color",
+		"43": "q_fantasy_props_small_bottle",
+		"44": "kk_abenteurer_shield_spikes_color",
+		"45": "kk_abenteurer_sword_2handed_color",
+		"46": "q_fantasy_props_key_gold",
+		"47": "kristall_4f7bff",
+		"48": "q_fantasy_props_coin_pile",
+		"49": "kk_abenteurer_staff",
+		"5": "kk_abenteurer_shield_spikes_color",
+		"50": "q_fantasy_props_anvil",
+		"51": "kk_abenteurer_shield_spikes_color",
+		"52": "kk_halloween_skull",
+		"53": "q_figuren_knight_male",
+		"54": "q_monster_big_bunny",
+		"55": "kk_abenteurer_arrow_bow_bundle",
+		"56": "kristall_d8c8a0",
+		"57": "q_tiere_horse",
+		"58": "q_fantasy_props_mug",
+		"59": "kk_abenteurer_shield_spikes_color",
+		"6": "kk_abenteurer_staff",
+		"60": "k_fantasy_stadt_banner_red",
+		"61": "kristall_d8c8a0",
+		"62": "kristall_4f7bff",
+		"63": "q_fantasy_props_small_bottle",
+		"64": "kristall_d8c8a0",
+		"65": "kk_abenteurer_wand",
+		"66": "kk_dungeon_torch_lit_gltf",
+		"67": "kristall_d8c8a0",
+		"68": "q_fantasy_props_anvil",
+		"69": "kk_abenteurer_spellbook_closed",
+		"7": "q_waffen_revolver_2",
+		"70": "kk_abenteurer_spellbook_closed",
+		"71": "q_zombie_spear",
+		"72": "q_fantasy_props_mug",
+		"73": "kk_gemischt_chain_shackle",
+		"74": "kk_abenteurer_axe_2handed",
+		"75": "q_fantasy_props_small_bottle",
+		"76": "kk_abenteurer_shield_round_color",
+		"77": "kk_abenteurer_shield_round_color",
+		"78": "q_fantasy_props_scroll_1",
+		"79": "q_waffen_revolver_2",
+		"8": "q_fantasy_props_pickaxe_bronze",
+		"80": "kk_abenteurer_sword_2handed_color",
+		"81": "q_fantasy_props_pickaxe_bronze",
+		"82": "kk_abenteurer_shield_round_color",
+		"83": "q_fantasy_props_anvil_log",
+		"84": "q_fantasy_props_scroll_1",
+		"85": "kk_abenteurer_staff",
+		"86": "q_waffen_revolver_2",
+		"87": "kk_abenteurer_staff",
+		"88": "kk_abenteurer_shield_round_color",
+		"89": "kk_abenteurer_axe_2handed",
+		"9": "q_fantasy_props_bag",
+		"90": "q_fantasy_props_scroll_1",
+		"91": "q_feldfruechte_flower_1",
+		"92": "kristall_d8c8a0",
+		"93": "q_feldfruechte_flower_1",
+		"94": "kk_dungeon_torch_lit_gltf",
+		"95": "kk_gemischt_idol_a",
+		"96": "q_fantasy_props_anvil",
+		"97": "q_cyberpunk_tank",
+		"98": "kk_abenteurer_shield_round_color",
+		"99": "q_fantasy_props_pickaxe_bronze"
+	},
+	"models": {
+		"enemies_dragon": "res://assets/models/enemies/dragon.glb",
+		"enemies_slime": "res://assets/models/enemies/slime.glb",
+		"k_blaster_grenade_a": "k_blaster/grenade_a",
+		"k_essen_egg": "k_essen/egg",
+		"k_essen_meat_cooked": "k_essen/meat_cooked",
+		"k_essen_pot_stew": "k_essen/pot_stew",
+		"k_fantasy_stadt_banner_red": "k_fantasy_stadt/banner_red",
+		"k_fantasy_stadt_fountain_round": "k_fantasy_stadt/fountain_round",
+		"k_fantasy_stadt_fountain_round_detail": "k_fantasy_stadt/fountain_round_detail",
+		"k_industrie_solar_panel_flat": "k_industrie/solar_panel_flat",
+		"k_industrie_solar_panel_landscape_group": "k_industrie/solar_panel_landscape_group",
+		"k_industrie_solar_panel_portrait_group": "k_industrie/solar_panel_portrait_group",
+		"k_piraten_ship_ghost": "k_piraten/ship_ghost",
+		"k_piraten_tower_complete_small": "k_piraten/tower_complete_small",
+		"k_piraten_tower_watch": "k_piraten/tower_watch",
+		"k_spielhalle_gambling_machine": "k_spielhalle/gambling_machine",
+		"k_weltraum_machine_barrel": "k_weltraum/machine_barrel",
+		"k_weltraum_machine_generator": "k_weltraum/machine_generator",
+		"k_weltraum_machine_generator_large": "k_weltraum/machine_generator_large",
+		"k_weltraum_machine_wireless": "k_weltraum/machine_wireless",
+		"kk_abenteurer_arrow_bow_bundle": "kk_abenteurer/arrow_bow_bundle",
+		"kk_abenteurer_axe_2handed": "kk_abenteurer/axe_2handed",
+		"kk_abenteurer_bow_with_string": "kk_abenteurer/bow_with_string",
+		"kk_abenteurer_crossbow_2handed": "kk_abenteurer/crossbow_2handed",
+		"kk_abenteurer_dagger": "kk_abenteurer/dagger",
+		"kk_abenteurer_knight": "kk_abenteurer/knight",
+		"kk_abenteurer_mage": "kk_abenteurer/mage",
+		"kk_abenteurer_ranger": "kk_abenteurer/ranger",
+		"kk_abenteurer_rogue_hooded": "kk_abenteurer/rogue_hooded",
+		"kk_abenteurer_shield_round_color": "kk_abenteurer/shield_round_color",
+		"kk_abenteurer_shield_spikes_color": "kk_abenteurer/shield_spikes_color",
+		"kk_abenteurer_spellbook_closed": "kk_abenteurer/spellbook_closed",
+		"kk_abenteurer_staff": "kk_abenteurer/staff",
+		"kk_abenteurer_sword_2handed_color": "kk_abenteurer/sword_2handed_color",
+		"kk_abenteurer_wand": "kk_abenteurer/wand",
+		"kk_brettspiel_hourglass": "kk_brettspiel/hourglass",
+		"kk_dungeon_bottle_a_green_gltf": "kk_dungeon/bottle_a_green_gltf",
+		"kk_dungeon_bottle_b_brown_gltf": "kk_dungeon/bottle_b_brown_gltf",
+		"kk_dungeon_bottle_c_green_gltf": "kk_dungeon/bottle_c_green_gltf",
+		"kk_dungeon_keg_decorated_gltf": "kk_dungeon/keg_decorated_gltf",
+		"kk_dungeon_torch_lit_gltf": "kk_dungeon/torch_lit_gltf",
+		"kk_gemischt_chain_shackle": "kk_gemischt/chain_shackle",
+		"kk_gemischt_idol_a": "kk_gemischt/idol_a",
+		"kk_halloween_floor_dirt_grave": "kk_halloween/floor_dirt_grave",
+		"kk_halloween_grave_a_destroyed": "kk_halloween/grave_a_destroyed",
+		"kk_halloween_lantern_standing": "kk_halloween/lantern_standing",
+		"kk_halloween_skull": "kk_halloween/skull",
+		"kk_halloween_skull_candle": "kk_halloween/skull_candle",
+		"kk_skelette_skeleton_mage": "kk_skelette/skeleton_mage",
+		"kk_skelette_skeleton_warrior": "kk_skelette/skeleton_warrior",
+		"kk_stadt_dumpster": "kk_stadt/dumpster",
+		"kristall_4f7bff": "kristall:4f7bff",
+		"kristall_4fd35a": "kristall:4fd35a",
+		"kristall_5aa8ff_crystal_18": "kristall:5aa8ff:crystal_18",
+		"kristall_5aa8ff_crystal_24": "kristall:5aa8ff:crystal_24",
+		"kristall_8a5ad0": "kristall:8a5ad0",
+		"kristall_8fd8ff_crystal_13": "kristall:8fd8ff:crystal_13",
+		"kristall_8fd8ff_crystal_23": "kristall:8fd8ff:crystal_23",
+		"kristall_c9a8ff_crystal_20": "kristall:c9a8ff:crystal_20",
+		"kristall_d8c8a0": "kristall:d8c8a0",
+		"kristall_e8504a": "kristall:e8504a",
+		"kristall_ffe060": "kristall:ffe060",
+		"nature_bush_common": "res://assets/models/nature/bush_common.glb",
+		"nature_campfire_bricks": "res://assets/models/nature/campfire_bricks.glb",
+		"nature_campfire_pit": "res://assets/models/nature/campfire_pit.glb",
+		"nature_campfire_stones": "res://assets/models/nature/campfire_stones.glb",
+		"nature_common_tree_3": "res://assets/models/nature/common_tree_3.glb",
+		"nature_fern_1": "res://assets/models/nature/fern_1.glb",
+		"nature_flower_3_group": "res://assets/models/nature/flower_3_group.glb",
+		"nature_flower_4_group": "res://assets/models/nature/flower_4_group.glb",
+		"nature_mushroom_laetiporus": "res://assets/models/nature/mushroom_laetiporus.glb",
+		"nature_mushroom_red_tall": "res://assets/models/nature/mushroom_red_tall.glb",
+		"nature_mushroom_tan_group": "res://assets/models/nature/mushroom_tan_group.glb",
+		"nature_plant_1": "res://assets/models/nature/plant_1.glb",
+		"nature_plant_1_big": "res://assets/models/nature/plant_1_big.glb",
+		"nature_plant_7_big": "res://assets/models/nature/plant_7_big.glb",
+		"nature_pot_large": "res://assets/models/nature/pot_large.glb",
+		"nature_rock_medium_1": "res://assets/models/nature/rock_medium_1.glb",
+		"nature_rock_medium_2": "res://assets/models/nature/rock_medium_2.glb",
+		"nature_rock_medium_3": "res://assets/models/nature/rock_medium_3.glb",
+		"nature_rock_tall_a": "res://assets/models/nature/rock_tall_a.glb",
+		"nature_rock_tall_e": "res://assets/models/nature/rock_tall_e.glb",
+		"nature_statue_block": "res://assets/models/nature/statue_block.glb",
+		"nature_statue_column": "res://assets/models/nature/statue_column.glb",
+		"nature_statue_column_damaged": "res://assets/models/nature/statue_column_damaged.glb",
+		"nature_statue_head": "res://assets/models/nature/statue_head.glb",
+		"nature_statue_obelisk": "res://assets/models/nature/statue_obelisk.glb",
+		"nature_statue_ring": "res://assets/models/nature/statue_ring.glb",
+		"nature_stone_tall_a": "res://assets/models/nature/stone_tall_a.glb",
+		"nature_stone_tall_g": "res://assets/models/nature/stone_tall_g.glb",
+		"q_bauernhof_pig": "q_bauernhof/pig",
+		"q_bauernhof_sheep": "q_bauernhof/sheep",
+		"q_cyberpunk_enemy_2_legs": "q_cyberpunk/enemy_2_legs",
+		"q_cyberpunk_pipe_1": "q_cyberpunk/pipe_1",
+		"q_cyberpunk_tank": "q_cyberpunk/tank",
+		"q_fantasy_props_anvil": "q_fantasy_props/anvil",
+		"q_fantasy_props_anvil_log": "q_fantasy_props/anvil_log",
+		"q_fantasy_props_bag": "q_fantasy_props/bag",
+		"q_fantasy_props_book_stack_1": "q_fantasy_props/book_stack_1",
+		"q_fantasy_props_bookcase_2": "q_fantasy_props/bookcase_2",
+		"q_fantasy_props_cage_small": "q_fantasy_props/cage_small",
+		"q_fantasy_props_coin_pile": "q_fantasy_props/coin_pile",
+		"q_fantasy_props_key_gold": "q_fantasy_props/key_gold",
+		"q_fantasy_props_mug": "q_fantasy_props/mug",
+		"q_fantasy_props_pickaxe_bronze": "q_fantasy_props/pickaxe_bronze",
+		"q_fantasy_props_potion_1": "q_fantasy_props/potion_1",
+		"q_fantasy_props_potion_2": "q_fantasy_props/potion_2",
+		"q_fantasy_props_potion_4": "q_fantasy_props/potion_4",
+		"q_fantasy_props_scroll_1": "q_fantasy_props/scroll_1",
+		"q_fantasy_props_small_bottle": "q_fantasy_props/small_bottle",
+		"q_fantasy_props_stall_cart_empty": "q_fantasy_props/stall_cart_empty",
+		"q_feldfruechte_apple_4": "q_feldfruechte/apple_4",
+		"q_feldfruechte_cactus_3": "q_feldfruechte/cactus_3",
+		"q_feldfruechte_flower_1": "q_feldfruechte/flower_1",
+		"q_feldfruechte_palm_tree_3": "q_feldfruechte/palm_tree_3",
+		"q_figuren_blue_soldier_male": "q_figuren/blue_soldier_male",
+		"q_figuren_elf": "q_figuren/elf",
+		"q_figuren_goblin_female": "q_figuren/goblin_female",
+		"q_figuren_goblin_male": "q_figuren/goblin_male",
+		"q_figuren_kimono_male": "q_figuren/kimono_male",
+		"q_figuren_knight_golden_female": "q_figuren/knight_golden_female",
+		"q_figuren_knight_golden_male": "q_figuren/knight_golden_male",
+		"q_figuren_knight_male": "q_figuren/knight_male",
+		"q_figuren_ninja_male": "q_figuren/ninja_male",
+		"q_figuren_ninja_sand": "q_figuren/ninja_sand",
+		"q_figuren_old_classy_male": "q_figuren/old_classy_male",
+		"q_figuren_pirate_male": "q_figuren/pirate_male",
+		"q_figuren_soldier_male": "q_figuren/soldier_male",
+		"q_figuren_viking_female": "q_figuren/viking_female",
+		"q_figuren_viking_male": "q_figuren/viking_male",
+		"q_figuren_witch": "q_figuren/witch",
+		"q_figuren_wizard": "q_figuren/wizard",
+		"q_geschuetze_bomber_1": "q_geschuetze/bomber_1",
+		"q_geschuetze_bomber_2": "q_geschuetze/bomber_2",
+		"q_geschuetze_gear_cannon_1": "q_geschuetze/gear_cannon_1",
+		"q_geschuetze_gun": "q_geschuetze/gun",
+		"q_geschuetze_gun_10": "q_geschuetze/gun_10",
+		"q_geschuetze_laser_1": "q_geschuetze/laser_1",
+		"q_geschuetze_laser_2": "q_geschuetze/laser_2",
+		"q_geschuetze_laser_doble": "q_geschuetze/laser_doble",
+		"q_geschuetze_long_2": "q_geschuetze/long_2",
+		"q_geschuetze_teleporter1": "q_geschuetze/teleporter1",
+		"q_geschuetze_teleporter2": "q_geschuetze/teleporter2",
+		"q_geschuetze_teleporter3": "q_geschuetze/teleporter3",
+		"q_geschuetze_teleporter4": "q_geschuetze/teleporter4",
+		"q_geschuetze_teleporter5": "q_geschuetze/teleporter5",
+		"q_modular_maenner_king": "q_modular_maenner/king",
+		"q_modular_maenner_worker": "q_modular_maenner/worker",
+		"q_monster_big_bunny": "q_monster/big_bunny",
+		"q_monster_big_demon": "q_monster/big_demon",
+		"q_monster_big_dino": "q_monster/big_dino",
+		"q_monster_big_frog": "q_monster/big_frog",
+		"q_monster_big_ninja": "q_monster/big_ninja",
+		"q_monster_big_orc": "q_monster/big_orc",
+		"q_monster_big_orc_skull": "q_monster/big_orc_skull",
+		"q_monster_big_tribal": "q_monster/big_tribal",
+		"q_monster_big_yeti": "q_monster/big_yeti",
+		"q_monster_blob_orc": "q_monster/blob_orc",
+		"q_monster_blob_wizard": "q_monster/blob_wizard",
+		"q_monster_flying_demon": "q_monster/flying_demon",
+		"q_monster_flying_dragon": "q_monster/flying_dragon",
+		"q_monster_flying_dragon_evolved": "q_monster/flying_dragon_evolved",
+		"q_monster_flying_ghost": "q_monster/flying_ghost",
+		"q_monster_flying_ghost_skull": "q_monster/flying_ghost_skull",
+		"q_monster_flying_goleling": "q_monster/flying_goleling",
+		"q_monster_flying_goleling_evolved": "q_monster/flying_goleling_evolved",
+		"q_monster_flying_squidle": "q_monster/flying_squidle",
+		"q_ruinen_arch_round": "q_ruinen/arch_round",
+		"q_ruinen_bear_trap_open": "q_ruinen/bear_trap_open",
+		"q_ruinen_column_round": "q_ruinen/column_round",
+		"q_ruinen_doors_gothic_arch": "q_ruinen/doors_gothic_arch",
+		"q_schiffe_sail_ship": "q_schiffe/sail_ship",
+		"q_suesse_monster_bee": "q_suesse_monster/bee",
+		"q_suesse_monster_chicken": "q_suesse_monster/chicken",
+		"q_suesse_monster_cthulhu": "q_suesse_monster/cthulhu",
+		"q_suesse_monster_demon": "q_suesse_monster/demon",
+		"q_suesse_monster_panda": "q_suesse_monster/panda",
+		"q_suesse_monster_pig": "q_suesse_monster/pig",
+		"q_suesse_monster_tree": "q_suesse_monster/tree",
+		"q_suesse_monster_yeti": "q_suesse_monster/yeti",
+		"q_tiere_bull": "q_tiere/bull",
+		"q_tiere_horse": "q_tiere/horse",
+		"q_tiere_husky": "q_tiere/husky",
+		"q_tiere_shiba_inu": "q_tiere/shiba_inu",
+		"q_tiere_stag": "q_tiere/stag",
+		"q_tiere_wolf": "q_tiere/wolf",
+		"q_waffen_revolver_2": "q_waffen/revolver_2",
+		"q_waffen_sniper_rifle_2": "q_waffen/sniper_rifle_2",
+		"q_wohnung_fireplace": "q_wohnung/fireplace",
+		"q_zombie_container_green": "q_zombie/container_green",
+		"q_zombie_pipes": "q_zombie/pipes",
+		"q_zombie_spear": "q_zombie/spear",
+		"q_zombie_water_tower": "q_zombie/water_tower",
+		"q_zombie_wheels_stack": "q_zombie/wheels_stack",
+		"q_zug_locomotive_front": "q_zug/locomotive_front",
+		"scenery_church": "res://assets/models/scenery/church.glb",
+		"scenery_crypt": "res://assets/models/scenery/crypt.glb",
+		"scenery_grave": "res://assets/models/scenery/grave.glb",
+		"scenery_gravestone_cross": "res://assets/models/scenery/gravestone_cross.glb",
+		"scenery_gravestone_decorative": "res://assets/models/scenery/gravestone_decorative.glb",
+		"scenery_gravestone_round": "res://assets/models/scenery/gravestone_round.glb",
+		"scenery_lightpost_single": "res://assets/models/scenery/lightpost_single.glb",
+		"scenery_mine_frame_1": "res://assets/models/scenery/mine_frame_1.glb",
+		"scenery_mine_rocks_1": "res://assets/models/scenery/mine_rocks_1.glb",
+		"special_gold_ore": "res://assets/models/special/gold_ore.glb",
+		"special_platonic": "res://assets/models/special/platonic.glb"
+	},
+	"roles": {
+		"1": {
+			"attack": "single"
+		},
+		"10": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"100": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"101": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"102": {
+			"attack": "single"
+		},
+		"103": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"104": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"105": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"106": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"107": {
+			"attack": "mass"
+		},
+		"108": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"109": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"11": {
+			"attack": "single"
+		},
+		"110": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"111": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"112": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"113": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"114": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"115": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"116": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"117": {
+			"attack": "single"
+		},
+		"118": {
+			"attack": "single"
+		},
+		"119": {
+			"attack": "single"
+		},
+		"12": {
+			"attack": "single"
+		},
+		"120": {
+			"attack": "single"
+		},
+		"121": {
+			"attack": "single"
+		},
+		"122": {
+			"attack": "mass"
+		},
+		"123": {
+			"attack": "single"
+		},
+		"124": {
+			"attack": "single"
+		},
+		"125": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"126": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"127": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"128": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"129": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"13": {
+			"attack": "single"
+		},
+		"130": {
+			"attack": "air",
+			"util": "cc"
+		},
+		"131": {
+			"attack": "mass"
+		},
+		"132": {
+			"attack": "mass"
+		},
+		"133": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"134": {
+			"attack": "single"
+		},
+		"135": {
+			"attack": "single"
+		},
+		"136": {
+			"attack": "single"
+		},
+		"137": {
+			"attack": "single"
+		},
+		"138": {
+			"attack": "single"
+		},
+		"139": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"14": {
+			"attack": "single"
+		},
+		"140": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"141": {
+			"attack": "single"
+		},
+		"142": {
+			"attack": "single"
+		},
+		"143": {
+			"attack": "single"
+		},
+		"144": {
+			"attack": "single"
+		},
+		"145": {
+			"attack": "mass"
+		},
+		"146": {
+			"attack": "mass"
+		},
+		"147": {
+			"attack": "mass"
+		},
+		"148": {
+			"attack": "mass"
+		},
+		"149": {
+			"attack": "mass"
+		},
+		"15": {
+			"attack": "single"
+		},
+		"150": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"151": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"152": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"153": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"154": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"155": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"156": {
+			"attack": "single"
+		},
+		"157": {
+			"attack": "mass"
+		},
+		"158": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"159": {
+			"attack": "mass"
+		},
+		"16": {
+			"attack": "single"
+		},
+		"160": {
+			"attack": "single"
+		},
+		"161": {
+			"attack": "mass"
+		},
+		"162": {
+			"attack": "mass"
+		},
+		"163": {
+			"attack": "mass"
+		},
+		"164": {
+			"attack": "mass"
+		},
+		"165": {
+			"attack": "mass"
+		},
+		"166": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"167": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"168": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"169": {
+			"attack": "single"
+		},
+		"17": {
+			"attack": "mass"
+		},
+		"170": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"171": {
+			"attack": "mass"
+		},
+		"172": {
+			"attack": "mass"
+		},
+		"173": {
+			"attack": "mass"
+		},
+		"174": {
+			"attack": "single"
+		},
+		"175": {
+			"attack": "single"
+		},
+		"176": {
+			"attack": "single"
+		},
+		"177": {
+			"attack": "air"
+		},
+		"178": {
+			"attack": "air"
+		},
+		"179": {
+			"attack": "mass"
+		},
+		"18": {
+			"attack": "mass"
+		},
+		"180": {
+			"attack": "mass"
+		},
+		"181": {
+			"attack": "mass"
+		},
+		"182": {
+			"attack": "mass"
+		},
+		"183": {
+			"attack": "mass"
+		},
+		"184": {
+			"attack": "mass"
+		},
+		"185": {
+			"attack": "mass"
+		},
+		"186": {
+			"attack": "single"
+		},
+		"187": {
+			"attack": "single"
+		},
+		"188": {
+			"attack": "single"
+		},
+		"189": {
+			"attack": "single"
+		},
+		"19": {
+			"attack": "mass"
+		},
+		"190": {
+			"attack": "single"
+		},
+		"191": {
+			"attack": "single"
+		},
+		"192": {
+			"attack": "single"
+		},
+		"193": {
+			"attack": "single"
+		},
+		"194": {
+			"attack": "single"
+		},
+		"195": {
+			"attack": "single"
+		},
+		"196": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"197": {
+			"attack": "single"
+		},
+		"198": {
+			"attack": "single"
+		},
+		"199": {
+			"attack": "mass"
+		},
+		"2": {
+			"attack": "mass"
+		},
+		"20": {
+			"attack": "mass"
+		},
+		"200": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"201": {
+			"attack": "mass"
+		},
+		"202": {
+			"attack": "mass"
+		},
+		"203": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"204": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"205": {
+			"attack": "single"
+		},
+		"206": {
+			"attack": "single"
+		},
+		"207": {
+			"attack": "single"
+		},
+		"208": {
+			"attack": "single"
+		},
+		"209": {
+			"attack": "single"
+		},
+		"21": {
+			"attack": "mass"
+		},
+		"210": {
+			"attack": "air"
+		},
+		"211": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"212": {
+			"attack": "single"
+		},
+		"213": {
+			"attack": "single"
+		},
+		"214": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"215": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"216": {
+			"attack": "mass"
+		},
+		"217": {
+			"attack": "mass"
+		},
+		"218": {
+			"attack": "mass"
+		},
+		"219": {
+			"attack": "single"
+		},
+		"22": {
+			"attack": "mass"
+		},
+		"220": {
+			"attack": "single"
+		},
+		"221": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"222": {
+			"attack": "single"
+		},
+		"223": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"224": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"225": {
+			"attack": "mass"
+		},
+		"226": {
+			"attack": "mass"
+		},
+		"227": {
+			"attack": "mass"
+		},
+		"228": {
+			"attack": "mass"
+		},
+		"229": {
+			"attack": "mass"
+		},
+		"23": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"230": {
+			"attack": "single"
+		},
+		"231": {
+			"attack": "single"
+		},
+		"232": {
+			"attack": "single"
+		},
+		"233": {
+			"attack": "single"
+		},
+		"234": {
+			"attack": "single"
+		},
+		"235": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"236": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"237": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"238": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"239": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"24": {
+			"attack": "mass"
+		},
+		"240": {
+			"attack": "single"
+		},
+		"241": {
+			"attack": "single"
+		},
+		"242": {
+			"attack": "single"
+		},
+		"243": {
+			"attack": "single"
+		},
+		"244": {
+			"attack": "single"
+		},
+		"245": {
+			"attack": "single"
+		},
+		"246": {
+			"attack": "single"
+		},
+		"247": {
+			"attack": "single"
+		},
+		"248": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"249": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"25": {
+			"attack": "mass"
+		},
+		"250": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"251": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"252": {
+			"attack": "single"
+		},
+		"253": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"254": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"255": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"256": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"257": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"258": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"26": {
+			"attack": "mass"
+		},
+		"262": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"263": {
+			"attack": "mass"
+		},
+		"264": {
+			"attack": "mass"
+		},
+		"265": {
+			"attack": "mass"
+		},
+		"266": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"267": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"268": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"269": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"27": {
+			"attack": "mass"
+		},
+		"270": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"271": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"272": {
+			"attack": "mass"
+		},
+		"273": {
+			"attack": "mass"
+		},
+		"274": {
+			"attack": "mass"
+		},
+		"275": {
+			"attack": "mass"
+		},
+		"276": {
+			"attack": "mass"
+		},
+		"277": {
+			"attack": "mass"
+		},
+		"278": {
+			"attack": "single"
+		},
+		"279": {
+			"attack": "single"
+		},
+		"28": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"280": {
+			"attack": "single"
+		},
+		"281": {
+			"attack": "single"
+		},
+		"282": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"283": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"284": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"285": {
+			"attack": "single"
+		},
+		"286": {
+			"attack": "single"
+		},
+		"287": {
+			"attack": "single"
+		},
+		"288": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"289": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"29": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"290": {
+			"attack": "mass"
+		},
+		"291": {
+			"attack": "mass"
+		},
+		"292": {
+			"attack": "mass"
+		},
+		"293": {
+			"attack": "mass"
+		},
+		"294": {
+			"attack": "mass"
+		},
+		"295": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"296": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"297": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"298": {
+			"attack": "air"
+		},
+		"299": {
+			"attack": "air"
+		},
+		"3": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"30": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"300": {
+			"attack": "air"
+		},
+		"301": {
+			"attack": "single"
+		},
+		"302": {
+			"attack": "single"
+		},
+		"303": {
+			"attack": "air",
+			"util": "aura"
+		},
+		"304": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"305": {
+			"attack": "single"
+		},
+		"306": {
+			"attack": "mass"
+		},
+		"307": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"308": {
+			"attack": "single"
+		},
+		"309": {
+			"attack": "single"
+		},
+		"31": {
+			"attack": "single"
+		},
+		"310": {
+			"attack": "single"
+		},
+		"311": {
+			"attack": "single"
+		},
+		"312": {
+			"attack": "air"
+		},
+		"313": {
+			"attack": "air"
+		},
+		"314": {
+			"attack": "air"
+		},
+		"315": {
+			"attack": "air"
+		},
+		"316": {
+			"attack": "air"
+		},
+		"317": {
+			"attack": "single"
+		},
+		"318": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"319": {
+			"attack": "single"
+		},
+		"32": {
+			"attack": "single"
+		},
+		"320": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"321": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"322": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"323": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"324": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"325": {
+			"attack": "single"
+		},
+		"326": {
+			"attack": "single"
+		},
+		"327": {
+			"attack": "single"
+		},
+		"328": {
+			"attack": "single"
+		},
+		"329": {
+			"attack": "mass"
+		},
+		"33": {
+			"attack": "single"
+		},
+		"330": {
+			"attack": "single"
+		},
+		"331": {
+			"attack": "single"
+		},
+		"332": {
+			"attack": "single"
+		},
+		"333": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"334": {
+			"attack": "single"
+		},
+		"335": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"336": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"337": {
+			"attack": "mass"
+		},
+		"338": {
+			"attack": "mass"
+		},
+		"339": {
+			"attack": "mass"
+		},
+		"34": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"340": {
+			"attack": "mass"
+		},
+		"341": {
+			"attack": "single"
+		},
+		"342": {
+			"attack": "single"
+		},
+		"343": {
+			"attack": "single"
+		},
+		"344": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"345": {
+			"attack": "single"
+		},
+		"346": {
+			"attack": "single"
+		},
+		"347": {
+			"attack": "single"
+		},
+		"348": {
+			"attack": "single"
+		},
+		"349": {
+			"attack": "single"
+		},
+		"35": {
+			"attack": "mass"
+		},
+		"350": {
+			"attack": "single"
+		},
+		"351": {
+			"attack": "single"
+		},
+		"352": {
+			"attack": "single"
+		},
+		"353": {
+			"attack": "single"
+		},
+		"354": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"355": {
+			"attack": "single"
+		},
+		"356": {
+			"attack": "single"
+		},
+		"357": {
+			"attack": "single"
+		},
+		"358": {
+			"attack": "single"
+		},
+		"359": {
+			"attack": "single"
+		},
+		"36": {
+			"attack": "single"
+		},
+		"360": {
+			"attack": "single"
+		},
+		"361": {
+			"attack": "single"
+		},
+		"362": {
+			"attack": "single"
+		},
+		"363": {
+			"attack": "mass"
+		},
+		"364": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"365": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"366": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"367": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"368": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"369": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"37": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"370": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"371": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"372": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"373": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"374": {
+			"attack": "mass"
+		},
+		"375": {
+			"attack": "mass"
+		},
+		"376": {
+			"attack": "single"
+		},
+		"377": {
+			"attack": "single"
+		},
+		"378": {
+			"attack": "mass"
+		},
+		"379": {
+			"attack": "single"
+		},
+		"38": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"380": {
+			"attack": "mass"
+		},
+		"381": {
+			"attack": "mass"
+		},
+		"382": {
+			"attack": "mass"
+		},
+		"383": {
+			"attack": "mass"
+		},
+		"384": {
+			"attack": "single"
+		},
+		"385": {
+			"attack": "mass"
+		},
+		"386": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"387": {
+			"attack": "mass"
+		},
+		"388": {
+			"attack": "mass"
+		},
+		"389": {
+			"attack": "mass"
+		},
+		"39": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"390": {
+			"attack": "mass"
+		},
+		"391": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"392": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"393": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"394": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"395": {
+			"attack": "single"
+		},
+		"396": {
+			"attack": "single"
+		},
+		"397": {
+			"attack": "single"
+		},
+		"398": {
+			"attack": "single"
+		},
+		"399": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"4": {
+			"attack": "single"
+		},
+		"40": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"400": {
+			"attack": "single"
+		},
+		"401": {
+			"attack": "mass"
+		},
+		"402": {
+			"attack": "single"
+		},
+		"403": {
+			"attack": "single"
+		},
+		"404": {
+			"attack": "mass"
+		},
+		"405": {
+			"attack": "single"
+		},
+		"406": {
+			"attack": "single"
+		},
+		"407": {
+			"attack": "single"
+		},
+		"408": {
+			"attack": "single"
+		},
+		"409": {
+			"attack": "single"
+		},
+		"41": {
+			"attack": "mass"
+		},
+		"410": {
+			"attack": "single"
+		},
+		"411": {
+			"attack": "single"
+		},
+		"412": {
+			"attack": "single"
+		},
+		"413": {
+			"attack": "single"
+		},
+		"414": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"415": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"416": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"417": {
+			"attack": "mass"
+		},
+		"418": {
+			"attack": "mass"
+		},
+		"419": {
+			"attack": "mass"
+		},
+		"42": {
+			"attack": "mass"
+		},
+		"420": {
+			"attack": "mass"
+		},
+		"421": {
+			"attack": "mass"
+		},
+		"422": {
+			"attack": "mass"
+		},
+		"423": {
+			"attack": "mass"
+		},
+		"424": {
+			"attack": "mass"
+		},
+		"425": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"426": {
+			"attack": "air"
+		},
+		"427": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"428": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"429": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"43": {
+			"attack": "mass"
+		},
+		"430": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"431": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"432": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"433": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"434": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"435": {
+			"attack": "mass"
+		},
+		"436": {
+			"attack": "mass"
+		},
+		"437": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"438": {
+			"attack": "single"
+		},
+		"439": {
+			"attack": "single"
+		},
+		"44": {
+			"attack": "mass"
+		},
+		"440": {
+			"attack": "mass"
+		},
+		"441": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"442": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"443": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"444": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"445": {
+			"attack": "mass"
+		},
+		"446": {
+			"attack": "mass"
+		},
+		"447": {
+			"attack": "mass"
+		},
+		"448": {
+			"attack": "mass"
+		},
+		"449": {
+			"attack": "mass"
+		},
+		"45": {
+			"attack": "mass"
+		},
+		"450": {
+			"attack": "single"
+		},
+		"451": {
+			"attack": "mass"
+		},
+		"452": {
+			"attack": "mass"
+		},
+		"453": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"454": {
+			"attack": "mass"
+		},
+		"455": {
+			"attack": "mass"
+		},
+		"456": {
+			"attack": "mass"
+		},
+		"457": {
+			"attack": "mass"
+		},
+		"458": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"459": {
+			"attack": "single"
+		},
+		"46": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"460": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"461": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"462": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"463": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"464": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"465": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"466": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"467": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"468": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"469": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"47": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"470": {
+			"attack": "single"
+		},
+		"471": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"472": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"473": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"474": {
+			"attack": "mass"
+		},
+		"475": {
+			"attack": "single"
+		},
+		"476": {
+			"attack": "mass"
+		},
+		"477": {
+			"attack": "mass"
+		},
+		"478": {
+			"attack": "mass"
+		},
+		"479": {
+			"attack": "mass"
+		},
+		"48": {
+			"attack": "mass"
+		},
+		"480": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"481": {
+			"attack": "single"
+		},
+		"482": {
+			"attack": "single"
+		},
+		"483": {
+			"attack": "single"
+		},
+		"484": {
+			"attack": "single"
+		},
+		"485": {
+			"attack": "single"
+		},
+		"486": {
+			"attack": "single"
+		},
+		"487": {
+			"attack": "single"
+		},
+		"488": {
+			"attack": "single"
+		},
+		"489": {
+			"attack": "single"
+		},
+		"49": {
+			"attack": "single"
+		},
+		"490": {
+			"attack": "single"
+		},
+		"491": {
+			"attack": "single"
+		},
+		"492": {
+			"attack": "single"
+		},
+		"493": {
+			"attack": "single"
+		},
+		"494": {
+			"attack": "single"
+		},
+		"495": {
+			"attack": "single"
+		},
+		"496": {
+			"attack": "single"
+		},
+		"497": {
+			"attack": "single"
+		},
+		"498": {
+			"attack": "single"
+		},
+		"499": {
+			"attack": "single"
+		},
+		"5": {
+			"attack": "single"
+		},
+		"50": {
+			"attack": "single"
+		},
+		"500": {
+			"attack": "single"
+		},
+		"501": {
+			"attack": "single"
+		},
+		"502": {
+			"attack": "single"
+		},
+		"503": {
+			"attack": "single"
+		},
+		"504": {
+			"attack": "single"
+		},
+		"505": {
+			"attack": "single"
+		},
+		"506": {
+			"attack": "single"
+		},
+		"507": {
+			"attack": "single"
+		},
+		"508": {
+			"attack": "single"
+		},
+		"509": {
+			"attack": "single"
+		},
+		"51": {
+			"attack": "single"
+		},
+		"510": {
+			"attack": "single"
+		},
+		"511": {
+			"attack": "single"
+		},
+		"512": {
+			"attack": "single"
+		},
+		"513": {
+			"attack": "single"
+		},
+		"514": {
+			"attack": "single"
+		},
+		"515": {
+			"attack": "single"
+		},
+		"516": {
+			"attack": "single"
+		},
+		"517": {
+			"attack": "single"
+		},
+		"518": {
+			"attack": "single"
+		},
+		"519": {
+			"attack": "single"
+		},
+		"52": {
+			"attack": "mass"
+		},
+		"520": {
+			"attack": "single"
+		},
+		"521": {
+			"attack": "single"
+		},
+		"522": {
+			"attack": "single"
+		},
+		"523": {
+			"attack": "single"
+		},
+		"524": {
+			"attack": "single"
+		},
+		"525": {
+			"attack": "mass"
+		},
+		"526": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"527": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"528": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"529": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"53": {
+			"attack": "mass"
+		},
+		"530": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"531": {
+			"attack": "mass"
+		},
+		"532": {
+			"attack": "single"
+		},
+		"533": {
+			"attack": "single"
+		},
+		"534": {
+			"attack": "single"
+		},
+		"535": {
+			"attack": "single"
+		},
+		"536": {
+			"attack": "single"
+		},
+		"537": {
+			"attack": "single"
+		},
+		"538": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"539": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"54": {
+			"attack": "mass"
+		},
+		"540": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"541": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"542": {
+			"attack": "single"
+		},
+		"543": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"544": {
+			"attack": "mass"
+		},
+		"545": {
+			"attack": "mass"
+		},
+		"546": {
+			"attack": "mass"
+		},
+		"547": {
+			"attack": "mass"
+		},
+		"548": {
+			"attack": "mass"
+		},
+		"549": {
+			"attack": "single"
+		},
+		"55": {
+			"attack": "mass"
+		},
+		"550": {
+			"attack": "single"
+		},
+		"551": {
+			"attack": "mass"
+		},
+		"552": {
+			"attack": "mass"
+		},
+		"553": {
+			"attack": "mass"
+		},
+		"554": {
+			"attack": "single"
+		},
+		"555": {
+			"attack": "single"
+		},
+		"556": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"557": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"558": {
+			"attack": "single"
+		},
+		"559": {
+			"attack": "single"
+		},
+		"56": {
+			"attack": "mass"
+		},
+		"560": {
+			"attack": "single"
+		},
+		"561": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"562": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"563": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"564": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"565": {
+			"attack": "single"
+		},
+		"566": {
+			"attack": "mass"
+		},
+		"567": {
+			"attack": "mass"
+		},
+		"568": {
+			"attack": "mass"
+		},
+		"569": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"57": {
+			"attack": "mass"
+		},
+		"570": {
+			"attack": "single"
+		},
+		"571": {
+			"attack": "mass"
+		},
+		"572": {
+			"attack": "mass"
+		},
+		"573": {
+			"attack": "mass"
+		},
+		"574": {
+			"attack": "mass"
+		},
+		"575": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"576": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"577": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"578": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"579": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"58": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"580": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"581": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"582": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"583": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"584": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"585": {
+			"attack": "single"
+		},
+		"586": {
+			"attack": "mass"
+		},
+		"587": {
+			"attack": "single"
+		},
+		"588": {
+			"attack": "mass"
+		},
+		"589": {
+			"attack": "mass"
+		},
+		"59": {
+			"attack": "single"
+		},
+		"590": {
+			"attack": "single"
+		},
+		"591": {
+			"attack": "single"
+		},
+		"592": {
+			"attack": "single"
+		},
+		"593": {
+			"attack": "single"
+		},
+		"594": {
+			"attack": "single"
+		},
+		"595": {
+			"attack": "single"
+		},
+		"596": {
+			"attack": "mass"
+		},
+		"597": {
+			"attack": "single"
+		},
+		"598": {
+			"attack": "single"
+		},
+		"599": {
+			"attack": "single"
+		},
+		"6": {
+			"attack": "single"
+		},
+		"60": {
+			"attack": "single"
+		},
+		"600": {
+			"attack": "single"
+		},
+		"601": {
+			"attack": "mass"
+		},
+		"602": {
+			"attack": "mass"
+		},
+		"603": {
+			"attack": "mass"
+		},
+		"604": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"605": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"606": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"607": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"608": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"609": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"61": {
+			"attack": "single"
+		},
+		"610": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"611": {
+			"attack": "mass",
+			"util": "eco"
+		},
+		"612": {
+			"attack": "single"
+		},
+		"613": {
+			"attack": "single"
+		},
+		"614": {
+			"attack": "single"
+		},
+		"615": {
+			"attack": "single"
+		},
+		"616": {
+			"attack": "single"
+		},
+		"617": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"618": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"619": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"62": {
+			"attack": "single"
+		},
+		"620": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"621": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"622": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"623": {
+			"attack": "single"
+		},
+		"624": {
+			"attack": "single"
+		},
+		"625": {
+			"attack": "single"
+		},
+		"626": {
+			"attack": "single"
+		},
+		"627": {
+			"attack": "single"
+		},
+		"628": {
+			"attack": "single"
+		},
+		"629": {
+			"attack": "single"
+		},
+		"63": {
+			"attack": "mass"
+		},
+		"630": {
+			"attack": "mass"
+		},
+		"631": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"632": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"633": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"634": {
+			"attack": "mass"
+		},
+		"635": {
+			"attack": "mass"
+		},
+		"636": {
+			"attack": "mass"
+		},
+		"637": {
+			"attack": "mass"
+		},
+		"638": {
+			"attack": "air"
+		},
+		"639": {
+			"attack": "air"
+		},
+		"64": {
+			"attack": "mass"
+		},
+		"640": {
+			"attack": "air"
+		},
+		"641": {
+			"attack": "air"
+		},
+		"642": {
+			"attack": "air"
+		},
+		"643": {
+			"attack": "air"
+		},
+		"644": {
+			"attack": "mass"
+		},
+		"645": {
+			"attack": "mass"
+		},
+		"646": {
+			"attack": "mass"
+		},
+		"647": {
+			"attack": "mass"
+		},
+		"648": {
+			"attack": "single"
+		},
+		"649": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"65": {
+			"attack": "mass"
+		},
+		"650": {
+			"attack": "mass"
+		},
+		"651": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"652": {
+			"attack": "single"
+		},
+		"653": {
+			"attack": "single"
+		},
+		"654": {
+			"attack": "mass"
+		},
+		"655": {
+			"attack": "mass"
+		},
+		"656": {
+			"attack": "mass"
+		},
+		"657": {
+			"attack": "mass"
+		},
+		"658": {
+			"attack": "single"
+		},
+		"659": {
+			"attack": "single"
+		},
+		"66": {
+			"attack": "single"
+		},
+		"660": {
+			"attack": "single"
+		},
+		"661": {
+			"attack": "single"
+		},
+		"662": {
+			"attack": "air"
+		},
+		"663": {
+			"attack": "air"
+		},
+		"664": {
+			"attack": "air"
+		},
+		"665": {
+			"attack": "air"
+		},
+		"666": {
+			"attack": "mass"
+		},
+		"667": {
+			"attack": "mass"
+		},
+		"668": {
+			"attack": "mass"
+		},
+		"669": {
+			"attack": "mass"
+		},
+		"67": {
+			"attack": "mass"
+		},
+		"670": {
+			"attack": "mass"
+		},
+		"671": {
+			"attack": "mass"
+		},
+		"672": {
+			"attack": "mass"
+		},
+		"673": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"674": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"675": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"676": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"677": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"678": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"679": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"68": {
+			"attack": "mass"
+		},
+		"680": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"681": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"682": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"683": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"684": {
+			"attack": "single"
+		},
+		"685": {
+			"attack": "single"
+		},
+		"686": {
+			"attack": "single"
+		},
+		"687": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"688": {
+			"attack": "single",
+			"util": "eco"
+		},
+		"69": {
+			"attack": "mass"
+		},
+		"7": {
+			"attack": "single"
+		},
+		"70": {
+			"attack": "single"
+		},
+		"71": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"72": {
+			"attack": "mass",
+			"util": "aura"
+		},
+		"73": {
+			"attack": "single"
+		},
+		"74": {
+			"attack": "single"
+		},
+		"75": {
+			"attack": "single"
+		},
+		"76": {
+			"attack": "single"
+		},
+		"77": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"78": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"79": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"8": {
+			"attack": "single"
+		},
+		"80": {
+			"attack": "single"
+		},
+		"81": {
+			"attack": "single"
+		},
+		"82": {
+			"attack": "single"
+		},
+		"83": {
+			"attack": "single"
+		},
+		"84": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"85": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"86": {
+			"attack": "single",
+			"util": "aura"
+		},
+		"87": {
+			"attack": "single"
+		},
+		"88": {
+			"attack": "single"
+		},
+		"89": {
+			"attack": "single"
+		},
+		"9": {
+			"attack": "mass",
+			"util": "cc"
+		},
+		"90": {
+			"attack": "single"
+		},
+		"91": {
+			"attack": "single"
+		},
+		"92": {
+			"attack": "single"
+		},
+		"93": {
+			"attack": "single"
+		},
+		"94": {
+			"attack": "single"
+		},
+		"95": {
+			"attack": "single"
+		},
+		"96": {
+			"attack": "single"
+		},
+		"97": {
+			"attack": "single"
+		},
+		"98": {
+			"attack": "single",
+			"util": "cc"
+		},
+		"99": {
+			"attack": "air"
+		},
+		"990": {
+			"attack": "single"
+		},
+		"991": {
+			"attack": "single"
+		},
+		"992": {
+			"attack": "single"
+		},
+		"993": {
+			"attack": "single"
+		},
+		"994": {
+			"attack": "single"
+		}
+	},
+	"towers": {
+		"1": "nature_bush_common",
+		"100": "k_fantasy_stadt_fountain_round",
+		"101": "q_figuren_ninja_sand",
+		"102": "nature_plant_1_big",
+		"107": "nature_campfire_pit",
+		"108": "q_figuren_ninja_male",
+		"11": "nature_statue_column_damaged",
+		"112": "kristall_8fd8ff_crystal_13",
+		"114": "q_figuren_goblin_male",
+		"115": "kristall_5aa8ff_crystal_18",
+		"117": "scenery_lightpost_single",
+		"121": "nature_statue_column_damaged",
+		"123": "q_geschuetze_laser_1",
+		"125": "special_gold_ore",
+		"130": "nature_statue_obelisk",
+		"131": "q_figuren_wizard",
+		"132": "q_monster_blob_wizard",
+		"134": "q_monster_flying_ghost_skull",
+		"139": "enemies_dragon",
+		"140": "q_figuren_viking_male",
+		"141": "q_geschuetze_gun_10",
+		"142": "kristall_8fd8ff_crystal_13",
+		"145": "kristall_5aa8ff_crystal_24",
+		"147": "nature_campfire_stones",
+		"150": "nature_plant_1_big",
+		"156": "q_ruinen_column_round",
+		"157": "kristall_5aa8ff_crystal_24",
+		"158": "q_zombie_container_green",
+		"159": "q_monster_big_ninja",
+		"160": "q_figuren_witch",
+		"161": "q_zombie_pipes",
+		"165": "scenery_crypt",
+		"166": "kk_halloween_grave_a_destroyed",
+		"167": "nature_statue_ring",
+		"169": "q_monster_flying_squidle",
+		"17": "q_geschuetze_long_2",
+		"170": "q_tiere_bull",
+		"183": "q_figuren_witch",
+		"186": "scenery_mine_rocks_1",
+		"190": "kristall_c9a8ff_crystal_20",
+		"192": "q_figuren_kimono_male",
+		"196": "enemies_dragon",
+		"197": "k_industrie_solar_panel_flat",
+		"199": "q_modular_maenner_king",
+		"200": "q_monster_flying_goleling_evolved",
+		"201": "q_figuren_soldier_male",
+		"202": "q_geschuetze_teleporter4",
+		"203": "nature_pot_large",
+		"205": "nature_statue_obelisk",
+		"210": "nature_statue_obelisk",
+		"211": "q_figuren_pirate_male",
+		"212": "q_figuren_wizard",
+		"214": "kristall_c9a8ff_crystal_20",
+		"215": "q_figuren_old_classy_male",
+		"216": "nature_statue_column_damaged",
+		"217": "q_geschuetze_bomber_1",
+		"219": "q_geschuetze_gear_cannon_1",
+		"220": "nature_statue_column_damaged",
+		"221": "q_zombie_water_tower",
+		"223": "enemies_dragon",
+		"226": "kk_dungeon_torch_lit_gltf",
+		"23": "kk_brettspiel_hourglass",
+		"231": "scenery_lightpost_single",
+		"235": "q_figuren_viking_female",
+		"24": "q_suesse_monster_bee",
+		"240": "q_monster_blob_orc",
+		"241": "nature_rock_tall_a",
+		"242": "q_tiere_shiba_inu",
+		"249": "q_monster_big_orc",
+		"253": "q_tiere_stag",
+		"254": "q_monster_big_dino",
+		"262": "kk_abenteurer_knight",
+		"266": "q_monster_flying_ghost",
+		"267": "nature_stone_tall_g",
+		"272": "q_figuren_viking_male",
+		"277": "special_platonic",
+		"279": "nature_pot_large",
+		"28": "scenery_mine_frame_1",
+		"282": "kristall_8fd8ff_crystal_13",
+		"288": "special_platonic",
+		"295": "q_monster_big_demon",
+		"296": "k_industrie_solar_panel_landscape_group",
+		"298": "q_bauernhof_pig",
+		"3": "enemies_dragon",
+		"303": "kristall_5aa8ff_crystal_18",
+		"304": "kristall_8fd8ff_crystal_23",
+		"305": "q_geschuetze_laser_doble",
+		"306": "q_geschuetze_teleporter5",
+		"307": "scenery_gravestone_decorative",
+		"31": "q_geschuetze_gun",
+		"312": "nature_stone_tall_g",
+		"317": "kk_skelette_skeleton_warrior",
+		"319": "enemies_slime",
+		"320": "k_weltraum_machine_barrel",
+		"325": "q_ruinen_bear_trap_open",
+		"328": "q_figuren_goblin_male",
+		"329": "kristall_5aa8ff_crystal_24",
+		"331": "k_weltraum_machine_barrel",
+		"335": "q_bauernhof_sheep",
+		"338": "kk_abenteurer_ranger",
+		"34": "q_cyberpunk_enemy_2_legs",
+		"345": "k_weltraum_machine_barrel",
+		"348": "k_weltraum_machine_barrel",
+		"351": "k_weltraum_machine_barrel",
+		"357": "k_weltraum_machine_barrel",
+		"36": "nature_stone_tall_a",
+		"363": "nature_statue_column",
+		"364": "nature_campfire_stones",
+		"37": "q_ruinen_doors_gothic_arch",
+		"372": "q_monster_big_yeti",
+		"373": "q_figuren_goblin_female",
+		"374": "special_platonic",
+		"376": "scenery_grave",
+		"377": "nature_mushroom_red_tall",
+		"378": "q_geschuetze_laser_2",
+		"38": "nature_statue_ring",
+		"380": "kk_halloween_lantern_standing",
+		"385": "special_platonic",
+		"386": "q_figuren_elf",
+		"39": "q_figuren_knight_golden_female",
+		"391": "q_zug_locomotive_front",
+		"392": "q_monster_big_tribal",
+		"396": "nature_flower_4_group",
+		"399": "nature_statue_obelisk",
+		"4": "nature_statue_block",
+		"400": "k_weltraum_machine_generator",
+		"401": "nature_statue_block",
+		"405": "nature_plant_7_big",
+		"41": "q_feldfruechte_cactus_3",
+		"411": "nature_flower_3_group",
+		"414": "k_piraten_ship_ghost",
+		"415": "q_modular_maenner_king",
+		"417": "k_piraten_tower_complete_small",
+		"421": "k_weltraum_machine_generator_large",
+		"426": "q_monster_flying_dragon",
+		"427": "q_figuren_old_classy_male",
+		"433": "q_geschuetze_teleporter2",
+		"434": "q_wohnung_fireplace",
+		"435": "q_figuren_elf",
+		"436": "nature_stone_tall_a",
+		"437": "kristall_8fd8ff_crystal_13",
+		"438": "q_suesse_monster_cthulhu",
+		"442": "kk_halloween_skull",
+		"444": "enemies_dragon",
+		"449": "nature_rock_medium_3",
+		"453": "scenery_crypt",
+		"458": "q_zombie_wheels_stack",
+		"46": "q_ruinen_arch_round",
+		"461": "nature_campfire_pit",
+		"468": "nature_rock_tall_e",
+		"469": "q_fantasy_props_anvil",
+		"47": "q_monster_flying_goleling",
+		"470": "nature_statue_column",
+		"471": "q_tiere_wolf",
+		"474": "nature_common_tree_3",
+		"476": "q_monster_big_orc_skull",
+		"48": "q_suesse_monster_pig",
+		"480": "q_fantasy_props_bookcase_2",
+		"482": "q_figuren_knight_male",
+		"487": "q_figuren_knight_male",
+		"496": "q_figuren_knight_male",
+		"498": "kk_abenteurer_ranger",
+		"5": "q_figuren_knight_male",
+		"507": "q_figuren_knight_male",
+		"510": "kk_abenteurer_knight",
+		"515": "q_figuren_knight_male",
+		"520": "q_suesse_monster_tree",
+		"524": "q_monster_flying_dragon_evolved",
+		"525": "q_feldfruechte_palm_tree_3",
+		"526": "scenery_gravestone_cross",
+		"527": "kk_skelette_skeleton_mage",
+		"53": "q_figuren_wizard",
+		"532": "nature_campfire_stones",
+		"537": "nature_mushroom_tan_group",
+		"538": "enemies_dragon",
+		"539": "nature_statue_obelisk",
+		"54": "nature_statue_obelisk",
+		"544": "nature_rock_tall_a",
+		"554": "q_suesse_monster_demon",
+		"555": "nature_campfire_stones",
+		"556": "k_spielhalle_gambling_machine",
+		"561": "q_figuren_knight_golden_female",
+		"562": "kristall_8fd8ff_crystal_13",
+		"564": "kk_halloween_floor_dirt_grave",
+		"566": "q_suesse_monster_yeti",
+		"570": "nature_mushroom_laetiporus",
+		"571": "nature_rock_medium_2",
+		"575": "nature_statue_head",
+		"576": "q_geschuetze_teleporter1",
+		"577": "k_fantasy_stadt_fountain_round_detail",
+		"580": "q_fantasy_props_cage_small",
+		"586": "nature_rock_medium_1",
+		"587": "nature_statue_obelisk",
+		"59": "kk_abenteurer_mage",
+		"590": "q_figuren_kimono_male",
+		"591": "nature_mushroom_red_tall",
+		"596": "q_geschuetze_bomber_2",
+		"601": "kk_abenteurer_rogue_hooded",
+		"604": "nature_statue_head",
+		"607": "nature_statue_block",
+		"608": "q_schiffe_sail_ship",
+		"617": "q_fantasy_props_book_stack_1",
+		"622": "q_modular_maenner_worker",
+		"63": "enemies_dragon",
+		"633": "scenery_church",
+		"638": "nature_stone_tall_a",
+		"644": "q_monster_flying_ghost",
+		"645": "scenery_crypt",
+		"648": "q_monster_flying_demon",
+		"649": "kk_skelette_skeleton_mage",
+		"650": "scenery_gravestone_round",
+		"651": "q_geschuetze_teleporter3",
+		"652": "q_feldfruechte_apple_4",
+		"654": "q_cyberpunk_pipe_1",
+		"659": "k_piraten_tower_watch",
+		"66": "nature_statue_head",
+		"662": "q_figuren_blue_soldier_male",
+		"666": "q_figuren_knight_golden_male",
+		"67": "nature_campfire_bricks",
+		"673": "nature_plant_1",
+		"680": "nature_fern_1",
+		"683": "q_suesse_monster_panda",
+		"684": "nature_rock_tall_a",
+		"70": "q_tiere_wolf",
+		"71": "k_industrie_solar_panel_portrait_group",
+		"77": "kristall_8fd8ff_crystal_13",
+		"80": "scenery_lightpost_single",
+		"83": "q_monster_flying_ghost",
+		"84": "q_figuren_knight_golden_male",
+		"91": "kk_halloween_skull_candle",
+		"94": "kristall_c9a8ff_crystal_20",
+		"98": "q_tiere_husky",
+		"99": "k_weltraum_machine_wireless",
+		"990": "q_tiere_wolf",
+		"991": "nature_campfire_bricks"
+	}
+}

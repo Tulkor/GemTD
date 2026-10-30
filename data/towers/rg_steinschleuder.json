@@ -3,10 +3,9 @@
 	"name": "Steinschleuder",
 	"category": "randgruppen",
 	"color": "#c06040",
-	"model": "res://assets/models/city/1story.glb",
+	"model": "res://assets/models/towers/eigen/steinschleuder.glb",
 	"model_tint": false,
 	"model_solid": true,
-	"model_scale": 0.42,
 	"damage_type": "siege",
 	"targets": "both",
 	"rg": {

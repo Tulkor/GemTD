@@ -39,6 +39,8 @@ var rg_choice: Dictionary = {}
 var score_mode := false
 ## GemTD-Variante Roguelike: alle zehn Wellen einen von drei Boni wählen (rogue.gd).
 var rogue := false
+## Mehrspieler mit Gebieten (Maul-Maps, Randgruppen, YouTD-Koop): auch in fremden Gebieten bauen (Wahl des Hosts).
+var foreign_build := false
 ## IDs der im Rezeptbuch angepinnten Spezial-Tower.
 var pinned_recipes: Array = []
 ## Hauptmenü nach dem Sprachwechsel mit offenen Einstellungen neu aufbauen.

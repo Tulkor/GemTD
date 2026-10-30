@@ -39,12 +39,13 @@ var status_label: Label
 
 func _ready() -> void:
 	map = Session.editor_map.duplicate_map() if Session.editor_map != null else MapData.create_empty(60, 60)
-	CameraRig.add_environment(self)
+	CameraRig.add_environment(self, {}, false)
 	board = Board3D.new()
 	board.map = map
 	board.grid_strength = 0.25
 	add_child(board)
 	camera_rig = CameraRig.new()
+	camera_rig.limit_view = false
 	add_child(camera_rig)
 	_build_ui()
 	_sync_fields()

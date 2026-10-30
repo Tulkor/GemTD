@@ -42,6 +42,10 @@ const CLUSTER_VARY := [1.0, 0.86, 0.94, 0.8, 0.9]
 const SHARD_TILT := [62.0, 74.0, 56.0, 80.0, 68.0]
 const SHARD_GLOW := 0.4
 static var _slab_cache := {}
+## eeveTD: wie die Tower nachts hervorgehoben werden (Lukas, 2026-10-29, zur Wahl):
+## "sockel" = vier Lampen in den Sockelecken leuchten den Tower an, "kontur" = weiße Kontur, "" = nichts.
+static var eeve_accent := "sockel"
+const SOCKEL_LIGHT := Color(1.0, 0.8, 0.55)
 
 var game  # game.gd
 var cell := Vector2i.ZERO
@@ -701,6 +705,11 @@ func _build_visual() -> void:
 			_gem.position.y = base_h
 			_visual.add_child(_gem)
 	var size := width
+	if _gem == null and float(def.get("fog", 0.0)) > 0.0:
+		# Nur Nebel (Bühnennebel): kein Kristall auf dem Sockel
+		_gem = Node3D.new()
+		_gem.position.y = base_h
+		_visual.add_child(_gem)
 	if _gem == null:
 		var oct := MeshInstance3D.new()
 		oct.mesh = _gem_mesh()
@@ -712,8 +721,61 @@ func _build_visual() -> void:
 		_gem.add_child(oct)
 		_visual.add_child(_gem)
 	ModelLoader.add_outline(_gem)
+	if tower_id.begins_with("eeve_") and not is_trap():
+		if eeve_accent == "kontur":
+			ModelLoader.add_outline(_gem, "druid_white")
+		elif eeve_accent == "sockel":
+			_add_corner_lights(foot, base_h)
 	_add_flame(_gem)
+	_add_fog(foot, base_h)
 	_finish_visual()
+
+
+## "fog": Bodennebel über dem Sockel bzw. auf "fog_height" des Modells, Größe in Towerbreiten.
+func _add_fog(foot: float, base_h: float) -> void:
+	var size := float(def.get("fog", 0.0))
+	if size <= 0.0:
+		return
+	var fog := FogFx.make(size * foot, Color(0.95, 0.92, 1.0).lerp(color, 0.3))
+	fog.position.y = base_h
+	# "fog_height": Anteil der Modellhöhe, auf dem der Nebel liegt (Bühnenboden), wie "flame_height"
+	if def.has("fog_height") and _gem:
+		var box := ModelLoader.aabb(_gem, Transform3D())
+		if box.size.y > 0.0:
+			fog.position = Vector3(box.get_center().x, box.position.y + box.size.y * float(def.fog_height), box.get_center().z)
+	_visual.add_child(fog)
+
+
+## Vier kleine Lampen in den Sockelecken, jede mit einem Spot schräg nach oben auf den Tower.
+func _add_corner_lights(foot: float, base_h: float) -> void:
+	var lamp_mat := StandardMaterial3D.new()
+	lamp_mat.albedo_color = SOCKEL_LIGHT
+	lamp_mat.emission_enabled = true
+	lamp_mat.emission = SOCKEL_LIGHT
+	lamp_mat.emission_energy_multiplier = 2.5
+	var lamp_mesh := SphereMesh.new()
+	lamp_mesh.radius = 0.025
+	lamp_mesh.height = 0.035
+	var top := Vector3(0, base_h + 0.35, 0)
+	var off := foot * 0.4
+	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		var p := Vector3(corner.x * off, base_h + 0.01, corner.y * off)
+		var lamp := MeshInstance3D.new()
+		lamp.mesh = lamp_mesh
+		lamp.material_override = lamp_mat
+		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lamp.position = p
+		_visual.add_child(lamp)
+		var spot := SpotLight3D.new()
+		spot.light_color = SOCKEL_LIGHT
+		spot.light_energy = 1.6
+		spot.spot_range = foot * 1.6
+		spot.spot_angle = 38.0
+		spot.spot_attenuation = 0.8
+		spot.shadow_enabled = false
+		spot.position = p + Vector3(corner.x, 0, corner.y) * 0.03
+		spot.basis = Basis.looking_at(top - spot.position)
+		_visual.add_child(spot)
 
 
 ## "flame": Größe der Flamme in Towerbreiten, sitzt oben auf dem Modell (Lagerfeuer, Kohlenbecken).

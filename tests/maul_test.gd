@@ -51,6 +51,12 @@ func _ready() -> void:
 	var zone: Rect2i = game.map.zones[0].rect
 	var cheap := str(MaulData.buyable("hm")[0].id)
 	check(game.build_problem(cheap, Vector2i(5, 5), 0) != "", "außerhalb des Gebiets wird nicht gebaut")
+	var other: Vector2i = _spots(game, game.map.zones[1].rect)[0]
+	check(game.build_problem(cheap, other, 0) != "", "ohne „Überall bauen“ nicht im fremden Gebiet")
+	game.foreign_build = true
+	check(game.build_problem(cheap, other, 0) == "", "mit „Überall bauen“ im fremden Gebiet: %s" % game.build_problem(cheap, other, 0))
+	check(game.build_problem(cheap, Vector2i(5, 5), 0) != "", "auch mit „Überall bauen“ nicht außerhalb der Gebiete")
+	game.foreign_build = false
 	var built := 0
 	var spots := _spots(game, zone)
 	for a in spots:
@@ -299,6 +305,13 @@ func _coop_tests() -> void:
 	check(client.players[1].gold == host.players[1].gold, "Gold gleich: %d" % client.players[1].gold)
 	client.submit({"type": "build", "tower": cheap, "cell": _spots(host, host.map.zones[0].rect)[0]})
 	check(host.towers.size() == 1, "Mitspieler baut nicht im Gebiet des Hosts")
+	host.foreign_build = true
+	pump.call()
+	check(client.foreign_build, "„Überall bauen“ kommt beim Mitspieler an")
+	var foreign: Vector2i = _spots(host, host.map.zones[0].rect).filter(func(c): return host.build_problem(cheap, c, 1) == "")[0]
+	client.submit({"type": "build", "tower": cheap, "cell": foreign})
+	pump.call()
+	check(host.towers.has(foreign) and host.towers[foreign].owner_player == 1, "mit „Überall bauen“ baut der Mitspieler im Gebiet des Hosts")
 	host.submit({"type": "start_now"})
 	for i in 30:
 		await get_tree().process_frame

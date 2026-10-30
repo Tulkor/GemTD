@@ -47,7 +47,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Mausrad heraus: weiter als in GemTD
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN \
+			and not UiUtil.mouse_over_ui(get_viewport()):
 		distance = minf(distance * 1.1, MAUL_MAX_DISTANCE)
 		_apply()
 		return

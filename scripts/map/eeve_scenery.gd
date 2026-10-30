@@ -60,17 +60,21 @@ const MIST_NIGHT := Color(0.5, 0.56, 0.72)
 ## Bodennebel und kühlerer, dunklerer Boden und Wald (Faktoren auf die Tagwerte).
 const NIGHT_EXTRA := {
 	"fog_height": 0.6, "fog_height_density": 0.05,
-	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.8, "forest_tint": Color(0.5, 0.56, 0.78),
+	"ground_tint": Vector3(0.72, 0.8, 1.0), "ground_brightness": 0.7, "forest_tint": Color(0.5, 0.56, 0.78),
+	# nachts mehr Struktur im Gras und große hellere und dunklere Flecken wie Mondlicht durch Wolken,
+	# sonst wirkt das Feld wie eine einheitlich blaue Fläche
+	"ground_contrast": 0.7, "ground_macro": 0.45,
 }
 
 var board: Board3D
 var map: MapData
 var _env: Environment
 var _lights_env: Array = []  ## Sonne/Mond und Gegenlicht aus CameraRig.add_environment
-var _ground_day := []   ## [tint, brightness] des Spielfeldbodens am Tag
+var _ground_day := []   ## [tint, brightness, grass_contrast, macro] des Spielfeldbodens am Tag
 var _forest_mats := []  ## [Material, Tagesfarbe] der Bäume und Büsche
 var _prop_mats := {}    ## [Originalmaterial, Tönung] -> abgedunkelte Kopie (Friedhof)
 var _lights: Array[OmniLight3D] = []
+var _shadow_mmis: Array[MultiMeshInstance3D] = []  ## Bäume nah am Rand mit Schatten (Grafik „Niedrig“: ohne)
 var _pools: Array[MeshInstance3D] = []
 var _glass_mat: StandardMaterial3D
 var _fireflies: CPUParticles3D
@@ -97,7 +101,10 @@ func _ready() -> void:
 	var gm: ShaderMaterial = board._ground_mat
 	var tint = gm.get_shader_parameter("tint")
 	var bright = gm.get_shader_parameter("brightness")
-	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72]
+	var contrast = gm.get_shader_parameter("grass_contrast")
+	var macro = gm.get_shader_parameter("macro")
+	_ground_day = [tint if tint is Vector3 else Vector3.ONE, float(bright) if bright != null else 0.72,
+		float(contrast) if contrast != null else 1.0, float(macro) if macro != null else 0.12]
 	_add_forest_floor()
 	_add_forest()
 	_add_graveyard()
@@ -107,6 +114,11 @@ func _ready() -> void:
 	_add_fireflies()
 	# Laternen beleuchten Tower und Gegner, den Boden nur über ihren Lichtfleck (Ebene 2 ausgenommen)
 	board._ground.layers = 2
+	_apply(FieldStyle.night)
+	Display.quality_changed.connect(_on_quality_changed)
+
+
+func _on_quality_changed() -> void:
 	_apply(FieldStyle.night)
 
 
@@ -150,10 +162,17 @@ func _apply(on: bool) -> void:
 	var gm: ShaderMaterial = board._ground_mat
 	gm.set_shader_parameter("tint", _ground_day[0] * look.get("ground_tint", Vector3.ONE))
 	gm.set_shader_parameter("brightness", _ground_day[1] * look.get("ground_brightness", 1.0))
+	gm.set_shader_parameter("grass_contrast", maxf(_ground_day[2], look.get("ground_contrast", 0.0)))
+	gm.set_shader_parameter("macro", look.get("ground_macro", _ground_day[3]))
 	for m in _forest_mats:
 		m[0].albedo_color = m[1] * look.get("forest_tint", Color.WHITE)
+	# Grafik „Niedrig“: Laternen ohne echtes Licht (jedes Licht zeichnet die Modelle in seiner Nähe noch einmal),
+	# der Lichtfleck am Boden bleibt; Bäume ohne Schatten
+	var low := Display.quality == Display.LOW
 	for l in _lights:
-		l.visible = on
+		l.visible = on and not low
+	for m in _shadow_mmis:
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if low else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	for p in _pools:
 		p.visible = on
 	_glass_mat.emission_energy_multiplier = 3.2 if on else 0.35
@@ -172,7 +191,7 @@ func _add_forest_floor() -> void:
 	var size := _size()
 	var floor := MeshInstance3D.new()
 	if board.path_depth > 0.0:
-		floor.mesh = _frame_mesh(size)
+		floor.mesh = frame_mesh(size, FLOOR_MARGIN)
 	else:
 		var plane := PlaneMesh.new()
 		plane.size = size + Vector2.ONE * FLOOR_MARGIN * 2.0
@@ -191,9 +210,9 @@ func _add_forest_floor() -> void:
 	add_child(floor)
 
 
-## Waldboden nur als Rahmen um die Karte (Schlucht: unter der Karte darf nichts den abgesenkten Weg verdecken).
-func _frame_mesh(size: Vector2) -> ArrayMesh:
-	var m := FLOOR_MARGIN
+## Boden nur als Rahmen der Breite m um die Karte (Schlucht: unter der Karte darf nichts den abgesenkten Weg
+## verdecken; auch für Randgruppen TD).
+static func frame_mesh(size: Vector2, m: float) -> ArrayMesh:
 	var o := size / 2.0  # Mitte, das Mesh liegt wie die Fläche um die Kartenmitte
 	var rects := [Rect2(-m, -m, size.x + 2 * m, m), Rect2(-m, size.y, size.x + 2 * m, m),
 			Rect2(-m, 0, m, size.y), Rect2(size.x, 0, m, size.y)]
@@ -420,6 +439,8 @@ func _add_multimesh(path: String, xfs: Array, shadows: bool) -> void:
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if shadows:
+		_shadow_mmis.append(mmi)
 	add_child(mmi)
 
 
@@ -510,6 +531,8 @@ func _add_lanterns() -> void:
 		var pm := ShaderMaterial.new()
 		pm.shader = pool_shader
 		pm.set_shader_parameter("light_color", POOL_LIGHT)
+		# Vulkan rechnet den Fleck in linearem Licht, ohne Abschwächung wirkt er grell orange
+		pm.set_shader_parameter("strength", 0.42)
 		pm.set_shader_parameter("phase", float(n) * 2.3)
 		# Pfosten im Fleck (UV), von dort fällt sein Schatten von der Laterne weg
 		pm.set_shader_parameter("post_uv", Vector2(0.5, 0.5) - arm / POOL_SIZE)

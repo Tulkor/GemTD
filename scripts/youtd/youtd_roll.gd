@@ -131,6 +131,32 @@ static func _tower_for_element(game, el: String, chance: float) -> String:
 	return str(YoutdWaves.weighted(gw, rng))
 
 
+## Ergebnis von „6 → 1“: ein Tower der Seltenheit rarity aus einem der Elemente der Zutaten (zufällig, häufigeres
+## Element öfter), höchstens so teuer wie alle Zutaten zusammen; teurere etwas öfter wie beim Würfeln.
+static func merge_result(game, ingredients: Array, rarity: String) -> String:
+	var rng: RandomNumberGenerator = game.roll_rng
+	var els := ingredients.map(func(id): return str(YoutdData.tower(id).get("element", "")))
+	var budget := 0.0
+	for id in ingredients:
+		budget += float(YoutdData.tower(id).get("cost", 0))
+	var first := bool(_mode(game).get("first_tier_only", true))
+	var power := float(_mode(game).get("weight_power", 0.25))
+	var order := els.duplicate()
+	_shuffle(order, rng)
+	for el in order + YoutdData.elements():
+		var group := _group(first, str(el), rarity)
+		if group.is_empty():
+			continue
+		var cheap := group.filter(func(id): return float(YoutdData.tower(id).cost) <= budget)
+		if cheap.is_empty():
+			cheap = [group[0]]
+		var gw := {}
+		for id in cheap:
+			gw[id] = pow(float(YoutdData.tower(id).cost), power)
+		return str(YoutdWaves.weighted(gw, rng))
+	return ""
+
+
 ## Item beim Kill (YtItemDropCalc): Seltenheit nach Gewichten × Qualität, 40 % Öl oder Verbrauchsgegenstand, sonst
 ## reguläres Item bis zur Welle. "" = nichts passendes.
 static func item(game, level: int, quality: float) -> String:

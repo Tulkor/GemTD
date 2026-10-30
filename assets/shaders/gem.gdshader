@@ -22,6 +22,11 @@ uniform float vein_amount = 0.0;
 uniform float stone_tint = 0.0;
 uniform vec4 stone_color : source_color = vec4(0.42, 0.41, 0.36, 1.0);
 uniform vec4 moss_color : source_color = vec4(0.30, 0.38, 0.18, 1.0);
+/// Gespiegelte Umgebung auf den Facetten (gespiegelt würde sonst nur der Sternenhimmel):
+/// heller Horizont-Streifen und Himmel, je Facette anders, an den Rändern stärker (Fresnel). 0 = aus
+uniform float env_reflect = 0.55;
+uniform vec4 reflect_horizon : source_color = vec4(1.0, 0.45, 0.9, 1.0);
+uniform vec4 reflect_sky : source_color = vec4(0.5, 0.8, 1.0, 1.0);
 
 varying float world_y;
 varying vec3 world_pos;
@@ -91,6 +96,16 @@ void fragment() {
 	vec3 lit = mix(color.rgb, vec3(1.0), 0.35);
 	EMISSION = (color.rgb * (glow + fresnel * 0.5 * (1.0 - daylight)) + lit * under_light * (under * under + down * 0.6 * under))
 			* mix(1.0, day.a, daylight);
+	if (env_reflect > 0.0) {
+		vec3 nw = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+		vec3 vw = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
+		vec3 rw = reflect(-vw, nw);
+		float band = exp(-abs(rw.y - 0.12) * 10.0);
+		float sky = smoothstep(0.35, 1.0, rw.y);
+		// bei Tageslicht weißlicher Himmel statt Neonfarben
+		vec3 env = mix(reflect_horizon.rgb * band + reflect_sky.rgb * sky * 0.45, vec3(band * 0.8 + sky * 0.5), daylight);
+		EMISSION += env * env_reflect * (0.2 + fresnel) * mix(1.0, day.a * 0.5, daylight);
+	}
 	RIM = 0.4;
 	RIM_TINT = 0.6;
 }

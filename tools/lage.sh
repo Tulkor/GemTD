@@ -12,6 +12,7 @@ N=$(git status --porcelain | wc -l)
 echo "main zuletzt:"; git log --format='  %h %ad %s' --date=format:'%m-%d %H:%M' -5 origin/main
 OFFEN=$(git branch -r --no-merged origin/main 2>/dev/null | grep -v HEAD | sed 's#^ *origin/##' | head -10 | tr '\n' ' ')
 [ -n "$OFFEN" ] && echo "Nicht in main: $OFFEN"
+echo "Offene PRs (14 Tage): $(tools/prs.sh offen --kurz 2>/dev/null)   Details: tools/prs.sh offen"
 U=/mnt/project-files/uploads/hearth
 if [ -d "$U" ]; then
   echo "Neueste Uploads:"

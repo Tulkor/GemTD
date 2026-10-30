@@ -6,6 +6,8 @@ jedem weiteren Schritt erneut mitbezahlt. Blockiert werden:
   - Read ohne offset/limit auf Text-Dateien über GRENZE Zeilen,
   - Bash `cat [-n] <datei>` und `git show <ref>:<datei>` ohne Pipe dahinter auf solche Dateien.
 Wer die ganze Datei wirklich braucht, hängt `# ganz` an den Bash-Befehl an.
+Außerdem: Befehle mit sehr langer Ausgabe (godot/xvfb-run direkt, unzip ohne -q, unzip -l, pip ohne -q) ohne
+Pipe dahinter werden auf das passende Werkzeug umgelenkt; `# roh` am Befehl lässt sie trotzdem durch.
 Exit 2 = blockieren, die Meldung auf stderr bekommt Claude zu sehen.
 """
 import json
@@ -60,6 +62,31 @@ def bash_dateien(cmd):
     return treffer
 
 
+# (Muster am Anfang eines Abschnitts ohne Pipe, Hinweis)
+LAUT = [
+    (r"(xvfb-run\b.*\s)?godot\b", "Godot gibt hunderte Zeilen aus. Tests: tools/run_tests.sh, Bilder: tools/screenshot.sh, "
+     "sonst tools/kurz.sh godot … (volles Log in /tmp/gemtd-kurz/)."),
+    (r"unzip\s+(-\w*l|-v)", "Für eine Übersicht: python3 -I tools/paket.py <zip> [--namen] (Arten, Ordner, Lizenz)."),
+    (r"unzip\s+(?!.*-\w*q)", "unzip listet jede Datei. unzip -q … oder tools/kurz.sh unzip …; Übersicht: python3 -I tools/paket.py <zip>."),
+    (r"(pip3?|python3 -m pip) install\s+(?!.*(-q|--quiet))", "pip install -q … oder tools/kurz.sh pip install …"),
+]
+
+
+def laut(cmd):
+    for abschnitt in re.split(r";|&&|\|\||\n", cmd):
+        teile = abschnitt.split("|")
+        if len(teile) > 1 or ">" in teile[0]:
+            continue  # gefiltert oder umgeleitet
+        erster = teile[0].strip()
+        erster = re.sub(r"^(timeout\s+\S+\s+|env\s+(\w+=\S+\s+)+|\w+=\S+\s+)+", "", erster)
+        if erster.startswith(("tools/", "./tools/", "bash tools/")) or "--version" in erster:
+            continue
+        for muster, tipp in LAUT:
+            if re.match(muster, erster):
+                return tipp
+    return None
+
+
 def main():
     try:
         d = json.load(sys.stdin)
@@ -74,6 +101,10 @@ def main():
         cmd = inp.get("command", "")
         if "# ganz" in cmd or "<<" in cmd:
             return 0
+        tipp = None if "# roh" in cmd else laut(cmd)
+        if tipp:
+            print(tipp + " Wenn die volle Ausgabe wirklich nötig ist: `# roh` an den Befehl hängen.", file=sys.stderr)
+            return 2
         kandidaten = bash_dateien(cmd)
     for k in kandidaten:
         p = k if os.path.isabs(k) else os.path.join(cwd, k)

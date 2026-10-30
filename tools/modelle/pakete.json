@@ -44,5 +44,6 @@
   "k_supermarkt": {"name": "Mini Market", "von": "Kenney", "url": "https://kenney.nl/assets/mini-market", "quellen": ["kenney_mini-market"], "format": ["glb"]},
   "k_piraten": {"name": "Pirate Kit", "von": "Kenney", "url": "https://kenney.nl/assets/pirate-kit", "quellen": ["kenney_pirate-kit"], "format": ["glb"]},
   "k_weltraum": {"name": "Space Kit", "von": "Kenney", "url": "https://kenney.nl/assets/space-kit", "quellen": ["kenney_space-kit"], "format": ["glb"]},
-  "oga_lautsprecher": {"name": "Low Poly Speaker", "von": "cosmac (OpenGameArt)", "url": "https://opengameart.org/content/low-poly-speaker", "quellen": ["speaker"], "format": ["obj"]}
+  "oga_lautsprecher": {"name": "Low Poly Speaker", "von": "cosmac (OpenGameArt)", "url": "https://opengameart.org/content/low-poly-speaker", "quellen": ["speaker"], "format": ["obj"]},
+  "pp_einzeln": {"name": "Einzelmodelle von Poly Pizza", "von": "verschiedene, siehe CREDITS.md (CC0 oder CC-BY)", "url": "https://poly.pizza", "quellen": ["polypizza"], "format": ["glb"]}
 }

@@ -45,6 +45,7 @@ static func capture(game) -> Dictionary:
 		"wave_index": game.wave_index,
 		"lives": game.lives,
 		"score_mode": game.score_mode,
+		"foreign_build": game.foreign_build,
 		"score": game.score,
 		"score_stats": game.score_stats.duplicate(true),
 		"final_boss": game.final_boss.duplicate(),
@@ -85,6 +86,7 @@ static func apply(game, s: Dictionary) -> void:
 	game.lives = int(s.get("lives", game.lives))
 	game.score_mode = bool(s.get("score_mode", false))
 	Session.score_mode = game.score_mode
+	game.foreign_build = bool(s.get("foreign_build", false))
 	game.score = float(s.get("score", 0.0))
 	game.score_stats = {}
 	var stats: Dictionary = s.get("score_stats", {})

@@ -46,6 +46,9 @@ var rules: Dictionary
 var levels: Array
 var map: MaulMap
 var board: MaulBoard
+var path_lights: PathLights  ## Lichtpfad entlang der Gegnerwege (Knopf „Lichtpfad“)
+var _own_routes: Array = []  ## Wege (PackedVector2Array) durchs eigene Gebiet, für den Lichtpfad
+var _other_routes: Array = []
 var effects: Effects
 var camera_rig: MaulCamera
 var hud: MaulHud
@@ -63,6 +66,7 @@ var local_player := 0
 var acting := 0
 var players: Array = []
 var sandbox := false        ## Option „Sandbox“: feste 800 XP (alles offen), Durchbrüche kosten keine Leben, keine XP
+var foreign_build := false  ## Option „Überall bauen“: Tower und Einheiten auch in den Gebieten der anderen
 var levels_done := 0
 ## Debug-Menü (maul_debug.gd): freies Bauen = Tower aller Filialen ohne Voraussetzungen und Towerlimit,
 ## alle Items ohne Laden. debug_xp: XP verändert, dann wird am Levelende nichts gespeichert.
@@ -162,6 +166,11 @@ func _ready() -> void:
 	board.players = players.size()
 	board.map = map
 	add_child(board)
+	path_lights = PathLights.new(board, "shoppingmaul")
+	path_lights.visible = Display.path_lights
+	path_lights.color_at = _path_light_color
+	board.add_child(path_lights)
+	board.set_path_dots(not Display.path_lights)
 	effects = Effects.new()
 	board.add_child(effects)
 	camera_rig = MaulCamera.new()
@@ -196,8 +205,8 @@ func _ready() -> void:
 # --- Start ---------------------------------------------------------------------
 
 ## Nach der Filialwahl: Gold, Leben und Countdown bis Level 1. Im Koop startet der Host (Schwierigkeit,
-## Modus, Sandbox gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
-func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false) -> void:
+## Modus, Sandbox, Überall bauen gelten für alle), die Mitspieler wählen ihre Filiale mit dem Befehl "shop".
+func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := false, foreign_on := false) -> void:
 	if mirror:
 		submit({"type": "shop", "shop": shop_id, "xp": players[local_player].xp})
 		return
@@ -206,6 +215,7 @@ func start_game(shop_id: String, diff: int, play_mode: String, sandbox_on := fal
 	difficulty = clampi(diff, 0, rules.get("difficulties", []).size() - 1)
 	mode = play_mode
 	sandbox = sandbox_on
+	foreign_build = foreign_on
 	var d := MaulData.difficulty(difficulty)
 	max_lives = int(d.get("lives", 150))
 	lives = max_lives
@@ -261,6 +271,11 @@ func pl(p := -1) -> Player:
 func _process(delta: float) -> void:
 	if phase == Phase.SETUP:
 		return
+	# Gebietsrahmen ab dem ersten Level nur noch schwach (auch beim Gast, level kommt vom Host);
+	# hell nur, solange die Gebietsgrenze gilt (Option „Überall bauen“ hebt sie auf)
+	if level > 0:
+		board.set_zone_glow(Board3D.ZONE_FAINT)
+	board.set_zone_rule(not foreign_build)
 	if phase < Phase.GAME_OVER:
 		game_time += delta
 		play_time += delta / maxf(Engine.time_scale, 0.001)
@@ -373,14 +388,14 @@ func _start_level(n: int) -> void:
 	_refresh_hud()
 
 
-## „Level 7: Boden, Schnell“
+## „Welle 7: Boden, Schnell“
 func level_title(n: int) -> String:
 	var lv := level_def(n)
 	var parts := [kind_name(str(lv.get("kind", "")))]
 	if specials_on():
 		for s in lv.get("specials", []):
 			parts.append(special_name(s))
-	return tr("Level %d: %s") % [n, ", ".join(parts)]
+	return tr("Welle %d: %s") % [n, ", ".join(parts)]
 
 
 static func kind_name(kind: String) -> String:
@@ -558,7 +573,7 @@ func _end_level() -> void:
 		show_message(tr(str(rules.get("level_40_text", ""))), 8.0)
 	else:
 		countdown = float(rules.level_delay)
-		var done_text: String = tr("Level %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
+		var done_text: String = tr("Welle %d geschafft: +%d Gold") % [n, income_pot / m + (floori(income_pot * float(inc.red_share) / m) if local_player == 0 else 0)]
 		show_message(done_text + ("\n" + bank_text if bank_text != "" else ""), 4.0)
 	_refresh_hud()
 
@@ -674,6 +689,8 @@ func _refresh_paths() -> void:
 	var zone: int = players[local_player].zone
 	var own := {}
 	var other := {}
+	_own_routes = []
+	_other_routes = []
 	for leg in all_legs():
 		var r := _route(leg[0], leg[1], "ground")
 		var mine := players.size() <= 1
@@ -683,6 +700,8 @@ func _refresh_paths() -> void:
 			mine = map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL))) == zone
 		for i in range(0, r.path.size(), 2):
 			(own if mine else other)[r.path[i]] = true
+		if not _own_routes.has(r.path) and not _other_routes.has(r.path):  # gleiche Abschnitte nur einmal beleuchten
+			(_own_routes if mine else _other_routes).append(r.path)
 	_own_path_pts = PackedVector2Array(own.keys())
 	_other_path_pts = PackedVector2Array(other.keys().filter(func(p): return not own.has(p)))
 	_show_paths()
@@ -702,6 +721,26 @@ func set_show_all_paths(on: bool) -> void:
 func _show_paths() -> void:
 	board.path_points = _own_path_pts + _other_path_pts if show_all_paths else _own_path_pts
 	board.refresh_path()
+	if path_lights != null:
+		path_lights.set_paths(_own_routes + _other_routes if show_all_paths else _own_routes)
+
+
+## Lichter in der Farbe des Spielers, durch dessen Gebiet sie gerade fliegen (Spieler i besitzt Gebiet i,
+## Board3D.PLAYER_COLORS); außerhalb der Spielergebiete in Messing (PathLights.COLORS).
+func _path_light_color(p: Vector2) -> Color:
+	var z := map.zone_at(Vector2i(floori(p.x / Board3D.CELL), floori(p.y / Board3D.CELL)))
+	if z < 0 or z >= players.size():
+		return Color(0, 0, 0, 0)
+	return Board3D.PLAYER_COLORS[z % Board3D.PLAYER_COLORS.size()]
+
+
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert. Solange er läuft, ohne Wegpunkte am Boden.
+func set_path_lights(on: bool) -> void:
+	Display.set_path_lights(on)
+	path_lights.visible = on
+	board.set_path_dots(not on)
+	if hud.lights_button != null:
+		hud.lights_button.set_pressed_no_signal(on)
 
 
 ## Würde ein Tower auf diesen Feldern einen der Wege versperren?
@@ -910,19 +949,39 @@ func frost_factor(t) -> float:
 
 
 func find_targets(t, count: int) -> Array:
+	if count == 1:
+		# häufigster Fall ohne Lambda und Sortieren (wie game.gd)
+		var best = null
+		for e in enemies:
+			if not e.dead and (best == null or e.traveled > best.traveled) and t.can_target(e) and t.in_range(e):
+				best = e
+		return [] if best == null else [best]
 	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and t.in_range(e))
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
 
 func find_targets_in(t, r: float, count: int) -> Array:
-	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_to(t.pos) <= r)
+	var r2 := r * r
+	if count == 1:
+		var best = null
+		for e in enemies:
+			if not e.dead and (best == null or e.traveled > best.traveled) and e.pos.distance_squared_to(t.pos) <= r2 \
+					and t.can_target(e):
+				best = e
+		return [] if best == null else [best]
+	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and e.pos.distance_squared_to(t.pos) <= r2)
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
 
 func enemies_in_radius(p: Vector2, radius: float) -> Array:
-	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
+	var out := []
+	var r2 := radius * radius
+	for e in enemies:
+		if not e.dead and e.pos.distance_squared_to(p) <= r2:
+			out.append(e)
+	return out
 
 
 ## fx wie bei game.gd ("t:<tower>:<stufe>"); FxData wählt den Effekt nach Filialfarbe und Fähigkeit.
@@ -1020,6 +1079,11 @@ func requirement_problem(def: Dictionary, p: int, ignore: MaulTower = null) -> S
 	return ""
 
 
+## Darf Spieler p in Gebiet z bauen und Einheiten aufstellen? Ohne „Überall bauen“ nur im eigenen.
+func may_use_zone(z: int, p: int) -> bool:
+	return z == players[p].zone or (foreign_build and z >= 0)
+
+
 ## Grund, warum Spieler p hier nicht bauen kann ("" = geht). check_path: Wege prüfen (teuer).
 func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> String:
 	var def := MaulData.tower(id)
@@ -1029,10 +1093,9 @@ func build_problem(id: String, a: Vector2i, p: int, check_path := false) -> Stri
 	if phase == Phase.SETUP or phase >= Phase.GAME_OVER:
 		return tr("Gerade kann nicht gebaut werden")
 	var cells := Board3D.footprint(a)
-	var zone: int = players[p].zone
 	for c in cells:
-		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or map.zone_at(c) != zone:
-			return tr("Nur im eigenen Gebiet")
+		if not map.in_bounds(c) or map.get_tile(c) != MapData.FLOOR or not may_use_zone(map.zone_at(c), p):
+			return tr("Nur im eigenen Gebiet") if not foreign_build else tr("Nur in einem Gebiet")
 		if map.is_marker_zone(c):
 			return tr("Zu nah am Wegpunkt")
 		if occupied.has(c):
@@ -1271,8 +1334,8 @@ func _execute(cmd: Dictionary) -> bool:
 			if u == null or u.owner_player != p:
 				return false
 			var at := Vector2(float(cmd.get("x", 0)), float(cmd.get("y", 0)))
-			if map.zone_at(Vector2i(floori(at.x / Board3D.CELL), floori(at.y / Board3D.CELL))) != players[p].zone:
-				_tell(p, tr("Nur im eigenen Gebiet"))
+			if not may_use_zone(map.zone_at(Vector2i(floori(at.x / Board3D.CELL), floori(at.y / Board3D.CELL))), p):
+				_tell(p, tr("Nur im eigenen Gebiet") if not foreign_build else tr("Nur in einem Gebiet"))
 				return false
 			u.post = at
 			return true
@@ -1701,6 +1764,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				set_speed(2.0)
 			KEY_3:
 				set_speed(4.0)
+			KEY_L:
+				set_path_lights(not path_lights.visible)
 			KEY_DELETE:
 				if selected != null:
 					submit({"type": "sell", "cell": selected.cell})
@@ -1710,6 +1775,9 @@ func _on_click(keep := false) -> void:
 	var c := board.mouse_cell(camera_rig.camera)
 	if build_id != "":
 		var a := board.mouse_anchor(camera_rig.camera)
+		# außerhalb des eigenen Gebiets: Rahmen leuchten auf
+		if not foreign_build and Board3D.footprint(a).any(func(f): return map.zone_at(f) != players[local_player].zone):
+			board.flash_zones()
 		if submit({"type": "build", "tower": build_id, "cell": a}) and not keep:
 			build_id = ""
 			hud.refresh_shop()

@@ -20,6 +20,7 @@ var lane_paths: Array = []
 var show_all_paths := false  ## Mehrspieler: auch die Bahnen der Mitspieler als Punkte zeigen
 
 var board: Board3D
+var path_lights: PathLights  ## Lichtpfad entlang der Gegnerwege (Knopf „Lichtpfad“)
 var path_depth := 0.0  ## Laufweg ("_"-Felder) so tief als Schlucht unter den Bauflächen (Board3D.path_depth)
 var camera_rig: CameraRig
 var effects: Effects
@@ -74,6 +75,8 @@ var wave_index := 0
 var lives := 50
 ## Punkte-Modus (Session.score_mode): statt Leben zählen Punkte, das Spiel endet erst nach der letzten Welle.
 var score_mode := false
+## Option „Überall bauen“ (Host, Startfenster): in Karten mit Gebieten auch in fremden Gebieten bauen
+var foreign_build := false
 var score := 0.0
 ## Wertung nach Wellentyp (wave_type): {kills, points, leaks, lost}, für den Endbildschirm
 var score_stats := {}
@@ -197,6 +200,12 @@ func _ready() -> void:
 		lives += n
 		_refresh_hud())
 	hud.debug_wave_requested.connect(debug_jump_to_wave)
+	if has_path_lights():
+		path_lights = PathLights.new(board, map.game if map.game != "" else Session.game_kind, map.path_lights)
+		path_lights.visible = Display.path_lights
+		board.add_child(path_lights)
+		hud.add_lights_toggle(Display.path_lights, set_path_lights)
+		board.set_path_dots(not Display.path_lights)
 	if has_other_paths():
 		hud.add_paths_toggle(set_show_all_paths)
 		board.set_marker_lanes(_own_lanes())
@@ -383,6 +392,8 @@ func _update_paths() -> void:
 	air_path = lane_paths[0].air
 	board.path_points = dots + others if show_all_paths else dots
 	board.refresh_path()
+	if path_lights != null:
+		path_lights.set_paths(range(lane_paths.size()).filter(func(i): return show_all_paths or _own_lane(i)).map(func(i): return lane_paths[i].ground))
 
 
 ## Im Mehrspieler gehören Bahnen mit Spielernummer einem Spieler; anfangs zeigt das Feld nur die
@@ -397,6 +408,18 @@ func _own_lanes() -> Array:
 
 func has_other_paths() -> bool:
 	return range(map.lane_count()).any(func(i): return not _own_lane(i))
+
+
+## Lichtpfad (Knopf „Lichtpfad“) in diesem Modus? YouTD hat einen festen Weg und braucht ihn nicht.
+func has_path_lights() -> bool:
+	return true
+
+
+## Lichtpfad ein/aus (Knopf im HUD, Taste L); bleibt gespeichert. Solange er läuft, ohne Wegpunkte am Boden.
+func set_path_lights(on: bool) -> void:
+	Display.set_path_lights(on)
+	path_lights.visible = on
+	board.set_path_dots(not on)
 
 
 func set_show_all_paths(on: bool) -> void:
@@ -418,6 +441,11 @@ func _process(delta: float) -> void:
 	if phase < Phase.GAME_OVER:
 		play_time += delta / maxf(Engine.time_scale, 0.001)
 	_update_hover()
+	# Zonenrahmen (Maul-Maps, Randgruppen) ab der ersten Welle nur noch schwach, auch im Koop beim Gast
+	if phase == Phase.WAVE or wave_index > 0:
+		board.set_zone_glow(Board3D.ZONE_FAINT)
+	# hell nur, solange die Gebietsgrenze gilt (Option „Überall bauen“ hebt sie auf)
+	board.set_zone_rule(not foreign_build)
 	if phase == Phase.WAVE and not mirror:
 		_process_wave(delta)
 
@@ -568,7 +596,7 @@ func can_move_trap(t: Tower, a: Vector2i) -> bool:
 	if t == null or not is_instance_valid(t) or not t.is_trap() or t.moves_left <= 0 or a == t.cell:
 		return false
 	for c in Board3D.footprint(a, Board3D.TRAP_CELLS):
-		if not map.is_walkable(c) or not map.can_build_for(c, acting):
+		if not map.is_walkable(c) or not may_build_for(c):
 			return false
 	return not _trap_overlaps(t, a)
 
@@ -597,7 +625,7 @@ func can_swap(t: Tower, other: Vector2i) -> bool:
 	if swap_cost(t) <= 0 or t.is_new or t.owner_player != acting or other == t.cell or gold < swap_cost(t):
 		return false
 	if rocks.has(other):
-		return map.can_build_for(other, acting)
+		return may_build_for(other)
 	var o: Tower = towers.get(other, null)
 	return o != null and not o.is_new and o.owner_player == acting
 
@@ -630,11 +658,32 @@ func swap_tower(t: Tower, other: Vector2i) -> bool:
 
 
 ## Passt ein Tower mit Anker a hin, ohne den Weg zu versperren? Fallen darunter stören nicht.
+## Darf Spieler p auf Feld c bauen? Eigenes oder freies Gebiet, mit „Überall bauen“ jedes Gebiet.
+func may_build_for(c: Vector2i, p := acting) -> bool:
+	return map.can_build_for(c, p) or (foreign_build and map.zone_index(c) >= 0)
+
+
+## Hat die Karte Gebiete für mehrere Spieler? Dann zeigen die Startfenster die Option „Überall bauen“.
+func has_foreign_zones() -> bool:
+	var owners := {}
+	for z in map.zones:
+		if int(z.player) >= 0:
+			owners[int(z.player)] = true
+	return owners.size() >= 2
+
+
+## Aus dem Befehl setup des Hosts: „Überall bauen“ übernehmen.
+func take_foreign_build(cmd: Dictionary) -> void:
+	if acting == 0 and cmd.has("foreign"):
+		foreign_build = bool(cmd.foreign)
+		Session.foreign_build = foreign_build
+
+
 ## any_zone: Zonen der Maul-Maps nicht beachten (zufällige Steine beim Start)
 func can_place(a: Vector2i, any_zone := false) -> bool:
 	var cells := Board3D.footprint(a)
 	for c in cells:
-		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or map.can_build_for(c, acting)):
+		if not map.is_buildable(c) or occupied.has(c) or not (any_zone or may_build_for(c)):
 			return false
 	return not pathfinder.would_block_cells(cells)
 
@@ -851,7 +900,7 @@ func replace_rocks(list: Array) -> int:
 
 ## Stein entfernen (in jeder Phase, kostet rock_remove_cost Gold).
 func can_remove_rock(c: Vector2i) -> bool:
-	return phase < Phase.GAME_OVER and rocks.has(c) and gold >= rock_remove_cost() and map.can_build_for(c, acting)
+	return phase < Phase.GAME_OVER and rocks.has(c) and gold >= rock_remove_cost() and may_build_for(c)
 
 
 func remove_rock(c: Vector2i) -> bool:
@@ -1232,6 +1281,7 @@ func _execute(cmd: Dictionary) -> bool:
 			Session.score_mode = bool(cmd.get("score_mode", false))
 			score_mode = Session.score_mode
 			Session.rogue = bool(cmd.get("rogue", false)) and Session.game_kind == "gemtd"
+			take_foreign_build(cmd)
 			if Session.rogue:
 				enable_rogue()
 			setup_done = true
@@ -1626,13 +1676,25 @@ func idle_speed_factor() -> float:
 
 
 func find_targets(t: Tower, count: int) -> Array:
+	if count == 1:
+		# häufigster Fall ohne Lambda, Zwischenliste und Sortieren: der am weitesten gelaufene Gegner in Reichweite
+		var best = null
+		for e in enemies:
+			if not e.dead and (best == null or e.traveled > best.traveled) and t.can_target(e) and t.in_range(e):
+				best = e
+		return [] if best == null else [best]
 	var list := enemies.filter(func(e): return not e.dead and t.can_target(e) and t.in_range(e))
 	list.sort_custom(func(a, b): return a.traveled > b.traveled)
 	return list.slice(0, count)
 
 
 func enemies_in_radius(p: Vector2, radius: float) -> Array:
-	return enemies.filter(func(e): return not e.dead and e.pos.distance_to(p) <= radius)
+	var out := []
+	var r2 := radius * radius
+	for e in enemies:
+		if not e.dead and e.pos.distance_squared_to(p) <= r2:
+			out.append(e)
+	return out
 
 
 ## fx: Schuss-/Treffer-Effekt, siehe effects.gd

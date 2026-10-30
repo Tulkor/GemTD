@@ -3,7 +3,7 @@
 	"name": "Gartenzwerg",
 	"category": "randgruppen",
 	"color": "#5cc85c",
-	"model": "res://assets/models/towers/q_figuren/goblin_male.glb",
+	"model": "res://assets/models/towers/pp_einzeln/gnome.glb",
 	"model_tint": false,
 	"model_solid": true,
 	"damage_type": "pierce",

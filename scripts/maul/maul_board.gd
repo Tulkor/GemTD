@@ -8,8 +8,9 @@ extends Board3D
 const COL_LEAK := Color("ff5d7a")
 const COL_TELEPORT := Color("b38cff")
 ## Stärke des Farbstichs im Gebiet (0..1), im eigenen etwas kräftiger.
-const TINT := 0.22
-const TINT_OWN := 0.28
+## Spielerfarbe am Boden nur angedeutet, die Gebietsrahmen zeigen sie deutlich (Lukas, 2026-10-28)
+const TINT := 0.06
+const TINT_OWN := 0.09
 
 var own_zone := 0
 ## So viele Spieler spielen mit (Gebiete 0 bis players - 1 haben einen Besitzer).
@@ -47,9 +48,13 @@ func _rebuild_markers() -> void:
 	var leak: Array = mm.maul.get("leak", [])
 	if leak.size() == 4:
 		_add_zone(Rect2i(int(leak[0]), int(leak[1]), int(leak[2]), int(leak[3])), style.get("zone_leak", COL_LEAK))
+	# Rahmen in der Farbe des Spielers, dem das Gebiet gehört; das eigene breiter und heller
 	for i in map.zones.size():
-		var col: Color = style.get("zone_own", PLAYER_COLORS[0]) if i == own_zone else style.get("zone_other", Color(0.45, 0.4, 0.6))
-		_add_zone(map.zones[i].rect, col)
+		if i < players:
+			var col: Color = PLAYER_COLORS[i % PLAYER_COLORS.size()]
+			_add_zone(map.zones[i].rect, col, 0.22 if i == own_zone else 0.15, 3.2 if i == own_zone else 2.4)
+		else:
+			_add_zone(map.zones[i].rect, style.get("zone_other", Color(0.45, 0.4, 0.6)))
 
 
 

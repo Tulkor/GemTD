@@ -98,7 +98,11 @@ Dazu Rüstungswert wie in WC3, kritische Treffer (Grundchance 1,25 %, ×1,25), Z
 - 180 Items wirken nur über Werte (z. B. „+25 % Schaden“), die übrigen haben seit Etappe 3 ihr Skript aus YouTD 2
   (141 Skripte in `scripts/youtd/items/`): Auslöser, Auren, Zauber (von Hand über die Auswahlkarte), Ladungen.
   Verbrauchsgegenstände benutzt man mit einem Klick im Lager.
-- **Horadrischer Würfel** (Seitenleiste, Lager-Bereich): 7 Rezepte nach `horadric_cube.gd`, z. B. 2 Öle oder
+- **Lager** unten links: Tower-Lager (Baumodus: Baumenü) und Item-Lager übereinander, je einklappbar, alles als Icons.
+  Items zieht man auf einen Tower (Karte oder Plätze der Auswahlkarte) und zurück. „6 → 1“: 6 Tower gleicher Seltenheit
+  aus dem Lager (die ältesten) werden zu 1 zufälligen der nächsten (Element einer Zutat, höchstens so teuer wie alle
+  zusammen). „Öle“ destilliert alle Öle so oft wie möglich (4 → 1 höher).
+- **Horadrischer Würfel** (Knopf im Item-Lager): 7 Rezepte nach `horadric_cube.gd`, z. B. 2 Öle oder
   Verbrauchsgegenstände → 1 neuer, 5 gleiche Items → 1 neues höherer Stufe, 4 → 1 seltener. Drei davon (Verflüssigen,
   Ausfällen, Durchtränken) nur mit dem Baumeister Backpacker. Rechtsklick sperrt ein Item gegen den Würfel.
 
@@ -147,7 +151,7 @@ steht still.
 - `scripts/youtd/`: `youtd_game.gd` (erweitert game.gd wie eeveTD, Befehle `setup`, `research`, `roll`, `build`,
   `item_put`, `next_wave`, `option`), `youtd_waves.gd` (Wellen-Generator), `youtd_roll.gd` (Tower würfeln, Item-Drops),
   `youtd_tower.gd`, `youtd_enemy.gd`, `youtd_data.gd` (Daten laden), `youtd_progress.gd` (Spieler-XP, Level, Weisheit im
-  Profil unter `modes.youtd.progress`), `youtd_panel.gd` (Seitenleiste), `youtd_setup_panel.gd` (Startfenster).
+  Profil unter `modes.youtd.progress`), `youtd_panel.gd` (Seitenleiste oben links), `youtd_store.gd` (Lager unten links), `youtd_slot.gd` (Icon-Feld), `youtd_setup_panel.gd` (Startfenster).
 - **Laufzeit aus YouTD 2** in `scripts/youtd/rt/` (Klassen mit Präfix `Yt`, umbenannt von `tools/youtd/umbenennen.py`):
   Jeder Tower und Gegner bekommt einen Kern (`YtTower`/`YtCreep`, Kind des Körpers `YoutdTower`/`YoutdEnemy`, Verweis
   `core.body`). Der Kern rechnet Werte, Leben, Angriffe, Buffs, Auren und Autocasts; der Körper zeigt Modell und Weg und

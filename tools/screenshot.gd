@@ -28,7 +28,9 @@ extends Node
 ##   --items                 eeveTD: Marktplatz (Feld 32,76), Lager mit Items, Höllenkohlenbecken (44,76) mit zwei Items;
 ##                           --auswahl wählt es, --lagerwahl=N wählt Item N im Lager, --markt öffnet das Marktplatz-Fenster
 ##   --winkel=oben,schraeg,nah,seite   ein Bild pro Winkel (Standard schraeg = Spielansicht)
-##   --punkt=x,y             Kamera auf dieses Feld richten (für nah)
+##   --punkt=x,y             Kamera auf dieses Feld richten (nah, auch schraeg/oben/seite)
+##   --abstand=N|max         Kameraabstand für schraeg/oben/seite (max = weitester Zoom, Rand der Karte prüfen)
+##   --frei                  Kamera nicht auf die Karte begrenzen (CameraRig.limit_view aus, z. B. Umgebung ansehen)
 ##   --baufeld=x,y           Maus über dieses Feld stellen (grüne/rote Bauvorschau, auch Shopping Maul)
 ##   --gegner                nah: Kamera dicht auf den ersten Gegner (z. B. Boss mit --welle=42 --phase=welle)
 ##   --zuschnitt=x,y,b,h     Bild zuschneiden (Pixel)
@@ -38,17 +40,23 @@ extends Node
 ##   --vitrine               eeveTD: viele verschiedene Tower auf den Mauern (Modelle ansehen)
 ##   --einstellungen         Einstellungsfenster vor Runde 1 offen lassen (z. B. eeveTD)
 ##   --wuerfel               YouTD: Bereich „Würfel“ der Seitenleiste aufklappen
+##   --turmlicht=sockel|kontur|aus  eeveTD: Tower von Lampen im Sockel angeleuchtet, weiße Kontur oder nichts
 ##   --nacht                 Nachtversion des Spielfeld-Stils (FieldStyle.night, z. B. Shopping Maul im Mondlicht,
 ##                           eeveTD ist ohnehin nachts)
 ##   --tag                   eeveTD bei Tag statt Nacht
 ##   --bonusfelder           eeveTD: Bonusfelder (Lava, Eis, Marmor) auslegen, drei davon unter Towern des Plans
 ##   --ende                  eeveTD: Endbildschirm mit Wertung (Sieg)
 ##   --alle_wege             Koop (Shopping Maul, GemTD-Maul-Karten): auch die Gegnerwege der Mitspieler zeigen
+##   --filter=aus|an         Stil-Filter des Modus ab- bzw. anschalten (ohne die Einstellung zu speichern)
+##   --lichtpfad             Lichtpfad an (Lichter fliegen den Gegnerweg entlang, ohne die Einstellung zu speichern)
 ##   --debug                 Debug-Menü offen (GemTD, eeveTD, Shopping Maul)
 ##   --spielmenue[=einstellungen]  Menü im Spiel offen (wie Esc), mit =einstellungen dazu das Einstellungsfenster
 ##   --roguelike[=N]         GemTD-Variante Roguelike: Bonus-Auswahl nach Welle N (Standard 10) offen;
 ##                           --boni=ruby:damage:0.4,silver:speed:0.2 diese Werte-Boni schon vorher gewählt (z. B. fürs Infofenster),
 ##                           --angebot=flask:ruby,execute,ability:silver diese Boni (Bonus-ID[:Tower]) als Karten
+##   --messen=S              statt eines Bildes S Sekunden Leistung messen (Bildzeit, Skriptzeit, Draw Calls,
+##                           Objekte, Lichter, Knoten), Ausgabe Zeilen MESSUNG; tools/leistung.sh fasst mehrere zusammen
+##   --grafik=0|1|2          Grafikqualität Niedrig/Mittel/Hoch (Standard Hoch; Xvfb würde sonst als Software-Grafik Niedrig wählen)
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -70,9 +78,16 @@ func _ready() -> void:
 	Session.skip_setup = not opts.has("einstellungen")
 	if opts.has("rasse"):
 		Session.rg_choice = {"race": str(opts.rasse)}
+	Display.quality = int(opts.get("grafik", Display.HIGH))
+	Display.apply_quality()
 	FieldStyle.night = opts.has("nacht")
+	# Stil-Filter (StyleFilter) aus bzw. an, ohne die Einstellung zu speichern
+	if opts.has("filter"):
+		Display.style_filter = opts.filter != "aus"
 	if opts.has("tag"):
 		Session.eeve_choice["night"] = false
+	if opts.has("turmlicht"):
+		Tower.eeve_accent = "" if opts.turmlicht == "aus" else str(opts.turmlicht)
 	if opts.has("koop"):
 		var guest := opts.has("gast")
 		Session.coop = {"role": "client" if guest else "host", "player": 1 if guest else 0, "names": String(opts.koop).split(",")}
@@ -127,6 +142,12 @@ func _ready() -> void:
 		angles = String(opts.get("winkel", "schraeg")).split(",")
 	if opts.has("extra") and scene == "spiel":
 		node.hud.extra_chance_requested.emit()
+	if opts.has("lichtpfad") and (scene == "spiel" or scene == "maul"):
+		node.path_lights.visible = true
+		node.board.set_path_dots(false)
+		var lb: Button = node.hud.lights_button
+		lb.set_pressed_no_signal(true)
+		await _frames(30)
 	if opts.has("debug") and (scene == "spiel" or scene == "maul"):
 		if scene == "maul":
 			node.hud.toggle_debug()
@@ -140,6 +161,12 @@ func _ready() -> void:
 			node.hud.open_leave_confirm()
 		if str(opts.spielmenue) == "einstellungen":
 			node.hud.settings_panel.open()
+	if opts.has("messen"):
+		if scene == "spiel":
+			_camera(node, angles[0])
+		await _measure(float(opts.messen))
+		get_tree().quit()
+		return
 	for w in angles:
 		if scene == "spiel":
 			_camera(node, w)
@@ -181,6 +208,99 @@ func _fake_lobby(menu: Node) -> void:
 		lobby.fields[uids[i]] = int(list[i])
 	Net.players_changed.emit()
 	await _frames(5)
+
+
+## --messen: S Sekunden lang je Bild die Leistungswerte sammeln, dann Mittel, 95-%-Wert und Höchstwert ausgeben.
+func _measure(seconds: float) -> void:
+	await _frames(10)
+	var keys := {
+		"bild_ms": -1,
+		"prozess_ms": Performance.TIME_PROCESS,
+		"physik_ms": Performance.TIME_PHYSICS_PROCESS,
+		"draw_calls": Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME,
+		"objekte": Performance.RENDER_TOTAL_OBJECTS_IN_FRAME,
+		"dreiecke": Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME,
+		"knoten": Performance.OBJECT_NODE_COUNT,
+	}
+	var rows := {}
+	for k in keys:
+		rows[k] = []
+	var t := 0.0
+	var last := Time.get_ticks_usec()
+	while t < seconds:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		var dt := (now - last) / 1000.0
+		last = now
+		t += dt / 1000.0
+		for k in keys:
+			var v: float = dt if keys[k] < 0 else Performance.get_monitor(keys[k])
+			if k.ends_with("_ms") and keys[k] >= 0:
+				v *= 1000.0
+			rows[k].append(v)
+	var counts := {"lichter": 0, "lichter_schatten": 0, "partikel": 0, "multimesh": 0, "multimesh_inst": 0, "gegner": 0, "tower": 0}
+	for n in _all_nodes(get_tree().root):
+		if n is Light3D and n.is_visible_in_tree():
+			counts.lichter += 1
+			if n.shadow_enabled:
+				counts.lichter_schatten += 1
+		elif (n is GPUParticles3D or n is CPUParticles3D) and n.is_visible_in_tree() and n.emitting:
+			counts.partikel += 1
+		elif n is MultiMeshInstance3D and n.is_visible_in_tree() and n.multimesh:
+			counts.multimesh += 1
+			counts.multimesh_inst += n.multimesh.visible_instance_count if n.multimesh.visible_instance_count >= 0 else n.multimesh.instance_count
+		if n is Enemy:
+			counts.gegner += 1
+		elif n is Tower:
+			counts.tower += 1
+	# größte Dreiecks-Verbraucher (Mesh x Anzahl), ohne Sichtbarkeitsprüfung der Kamera
+	var geo := {}
+	for n in _all_nodes(get_tree().root):
+		var mesh: Mesh = null
+		var count := 1
+		if n is MeshInstance3D and n.is_visible_in_tree():
+			mesh = n.mesh
+		elif n is MultiMeshInstance3D and n.is_visible_in_tree() and n.multimesh:
+			mesh = n.multimesh.mesh
+			count = n.multimesh.visible_instance_count if n.multimesh.visible_instance_count >= 0 else n.multimesh.instance_count
+		if mesh == null or count == 0:
+			continue
+		var name: String = mesh.resource_path.get_file() if mesh.resource_path != "" else (mesh.resource_name if mesh.resource_name != "" else "%s/%s" % [n.get_parent().name, n.name])
+		var e: Array = geo.get_or_add(name, [0, 0, _tris(mesh), n is MultiMeshInstance3D])
+		e[0] += count
+		e[1] += count * e[2]
+	var top := geo.keys()
+	top.sort_custom(func(a, b): return geo[a][1] > geo[b][1])
+	for k in top.slice(0, int(opts.get("geometrie", "8"))):
+		print("MESSUNG geometrie %s: %d x %d = %d Dreiecke%s" % [k, geo[k][0], geo[k][2], geo[k][1], " (MultiMesh)" if geo[k][3] else ""])
+	var frames: int = rows.bild_ms.size()
+	print("MESSUNG bilder=%d sekunden=%.1f fps=%.1f" % [frames, t, frames / maxf(t, 0.001)])
+	for k in keys:
+		var a: Array = rows[k].duplicate()
+		a.sort()
+		var sum := 0.0
+		for v in a:
+			sum += v
+		print("MESSUNG %s mittel=%.2f p95=%.2f max=%.2f" % [k, sum / a.size(), a[int(a.size() * 0.95)], a[-1]])
+	print("MESSUNG anzahl %s" % " ".join(counts.keys().map(func(k): return "%s=%d" % [k, counts[k]])))
+
+
+func _tris(mesh: Mesh) -> int:
+	if mesh is ArrayMesh or mesh is PrimitiveMesh:
+		var sum := 0
+		for i in mesh.get_surface_count():
+			var arr := mesh.surface_get_arrays(i)
+			var idx = arr[Mesh.ARRAY_INDEX]
+			sum += (idx.size() if idx != null and idx.size() > 0 else arr[Mesh.ARRAY_VERTEX].size()) / 3
+		return sum
+	return 0
+
+
+func _all_nodes(n: Node) -> Array:
+	var out := [n]
+	for c in n.get_children():
+		out.append_array(_all_nodes(c))
+	return out
 
 
 func _frames(n: int) -> void:
@@ -273,9 +393,12 @@ func _prepare_maul(game: Node) -> void:
 			game.hud._setup._build_cards()
 		if opts.has("profil"):
 			game.hud._setup._show_profile()
+		if opts.has("ueberall"):
+			game.hud._setup._foreign = true
+			game.hud._setup._refresh()
 		return
 	var shop: String = opts.filiale
-	game.start_game(shop, 1, "group", opts.has("sandbox"))
+	game.start_game(shop, 1, "group", opts.has("sandbox"), opts.has("ueberall"))
 	if opts.has("gold"):
 		game.players[0].gold = int(opts.gold)
 	var zone: Rect2i = game.map.zones[0].rect
@@ -533,8 +656,8 @@ func _prepare_youtd(game: Node) -> void:
 	Engine.time_scale = 1.0
 	if opts.has("auswahl"):
 		game._select(game.towers.get(Vector2i(12, 12)))
-	if opts.has("wuerfel") and game.youtd_panel != null:
-		game.youtd_panel.toggle_section("cube")
+	if opts.has("wuerfel") and game.youtd_store != null:
+		game.youtd_store.set_cube(true)
 	game._refresh_hud()
 	await _frames(3)
 
@@ -597,6 +720,13 @@ func _camera(game: Node, w: String) -> void:
 			rig.target = Board3D.to_3d(focus)
 		_:
 			pass
+	if w != "nah" and opts.has("punkt"):
+		var p := String(opts.punkt).split(",")
+		rig.target = Board3D.to_3d(Vector2(int(p[0]), int(p[1])) * Board3D.CELL)
+	rig.limit_view = not opts.has("frei")
+	if opts.has("abstand") and w != "nah":
+		rig.distance = CameraRig.MAX_DISTANCE if str(opts.abstand) == "max" else float(opts.abstand)
+	rig._clamp_target()
 	rig._apply()
 
 

@@ -24,6 +24,6 @@ func buildable_cell_exists_at_pos(player: YtPlayer, pos: Vector2i) -> bool:
 		return false
 	var m = YtWorld.game.map
 	for c in Board3D.footprint(pos):
-		if not m.is_buildable(c) or not m.can_build_for(c, player.id if player != null else 0):
+		if not m.is_buildable(c) or not YtWorld.game.may_build_for(c, player.id if player != null else 0):
 			return false
 	return true

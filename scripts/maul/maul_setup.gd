@@ -2,7 +2,7 @@ class_name MaulSetup
 extends ColorRect
 ## Vor Level 1: Schwierigkeit, Modus und Filiale wählen („Filiale eröffnen“).
 ## Zwei Reiter: die 11 Standard-Filialen und die 9 Profi-Filialen (ab 25 XP und nur mit Speziallevels).
-## Im Koop wählt der Host Schwierigkeit, Modus und Sandbox, jeder Mitspieler nur seine Filiale.
+## Im Koop wählt der Host Schwierigkeit, Modus, Sandbox und „Überall bauen“, jeder Mitspieler nur seine Filiale.
 
 const CARD_WIDTH := 236.0
 
@@ -12,12 +12,14 @@ var _kind := "standard"
 var _difficulty := 1
 var _mode := "group"
 var _sandbox := false
+var _foreign := false
 var _waiting := false      ## Mitspieler hat gewählt, der Host hat noch nicht gestartet
 var _cards := {}
 var _diff_buttons: Array = []
 var _mode_buttons: Array = []
 var _kind_buttons := {}
 var _sandbox_button: Button
+var _foreign_button: Button
 var _grid: GridContainer
 var _detail: Label
 var _xp: Label
@@ -35,6 +37,7 @@ func _ready() -> void:
 	_difficulty = int(last.get("difficulty", _difficulty))
 	_mode = str(last.get("mode", _mode))
 	_sandbox = bool(last.get("sandbox", _sandbox))
+	_foreign = bool(last.get("foreign", _foreign))
 	_kind = str(last.get("kind", _kind))
 	_shop = str(last.get("shop", _shop))
 	var center := CenterContainer.new()
@@ -91,6 +94,13 @@ func _ready() -> void:
 			_sandbox = not _sandbox
 			_refresh())
 		_sandbox_button.tooltip_text = "Zum Ausprobieren: 800 XP (alles freigeschaltet), Durchbrüche kosten keine Leben, es gibt keine neuen XP."
+		var zone_box := VBoxContainer.new()
+		opts.add_child(zone_box)
+		DecoTheme.caption("Fremde Gebiete", zone_box)
+		_foreign_button = _toggle("Überall bauen", zone_box, func():
+			_foreign = not _foreign
+			_refresh())
+		_foreign_button.tooltip_text = "An: alle dürfen Tower auch in den Gebieten der anderen (und in leeren Gebieten) bauen und Einheiten dort aufstellen. Aus: nur im eigenen Gebiet."
 	else:
 		var info := UiUtil.wrap_label("Koop: der Host wählt Schwierigkeit und Modus, jeder eröffnet seine eigene Filiale in seinem Gebiet. Die Leben sind gemeinsam.", box, CARD_WIDTH * 4 + 30)
 		info.add_theme_color_override("font_color", DecoTheme.CYAN)
@@ -146,7 +156,7 @@ func _build_cards() -> void:
 	_cards.clear()
 	for s in MaulData.shops():
 		if str(s.kind) == _kind:
-			_add_card(str(s.id), str(s.name), str(s.get("text", "")), Color.from_string(str(s.color), DecoTheme.GOLD), str(s.bonus))
+			_add_card(str(s.id), str(s.name), tr(str(s.get("text", ""))), Color.from_string(str(s.color), DecoTheme.GOLD), str(s.bonus))
 	if _kind == "pro":
 		_add_card("random_pro", tr("Profi-Zufall"), tr("Eine der 9 Profi-Filialen"), DecoTheme.PURPLE_LIGHT, "")
 	else:
@@ -197,9 +207,10 @@ func _add_card(id: String, name: String, text: String, col: Color, bonus: String
 
 ## Kartentext: bei Profi-Filialen nur die Besonderheiten (die Werte stehen im Tooltip).
 func _short(text: String) -> String:
-	var i := text.find("Besonderheiten:")
-	if _kind == "pro" and i >= 0:
-		return text.substr(i + 15).replace(" / ", " ").strip_edges()
+	for key in ["Besonderheiten:", "Special:"]:
+		var i := text.find(key)
+		if _kind == "pro" and i >= 0:
+			return text.substr(i + key.length()).replace(" / ", " ").strip_edges()
 	return text.replace("Reichweite:", tr("Reichweite")).replace("  ", " ")
 
 
@@ -230,7 +241,7 @@ func _pro_open() -> bool:
 func refresh() -> void:
 	if _waiting and game.phase != MaulGame.Phase.SETUP:
 		_waiting = false
-		game.start_game(_shop, _difficulty, _mode, _sandbox)
+		game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign)
 	_refresh()
 
 
@@ -244,6 +255,8 @@ func _refresh() -> void:
 		e[0].set_pressed_no_signal(e[1] == _mode)
 	if _sandbox_button != null:
 		_sandbox_button.set_pressed_no_signal(_sandbox)
+	if _foreign_button != null:
+		_foreign_button.set_pressed_no_signal(_foreign)
 	for k in _kind_buttons:
 		_kind_buttons[k].set_pressed_no_signal(k == _kind)
 	var pro_open := _pro_open()
@@ -305,5 +318,5 @@ func _start() -> void:
 		_waiting = true
 		_refresh()
 		return
-	Session.maul_choice = {"shop": _shop, "kind": _kind, "difficulty": _difficulty, "mode": _mode, "sandbox": _sandbox}
-	game.start_game(_shop, _difficulty, _mode, _sandbox)
+	Session.maul_choice = {"shop": _shop, "kind": _kind, "difficulty": _difficulty, "mode": _mode, "sandbox": _sandbox, "foreign": _foreign}
+	game.start_game(_shop, _difficulty, _mode, _sandbox, _foreign)

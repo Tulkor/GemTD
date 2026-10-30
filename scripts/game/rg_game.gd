@@ -42,6 +42,8 @@ func _ready() -> void:
 		for p in players:
 			p.gold = start_gold()
 		level_pause = float(rules.get("first_pause", 60))
+	board.marker_labels = false
+	board._rebuild_markers()
 	RgScenery.add_to(self)
 	_focus_own_zone()
 	_style_hud()
@@ -198,6 +200,7 @@ func _execute(cmd: Dictionary) -> bool:
 		"setup":
 			if setup_done:
 				return false
+			take_foreign_build(cmd)
 			return _apply_setup(str(cmd.get("race", "")), int(cmd.get("difficulty", difficulty)))
 		"build":
 			return build_tower(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
@@ -490,6 +493,8 @@ func _on_click(c: Vector2i, anchor: Vector2i, _add := false) -> void:
 	if placing != "":
 		if can_build_tower(placing, anchor):
 			submit({"type": "build", "id": placing, "cell": anchor})
+		elif anchor != NO_CELL and Board3D.footprint(anchor).any(func(f): return not may_build_for(f, local_player)):
+			board.flash_zones()
 		return
 	var a: Vector2i = occupied.get(c, NO_CELL)
 	if towers.has(a):
