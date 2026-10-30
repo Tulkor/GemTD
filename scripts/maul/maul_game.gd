@@ -33,7 +33,7 @@ class Player:
 	var xp := 10              ## Erfahrung in Zehnteln (10 = 1,0 XP)
 	var xp_pot := 0.0
 	var research := {}        ## TOI: Forschung → Stufe
-	var aok_lives := 0        ## AOX: in diesem Level zurückgeholte Leben
+	var aok_lives := 0        ## AOX/Life: in diesem Level durch Kills zurückgeholte Leben
 	var account := 0          ## Konto (maul_bank.gd)
 	var auto_deposit := false ## am Levelende alles Gold aufs Konto
 	var bank_level := 0       ## Bank-Upgrade im Hauptgebäude (0–3)
@@ -848,14 +848,9 @@ func on_enemy_killed(e) -> void:
 		players[p].gold += int(e.bounty)
 	players[p].kills += 1
 	players[p].level_kills += 1
-	# AOX: 10 % Chance, Leben zurückzuholen (die Hälfte der Leckkosten, höchstens 30 pro Level)
-	var aok: Dictionary = MaulData.pro().aok
-	if players[p].shop == "aok" and lives < max_lives and randf() < float(aok.life_chance):
-		var room: int = int(aok.life_max_per_level) - players[p].aok_lives
-		var gain := mini(maxi(e.leak_cost / 2, 1), room)
-		if gain > 0:
-			players[p].aok_lives += gain
-			gain_lives(gain)
+	# AOX: 10 % Chance, Leben zurückzuholen (Tower mit "Life" würfeln selbst, MaulTower._killed)
+	if players[p].shop == "aok" and randf() < float(MaulData.pro().aok.life_chance):
+		kill_life(p, e)
 	# Contained Darkness frisst Leichen in der Nähe, nach 5 wird sie für 30 s zur Unleashed Darkness
 	var dk: Dictionary = MaulData.pro().undertaker.darkness
 	for t in towers.values():
@@ -880,6 +875,17 @@ func _share_bounty(amount: int) -> void:
 	for pl in players:
 		pl.gold += each
 	gold_pot -= each * m
+
+
+## Leben durch einen Kill zurückholen (AOX, Life): die Hälfte der Leckkosten, höchstens 30 pro Level und Spieler.
+func kill_life(p: int, e) -> void:
+	if lives >= max_lives or p < 0 or p >= players.size():
+		return
+	var room: int = int(MaulData.pro().aok.life_max_per_level) - players[p].aok_lives
+	var gain := mini(maxi(e.leak_cost / 2, 1), room)
+	if gain > 0:
+		players[p].aok_lives += gain
+		gain_lives(gain)
 
 
 func gain_lives(n: int) -> void:

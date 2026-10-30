@@ -255,7 +255,7 @@ func _apply_enemy_auras(delta: float) -> void:
 					e.last_tower = self
 					total_damage += e.take_raw_damage(float(ab.dps) * delta)
 					if e.dead:
-						kills += 1
+						_killed(e)
 				"slow_aura":
 					e.apply_slow(float(ab.factor), 0.25)
 				"armor_aura":
@@ -347,9 +347,14 @@ func _hit(e, dmg: float) -> void:
 	e.last_tower = self
 	total_damage += e.take_damage(dmg, damage_type())
 	if e.dead:
-		kills += 1
+		_killed(e)
 	if not rogue_fx.is_empty() and game.rogue != null:
 		game.rogue.on_hit(self, e)
+
+
+## Ein Gegner ist durch diesen Tower gestorben (Modi hängen hier Kill-Effekte an).
+func _killed(_e) -> void:
+	kills += 1
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
@@ -501,7 +506,7 @@ func _cone(target_pos: Vector2, ab: Dictionary, dmg: float, target) -> void:
 			other.last_tower = self
 			total_damage += other.take_damage(float(ab.damage) * (1.0 + damage_bonus + kill_bonus() + rogue_damage), "spells")
 			if other.dead:
-				kills += 1
+				_killed(other)
 		else:
 			_hit(other, dmg)
 	# Umriss des Kegels kurz aufblitzen lassen
@@ -533,7 +538,7 @@ func _nova(target, ab: Dictionary) -> void:
 		other.last_tower = self
 		total_damage += other.take_damage(float(ab.damage) * (1.0 + kill_bonus()), "spells")
 		if other.dead:
-			kills += 1
+			_killed(other)
 	game.add_beam(Board3D.to_3d(center, 0.1), Board3D.to_3d(center, 1.5), Color.WHITE, "n:%s:%d:%s" % [tower_id, tier, float(ab.get("radius", 2.0))])
 
 
