@@ -892,6 +892,8 @@ static func ability_lines(d: Dictionary) -> Array:
 				out.append(_t("Flächenschaden %d %% (Radius %s)") % [roundi(float(ab.factor) * 100), _n(float(ab.radius))])
 			"multishot":
 				out.append(_t("Trifft %d Ziele") % int(ab.targets))
+			"air_bonus":
+				out.append(_t("%s-facher Schaden gegen Luft") % _n(float(ab.multiplier)))
 			"detect":
 				out.append(_t("Enttarnt Unsichtbare (Radius %s)") % _n(float(ab.radius)))
 			"nova_spell":

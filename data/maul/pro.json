@@ -215,6 +215,9 @@
 		"leash": 7.0
 	},
 	"overrides": {
+		"h005": {"targets": "both", "abilities": [{"type": "stun", "chance": 0.1, "duration": 0.33}, {"type": "air_bonus", "multiplier": 10.0}]},
+		"o00C": {"targets": "ground"},
+		"h00Y": {"targets": "ground"},
 		"h00S": {"targets": "ground", "abilities": [{"type": "burn_aura", "radius": 3.91, "dps": 18.0, "targets": "ground"}]},
 		"h01M": {"damage": [160, 160], "cooldown": 0.1, "range": 3.91, "targets": "both"},
 		"h01U": {"damage": [1500, 1500], "cooldown": 1.0, "range": 7.81, "targets": "ground", "abilities": [{"type": "poison", "dps": 1500.0, "duration": 3.0}]},

@@ -320,8 +320,8 @@ def build_towers(rs, out):
             # Späherturm (hwtw) ohne aktivierten Angriff: Schaden nur über Zauber
             if only_aura or (t["base"] == "hwtw" and um.get("uaen") != 1):
                 lo = hi = 0
-            # Flächenschaden der Waffe: voller Schaden im inneren Radius, außen weniger
-            if um.get("ua1w") in ("msplash", "artillery", "aline") and um.get("ua1q"):
+            # Flächenschaden der Waffe: voller Schaden im inneren Radius, außen weniger (nur mit echtem Angriff)
+            if um.get("ua1w") in ("msplash", "artillery", "aline") and um.get("ua1q") and hi:
                 abilities.insert(0, {"type": "splash", "radius": round(float(um["ua1q"]) / TOWER, 2), "factor": 0.5})
             hk = re.search(r"\((\w)\)", t.get("hotkey_name") or "")
             extra = {"requires": t["requires"]} if t.get("requires") else {}
