@@ -6,7 +6,7 @@ Aufruf aus dem Projektordner:
   python3 tools/balance_editor/bauen.py --ziel=pfad.html     anderer Zielpfad
 Die fertige Datei läuft ohne Installation im Browser (Doppelklick, Edge oder Chrome).
 Eingebettet: Tower, Gegner, GemTD-Wellen, Maul-Shops und -Level, Fähigkeiten aus scripts/game/abilities.gd,
-die Schrift DejaVu Sans Mono.
+Level-Profile (data/leveling.json), die Schrift DejaVu Sans Mono.
 """
 import base64
 import json
@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 DEFAULT = Path("/mnt/project-files/balance-editor/balance_editor.html")
-FILES = ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", "data/roguelike_enemies.json", "data/eeve_items.json"]
+FILES = ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", "data/roguelike_enemies.json", "data/eeve_items.json", "data/leveling.json"]
 
 
 def data_texts():

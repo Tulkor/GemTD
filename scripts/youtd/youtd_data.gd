@@ -223,12 +223,16 @@ static func item_slots(id: String) -> int:
 
 # --- Erfahrung -------------------------------------------------------------------
 
+## Erfahrungstabellen kommen aus dem gemeinsamen Level-System (data/leveling.json, Profile youtd und
+## youtd_spieler), damit sich die EP-Formel dort ändern lässt; ohne Profil die Tabellen aus xp.json.
 static func tower_exp_table() -> Array:
-	return _file("xp").get("tower", [0])
+	var p := Leveling.for_tower("youtd", "")
+	return p._table if p.has("_table") else _file("xp").get("tower", [0])
 
 
 static func player_exp_table() -> Array:
-	return _file("xp").get("player", [0])
+	var p := Leveling.cached("youtd_spieler")
+	return p._table if p.has("_table") else _file("xp").get("player", [0])
 
 
 ## Level zu einer Erfahrung in einer Tabelle (höchstes Level, dessen Schwelle erreicht ist).

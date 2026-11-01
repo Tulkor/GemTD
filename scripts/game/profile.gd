@@ -4,27 +4,34 @@ extends RefCounted
 ## Rekorden und Tower-Statistik je Modus, dazu jeder Run komplett in runs/<id>.json (alle Tower,
 ## jede Welle, siehe run_stats.gd), damit man später an jedes Detail kommt. Angezeigt wird nur
 ## das Wichtigste (profile_panel.gd). Shopping Maul legt XP und Rekorde je Filiale unter
-## modes.maul.progress ab (maul_profile.gd, maul_xp.gd). Runs mit Debug-Hilfen stehen in der
-## Liste, zählen aber nicht für Summen und Rekorde.
+## modes.maul.progress ab (maul_profile.gd, maul_xp.gd), YouTD unter modes.youtd.progress. Das Profil
+## hängt an keinem Spielstand: Level und XP bleiben, auch wenn Spielstände gelöscht werden.
+## Runs mit Debug-Hilfen stehen in der Liste und ihre Zeit zählt zur Spielzeit, sie zählen aber nicht
+## für Runs, Siege, Rekorde und geben keine EP. Abgebrochene Runs (Spiel verlassen) zählen mit ihrer Zeit
+## und als "aborted" (record_abort). Alle Dateien tragen ein Siegel (profile_store.gd).
 ##
-## profile.json: {version, created, updated, name,
+## profile.json: {seal, version, created, updated, name, integrity: {state, tampered: [Zeiten]},
+##   daily: {JJJJ-MM-TT: {time, runs}},
 ##   modes: {<modus>: {runs, wins, losses, play_time, kills, damage, waves, leaks, built, actions,
-##     by_map: {map: {runs, wins, best_wave, best_score}}, by_difficulty: {…}, best_run: {Index-Eintrag},
+##     aborted, debug_runs, debug_time, first_played, last_played, streak, best_streak,
+##     by_map: {map: {runs, wins, best_wave, best_score, play_time}}, by_difficulty: {…}, best_run: {Index-Eintrag},
 ##     records: {name: {value, run, id?, label?, wave?, time}}, progress?: {…}}},
 ##   towers: {<modus>: {tower_id: {built, tiers, runs, wins, wins_alive, kills, damage, best_run_kills,
 ##     best_run_damage, best_tower_kills, best_tower_damage, best_wave_damage, (je *_run)}}},
 ##   runs: [Index-Einträge, neueste zuerst]}
 ## runs/<id>.json: Index-Eintrag + alles aus info + RunStats.result() (towers, types, wave_log, actions).
 
-const VERSION := 1
-const MAX_INDEX := 2000
-const MODES := ["gemtd", "eeve", "maul", "roguelike"]
+const VERSION := 2
+const MAX_INDEX := 5000  ## Einträge in der Liste; die Run-Dateien selbst bleiben alle
+const MODES := ["gemtd", "roguelike", "eeve", "maul", "randgruppen", "youtd"]
 ## Rekorde, bei denen der kleinere Wert besser ist
 const LOWER_IS_BETTER := ["fastest_win"]
 
 static var dir := "user://profile"  ## Tests schreiben in einen eigenen Ordner
 static var _data := {}
 static var _loaded_from := ""
+## Zustand beim Laden: ProfileStore.VALID, UNSIGNED (alte Datei), TAMPERED (von Hand geändert) …
+static var integrity := ProfileStore.VALID
 
 
 static func file() -> String:
@@ -40,20 +47,26 @@ static func data() -> Dictionary:
 static func _load() -> void:
 	_loaded_from = dir
 	_data = {}
-	if FileAccess.file_exists(file()):
-		var d = JSON.parse_string(FileAccess.get_file_as_string(file()))
-		if d is Dictionary:
-			_data = d
-		else:
-			push_warning("Profil beschädigt, nehme Sicherung: %s" % file())
-			d = JSON.parse_string(FileAccess.get_file_as_string(file() + ".bak")) if FileAccess.file_exists(file() + ".bak") else null
-			if d is Dictionary:
-				_data = d
+	var r := ProfileStore.read(file())
+	if not r.data is Dictionary and r.state != ProfileStore.MISSING:
+		push_warning("Profil beschädigt, nehme Sicherung: %s" % file())
+		# Die kaputte Datei bleibt liegen, damit nichts verloren geht
+		DirAccess.copy_absolute(file(), file() + ".kaputt_%d" % int(Time.get_unix_time_from_system()))
+		r = ProfileStore.read(file() + ".bak")
+		if not r.data is Dictionary:
+			r = ProfileStore.newest_backup(file())
+	integrity = r.state if r.data is Dictionary else ProfileStore.VALID
+	if r.data is Dictionary:
+		_data = r.data
 	if _data.is_empty():
 		_data = {"version": VERSION, "created": _now(), "updated": _now(), "name": "", "modes": {}, "towers": {}, "runs": []}
 		_import_old()
-		save()
 	_upgrade()
+	if integrity == ProfileStore.TAMPERED:
+		push_warning("Profil-Siegel passt nicht (von Hand geändert?): %s" % file())
+		_data.integrity.tampered.append(_now())
+	_data.integrity.state = "tampered" if not _data.integrity.tampered.is_empty() else "ok"
+	save()
 
 
 ## Ältere Fassungen der Datei auf VERSION bringen (hier kommen später Umbauten hin).
@@ -63,19 +76,26 @@ static func _upgrade() -> void:
 			_data[k] = {}
 	if not _data.get("runs") is Array:
 		_data.runs = []
+	if not _data.get("daily") is Dictionary:
+		_data.daily = {}
+	if not _data.get("integrity") is Dictionary:
+		_data.integrity = {"state": "ok", "tampered": []}
+	if not _data.integrity.get("tampered") is Array:
+		_data.integrity.tampered = []
+	for m in _data.modes:
+		_fill_mode(_data.modes[m])
 	_data.version = VERSION
 
 
 static func save() -> void:
-	DirAccess.make_dir_recursive_absolute(dir.path_join("runs"))
 	_data.updated = _now()
-	if FileAccess.file_exists(file()):
-		DirAccess.copy_absolute(file(), file() + ".bak")
-	var f := FileAccess.open(file(), FileAccess.WRITE)
-	if f == null:
-		push_warning("Profil nicht speicherbar: %s" % file())
-		return
-	f.store_string(JSON.stringify(_data, "\t"))
+	ProfileStore.daily_backup(file())
+	ProfileStore.write(file(), _data, "\t", true)
+
+
+## Ist das Profil unverändert seit dem letzten Speichern durch das Spiel?
+static func sealed() -> bool:
+	return str(data().get("integrity", {}).get("state", "ok")) == "ok"
 
 
 ## Nur für Tests: alles vergessen (nächster Zugriff lädt neu).
@@ -92,9 +112,25 @@ static func _now() -> String:
 static func mode(m: String) -> Dictionary:
 	var modes: Dictionary = data().modes
 	if not modes.has(m):
-		modes[m] = {"runs": 0, "wins": 0, "losses": 0, "play_time": 0, "kills": 0, "damage": 0, "waves": 0,
-			"leaks": 0, "built": 0, "actions": {}, "by_map": {}, "by_difficulty": {}, "best_run": {}, "records": {}}
+		modes[m] = {}
+	_fill_mode(modes[m])
 	return modes[m]
+
+
+const _MODE_NUMBERS := ["runs", "wins", "losses", "play_time", "kills", "damage", "waves", "leaks", "built",
+	"aborted", "debug_runs", "debug_time", "streak", "best_streak"]
+
+
+static func _fill_mode(md: Dictionary) -> void:
+	for k in _MODE_NUMBERS:
+		if not md.has(k):
+			md[k] = 0
+	for k in ["actions", "by_map", "by_difficulty", "best_run", "records"]:
+		if not md.get(k) is Dictionary:
+			md[k] = {}
+	for k in ["first_played", "last_played"]:
+		if not md.has(k):
+			md[k] = ""
 
 
 ## Eigener Bereich eines Modus für Fortschritt (Maul: XP, Rekorde je Filiale). Danach save().
@@ -123,16 +159,26 @@ static func load_run(rid: String) -> Dictionary:
 	var p := dir.path_join("runs/%s.json" % rid)
 	if not FileAccess.file_exists(p):
 		return {}
-	var d = JSON.parse_string(FileAccess.get_file_as_string(p))
-	return d if d is Dictionary else {}
+	var r := ProfileStore.read(p)
+	if not r.data is Dictionary:
+		return {}
+	r.data.sealed = r.state == ProfileStore.VALID
+	return r.data
 
 
 ## Summen über alle Modi.
 static func totals() -> Dictionary:
-	var s := {"runs": 0, "wins": 0, "play_time": 0, "kills": 0, "damage": 0, "waves": 0, "built": 0, "best_wave": 0}
+	var s := {"runs": 0, "wins": 0, "losses": 0, "play_time": 0, "kills": 0, "damage": 0, "waves": 0, "built": 0,
+		"aborted": 0, "debug_runs": 0, "best_wave": 0, "first_played": "", "last_played": ""}
 	for m in data().modes:
 		var md: Dictionary = data().modes[m]
-		for k in ["runs", "wins", "play_time", "kills", "damage", "waves", "built"]:
+		var first := str(md.get("first_played", ""))
+		if first != "" and (s.first_played == "" or first < s.first_played):
+			s.first_played = first
+		var last := str(md.get("last_played", ""))
+		if last > str(s.last_played):
+			s.last_played = last
+		for k in ["runs", "wins", "losses", "play_time", "kills", "damage", "waves", "built", "aborted", "debug_runs"]:
 			s[k] += int(md.get(k, 0))
 		s.best_wave = maxi(s.best_wave, int(md.get("records", {}).get("best_wave", {}).get("value", 0)))
 	return s
@@ -161,8 +207,9 @@ static func _better(a: Dictionary, b: Dictionary) -> bool:
 
 
 ## Einen beendeten Run eintragen. info: map, map_path, difficulty, victory, wave, waves, lives,
-## max_lives, score, score_mode, kills, play_time, path, coop, players, debug und was der Modus
-## sonst mitgibt; stats: RunStats.result(). Gibt die neuen Rekorde zurück ({name: true}).
+## max_lives, score, score_mode, kills, play_time, path, coop, players, debug, time_counted (Sekunden,
+## die schon beim Verlassen eines gespeicherten Runs gebucht wurden) und was der Modus sonst mitgibt;
+## stats: RunStats.result(). Gibt die neuen Rekorde zurück ({name: true}).
 static func record_run(m: String, info: Dictionary, stats: Dictionary) -> Dictionary:
 	data()
 	var rid := "%s_%s_%04d" % [m, Time.get_datetime_string_from_system(false, false).replace(":", "").replace("-", ""), randi() % 10000]
@@ -181,19 +228,67 @@ static func record_run(m: String, info: Dictionary, stats: Dictionary) -> Dictio
 	full.merge(stats, true)
 	full.merge(entry, true)
 	full.version = VERSION
-	DirAccess.make_dir_recursive_absolute(dir.path_join("runs"))
-	var f := FileAccess.open(dir.path_join("runs/%s.json" % rid), FileAccess.WRITE)
-	if f != null:
-		f.store_string(JSON.stringify(full))
-		f.close()
-	_data.runs.push_front(entry)
-	if _data.runs.size() > MAX_INDEX:
-		_data.runs.resize(MAX_INDEX)
+	ProfileStore.write(dir.path_join("runs/%s.json" % rid), full, "")
+	_add_index(entry)
+	_book_time(m, entry, maxi(0, entry.play_time - int(info.get("time_counted", 0))), true)
 	var news := {}
 	if not entry.debug:
 		news = _count(m, entry, info, stats, maxi(waves_done, 0))
 	save()
 	return news
+
+
+## Run verlassen, bevor er zu Ende war. info wie bei record_run, dazu saved (vorher gespeichert: dann
+## wird nur die Zeit gebucht, der Run geht ja beim Laden weiter). Gibt die gebuchten Sekunden zurück.
+static func record_abort(m: String, info: Dictionary) -> int:
+	data()
+	var secs := maxi(0, int(info.get("play_time", 0)) - int(info.get("time_counted", 0)))
+	var saved := bool(info.get("saved", false))
+	if secs <= 0 and saved:
+		return 0
+	var entry := {"id": "", "mode": m, "time": _now(), "map": info.get("map", ""), "difficulty": info.get("difficulty", 0),
+		"victory": false, "aborted": true, "saved": saved, "wave": int(info.get("wave", 0)), "waves": int(info.get("waves", 0)),
+		"lives": int(info.get("lives", 0)), "kills": int(info.get("kills", 0)), "play_time": int(info.get("play_time", 0)),
+		"debug": bool(info.get("debug", false))}
+	_book_time(m, entry, secs, not saved)
+	if not saved:
+		entry.id = "%s_%s_%04d_ab" % [m, Time.get_datetime_string_from_system(false, false).replace(":", "").replace("-", ""), randi() % 10000]
+		var full := info.duplicate(true)
+		full.merge(entry, true)
+		full.version = VERSION
+		ProfileStore.write(dir.path_join("runs/%s.json" % entry.id), full, "")
+		_add_index(entry)
+		mode(m).aborted += 1
+	save()
+	return secs
+
+
+static func _add_index(entry: Dictionary) -> void:
+	_data.runs.push_front(entry)
+	if _data.runs.size() > MAX_INDEX:
+		_data.runs.resize(MAX_INDEX)
+
+
+## Spielzeit buchen (auch Debug und abgebrochene Runs): Modus, Karte, Tag. new_run: zählt im Tag als Run.
+static func _book_time(m: String, entry: Dictionary, secs: int, new_run: bool) -> void:
+	var md := mode(m)
+	md.play_time += secs
+	if entry.debug:
+		md.debug_time += secs
+		md.debug_runs += 1 if new_run and not entry.get("aborted", false) else 0
+	if md.first_played == "":
+		md.first_played = entry.time
+	md.last_played = entry.time
+	var g: Dictionary = md.by_map
+	var key := str(entry.map)
+	if not g.has(key):
+		g[key] = {"runs": 0, "wins": 0, "best_wave": 0, "best_score": 0}
+	g[key].play_time = int(g[key].get("play_time", 0)) + secs
+	var day := Time.get_date_string_from_system()
+	if not _data.daily.has(day):
+		_data.daily[day] = {"time": 0, "runs": 0}
+	_data.daily[day].time = int(_data.daily[day].time) + secs
+	_data.daily[day].runs = int(_data.daily[day].runs) + (1 if new_run else 0)
 
 
 static func _count(m: String, entry: Dictionary, info: Dictionary, stats: Dictionary, waves_done: int) -> Dictionary:
@@ -202,7 +297,8 @@ static func _count(m: String, entry: Dictionary, info: Dictionary, stats: Dictio
 	md.runs += 1
 	md.wins += 1 if won else 0
 	md.losses += 0 if won else 1
-	md.play_time += entry.play_time
+	md.streak = int(md.streak) + 1 if won else 0
+	md.best_streak = maxi(int(md.best_streak), int(md.streak))
 	md.kills += entry.kills
 	md.damage += entry.damage
 	md.waves += waves_done
@@ -300,5 +396,6 @@ static func _import_old() -> void:
 		if not top.is_empty():
 			entry.top = {"id": "", "label": top[0].get("label", ""), "damage": int(top[0].get("damage", 0))}
 		_data.runs.push_front(entry)
+		mode("gemtd").play_time += entry.play_time
 		var waves_done: int = entry.wave - (0 if entry.victory else 1)
 		_count("gemtd", entry, r, {}, maxi(waves_done, 0))

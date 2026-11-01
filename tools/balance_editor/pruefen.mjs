@@ -140,6 +140,41 @@ try {
   check(/13 übernommen, 0 ausgelassen/.test(out), "balance_anwenden.py --probe: " + out.trim().split("\n").pop());
 } catch (e) { check(false, "balance_anwenden.py: " + (e.stdout || e.message)); }
 
+// Level & EP: Kurve wie im Spiel, Formel ändern, Freischaltung hinzufügen
+await page.click(".tab >> text=Level & EP");
+await page.selectOption("#pick", "youtd");
+const yt = await page.evaluate(() => levelTable(levelProfile("youtd")).rows.map((r) => r.total));
+const xp = JSON.parse(readFileSync("data/youtd/xp.json", "utf-8")).tower.slice(1);
+check(yt.join() === xp.join(), "YouTD-Kurve im Editor gleich xp.json");
+await page.selectOption("#pick", "gemtd");
+for (const id of ["gemtd", "eevetd", "randgruppen", "youtd_spieler"]) { await page.selectOption("#pick", id); }
+await page.click("#kind >> text=Modi");
+await page.click("#kind >> text=Profile");
+await page.selectOption("#pick", "gemtd");
+check(await page.evaluate(() => allChanges().filter((c) => c.datei === "data/leveling.json").length) === 0, "Ansehen der Level-Profile ändert nichts");
+await page.locator(".stat", { hasText: "Faktor auf alle Stufen" }).first().locator("input").fill("2");
+await page.locator(".stat", { hasText: "Faktor auf alle Stufen" }).first().locator("input").dispatchEvent("change");
+const t2 = await page.locator(".level-table tr").nth(2).locator("td").allTextContents();
+check(t2.join() === "2,20,40", "Faktor 2: Level 2 kostet 20, gesamt 40 (" + t2 + ")");
+await page.locator("select.curve-type").selectOption("formel");
+const fi = page.locator(".stat", { hasText: "Formel:" }).locator("input");
+await fi.fill("base * pow(growth, level - 1) +");
+await fi.dispatchEvent("change");
+check(await page.locator(".msg.err").count() > 0, "kaputte Formel wird gemeldet");
+await fi.fill("10 * level");
+await fi.dispatchEvent("change");
+const t3 = await page.locator(".level-table tr").nth(3).locator("td").allTextContents();
+check(t3.join() === "3,60,120", "Formel 10 × level mal Faktor 2: Level 3 kostet 60 (" + t3 + ")");
+await page.click("text=+ Wert");
+const lv = await page.evaluate(() => FILES["data/leveling.json"].cur.profiles.gemtd.unlocks);
+check(lv.length === 1 && lv[0].stat === "range" && lv[0].level === 1, "Freischaltung hinzugefügt: " + JSON.stringify(lv));
+const lvText = await page.evaluate(() => fileText("data/leveling.json"));
+check(/"formula": "10 \* level"/.test(lvText) && /"value": 0\.1/.test(lvText) && /"factor": 2\.0/.test(lvText), "leveling.json mit Formel, Freischaltung und Kommazahl geschrieben");
+await page.click("#kind >> text=Modi");
+await page.locator(".stat", { hasText: "Shopping Maul" }).locator("select").selectOption("gemtd");
+check(await page.evaluate(() => FILES["data/leveling.json"].cur.modes.shoppingmaul) === "gemtd", "Modus-Zuordnung änderbar");
+if (shots) await page.screenshot({ path: path.join(shots, "balance_editor_level.png"), fullPage: true });
+
 check(errors.length === 0, "keine JavaScript-Fehler" + (errors.length ? ": " + errors.join("; ") : ""));
 await browser.close();
 console.log(failed ? `${failed} Prüfungen fehlgeschlagen` : "Balance-Editor: alle Prüfungen bestanden");

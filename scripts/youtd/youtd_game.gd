@@ -75,7 +75,6 @@ var xp_result := {}
 var youtd_panel: YoutdPanel
 var youtd_store: YoutdStore
 var _item_row: HFlowContainer  ## Item-Plätze auf der Auswahlkarte
-var _drag = null               ## gerade gezogene Daten (Item aus dem Lager)
 var scenery: EeveScenery
 var world: YtWorld           ## Laufzeit von YouTD 2 (Takt, Geschosse, Effekte)
 var _pending_load := {}      ## YouTD-Teil eines Spielstands, bis YtWorld steht
@@ -195,7 +194,7 @@ func save_mode() -> String:
 # --- Koop (coop_sync.gd, youtd_coop.gd) ------------------------------------------------
 
 func coop_commands() -> Array:
-	return ["research", "roll", "build", "item_put", "item_take", "item_use", "item_lock", "transmute", "oil_merge", "tower_merge",
+	return ["research", "roll", "build", "item_put", "item_take", "item_move", "item_use", "item_lock", "transmute", "oil_merge", "tower_merge",
 			"next_wave", "player_setup"]
 
 
@@ -270,6 +269,8 @@ func _execute(cmd: Dictionary) -> bool:
 			return put_item(tower_from_ref(cmd.get("tower", {})), stash_index(int(cmd.get("uid", -1))))
 		"item_use":
 			return consume_item(stash_index(int(cmd.get("uid", -1))))
+		"item_move":
+			return move_item(cmd.get("from", {}), cmd.get("to", {}))
 		"item_lock":
 			var i := stash_index(int(cmd.get("uid", -1)))
 			if i < 0:
@@ -642,6 +643,93 @@ func consume_item(i: int) -> bool:
 		picked_item = -1
 	_refresh_hud()
 	return true
+
+
+## Ort eines Items im Inventar (InvSlot): {"stash": uid} (-1 = freies Lagerfeld) oder {"tower": ref, "slot": k}
+## (k über den belegten Plätzen oder -1 = freier Platz). Ergebnis {it, tower, slot, stash} oder {} wenn ungültig.
+func _inv_place(loc: Dictionary) -> Dictionary:
+	if loc.has("stash"):
+		var uid := int(loc.stash)
+		var i := stash_index(uid) if uid >= 0 else -1
+		if uid >= 0 and i < 0:
+			return {}
+		return {"it": item_stash[i] if i >= 0 else null, "tower": null, "slot": -1, "stash": i}
+	var t := tower_from_ref(loc.get("tower", {}))
+	if not t is YoutdTower or t.owner_player != acting or (t as YoutdTower).core == null:
+		return {}
+	var yt := t as YoutdTower
+	var k := int(loc.get("slot", -1))
+	return {"it": yt.items[k] if k >= 0 and k < yt.items.size() else null, "tower": yt, "slot": k, "stash": -1}
+
+
+## Item an Platz idx der Liste schieben (für Tausch: beide Items landen auf dem Platz des anderen).
+static func _place_at(list: Array, it, idx: int) -> void:
+	list.erase(it)
+	list.insert(clampi(idx, 0, list.size()) if idx >= 0 else list.size(), it)
+
+
+## Item von einem Inventarort zum anderen wie in WC3: auf ein anderes Item = tauschen, auf einen freien Platz =
+## verschieben. Öle wirken beim Einlegen sofort und werden verbraucht, Verbrauchsgegenstände gehen nicht in Tower.
+func move_item(from: Dictionary, to: Dictionary) -> bool:
+	var a := _inv_place(from)
+	var b := _inv_place(to)
+	if a.is_empty() or b.is_empty() or a.it == null or a.it == b.it:
+		return false
+	var it: YtItem = a.it
+	var other: YtItem = b.it
+	if b.tower == null:
+		if a.tower == null:
+			# im Lager umsortieren
+			_place_at(item_stash, it, b.stash)
+			if other != null:
+				_place_at(item_stash, other, a.stash)
+		elif other == null or other.is_consumable() or other.is_oil():
+			return take_item(a.tower, a.slot)
+		else:
+			_swap_stash_tower(other, a.tower, a.slot)
+	else:
+		var t: YoutdTower = b.tower
+		if it.is_consumable():
+			return false
+		if a.tower == null:
+			if it.is_oil() or other == null:
+				return put_item(t, a.stash)
+			_swap_stash_tower(it, t, b.slot)
+		elif a.tower == t:
+			if other == null:
+				_place_at(t.items, it, -1)
+			else:
+				var k: int = a.slot
+				t.items[k] = other
+				t.items[b.slot] = it
+		elif other == null:
+			if not t.core.have_item_space():
+				return false
+			it.drop()
+			it.pickup(t.core)
+		else:
+			var src: YoutdTower = a.tower
+			it.drop()
+			other.drop()
+			it.pickup(t.core)
+			other.pickup(src.core)
+			_place_at(t.items, it, b.slot)
+			_place_at(src.items, other, a.slot)
+	if youtd_store != null:
+		youtd_store.items_dirty()
+	_refresh_hud()
+	return true
+
+
+## Lager-Item s gegen das Item auf Platz k von Tower t tauschen, beide nehmen den Platz des anderen ein.
+func _swap_stash_tower(s: YtItem, t: YoutdTower, k: int) -> void:
+	var si := item_stash.find(s)
+	var old: YtItem = t.items[k]
+	old.drop()
+	s.pickup(t.core)
+	_place_at(t.items, s, k)
+	old.fly_to_stash(0.0)
+	_place_at(item_stash, old, si)
 
 
 ## Horadrischer Würfel: Items uids aus dem Lager des handelnden Spielers nach dem passenden Rezept verwandeln.
@@ -1059,7 +1147,7 @@ func _finish(p: Phase) -> void:
 	if phase >= Phase.GAME_OVER:
 		return
 	phase = p
-	if not debug_used:
+	if not debug_run():
 		xp_result = YoutdProgress.record(my_score(), waves_done, p == Phase.VICTORY, enemies_killed)
 	record_profile(p == Phase.VICTORY)
 	Engine.time_scale = 1.0
@@ -1326,6 +1414,27 @@ func _refresh_hud_local() -> void:
 		youtd_store.refresh()
 
 
+## Werte, die Tower yt durch seine Öle hat, je Art zusammengezählt: [[Text, ""], …] für den Tooltip „▲ Öle“.
+static func oil_rows(yt: YoutdTower) -> Array:
+	var sum := {}
+	var order := []
+	for it in yt.oils:
+		for m in (it as YtItem)._modifier.get_modification_list():
+			if not sum.has(m.type):
+				sum[m.type] = YtModification.new(m.type, 0.0, 0.0)
+				order.append(m.type)
+			sum[m.type].value_base += m.value_base
+			sum[m.type].level_add += m.level_add
+	var rows := []
+	for ty in order:
+		var text: String = (sum[ty] as YtModification).get_tooltip_text().strip_edges()
+		if text != "":
+			rows.append([text, ""])
+	if rows.is_empty() and not yt.oils.is_empty():
+		rows.append([", ".join(yt.oils.map(func(it): return it.get_display_name())), ""])
+	return rows
+
+
 func _refresh_selection() -> void:
 	if selected == null or not is_instance_valid(selected) or not selected is YoutdTower:
 		_refresh_item_row(null)
@@ -1338,18 +1447,17 @@ func _refresh_selection() -> void:
 	var table := YoutdData.tower_exp_table()
 	if yt.level + 1 < table.size() and yt.level < max_tower_level():
 		body += tr(" (nächstes Level bei %d)") % int(table[yt.level + 1])
-	if not yt.oils.is_empty():
-		body += "\n" + tr("Öle: %s") % ", ".join(yt.oils.map(func(it): return it.get_display_name()))
 	var effects := buff_lines(yt.core)
 	if not effects.is_empty():
 		body += "\n" + tr("Effekte:") + "\n  · " + "\n  · ".join(effects)
 	body += "\n" + tr("Verkaufswert: %d Gold") % sell_value(yt)
-	hud.set_selection({"title": yt.label(), "color": yt.color, "body": body, "used_in": null, "stats": yt.view()})
+	hud.set_selection({"title": yt.label(), "color": yt.color, "body": body, "used_in": null, "stats": yt.view(), "oils": oil_rows(yt)})
 	hud.set_options(tower_options(yt).map(func(o): return _option_view(yt, o)))
 	hud.set_options_enabled(true)
 
 
-## Item-Plätze des Towers als Icons: belegte zieht man ins Lager, auf freie (und belegte) legt man Items aus dem Lager.
+## Item-Plätze des Towers als Inventarfelder wie in WC3: immer alle Felder, die der Tower nicht hat ausgegraut, freie
+## dunkel. Items zieht man ins Lager, auf andere Plätze oder andere Tower; auf ein Item gezogen wird getauscht.
 func _refresh_item_row(yt: YoutdTower) -> void:
 	if _item_row == null:
 		return
@@ -1362,49 +1470,63 @@ func _refresh_item_row(yt: YoutdTower) -> void:
 	var mine := yt.owner_player == local_player
 	var cap := int(YoutdData.rules().get("rarities", {}).get("item_slots_max", {}).get("unique", 6))
 	for k in maxi(cap, yt.slots()):
-		var s: YoutdSlot
+		var s := InvSlot.new(40.0)
+		_item_row.add_child(s)
 		if k >= yt.slots():
-			# wie in WC3 immer alle Felder: die, die der Tower nicht hat, dunkel
-			s = YoutdSlot.new(null, Color.TRANSPARENT, 40.0)
-			s.set_marked(false, true)
+			s.set_locked()
 			s.tooltip_text = tr("Dieser Tower hat nur %d Item-Plätze") % yt.slots()
-			_item_row.add_child(s)
 			continue
+		var loc := {"tower": tower_ref(yt), "slot": k}
 		if k < yt.items.size():
 			var it: YtItem = yt.items[k]
 			var d := YoutdData.item(str(it.get_id()))
-			s = YoutdSlot.new(YoutdData.item_icon(str(it.get_id())), YoutdData.rarity_color(str(d.get("rarity", "common"))), 40.0)
+			s.show_item(YoutdData.item_icon(str(it.get_id())), YoutdData.rarity_color(str(d.get("rarity", "common"))))
 			s.set_count(str(it.get_charges()) if it.uses_charges() else "")
-			s.tooltip_text = YoutdPanel.item_tip_for(it) + ("\n" + tr("Ins Lager ziehen: herausnehmen") if mine else "")
+			s.tooltip_text = YoutdPanel.item_tip_for(it) + ("\n" + tr("Ziehen: ins Lager, auf einen anderen Platz oder Tower") if mine else "")
 			if mine:
-				s.drag_data = {"tower_item": k, "tower": tower_ref(yt)}
+				s.drag_data = {"inv": true, "from": loc}
 		else:
-			s = YoutdSlot.new(null, Color.TRANSPARENT, 40.0)
 			s.tooltip_text = tr("Freier Item-Platz: Item aus dem Lager hierher ziehen")
 		if mine:
-			s.accepts = func(data): return data is Dictionary and data.has("yt_item")
-			s.on_drop = func(data): submit({"type": "item_put", "tower": tower_ref(yt), "uid": int(data.yt_item)})
-		_item_row.add_child(s)
-	for it in yt.oils:
-		var o := YoutdSlot.new(YoutdData.item_icon(str(it.get_id())), Color.TRANSPARENT, 28.0)
-		o.tooltip_text = tr("Öl (wirkt dauerhaft): %s") % it.get_display_name()
-		_item_row.add_child(o)
+			s.accepts = func(data):
+				var it2 := _drag_item(data)
+				return it2 != null and not it2.is_consumable()
+			s.on_drop = func(data): submit({"type": "item_move", "from": data.from, "to": loc})
 
 
-## Ein Item aus dem Lager, das nicht auf einem Feld landet, kommt in den Tower unter der Maus (wie in WC3).
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_DRAG_BEGIN:
-		_drag = get_viewport().gui_get_drag_data()
-	elif what == NOTIFICATION_DRAG_END:
-		var data = _drag
-		_drag = null
-		if get_viewport().gui_is_drag_successful() or not (data is Dictionary) or not data.has("yt_item"):
-			return
-		if board == null or camera_rig == null or UiUtil.mouse_over_ui(get_viewport()):
-			return
-		var a: Vector2i = occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL)
-		if towers.has(a):
-			submit({"type": "item_put", "tower": tower_ref(towers[a]), "uid": int(data.yt_item)})
+## Gezogenes Item (Lager oder anderer Tower) auf einen Tower in der Welt (InvWorldDrop, wie in WC3).
+func _drag_item(data: Dictionary) -> YtItem:
+	var a := _inv_place(data.get("from", {}))
+	return a.get("it") if not a.is_empty() else null
+
+
+func inv_drop_reason(t: Tower, data: Dictionary) -> String:
+	if not t is YoutdTower or t.owner_player != local_player:
+		return tr("Nicht dein Tower")
+	var it := _drag_item(data)
+	if it == null:
+		return tr("Item nicht mehr da")
+	if it.is_consumable():
+		return tr("Wird per Klick im Lager benutzt")
+	if it.is_oil():
+		return ""
+	if (t as YoutdTower).items.has(it):
+		return tr("Liegt schon in diesem Tower")
+	if (t as YoutdTower).items.size() >= (t as YoutdTower).slots():
+		return tr("Inventar voll")
+	return ""
+
+
+func inv_drop_hint(t: Tower, data: Dictionary) -> String:
+	var it := _drag_item(data)
+	if it != null and it.is_oil():
+		return "+ " + tr("Öl anwenden (wird verbraucht)")
+	var yt := t as YoutdTower
+	return "+ " + tr("Einlegen · %d frei") % (yt.slots() - yt.items.size())
+
+
+func inv_drop_on_tower(t: Tower, data: Dictionary) -> void:
+	submit({"type": "item_move", "from": data.get("from", {}), "to": {"tower": tower_ref(t), "slot": -1}})
 
 
 func _option_view(_t: Tower, o: Dictionary) -> Dictionary:

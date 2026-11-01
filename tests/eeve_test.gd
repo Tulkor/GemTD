@@ -444,8 +444,8 @@ func _bonus_tests() -> void:
 		made.append(game.towers[cell])
 	check(is_equal_approx(made[0].damage_bonus, 0.5) and made[0].damage_source.contains("Lava"), "Lava: +40 %% Schaden (%s)" % made[0].damage_bonus)
 	check(is_equal_approx(made[1].speed_bonus, 0.35) and is_equal_approx(made[1].damage_bonus, 0.1), "Eis: +35 %% Angriffstempo")
-	made[2].kills = 10
-	made[3].kills = 10
+	made[2].gain_ep(10)
+	made[3].gain_ep(10)
 	check(made[2].kill_bonus() > made[3].kill_bonus() and is_equal_approx(made[2].xp_factor, 2.0), "Marmor: doppelte Erfahrung für Kill-Ränge")
 	check(is_equal_approx(made[3].damage_bonus, 0.1) and made[3].speed_bonus == 0.0, "daneben kein Bonus")
 	check(made[0].base_tint == Color("#ff6a1a") and made[3].base_tint.a == 0.0, "Sockel in der Farbe des Bonusfelds")

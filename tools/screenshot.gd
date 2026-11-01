@@ -3,7 +3,8 @@ extends Node
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
 ##   --seite=single|history|profile|credits|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
-##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
+##   --reiter=X              (mit --seite=profile) overview, history oder ein Modus (gemtd, eeve, maul, youtd …);
+##   --beispielprofil        Profil mit ausgedachten Runs aller Modi füllen (Profilseite ansehen)
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
@@ -59,6 +60,8 @@ extends Node
 ##   --messen=S              statt eines Bildes S Sekunden Leistung messen (Bildzeit, Skriptzeit, Draw Calls,
 ##                           Objekte, Lichter, Knoten), Ausgabe Zeilen MESSUNG; tools/leistung.sh fasst mehrere zusammen
 ##   --grafik=0|1|2          Grafikqualität Niedrig/Mittel/Hoch (Standard Hoch; Xvfb würde sonst als Software-Grafik Niedrig wählen)
+##   --ep=N                  (mit --auswahl) der gewählte Tower hat N EP (Level-System, leveling.gd);
+##                           --level_demo: Beispiel-Freischaltungen (Reichweite ab 3, Krit ab 5), --leveltip: Level-Tooltip offen
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -69,6 +72,41 @@ var opts := {}
 var rng := RandomNumberGenerator.new()
 
 
+## Ausgedachte Runs in allen Modi (--beispielprofil), jedes Mal neu.
+func _example_profile() -> void:
+	var g := ProjectSettings.globalize_path(Profile.dir)
+	for sub in ["runs", "backups", ""]:
+		if not DirAccess.dir_exists_absolute(g.path_join(sub)):
+			continue
+		for f in DirAccess.get_files_at(g.path_join(sub)):
+			DirAccess.remove_absolute(g.path_join(sub).path_join(f))
+	Profile.reset_cache()
+	var r := RandomNumberGenerator.new()
+	r.seed = 7
+	var maps := {"gemtd": ["Classic", "Spirale"], "roguelike": ["Classic"], "eeve": ["Druidenhain"], "maul": ["ikea", "mediamarkt"],
+		"randgruppen": ["Stadtpark"], "youtd": ["Insel"]}
+	var waves := {"gemtd": 50, "roguelike": 50, "eeve": 57, "maul": 40, "randgruppen": 35, "youtd": 120}
+	var towers := {"gemtd": ["ruby", "sapphire", "emerald"], "roguelike": ["ruby"], "eeve": [], "maul": [], "randgruppen": [], "youtd": []}
+	for i in 60:
+		var m: String = ["gemtd", "gemtd", "gemtd", "roguelike", "eeve", "maul", "maul", "randgruppen", "youtd"][r.randi() % 9]
+		var n: int = waves[m]
+		var won := r.randf() < 0.4
+		var wave := n if won else r.randi_range(n / 3, n - 1)
+		var types := {}
+		for id in towers[m]:
+			types[id] = {"built": r.randi_range(2, 9), "tiers": {}, "kills": r.randi_range(50, 900), "damage": r.randf_range(1e5, 9e7),
+				"best_wave_damage": r.randf_range(1e4, 5e6), "best_wave": r.randi_range(1, wave), "alive": 1}
+		var info := {"map": maps[m][r.randi() % maps[m].size()], "difficulty": r.randi_range(0, 2), "victory": won, "wave": wave,
+			"waves": n, "lives": r.randi_range(0, 50), "score": r.randi_range(5000, 48000) if m == "gemtd" else 0,
+			"kills": r.randi_range(400, 5000), "play_time": r.randi_range(900, 5400), "debug": i % 17 == 3}
+		Profile.record_run(m, info, {"types": types, "towers": [], "wave_log": [], "actions": {}})
+		if i % 13 == 5:
+			Profile.record_abort(m, {"map": info.map, "wave": wave / 2, "waves": n, "play_time": 600})
+	MaulXp.save_xp(314)
+	YoutdProgress.prog().xp = 4820.0
+	Profile.save()
+
+
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--"):
@@ -77,6 +115,8 @@ func _ready() -> void:
 	rng.seed = int(opts.get("seed", "1"))
 	RunHistory.path = "user://screenshot_run_history.json"
 	Profile.dir = "user://screenshot_profile"
+	if opts.has("beispielprofil"):
+		_example_profile()
 	Session.skip_setup = not opts.has("einstellungen")
 	if opts.has("rasse"):
 		Session.rg_choice = {"race": str(opts.rasse)}
@@ -132,7 +172,7 @@ func _ready() -> void:
 	elif scene == "menu" and opts.has("seite"):
 		node.show_page(opts.seite)
 		if opts.has("reiter") and opts.seite == "profile":
-			node.profile.show_tab(int(opts.reiter))
+			node.profile.show_view(str(opts.reiter))
 		await _frames(3)
 	if scene == "menu" and opts.has("lobby"):
 		await _fake_lobby(node)
@@ -382,6 +422,7 @@ func _prepare(game: Node) -> void:
 			game._select(game.round_towers[0])
 		elif not game.towers.is_empty():
 			game._select(game.towers.values()[0])
+	await _level_shot(game)
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:
@@ -655,6 +696,13 @@ func _prepare_youtd(game: Node) -> void:
 	var sel = game.towers.get(Vector2i(12, 12))
 	if sel != null and not game.item_stash.is_empty():
 		game.put_item(sel, game.item_stash.size() - 1)
+		# zwei Öle (verbraucht, „▲ Öle“ neben dem Namen) und eines im Lager
+		var oils: Array = YoutdData.items().keys().filter(func(id): return YoutdData.item(id).type == "oil")
+		for k in 3:
+			var o := YtItem.make(int(oils[k * 3]), game.yp())
+			game.stash_add(o)
+			if k < 2:
+				game.put_item(sel, game.item_stash.size() - 1)
 	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
 	game.submit({"type": "next_wave"})
 	Engine.time_scale = 8.0
@@ -748,3 +796,32 @@ func _mouse_to_cell(node: Node) -> void:
 	var vp := get_viewport()
 	Input.warp_mouse(vp.get_screen_transform() * node.camera_rig.camera.unproject_position(p))
 	await _frames(2)
+
+
+## Level-System fürs Bild: EP setzen, Beispiel-Freischaltungen, Level-Tooltip offen neben dem Kills-Feld.
+func _level_shot(game: Node) -> void:
+	if game.selected == null or not opts.has("ep"):
+		return
+	if opts.has("level_demo"):
+		var mode := Leveling.mode_profile_id(game.profile_mode())
+		Database.leveling.profiles[mode]["unlocks"] = [{"level": 3, "stat": "range", "value": 0.1},
+			{"level": 5, "ability": {"type": "crit", "chance": 0.15, "multiplier": 2.0}}]
+		Leveling.reset()
+		game.selected.set_tower(game.selected.tower_id, game.selected.tier)
+		game.selected.set_selected(true)
+	game.selected.kills = int(float(opts.ep))
+	game.selected.set_ep(float(opts.ep))
+	game._refresh_hud()
+	await get_tree().process_frame
+	if not opts.has("leveltip"):
+		return
+	var hud = game.hud
+	var tip: Control = hud._kills_tooltip()
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", hud.info_kills.get_theme_stylebox("panel", "TooltipPanel"))
+	box.add_child(tip)
+	hud.add_child(box)
+	await get_tree().process_frame
+	var r: Rect2 = hud.info_kills.get_global_rect()
+	box.position = Vector2(r.position.x, r.position.y - box.size.y - 6)
+

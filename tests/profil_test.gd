@@ -32,8 +32,10 @@ func _clean(dir: String) -> void:
 		if d != null:
 			for n in d.get_files():
 				d.remove(n)
-	for n in ["profile.json", "profile.json.bak"]:
-		DirAccess.remove_absolute(g.path_join(n))
+	for sub in ["backups", ""]:
+		if DirAccess.dir_exists_absolute(g.path_join(sub)):
+			for n in DirAccess.get_files_at(g.path_join(sub)):
+				DirAccess.remove_absolute(g.path_join(sub).path_join(n))
 
 
 func _ready() -> void:
@@ -114,6 +116,46 @@ func _ready() -> void:
 	check(Profile.runs().size() == 3 and int(Profile.data().version) == Profile.VERSION and int(Profile.towers("gemtd").silver.kills) == 10, "Profil aus der Datei geladen")
 	check(int(Profile.totals().runs) == 2 and int(Profile.totals().best_wave) == 50, "Summen über alle Modi")
 
+	# Spielzeit zählt auch für Debug-Runs (aber kein Run, keine Siege)
+	var time_before := int(Profile.mode("gemtd").play_time)
+	Profile.record_run("gemtd", {"map": "Classic", "victory": true, "wave": 50, "waves": 50, "play_time": 100, "debug": true}, {})
+	check(int(Profile.mode("gemtd").play_time) == time_before + 100 and int(Profile.mode("gemtd").debug_runs) == 2
+		and int(Profile.mode("gemtd").wins) == 1, "Debug-Run: Zeit zählt, Sieg nicht")
+	# Abgebrochen ohne Speichern: Zeit + aborted; gespeichert: nur Zeit, beim Weiterspielen nicht doppelt
+	Profile.record_abort("eeve", {"map": "Hain", "wave": 3, "waves": 57, "play_time": 300})
+	check(int(Profile.mode("eeve").aborted) == 1 and int(Profile.mode("eeve").play_time) == 300 and int(Profile.mode("eeve").runs) == 0
+		and Profile.runs()[0].get("aborted", false), "abgebrochener Run: Zeit und Liste, kein Run")
+	Profile.record_abort("eeve", {"map": "Hain", "wave": 5, "waves": 57, "play_time": 500, "saved": true})
+	Profile.record_run("eeve", {"map": "Hain", "victory": true, "wave": 57, "waves": 57, "play_time": 900, "time_counted": 500}, {})
+	check(int(Profile.mode("eeve").play_time) == 300 + 500 + 400 and int(Profile.mode("eeve").aborted) == 1 and int(Profile.mode("eeve").runs) == 1,
+		"gespeichert verlassen und später gewonnen: Zeit nicht doppelt")
+	check(int(Profile.mode("eeve").streak) == 1 and int(Profile.data().daily[Time.get_date_string_from_system()].time) >= 1200, "Siegesserie und Zeit je Tag")
+	check(int(Profile.mode("eeve").by_map.Hain.play_time) == 1200, "Zeit je Map")
+
+	# Siegel: unverändert gültig, von Hand geändert fällt auf, Werte bleiben lesbar
+	Profile.reset_cache()
+	Profile.data()
+	check(Profile.sealed() and Profile.integrity == ProfileStore.VALID, "Siegel nach dem Speichern gültig")
+	var text := FileAccess.get_file_as_string(Profile.file())
+	check(text.begins_with("{\"seal\":\"") and text.contains("\"play_time\""), "Profil bleibt lesbares JSON mit Siegel vorne")
+	var f := FileAccess.open(Profile.file(), FileAccess.WRITE)
+	f.store_string(text.replace("\"play_time\": ", "\"play_time\": 9"))
+	f.close()
+	Profile.reset_cache()
+	Profile.data()
+	check(Profile.integrity == ProfileStore.TAMPERED and not Profile.sealed() and int(Profile.mode("eeve").runs) == 1, "von Hand geändert: Siegel ungültig, Profil bleibt (%s, %s)" % [Profile.integrity, Profile.mode("eeve").runs])
+	Profile.reset_cache()
+	check(not Profile.sealed(), "Änderung bleibt vermerkt, auch nach neuem Siegel")
+	check(ProfileStore.decode(ProfileStore.encode({})).state == ProfileStore.VALID, "leeres Dictionary versiegeln")
+	# Kaputte Datei: Sicherung statt leeres Profil, die kaputte Datei bleibt liegen
+	f = FileAccess.open(Profile.file(), FileAccess.WRITE)
+	f.store_string("{kaputt")
+	f.close()
+	Profile.reset_cache()
+	check(int(Profile.mode("eeve").runs) == 1, "kaputte Datei: Stand aus der Sicherung")
+	var run_file := Profile.load_run(Profile.runs()[0].id)
+	check(run_file.get("sealed", false), "Run-Datei mit Siegel")
+
 	# Maul: alter Stand aus maul.cfg wird übernommen
 	MaulProfile.path = "user://test_profil_maul.cfg"
 	var cfg := ConfigFile.new()
@@ -130,15 +172,25 @@ func _ready() -> void:
 	check(MaulXp.load_xp() == 400 and MaulProfile.shop("ikea").best_win == 2 and MaulProfile.totals().games == 8, "Maul: im Profil gespeichert")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(MaulProfile.path))
 
-	# Fenster
+	# Fenster: Übersicht, jede Detailseite, Run-History
 	var panel := ProfilePanel.new()
 	add_child(panel)
 	await get_tree().process_frame
-	check(panel.tabs.get_child_count() >= 4, "Profil-Fenster mit Reitern")
-	for i in panel.tabs.get_child_count():
-		panel.show_tab(i)
+	check(panel.body.get_child_count() > 0 and panel.title.text != "", "Profil-Übersicht")
+	for x in ProfileWc3.MODES:
+		panel.show_view(x[0])
 		await get_tree().process_frame
-	check(panel.content.get_child_count() > 0, "jeder Reiter baut sich auf")
+		check(panel.tabs != null and panel.tabs.get_child_count() == ProfileWc3.MODES.size() + 1, "Detailseite %s" % x[0])
+	panel.show_history()
+	await get_tree().process_frame
+	var hist: ProfileHistory = panel.body.get_child(panel.body.get_child_count() - 1)
+	check(hist.list.get_child_count() > 0, "Run-History zeigt Runs")
+	hist.set_filter("eeve")
+	await get_tree().process_frame
+	check(hist.chart.runs.size() == 2, "Filter je Modus: %d" % hist.chart.runs.size())
+	hist.back_requested.emit()
+	await get_tree().process_frame
+	check(panel.view == "youtd", "Zurück aus der Run-History: %s" % panel.view)
 	panel.queue_free()
 
 	_clean(Profile.dir)

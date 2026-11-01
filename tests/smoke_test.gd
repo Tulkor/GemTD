@@ -349,18 +349,19 @@ func _ready() -> void:
 	check(not up_views.is_empty() and up_views[0].label == "Sterlingsilber" and str(up_views[0].get("sub", "")).ends_with("Gold"), "Upgrade-Knopf: nur Name, darunter Goldkosten: %s" % [up_views])
 	check(not (up_views[0].diff as Array).is_empty() and float(up_views[0].preview_range) > 0.0, "Upgrade-Knopf mit Werte-Vergleich und neuer Reichweite: %s" % [up_views[0].get("diff")])
 	# Infofenster: Kacheln, Kills mit Rang, Herkunft der Boni, Upgrade-Vorschau
-	var ki := TowerStats.kill_info(23)
-	check(ki.rank == 2 and ki.missing == 7 and is_equal_approx(ki.next_bonus, 0.3) and not ki.maxed, "Kill-Rang bei 23 Kills: %s" % [ki])
-	check(TowerStats.kill_info(500).maxed, "Kill-Rang gedeckelt")
 	var old_kills: int = topaz.kills
+	var old_ep: float = topaz.ep
 	topaz.kills = 23
+	topaz.set_ep(23)
+	var ki := TowerStats.level_info(topaz)
+	check(ki.levels and ki.level == 2 and is_equal_approx(ki.need, 7.0) and is_equal_approx(ki.bonus, 0.2) and not ki.maxed, "Level bei 23 EP: %s" % [ki])
 	topaz.damage_bonus = 0.1
 	topaz.damage_source = "Kraftplatte"
 	var tv := TowerStats.view(topaz)
 	var tkeys: Array = tv.tiles.map(func(x): return x.key)
 	check(tkeys == ["range", "speed", "damage", "type"], "Kacheln: %s" % [tkeys])
 	var dtile: Dictionary = tv.tiles[2]
-	check(dtile.mod and dtile.rows.any(func(r): return "Kraftplatte" in r[0]) and dtile.rows.any(func(r): return "Rang 2" in r[0]), "Schaden grün, Tooltip nennt Kraftplatte und Kill-Rang: %s" % [dtile.rows])
+	check(dtile.mod and dtile.rows.any(func(r): return "Kraftplatte" in r[0]) and dtile.rows.any(func(r): return "Level 2" in r[0]), "Schaden grün, Tooltip nennt Kraftplatte und Level: %s" % [dtile.rows])
 	game._select(topaz)
 	game._refresh_hud()
 	var hud = game.hud
@@ -379,6 +380,7 @@ func _ready() -> void:
 	hud.preview_range_requested.emit(0.0)
 	check(topaz._preview_ring == null, "Reichweiten-Vorschau wieder aus")
 	topaz.kills = old_kills
+	topaz.set_ep(old_ep)
 	topaz.damage_bonus = 0.0
 	topaz.damage_source = ""
 	# Gegner-Fenster: Anteil der abgezogenen Wellen-Leben und Felder bis zum Ziel

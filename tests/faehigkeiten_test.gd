@@ -89,8 +89,8 @@ func _auras() -> void:
 	var stone := _place("eeve_stone_of_wisdom", 18)
 	check(stone != null and is_equal_approx(near.xp_bonus, 0.45) and is_equal_approx(stone.xp_bonus, 0.45), "Stein der Weisheit: +45 %% Erfahrung (%.2f)" % near.xp_bonus)
 	check(far.xp_bonus == 0.0, "weit weg keine Erfahrungs-Aura")
-	near.kills = 7
-	far.kills = 7
+	near.gain_ep(7)
+	far.gain_ep(7)
 	check(near.kill_bonus() > far.kill_bonus(), "mit Erfahrungs-Aura zählen die Kills mehr (%.2f > %.2f)" % [near.kill_bonus(), far.kill_bonus()])
 	var fountain := _place("eeve_ancient_fountain_of_wisdom", 22)
 	var diamond := _place("eeve_diamond_mine", 26)

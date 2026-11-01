@@ -44,6 +44,8 @@ static func state(g: MaulGame) -> Dictionary:
 		"streak": g.streak,
 		"prev_budget": g.prev_budget,
 		"play_time": g.play_time,
+		"profile_time": roundi(g.play_time),
+		"debug_used": g.debug_used,
 		"xp_start": g.xp_start,
 		"gold_pot": g.gold_pot,
 	}
@@ -115,6 +117,8 @@ static func apply(g: MaulGame, s: Dictionary) -> void:
 	g.streak = int(s.get("streak", 0))
 	g.prev_budget = float(s.get("prev_budget", 0.0))
 	g.play_time = float(s.get("play_time", 0.0))
+	g.profile_time = int(s.get("profile_time", 0))
+	g.debug_used = g.debug_used or bool(s.get("debug_used", false))
 	g.xp_start = int(s.get("xp_start", me.xp))
 	g.gold_pot = int(s.get("gold_pot", 0))
 	g.level_save = state(g)

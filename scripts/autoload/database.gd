@@ -27,6 +27,8 @@ var eeve_items: Dictionary = {}
 var roguelike: Dictionary = {}
 ## Gegnerwerte im Roguelike (res://data/roguelike_enemies.json), über die normalen gelegt (Rogue.enemy_def).
 var roguelike_enemies: Dictionary = {}
+## Level und EP der Tower in allen Modi (res://data/leveling.json), siehe leveling.gd.
+var leveling: Dictionary = {}
 ## TD-Modi aus data/modes.json, in der Reihenfolge der Datei (siehe mode()).
 var modes: Array = []
 
@@ -51,6 +53,9 @@ func reload() -> void:
 	roguelike = rl if typeof(rl) == TYPE_DICTIONARY else {}
 	var re = load_json(RES_DATA + "roguelike_enemies.json")
 	roguelike_enemies = re if typeof(re) == TYPE_DICTIONARY else {}
+	var lv = load_json(RES_DATA + "leveling.json")
+	leveling = lv if typeof(lv) == TYPE_DICTIONARY else {}
+	Leveling.reset()
 	var m = load_json(RES_DATA + "modes.json")
 	modes = m.get("modes", []) if typeof(m) == TYPE_DICTIONARY else []
 	if modes.is_empty():

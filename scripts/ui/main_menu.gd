@@ -15,7 +15,6 @@ var lobby: LobbyPanel
 var loader: LoadPanel
 var net_tile: Wc3Button
 var net_tile_text: Label
-var history: RunHistoryPanel
 var map_caption: Label
 var map_info: Label
 var map_title: Label
@@ -23,7 +22,6 @@ var mode_hint: Label
 var map_scroll: ScrollContainer
 var no_map_hint: Label
 var single_page: Control
-var history_page: Control
 var profile: ProfilePanel
 var profile_page: Control
 var credits_page: Control
@@ -41,23 +39,13 @@ func _ready() -> void:
 	theme = DecoTheme.get_theme()
 	_build_hub()
 	_build_single()
-	history_page = _page()
-	var hv: VBoxContainer = history_page.get_meta("box")
-	_back_button(hv.get_child(0), func(): show_page(""))
-	DecoTheme.title(UiUtil.label("Run-History", hv.get_child(0), 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	DecoTheme.head_line(hv.get_child(0))
-	history = RunHistoryPanel.new()
-	history.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	history.replay_requested.connect(_replay)
-	hv.add_child(history)
-	profile_page = _page()
-	var pv: VBoxContainer = profile_page.get_meta("box")
-	_back_button(pv.get_child(0), func(): show_page(""))
-	DecoTheme.title(UiUtil.label("Profil", pv.get_child(0), 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	DecoTheme.head_line(pv.get_child(0))
+	# Profil und Run-History im WC3-Stil über der Nachtszene (profile_panel.gd, Lukas 2026-11-01)
 	profile = ProfilePanel.new()
-	profile.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	pv.add_child(profile)
+	profile.back_requested.connect(func(): show_page(""))
+	profile.replay_requested.connect(_replay)
+	add_child(profile)
+	profile.hide()
+	profile_page = profile
 	credits_page = _page()
 	var cv: VBoxContainer = credits_page.get_meta("box")
 	_back_button(cv.get_child(0), func(): show_page(""))
@@ -74,7 +62,7 @@ func _ready() -> void:
 	lobby.hide()
 	lobby.start_requested.connect(_start_session)
 	# Die Lobby liegt über dem Hub (auch direkt geöffnet nach einer Sitzung): Säule und Logo dann ausblenden
-	lobby.visibility_changed.connect(func(): hub.visible = not lobby.visible and not single_page.visible and not history_page.visible \
+	lobby.visibility_changed.connect(func(): hub.visible = not lobby.visible and not single_page.visible \
 		and not profile_page.visible and not credits_page.visible)
 	loader = LoadPanel.new()
 	add_child(loader)
@@ -97,17 +85,17 @@ func _ready() -> void:
 func show_page(page: String) -> void:
 	hub.visible = page == ""
 	# Die 3D-Nachtszene bleibt auch hinter Einzelspieler und Lobby (WC3-Stil)
-	hub_bg.visible = page == "" or page == "single" or page == "lobby"
+	hub_bg.visible = page == "" or page == "single" or page == "lobby" or page == "profile" or page == "history"
 	hub_bg.process_mode = Node.PROCESS_MODE_INHERIT if hub_bg.visible else Node.PROCESS_MODE_DISABLED
 	single_page.visible = page == "single"
 	credits_page.visible = page == "credits"
-	history_page.visible = page == "history"
-	profile_page.visible = page == "profile"
+	profile_page.visible = page == "profile" or page == "history"
 	if page == "profile":
-		profile.reload()
+		profile.show_view("overview")
+	elif page == "history":
+		profile.show_view("overview")
+		profile.show_history()
 	lobby.visible = page == "lobby"
-	if page == "history":
-		history.reload()
 	if page == "single":
 		_update_selection()
 
@@ -486,7 +474,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if settings.visible:
 		settings.hide()
-	elif single_page.visible or history_page.visible or profile_page.visible:
+	elif single_page.visible or profile_page.visible:
 		show_page("")
 	else:
 		return

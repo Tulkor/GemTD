@@ -102,6 +102,9 @@ var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
+const ICON_UP := "up"    ## Pfeil-Symbol aus UiTheme.icon (kein Text)
+var info_oils: TooltipHost     ## „▲ Öle“ neben dem Namen, Hover zeigt die Werte durch Öle (info.oils)
+var _oils_icon: TextureRect
 var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
 var info_tier_label: Label
 var info_kills_label: Label
@@ -516,6 +519,24 @@ func _build_bottom() -> void:
 	head.add_child(info_kills)
 	info_kills_label = UiUtil.label("", info_kills, 12)
 	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
+	# Öle neben dem Namen (YouTD): nur ein Kästchen, Hover zeigt, welche Werte der Tower durch Öle hat
+	info_oils = TooltipHost.new()
+	info_oils.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.HAVE, 0, 2, 4))
+	info_oils.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_oils.make = _oils_tooltip
+	info_oils.visible = false
+	head.add_child(info_oils)
+	var oils_row := HBoxContainer.new()
+	oils_row.add_theme_constant_override("separation", 3)
+	oils_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_oils.add_child(oils_row)
+	_oils_icon = TextureRect.new()
+	_oils_icon.custom_minimum_size = Vector2(12, 12)
+	_oils_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_oils_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_oils_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	oils_row.add_child(_oils_icon)
+	UiUtil.label(tr("Öle"), oils_row, 12).add_theme_color_override("font_color", UiTheme.HAVE)
 	# Breite gleich mitgeben: ohne sie misst Godot umbrechende Labels im ersten Frame ein Zeichen breit
 	# und damit tausende Pixel hoch, die Auswahlkarte sprang dann kurz auf volle Bildschirmhöhe
 	info_sub = UiUtil.wrap_label("", info_left, INFO_W)
@@ -909,6 +930,9 @@ func set_selection(info: Dictionary) -> void:
 	if info_tier.visible:
 		info_tier_label.text = QualityBadge.roman(int(info.tier))
 		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
+	info_oils.visible = not (info.get("oils", []) as Array).is_empty()
+	if info_oils.visible:
+		_oils_icon.texture = UiTheme.icon(ICON_UP, 24)  # erst hier: Farbe nach dem Stil des Modus
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
@@ -922,6 +946,7 @@ func _fit_title() -> void:
 	var font := info_title.get_theme_font("font")
 	var text := info_title.text.to_upper() if info_title.uppercase else info_title.text
 	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0) \
+			- (info_oils.get_combined_minimum_size().x + 10.0 if info_oils.visible else 0.0) \
 			- (info_tier.get_combined_minimum_size().x + 10.0 if info_tier.visible else 0.0)
 	var size := _title_size
 	while size > _title_size - 5 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
@@ -1079,6 +1104,8 @@ func _show_stats(st: Dictionary) -> void:
 	if info_kills.visible:
 		var k: Dictionary = st.kills
 		info_kills_label.text = "✖ " + tr("%d Kills") % int(k.kills)
+		if k.get("levels", false):
+			info_kills_label.text = tr("Lv %d") % int(k.level) + " · ✖ %d" % int(k.kills)
 		info_kills.tooltip_text = tr("Kills: %d   Schaden gesamt: %d") % [int(k.kills), int(k.total_damage)]
 	var key := [st.abilities, st.description]
 	if key == _abil_key:
@@ -1165,31 +1192,61 @@ func _stat_tooltip(i: int) -> Control:
 	return v
 
 
-## Kill-Rang: Bonus jetzt, Fortschritt zum nächsten Rang und wie viele Kills noch fehlen.
+## Öle: welche Werte der Tower durch eingesetzte Öle hat (info.oils = [[Wert, Betrag], …]).
+func _oils_tooltip() -> Control:
+	var rows: Array = _selection.get("oils", [])
+	if rows.is_empty():
+		return null
+	var v := _tip_box(tr("Durch Öle"), 300)
+	for r in rows:
+		_tip_row(v, str(r[0]), str(r[1]), UiTheme.HAVE)
+	_tip_line(v)
+	_tip_note(v, tr("Öle werden beim Einsetzen verbraucht und wirken dauerhaft."), 300)
+	return v
+
+
+## Level und EP: Level, Fortschritt zum nächsten, Boni jetzt, nächste Freischaltung (leveling.gd).
 func _kills_tooltip() -> Control:
 	if _stats.is_empty() or (_stats.kills as Dictionary).is_empty():
 		return null
 	var k: Dictionary = _stats.kills
-	var v := _tip_box("✖ " + tr("%d Kills · Rang %d") % [int(k.kills), int(k.rank)], 330)
-	_tip_row(v, tr("Schadensbonus jetzt"), TowerStats.pct(k.bonus), UiTheme.HAVE)
+	if not k.get("levels", false):
+		var w := _tip_box("✖ " + tr("%d Kills") % int(k.kills), 330)
+		_tip_row(w, tr("Schaden gesamt"), "%d" % int(k.total_damage), UiTheme.COIN)
+		return w
+	var v := _tip_box(tr("Level %d") % int(k.level) + " / %d" % int(k.max_level), 330)
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 2)
 	v.add_child(bar)
-	var filled := 10 if k.maxed else roundi(10.0 * float(k.progress) / float(k.per_rank))
+	var filled := 10 if k.maxed else floori(10.0 * float(k.progress))
 	for s in 10:
 		var seg := ColorRect.new()
 		seg.custom_minimum_size = Vector2(12, 8)
 		seg.color = UiTheme.COIN if s < filled else UiTheme.BORDER
 		bar.add_child(seg)
 	if k.maxed:
-		_tip_row(v, tr("Höchster Rang erreicht"), "", UiTheme.TEXT, UiTheme.HAVE)
+		_tip_row(v, tr("Höchstes Level erreicht"), "%s EP" % _ep(k.ep), UiTheme.COIN, UiTheme.HAVE)
 	else:
-		var h := _tip_row(v, tr("Rang %d bei %d Kills") % [int(k.rank) + 1, int(k.next_at)], tr("noch %d") % int(k.missing), UiTheme.COIN)
-		UiUtil.label("→ " + TowerStats.pct(k.next_bonus), h, 13).add_theme_color_override("font_color", UiTheme.HAVE)
+		_tip_row(v, "%s / %s EP" % [_ep(k.ep), _ep(k.next)], tr("noch %s") % _ep(k.need), UiTheme.COIN)
+	if float(k.bonus) > 0.0:
+		_tip_row(v, tr("Schadensbonus jetzt"), TowerStats.pct(k.bonus), UiTheme.HAVE)
+	for u in k.unlocked:
+		var l := UiUtil.wrap_label("✓ " + str(u), v, 330)
+		l.add_theme_font_size_override("font_size", 12)
+		l.add_theme_color_override("font_color", UiTheme.HAVE)
+	if str(k.next_unlock) != "":
+		var h := _tip_row(v, tr("Ab Level %d") % int(k.next_unlock_level), "", UiTheme.TEXT, UiTheme.GOLD)
+		UiUtil.label(str(k.next_unlock), h, 13).add_theme_color_override("font_color", UiTheme.CYAN)
+	_tip_row(v, tr("Kills"), "%d" % int(k.kills), UiTheme.COIN)
 	_tip_row(v, tr("Schaden gesamt"), "%d" % int(k.total_damage), UiTheme.COIN)
-	_tip_line(v)
-	_tip_note(v, tr("Je %d Kills %s Schaden, höchstens %s.") % [int(k.per_rank), TowerStats.pct(k.step), TowerStats.pct(k.max)], 330)
+	if str(k.per_level) != "":
+		_tip_line(v)
+		_tip_note(v, tr("EP bekommt der Tower für Kills.") + " " + str(k.per_level) + ".", 330)
 	return v
+
+
+static func _ep(v: float) -> String:
+	return str(roundi(v)) if is_equal_approx(v, roundf(v)) else "%.1f" % v
 
 
 ## Was sich bei dieser Aktion an den Werten ändert (alt → neu, grün besser, rot schlechter).

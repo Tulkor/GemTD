@@ -9,6 +9,7 @@ const ROMAN := ["", "I", "II", "III", "IV"]
 var item_id := ""
 var selected := false
 var empty_text := ""   ## Text in einem leeren Platz (z. B. "+")
+var bare := false      ## nur das Symbol, ohne Kästchen (im Inventarfeld InvSlot)
 
 
 func _init(size_px := 52.0) -> void:
@@ -41,9 +42,10 @@ static func tint(id: String) -> Color:
 
 func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size)
-	draw_rect(r, UiTheme.PANEL_2)
-	var edge := UiTheme.CYAN if selected else UiTheme.BORDER
-	draw_rect(r.grow(-0.5), edge, false, 2.0 if selected else 1.0)
+	if not bare:
+		draw_rect(r, UiTheme.PANEL_2)
+		var edge := UiTheme.CYAN if selected else UiTheme.BORDER
+		draw_rect(r.grow(-0.5), edge, false, 2.0 if selected else 1.0)
 	if item_id == "":
 		if empty_text != "":
 			var f := UiTheme.font()

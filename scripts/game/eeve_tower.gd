@@ -112,7 +112,7 @@ func _hp_cut(ab: Dictionary) -> void:
 		e.last_tower = self
 		total_damage += e.take_raw_damage(e.hp * f)
 		if e.dead:
-			kills += 1
+			credit_kill(e)
 
 
 func _hit(e, dmg: float) -> void:
@@ -177,7 +177,7 @@ func _spell(e, dmg: float) -> void:
 	e.last_tower = self
 	total_damage += e.take_damage(dmg * (1.0 + damage_bonus + kill_bonus()), "spells")
 	if e.dead:
-		kills += 1
+		credit_kill(e)
 
 
 ## Item-Kugel: ein Geschoss auf einen zufälligen Gegner im Radius, Schaden = dps × Abstand (Zauberschaden,
@@ -192,5 +192,5 @@ func _orb(ab: Dictionary) -> bool:
 	e.last_tower = self
 	total_damage += e.take_damage(float(ab.dps) * float(ab.get("every", 0.5)), "spells")
 	if e.dead:
-		kills += 1
+		credit_kill(e)
 	return true

@@ -1,0 +1,73 @@
+{
+	"_info": "Level und EP (Erfahrungspunkte) für Tower in allen Modi, siehe scripts/game/leveling.gd, bearbeiten im Balance-Editor (Reiter Level & EP). modes: welches Profil ein Modus nutzt (leer = keine Tower-Level). Profil: extends erbt von einem anderen Profil; max_level; curve = EP je Level-Stufe (type konstant|linear|exponentiell|formel|tabelle mit base, step, growth, formula, table; factor multipliziert jede Stufe, damit lassen sich die benötigten EP in einem Zug erhöhen; jede Stufe kostet mindestens 1). Variablen in formula: level (das Level, das erreicht wird, ab 1), base, step, growth; Funktionen pow, max, min, floor, ceil, sqrt, round, abs. ep: EP je Kill (kill), Faktor für Bosse (boss) und Flieger (air), dazu hp × maximale Leben des Gegners. per_level: Boni je erreichtem Level (damage, speed, range als Anteil, 0.1 = +10 %). unlocks: ab Level freigeschaltete Werte {level, stat, value} oder Fähigkeiten {level, ability: {type, …}} (gleicher Fähigkeits-Typ bei höherem Level ersetzt den früheren). towers: Abweichungen je Tower-ID (ep_factor, max_level ersetzen; curve, ep, per_level einzeln; unlocks kommen dazu). system: der Modus rechnet Level und Boni selbst und nimmt nur die Kurve (YouTD).",
+	"modes": {
+		"gemtd": "gemtd",
+		"roguelike": "gemtd",
+		"eeve": "eevetd",
+		"randgruppen": "randgruppen",
+		"youtd": "youtd",
+		"shoppingmaul": ""
+	},
+	"profiles": {
+		"gemtd": {
+			"name": "GemTD: Kill-Ränge wie in WC3",
+			"max_level": 12,
+			"curve": {
+				"type": "konstant",
+				"base": 10,
+				"step": 0,
+				"growth": 1.0,
+				"formula": "",
+				"table": [],
+				"factor": 1.0
+			},
+			"ep": {
+				"kill": 1.0,
+				"boss": 1.0,
+				"air": 1.0,
+				"hp": 0.0
+			},
+			"per_level": {
+				"damage": 0.1
+			},
+			"unlocks": [],
+			"towers": {}
+		},
+		"eevetd": {
+			"name": "eeveTD",
+			"extends": "gemtd"
+		},
+		"randgruppen": {
+			"name": "Randgruppen TD",
+			"extends": "gemtd"
+		},
+		"youtd": {
+			"name": "YouTD: Tower-Erfahrung (Boni je Level stehen in den Tower-Skripten; normal bis Level 25, mit Boni bis 30)",
+			"max_level": 30,
+			"curve": {
+				"type": "formel",
+				"base": 12,
+				"step": 1,
+				"growth": 1.0,
+				"formula": "max(base, 10 + level)",
+				"table": [],
+				"factor": 1.0
+			},
+			"system": "youtd"
+		},
+		"youtd_spieler": {
+			"name": "YouTD: Spieler-Level über Partien",
+			"max_level": 300,
+			"curve": {
+				"type": "formel",
+				"base": 12,
+				"step": 1,
+				"growth": 1.0,
+				"formula": "max(base, 10 + level)",
+				"table": [],
+				"factor": 1.0
+			},
+			"system": "youtd"
+		}
+	}
+}

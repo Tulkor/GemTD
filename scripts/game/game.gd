@@ -103,7 +103,9 @@ var enemies_killed := 0
 var leaks_per_wave := {}  ## Welle (Index) -> verlorene Leben (Punkte-Modus: durchgelassene Gegner), für die Run-History
 var play_time := 0.0      ## gespielte Sekunden in Echtzeit, ohne Pause
 var run_stats := RunStats.new()  ## Statistik fürs Profil (profile.gd)
-var debug_used := false   ## Debug-Menü geöffnet: der Run zählt nicht für Summen und Rekorde im Profil
+var debug_used := false   ## Debug-Menü geöffnet: der Run zählt nicht für Summen und Rekorde im Profil, keine EP
+var profile_time := 0      ## Sekunden dieses Runs, die schon im Profil stehen (Verlassen und später Laden)
+var _saves_at_start := 0
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
@@ -129,6 +131,7 @@ var _probe: Enemy = null   ## Messpunkt für free_stretch
 
 
 func _ready() -> void:
+	_saves_at_start = SaveGame.writes
 	rng.randomize()
 	# Spielstand fortsetzen (save_game.gd) oder neues Spiel
 	var saved: Dictionary = Session.load_state
@@ -167,6 +170,7 @@ func _ready() -> void:
 
 	hud = Hud.new()
 	add_child(hud)
+	_setup_inv_drop()
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
@@ -244,6 +248,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	record_profile_abort()
 	if _probe != null:
 		_probe.free()
 		_probe = null
@@ -435,6 +440,42 @@ func active_lanes() -> Array:
 	return range(map.lane_count()).filter(func(i): return map.lane_player(i) < players.size())
 
 
+# --- Inventar: Items auf Tower in der Welt ziehen (Modi mit Items überschreiben inv_drop_*) ---
+
+var inv_drop: InvWorldDrop
+
+
+func _setup_inv_drop() -> void:
+	inv_drop = InvWorldDrop.new()
+	inv_drop.tower_at = func():
+		var a: Vector2i = occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL)
+		return towers.get(a)
+	inv_drop.reason = inv_drop_reason
+	inv_drop.hint = inv_drop_hint
+	inv_drop.drop = inv_drop_on_tower
+	inv_drop.mark = func(t, ok: bool):
+		board.hover_cell = t.cell if t != null else NO_CELL
+		board.hover_size = Board3D.TOWER_CELLS
+		board.hover_ok = ok
+		board.refresh_hover()
+	inv_drop.tell = func(text: String): hud.show_message(text)
+	add_child(inv_drop)
+
+
+## Warum Tower t das gezogene Item (data aus InvSlot) nicht nimmt; "" = nimmt es.
+func inv_drop_reason(_t: Tower, _data: Dictionary) -> String:
+	return tr("Dieser Tower hat kein Inventar")
+
+
+## Schild an der Maus, wenn Tower t das Item nimmt.
+func inv_drop_hint(_t: Tower, _data: Dictionary) -> String:
+	return "+ " + tr("Einlegen")
+
+
+func inv_drop_on_tower(_t: Tower, _data: Dictionary) -> void:
+	pass
+
+
 # --- Eingabe -----------------------------------------------------------------
 
 func _process(delta: float) -> void:
@@ -451,6 +492,8 @@ func _process(delta: float) -> void:
 
 
 func _update_hover() -> void:
+	if inv_drop != null and inv_drop.active():
+		return  # beim Ziehen eines Items markiert inv_drop den Tower unter der Maus
 	var c := NO_CELL
 	var size := Board3D.TOWER_CELLS
 	if moving != null and not moving.is_trap():
@@ -1354,9 +1397,11 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 		round_towers.clear()
 		t.is_new = false
 	t.kills += o.consume.reduce(func(acc, c): return acc + c.kills, 0)
+	var ep_sum: float = t.ep + o.consume.reduce(func(acc, c): return acc + c.ep, 0.0)
 	var old_id := t.tower_id
 	_unregister(t)
 	t.set_tower(o.id, o.tier)
+	t.set_ep(ep_sum)
 	_register(t)
 	run_stats.built(t, o.action, wave_index + 1)
 	if t.is_trap() and (o.id != old_id or o.action == "keep"):
@@ -1888,9 +1933,31 @@ func record_profile(victory: bool) -> Dictionary:
 	info.erase("top")
 	info.coop = coop != null
 	info.players = players.size()
-	info.debug = debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0
+	info.debug = debug_run()
+	info.time_counted = profile_time
 	info.merge(profile_extra(), true)
+	profile_time = roundi(play_time)
 	return Profile.record_run(profile_mode(), info, run_stats.result(all_towers().filter(func(t): return not t.is_new)))
+
+
+## Hilft hier eine Debug-Hilfe? Dann gibt der Run keine EP und zählt nicht für Siege und Rekorde (nur die
+## Zeit). Gilt für den ganzen Run, auch nach Speichern und Laden (debug_used steht im Spielstand).
+func debug_run() -> bool:
+	return debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0 or Session.return_scene != Session.MAIN_MENU
+
+
+## Spiel verlassen, bevor der Run zu Ende ist: Zeit ins Profil, ohne Speichern auch als abgebrochen.
+func record_profile_abort() -> void:
+	if phase >= Phase.GAME_OVER or roundi(play_time) - profile_time < 10:
+		return
+	var info := RunHistory.entry_from(self, false)
+	info.erase("top")
+	info.debug = debug_run()
+	info.time_counted = profile_time
+	info.saved = SaveGame.writes > _saves_at_start
+	info.merge(profile_extra(), true)
+	Profile.record_abort(profile_mode(), info)
+	profile_time = roundi(play_time)
 
 
 ## Modus im Profil (eeve_game.gd überschreibt das, die Variante Roguelike zählt eigen).

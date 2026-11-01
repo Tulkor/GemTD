@@ -27,7 +27,7 @@ static func capture(game) -> Dictionary:
 	var list: Array = game.all_towers()
 	var ts := []
 	for t in list:
-		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills,
+		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills, "ep": t.ep,
 			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left, "on_rock": t.get_meta("on_rock", false),
 			"owner": t.owner_player})
 	var es := []
@@ -74,6 +74,8 @@ static func capture(game) -> Dictionary:
 		st.rogue = game.rogue.to_dict()
 	st.run_stats = game.run_stats.capture(list)
 	st.debug_used = game.debug_used
+	# Die Zeit bis hier bucht das Profil beim Verlassen (record_profile_abort), nach dem Laden zählt sie nicht noch einmal
+	st.profile_time = roundi(game.play_time)
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -119,6 +121,8 @@ static func apply(game, s: Dictionary) -> void:
 		game.board.add_child(t)
 		t.setup(game, d.cell, str(d.id), int(d.tier))
 		t.kills = int(d.get("kills", 0))
+		# Ältere Spielstände ohne EP: ein Kill = EP eines normalen Kills
+		t.set_ep(float(d.get("ep", t.kills * Leveling.kill_ep(t.level_profile(), null))))
 		t.total_damage = float(d.get("dmg", 0.0))
 		t.cooldown_left = float(d.get("cd", 0.0))
 		t.moves_left = int(d.get("moves", 0))
@@ -161,6 +165,7 @@ static func apply(game, s: Dictionary) -> void:
 		game._update_auras()
 	game.run_stats.restore(s.get("run_stats", {}), made)
 	game.debug_used = bool(s.get("debug_used", false))
+	game.profile_time = int(s.get("profile_time", 0))
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:
@@ -223,6 +228,9 @@ static func path_for(id: String) -> String:
 	return DIR.path_join(id + EXT)
 
 
+static var writes := 0  ## Zahl der geschriebenen Spielstände seit Programmstart (Profil: Run gespeichert?)
+
+
 static func write(data: Dictionary) -> bool:
 	DirAccess.make_dir_recursive_absolute(DIR)
 	data["version"] = VERSION
@@ -232,6 +240,7 @@ static func write(data: Dictionary) -> bool:
 		return false
 	f.store_var(data)
 	f.close()
+	writes += 1
 	return true
 
 

@@ -79,7 +79,9 @@ var levels_done := 0
 var debug_free := false
 var debug_xp := false
 var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
-var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
+var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd), keine XP
+var profile_time := 0       ## Sekunden dieser Partie, die schon im Profil stehen (Verlassen und später Laden)
+var _saves_at_start := 0
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
 var level_save := {}        ## Einzelspiel: Stand vom Beginn des laufenden Levels (maul_save.gd)
@@ -140,6 +142,7 @@ var _hud_timer := 0.0
 
 
 func _ready() -> void:
+	_saves_at_start = SaveGame.writes
 	# Art déco für Oberfläche und Spielfeld (Petrol, Messing), vor dem Bau von HUD und Board
 	UiTheme.use_skin(UiTheme.DECO)
 	rules = MaulData.rules()
@@ -191,6 +194,7 @@ func _ready() -> void:
 	hud = MaulHud.new()
 	hud.game = self
 	add_child(hud)
+	_setup_inv_drop()
 	_refresh_paths()
 	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
@@ -629,7 +633,7 @@ func _finish(p: Phase) -> void:
 ## Partie ins eigene Profil schreiben (auch Koop-Mitspieler, jeder auf seinem Rechner).
 func _record_profile(won: bool) -> void:
 	profile_news = {}
-	if sandbox or debug_used or Session.debug_immortal:
+	if debug_run():
 		return
 	profile_news = MaulProfile.record(shop_of(local_player), difficulty, levels_done, won, enemies_killed, play_time)
 
@@ -641,8 +645,24 @@ func _record_run(won: bool) -> void:
 		"wave": levels_done, "waves": levels.size(), "lives": lives, "max_lives": max_lives, "kills": enemies_killed,
 		"play_time": roundi(play_time), "coop": players.size() > 1, "players": players.size(),
 		"xp": me.xp, "xp_gain": me.xp - xp_start, "gold": me.gold, "sandbox": sandbox,
-		"debug": sandbox or debug_used or Session.debug_immortal}
+		"debug": debug_run(), "time_counted": profile_time}
+	profile_time = roundi(play_time)
 	Profile.record_run("maul", info, run_stats.result(_my_towers()))
+
+
+## Debug-Menü, Sandbox oder Unsterblich in diesem Run: keine XP, zählt nicht für Siege und Rekorde (nur die Zeit).
+func debug_run() -> bool:
+	return sandbox or debug_used or Session.debug_immortal
+
+
+## Spiel verlassen, bevor die Partie zu Ende ist: Zeit ins Profil, ohne Speichern auch als abgebrochen.
+func _record_abort() -> void:
+	if phase >= Phase.GAME_OVER or phase == Phase.SETUP and levels_done == 0 or roundi(play_time) - profile_time < 10:
+		return
+	Profile.record_abort("maul", {"map": shop_of(local_player), "shop": shop_of(local_player), "difficulty": difficulty,
+		"wave": levels_done, "waves": levels.size(), "lives": lives, "kills": enemies_killed, "play_time": roundi(play_time),
+		"debug": debug_run(), "time_counted": profile_time, "saved": SaveGame.writes > _saves_at_start})
+	profile_time = roundi(play_time)
 
 
 func _my_towers() -> Array:
@@ -1331,6 +1351,8 @@ func _execute(cmd: Dictionary) -> bool:
 			players[p].gold += floori(int(MaulData.item(str(t.items[i])).get("cost", 0)) * float(rules.sell_refund))
 			t.items.remove_at(i)
 			return true
+		"item_move":
+			return move_item(p, cmd.get("from", {}), cmd.get("to", {}))
 		"move_items":
 			var from := _tower(p, cmd.get("from"))
 			var to := _tower(p, cmd.get("to"))
@@ -1511,6 +1533,51 @@ func _buy_item(p: int, t: MaulTower, id: String) -> bool:
 	t.items.append(id)
 	_combine(t)
 	return true
+
+
+## Item wie in WC3 ziehen: von {"tower": Anker, "slot": k} nach {"tower": Anker, "slot": j} (j über den belegten
+## Plätzen oder -1 = freier Platz). Auf ein Item = tauschen, sonst verschieben; danach greifen die IKEO-Kombis.
+func move_item(p: int, from: Dictionary, to: Dictionary) -> bool:
+	if move_reason(p, from, to) != "":
+		return false
+	var a := _tower(p, from.get("tower"))
+	var b := _tower(p, to.get("tower"))
+	var k := int(from.get("slot", -1))
+	var j := int(to.get("slot", -1))
+	var id: String = a.items[k]
+	if j >= 0 and j < b.items.size():
+		a.items[k] = b.items[j]
+		b.items[j] = id
+	else:
+		a.items.remove_at(k)
+		b.items.append(id)
+	a._item_cd.clear()
+	b._item_cd.clear()
+	_combine(a)
+	if b != a:
+		_combine(b)
+	return true
+
+
+## Warum das Item nicht dorthin geht ("" = geht).
+func move_reason(p: int, from: Dictionary, to: Dictionary) -> String:
+	var a := _tower(p, from.get("tower"))
+	var b := _tower(p, to.get("tower"))
+	var k := int(from.get("slot", -1))
+	var j := int(to.get("slot", -1))
+	if a == null or k < 0 or k >= a.items.size():
+		return tr("Item nicht mehr da")
+	if b == null:
+		return tr("Nicht dein Tower")
+	if b.slots() <= 0:
+		return tr("Dieser Tower hat keine Item-Slots")
+	if j >= b.slots():
+		return tr("Diesen Slot hat der Tower nicht")
+	if a == b and (j == k or j < 0 or j >= b.items.size()):
+		return tr("Liegt schon in diesem Tower") if j != k else tr("Liegt schon dort")
+	if (j < 0 or j >= b.items.size()) and b.items.size() >= b.slots():
+		return tr("Inventar voll")
+	return ""
 
 
 ## IKEO: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
@@ -1724,7 +1791,7 @@ func _end_level_pro(n: int) -> void:
 		if p.shop == "aok" and level_lost > 0:
 			p.gold += mini(n * floori(float(aok.gold_factor) * level_lost), n * int(aok.gold_cap))
 	var x := MaulXp.cfg()
-	if sandbox or debug_xp or players.size() < int(x.get("min_players", 1)):
+	if sandbox or debug_xp or debug_run() or players.size() < int(x.get("min_players", 1)):
 		return
 	var ke := float(MaulData.difficulty(difficulty).get("xp", 1.0))
 	for i in players.size():
@@ -1807,7 +1874,32 @@ func choose_build(id: String) -> void:
 	hud.refresh_shop()
 
 
+# --- Inventar: Items auf einen anderen Tower in der Welt ziehen (InvWorldDrop) ---
+
+var inv_drop: InvWorldDrop
+
+
+func _setup_inv_drop() -> void:
+	inv_drop = InvWorldDrop.new()
+	inv_drop.tower_at = func():
+		return towers.get(occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL))
+	inv_drop.reason = func(t: MaulTower, data: Dictionary) -> String:
+		return move_reason(local_player, data.get("from", {}), {"tower": t.cell, "slot": -1})
+	inv_drop.hint = func(t: MaulTower, _data: Dictionary) -> String:
+		return "+ " + tr("Einlegen · %d frei") % (t.slots() - t.items.size())
+	inv_drop.drop = func(t: MaulTower, data: Dictionary) -> void:
+		submit({"type": "item_move", "from": data.get("from", {}), "to": {"tower": t.cell, "slot": -1}})
+	inv_drop.mark = func(t, ok: bool) -> void:
+		board.hover_cell = t.cell if t != null else NO_CELL
+		board.hover_ok = ok
+		board.refresh_hover()
+	inv_drop.tell = func(text: String) -> void: show_message(text)
+	add_child(inv_drop)
+
+
 func _update_hover() -> void:
+	if inv_drop != null and inv_drop.active():
+		return  # beim Ziehen eines Items markiert inv_drop den Tower unter der Maus
 	var c := NO_CELL
 	if build_id != "" and camera_rig.camera != null:
 		c = board.mouse_anchor(camera_rig.camera)
@@ -1991,6 +2083,7 @@ func _refresh_hud() -> void:
 
 
 func _exit_tree() -> void:
+	_record_abort()
 	UiTheme.use_skin(UiTheme.ARCADE)
 	Engine.time_scale = 1.0
 	if Net.game == self:
