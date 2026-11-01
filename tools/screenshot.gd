@@ -59,6 +59,8 @@ extends Node
 ##   --messen=S              statt eines Bildes S Sekunden Leistung messen (Bildzeit, Skriptzeit, Draw Calls,
 ##                           Objekte, Lichter, Knoten), Ausgabe Zeilen MESSUNG; tools/leistung.sh fasst mehrere zusammen
 ##   --grafik=0|1|2          Grafikqualität Niedrig/Mittel/Hoch (Standard Hoch; Xvfb würde sonst als Software-Grafik Niedrig wählen)
+##   --ep=N                  (mit --auswahl) der gewählte Tower hat N EP (Level-System, leveling.gd);
+##                           --level_demo: Beispiel-Freischaltungen (Reichweite ab 3, Krit ab 5), --leveltip: Level-Tooltip offen
 ##   --sprache=de|en
 ##   --aus=<ordner>          Standard /mnt/project-files/screens/auto
 ##   --name=<präfix>         Dateiname <präfix>_<winkel>.png, Standard bild
@@ -382,6 +384,7 @@ func _prepare(game: Node) -> void:
 			game._select(game.round_towers[0])
 		elif not game.towers.is_empty():
 			game._select(game.towers.values()[0])
+	await _level_shot(game)
 	var t := 0.0
 	var wait := float(opts.get("warten", "1"))
 	while t < wait:
@@ -748,3 +751,32 @@ func _mouse_to_cell(node: Node) -> void:
 	var vp := get_viewport()
 	Input.warp_mouse(vp.get_screen_transform() * node.camera_rig.camera.unproject_position(p))
 	await _frames(2)
+
+
+## Level-System fürs Bild: EP setzen, Beispiel-Freischaltungen, Level-Tooltip offen neben dem Kills-Feld.
+func _level_shot(game: Node) -> void:
+	if game.selected == null or not opts.has("ep"):
+		return
+	if opts.has("level_demo"):
+		var mode := Leveling.mode_profile_id(game.profile_mode())
+		Database.leveling.profiles[mode]["unlocks"] = [{"level": 3, "stat": "range", "value": 0.1},
+			{"level": 5, "ability": {"type": "crit", "chance": 0.15, "multiplier": 2.0}}]
+		Leveling.reset()
+		game.selected.set_tower(game.selected.tower_id, game.selected.tier)
+		game.selected.set_selected(true)
+	game.selected.kills = int(float(opts.ep))
+	game.selected.set_ep(float(opts.ep))
+	game._refresh_hud()
+	await get_tree().process_frame
+	if not opts.has("leveltip"):
+		return
+	var hud = game.hud
+	var tip: Control = hud._kills_tooltip()
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", hud.info_kills.get_theme_stylebox("panel", "TooltipPanel"))
+	box.add_child(tip)
+	hud.add_child(box)
+	await get_tree().process_frame
+	var r: Rect2 = hud.info_kills.get_global_rect()
+	box.position = Vector2(r.position.x, r.position.y - box.size.y - 6)
+

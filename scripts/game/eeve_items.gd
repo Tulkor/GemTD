@@ -244,11 +244,14 @@ func use(index: int, t: Tower) -> bool:
 			t.items.append(id)
 			inv.remove_at(index)
 		"xp":
+			# So viel Erfahrung wie die Kills (EP je Kill aus data/leveling.json, mit Marmor und Auren)
 			t.kills += int(it.get("amount", 10))
+			t.gain_ep(int(it.get("amount", 10)) * Leveling.kill_ep(t.level_profile(), null))
 			inv.remove_at(index)
 		"vial":
 			var n := mini(int(it.get("amount", 10)), t.kills)
 			t.kills -= n
+			t.set_ep(t.ep - minf(int(it.get("amount", 10)) * Leveling.kill_ep(t.level_profile(), null) * t.xp_factor, t.ep))
 			inv[index] = str(it.get("becomes", "xp_potion"))
 		"slot":
 			t.extra_slots += 1

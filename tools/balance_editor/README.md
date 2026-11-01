@@ -19,6 +19,11 @@ läuft ohne Installation in Edge oder Chrome (Doppelklick).
   GemTD-Wellen zeigen Anzahl/Abstand der Gruppe und die Gegnerwerte. Gegnerwerte gelten in allen Wellen,
   in denen der Gegner vorkommt (steht dabei). eeveTD zeigt die Gegner je Gegnerstufe, Maul die 50 Level.
 
+- Reiter **Level & EP** (`data/leveling.json`): je Profil höchstes Level, EP-Kurve (konstant, linear, exponentiell,
+  eigene Formel oder Tabelle, „Faktor auf alle Stufen“ erhöht alle benötigten EP), Vorschau der EP je Level wie im Spiel,
+  EP je Kill/Boss/Flieger, Boni je Level, Freischaltungen (Wert oder Fähigkeit ab Level) und Abweichungen je Tower.
+  „Modi“ ordnet jedem Modus ein Profil zu (oder keines).
+
 ## Speichern
 Zwei Wege:
 1. **Ordner öffnen** (Edge/Chrome) und den Repo-Ordner wählen: lädt die aktuellen Daten von dort,

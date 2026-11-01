@@ -81,6 +81,14 @@ var flat_damage := 0.0  ## fester Zusatzschaden je Schuss nach allen Prozenten (
 var _all_abilities: Array = []
 var cooldown_left := 0.0
 var kills := 0
+## Level und EP (leveling.gd, data/leveling.json): EP kommen über gain_ep(), vor allem durch Kills
+var ep := 0.0
+var lvl := 0      ## Level (YouTD-Tower haben ihr eigenes level)
+var level_damage := 0.0
+var level_speed := 0.0
+var level_range := 0.0
+var level_abilities: Array = []  ## mit dem Level freigeschaltete Fähigkeiten (zusätzlich zu stats.abilities)
+var _lv: Dictionary = {}         ## Level-Profil dieses Towers in diesem Modus ({} = keine Level)
 var moves_left := 0  ## wie oft eine Falle noch verschoben werden darf
 var total_damage := 0.0
 
@@ -109,6 +117,8 @@ func set_tower(id: String, t: int) -> void:
 	def = Database.towers.get(id, {})
 	stats = Database.tower_tier(id, t)
 	color = Color.from_string(str(def.get("color", "#ffffff")), Color.WHITE)
+	_lv = Leveling.for_game(game, id)
+	_apply_level(false)
 	place_at(cell)
 	_build_visual()
 
@@ -133,13 +143,22 @@ func is_trap() -> bool:
 
 
 func range_cells() -> float:
-	return float(stats.get("range", 3.0)) * (1.0 + rogue_range)
+	return float(stats.get("range", 3.0)) * range_mult()
+
+
+## Faktor auf die Reichweite aus Roguelike-Boni/Items und Level.
+func range_mult() -> float:
+	return 1.0 + rogue_range + level_range
 
 
 func abilities() -> Array:
-	if rogue_abilities.is_empty():
+	if rogue_abilities.is_empty() and level_abilities.is_empty():
 		return stats.get("abilities", [])
 	return _all_abilities
+
+
+func _refresh_abilities() -> void:
+	_all_abilities = stats.get("abilities", []) + rogue_abilities + level_abilities
 
 
 func ability(type: String) -> Dictionary:
@@ -171,7 +190,7 @@ func can_attack() -> bool:
 ## Reichweite gegen ein bestimmtes Ziel (manche Fallen haben gegen Flieger mehr Reichweite).
 func range_for(e) -> float:
 	if e.flying and stats.has("range_air"):
-		return float(stats.range_air) * (1.0 + rogue_range)
+		return float(stats.range_air) * range_mult()
 	return range_cells()
 
 
@@ -188,17 +207,100 @@ func damage_type() -> String:
 	return str(stats.get("damage_type", def.get("damage_type", "")))
 
 
-## Kill-Ränge wie in WC3: +10 % Schaden pro 10 Kills (Werte in balance.json).
+## Schadensbonus aus dem Level (in GemTD die Kill-Ränge wie in WC3: +10 % je 10 Kills, data/leveling.json).
 func kill_bonus() -> float:
-	var kr: Dictionary = Database.balance.get("kill_rank", {})
-	if kr.is_empty():
-		return 0.0
-	var ranks := floori(kills * (xp_factor + xp_bonus) / float(kr.get("kills_per_rank", 10)))
-	return minf(ranks * float(kr.get("bonus_per_rank", 0.1)), float(kr.get("max_bonus", 1.2)))
+	return level_damage
 
 
 func cooldown() -> float:
-	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus + rogue_speed) / maxf(1.0 - speed_malus, 0.1)
+	return float(stats.get("cooldown", 1.0)) / (1.0 + speed_bonus + rogue_speed + level_speed) / maxf(1.0 - speed_malus, 0.1)
+
+
+# --- Level und EP ----------------------------------------------------------------
+
+## Steigt dieser Tower in diesem Modus im Level?
+func has_levels() -> bool:
+	return not _lv.is_empty()
+
+
+func level_profile() -> Dictionary:
+	return _lv
+
+
+## EP gutschreiben (Erfahrungs-Auren und eeveTD-Marmor zählen mit). Gibt die Zahl gewonnener Level zurück.
+func gain_ep(amount: float) -> int:
+	if _lv.is_empty() or amount <= 0.0:
+		return 0
+	ep += amount * (xp_factor + xp_bonus) * float(_lv.get("ep_factor", 1.0))
+	var before := lvl
+	_apply_level(true)
+	return lvl - before
+
+
+## EP direkt setzen (Spielstand, Koop, Kombinieren), ohne Faktoren.
+func set_ep(value: float) -> void:
+	ep = maxf(value, 0.0)
+	_apply_level(false)
+
+
+## Ein Gegner zählt als Kill dieses Towers: Kill und EP.
+func credit_kill(e) -> void:
+	kills += 1
+	if not _lv.is_empty():
+		gain_ep(Leveling.kill_ep(_lv, e))
+
+
+## Level aus den EP und die Boni daraus. announce: ein Aufstieg zeigt sich (Text über dem Tower).
+func _apply_level(announce: bool) -> void:
+	var old := lvl
+	var old_abs := level_abilities
+	var old_range := level_range
+	if _lv.is_empty():
+		lvl = 0
+		level_damage = 0.0
+		level_speed = 0.0
+		level_range = 0.0
+		level_abilities = []
+	else:
+		lvl = Leveling.level_at(_lv, ep)
+		if lvl == old and announce:
+			return
+		var b := Leveling.bonuses(_lv, lvl)
+		level_damage = b.damage
+		level_speed = b.speed
+		level_range = b.range
+		level_abilities = b.abilities
+	_refresh_abilities()
+	if not is_equal_approx(old_range, level_range):
+		_rebuild_range_ring()
+	if lvl > old and announce:
+		_level_up(old)
+	# Neue Auren (Fähigkeiten aus dem Level) wirken erst nach dem nächsten Auren-Durchlauf
+	if old_abs != level_abilities and game != null and game.has_method("_update_auras") and is_inside_tree():
+		game._update_auras()
+
+
+## Aufstieg sichtbar machen: „LEVEL n“ steigt über dem Tower auf und verblasst (Modi können mehr anhängen).
+func _level_up(_old_level: int) -> void:
+	if DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	var l := Label3D.new()
+	l.text = tr("LEVEL %d") % lvl
+	l.font = UiTheme.font(true)
+	l.font_size = 44
+	l.pixel_size = 0.006
+	l.modulate = UiTheme.GOLD
+	l.outline_modulate = Color(0, 0, 0, 0.85)
+	l.outline_size = 10
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.position = Vector3(0, 1.6, 0)
+	add_child(l)
+	var tw := l.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(l, "position:y", 2.4, 1.4)
+	tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.8)
+	tw.chain().tween_callback(l.queue_free)
 
 
 # --- Kampf -------------------------------------------------------------------
@@ -353,8 +455,8 @@ func _hit(e, dmg: float) -> void:
 
 
 ## Ein Gegner ist durch diesen Tower gestorben (Modi hängen hier Kill-Effekte an).
-func _killed(_e) -> void:
-	kills += 1
+func _killed(e) -> void:
+	credit_kill(e)
 
 
 const ON_HIT := ["slow", "poison", "armor_reduce", "stun", "gold_on_hit", "stacking_damage", "nova"]
@@ -1073,7 +1175,7 @@ func _finish_visual() -> void:
 	_new_ring.visible = is_new
 	_select_ring = _ring(0.52, 0.06, Color.YELLOW)
 	# Fallen zeigen ihre Fläche über die Platte, der Ring nur Luft- oder Aurareichweite
-	_range_ring = _ring(ring_radius(stats, is_trap()) * (1.0 + rogue_range), 0.05, Color(1, 1, 1, 0.6))
+	_range_ring = _ring(ring_radius(stats, is_trap()) * range_mult(), 0.05, Color(1, 1, 1, 0.6))
 	set_selected(selected)
 
 
@@ -1095,15 +1197,20 @@ func set_rogue(b: Dictionary) -> void:
 			a.dps = snappedf((float(dmg[0]) + float(dmg[1])) / 2.0 * float(a.dps_factor) / maxf(float(stats.get("cooldown", 1.0)), 0.05), 0.1)
 			a.erase("dps_factor")
 		rogue_abilities.append(a)
-	_all_abilities = stats.get("abilities", []) + rogue_abilities
+	_refresh_abilities()
 	var r := float(b.get("range", 0.0))
 	if is_equal_approx(r, rogue_range):
 		return
 	rogue_range = r
+	_rebuild_range_ring()
+
+
+## Reichweitenring neu, wenn sich der Faktor auf die Reichweite geändert hat (Roguelike, Items, Level).
+func _rebuild_range_ring() -> void:
 	if _range_ring != null and is_instance_valid(_range_ring):
 		var vis := _range_ring.visible
 		_range_ring.queue_free()
-		_range_ring = _ring(ring_radius(stats, is_trap()) * (1.0 + rogue_range), 0.05, Color(1, 1, 1, 0.6))
+		_range_ring = _ring(ring_radius(stats, is_trap()) * range_mult(), 0.05, Color(1, 1, 1, 0.6))
 		_range_ring.visible = vis
 
 

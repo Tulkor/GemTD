@@ -53,22 +53,29 @@ static func targets_text(mode: String) -> String:
 	return _t("trifft Boden + Luft")
 
 
-## Kill-Rang wie tower.kill_bonus(): Rang, Bonus jetzt, nächster Rang und Fortschritt dorthin.
-static func kill_info(kills: int) -> Dictionary:
-	var kr: Dictionary = Database.balance.get("kill_rank", {})
-	var per := maxi(int(kr.get("kills_per_rank", 10)), 1)
-	var step := float(kr.get("bonus_per_rank", 0.1))
-	var cap := float(kr.get("max_bonus", 1.2))
-	var rank := floori(kills / float(per))
-	var bonus := minf(rank * step, cap) if not kr.is_empty() else 0.0
-	var maxed := kr.is_empty() or step <= 0.0 or bonus >= cap - 0.0001
-	return {"kills": kills, "rank": rank, "bonus": bonus, "per_rank": per, "step": step, "max": cap,
-			"maxed": maxed, "next_at": (rank + 1) * per, "missing": (rank + 1) * per - kills,
-			"next_bonus": minf((rank + 1) * step, cap), "progress": kills - rank * per}
+## Level und EP eines Towers (leveling.gd): {kills, levels (false = keine Level in diesem Modus), level,
+## max_level, ep, start, next, need, progress, maxed, bonus (Schaden jetzt), per_level (Text), next_unlock (Text),
+## next_unlock_level, unlocked (Texte der erreichten Freischaltungen)}.
+static func level_info(t) -> Dictionary:
+	var d := {"kills": t.kills, "levels": t.has_levels()}
+	if not t.has_levels():
+		return d
+	var p: Dictionary = t.level_profile()
+	d.merge(Leveling.info(p, t.ep))
+	d.bonus = t.kill_bonus()
+	d.per_level = Leveling.per_level_text(p)
+	var nu := Leveling.next_unlock(p, int(d.level))
+	d.next_unlock = Leveling.unlock_text(nu) if not nu.is_empty() else ""
+	d.next_unlock_level = int(nu.get("level", 0))
+	d.unlocked = []
+	for lv in range(1, int(d.level) + 1):
+		for u in Leveling.unlocks_at(p, lv):
+			d.unlocked.append(_t("Lv %d") % lv + ": " + Leveling.unlock_text(u))
+	return d
 
 
 ## Alles fürs Infofenster eines Towers:
-## {subtitle, tiles, abilities, description, kills (kill_info + total_damage, oder {} bei neuen Gems)}.
+## {subtitle, tiles, abilities, description, kills (level_info + total_damage, oder {} bei neuen Gems)}.
 ## tiles: [{key, caption, value, mod, rows, total}], rows: [[Text, Wert, Farbe]] mit Farbe "", "up" oder "muted".
 static func view(t) -> Dictionary:
 	var s: Dictionary = t.stats
@@ -85,15 +92,19 @@ static func view(t) -> Dictionary:
 		reach = num(t._aura_radius())
 	var range_rows := [[_t("Grundwert"), reach, ""]]
 	var range_total := []
-	if t.rogue_range > 0.0 and attack:
+	var range_up: bool = (t.rogue_range > 0.0 or t.level_range > 0.0) and attack
+	if range_up:
 		var boosted := s.duplicate()
-		boosted.range = float(s.get("range", 3.0)) * (1.0 + t.rogue_range)
+		boosted.range = float(s.get("range", 3.0)) * t.range_mult()
 		if s.has("range_air"):
-			boosted.range_air = float(s.range_air) * (1.0 + t.rogue_range)
-		range_rows.append([_t(t.bonus_label), pct(t.rogue_range), "up"])
+			boosted.range_air = float(s.range_air) * t.range_mult()
+		if t.rogue_range > 0.0:
+			range_rows.append([_t(t.bonus_label), pct(t.rogue_range), "up"])
+		if t.level_range > 0.0:
+			range_rows.append([_t("Level %d") % t.lvl, pct(t.level_range), "up"])
 		reach = range_text(boosted, trap)
 		range_total = [_t("Gesamt"), reach]
-	tiles.append({"key": "range", "caption": _t("Reichweite"), "value": reach, "mod": t.rogue_range > 0.0 and attack,
+	tiles.append({"key": "range", "caption": _t("Reichweite"), "value": reach, "mod": range_up,
 			"rows": range_rows, "total": range_total})
 	if attack:
 		var base_cd := float(s.get("cooldown", 1.0))
@@ -102,7 +113,9 @@ static func view(t) -> Dictionary:
 			rows.append([(t.speed_source if t.speed_source != "" else _t("Tempo")) + " " + _t("(Aura)"), pct(t.speed_bonus), "up"])
 		if t.rogue_speed > 0.0:
 			rows.append([_t(t.bonus_label), pct(t.rogue_speed), "up"])
-		tiles.append({"key": "speed", "caption": _t("Tempo"), "value": num(t.cooldown(), 2) + " s", "mod": t.speed_bonus + t.rogue_speed > 0.0,
+		if t.level_speed > 0.0:
+			rows.append([_t("Level %d") % t.lvl, pct(t.level_speed), "up"])
+		tiles.append({"key": "speed", "caption": _t("Tempo"), "value": num(t.cooldown(), 2) + " s", "mod": t.speed_bonus + t.rogue_speed + t.level_speed > 0.0,
 				"rows": rows, "total": [_t("Gesamt"), num(t.cooldown(), 2) + " s"]})
 		var dmg: Array = s.get("damage", [0, 0])
 		var lo := float(dmg[0])
@@ -116,7 +129,7 @@ static func view(t) -> Dictionary:
 			drows.append([_t("Wellenbonus · Welle %d") % t.game.current_wave(), "+%d" % roundi(extra), "up"])
 		var kb: float = t.kill_bonus()
 		if kb > 0.0:
-			drows.append([_t("Kills · Rang %d") % kill_info(t.kills).rank, pct(kb), "up"])
+			drows.append([_t("Level %d") % t.lvl, pct(kb), "up"])
 		if t.damage_bonus > 0.0:
 			drows.append([(t.damage_source if t.damage_source != "" else _t("Schaden")) + " " + _t("(Aura)"), pct(t.damage_bonus), "up"])
 		if t.rogue_damage > 0.0:
@@ -132,7 +145,7 @@ static func view(t) -> Dictionary:
 				"value": _t(Database.DAMAGE_TYPE_NAMES.get(dt, dt)) if dt != "" else "–", "mod": false, "rows": [], "total": []})
 	var kills := {}
 	if not t.is_new:
-		kills = kill_info(t.kills)
+		kills = level_info(t)
 		kills.total_damage = t.total_damage
 	return {"subtitle": subtitle, "tiles": tiles, "kills": kills,
 			"abilities": t.abilities().map(func(ab): return Abilities.describe(ab))

@@ -157,7 +157,7 @@ func _process(delta: float) -> void:
 		if is_instance_valid(poison_source):
 			poison_source.total_damage += dealt
 			if dead:
-				poison_source.kills += 1
+				poison_source.credit_kill(self)
 		if dead:
 			return
 	if stack_time > 0.0:
