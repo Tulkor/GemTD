@@ -12,8 +12,11 @@ var label_text := ""
 var hotkey := -1
 ## Erklärung für die Hinweiszeile unter dem Logo.
 var description := ""
+## Kleiner Text rechts im Knopf (z. B. Spielerzahl); dann steht der Name links.
+var side_text := ""
 
 var _tex: Texture2D
+var _rock: Texture2D
 
 
 func _init(text_de: String, is_main: bool) -> void:
@@ -26,6 +29,7 @@ func _init(text_de: String, is_main: bool) -> void:
 	for s in ["normal", "hover", "pressed", "disabled", "focus", "hover_pressed"]:
 		add_theme_stylebox_override(s, StyleBoxEmpty.new())
 	_tex = load(Wc3Theme.ROCK if main else Wc3Theme.STONE)
+	_rock = load(Wc3Theme.ROCK)
 	mouse_entered.connect(queue_redraw)
 	mouse_exited.connect(queue_redraw)
 	button_down.connect(queue_redraw)
@@ -49,26 +53,37 @@ func font_size() -> int:
 
 func _draw() -> void:
 	var hover := is_hovered() and not disabled
-	var down := is_pressed() or button_pressed
+	# Umschaltknopf (Modusliste): eingeschaltet sieht er aus wie ein Hauptknopf (Fels, rot), ohne eingedrückt zu wirken
+	var chosen := toggle_mode and button_pressed and not disabled
+	var red := main or chosen
+	var down := is_pressed() and not toggle_mode
 	var r := Rect2(Vector2.ZERO, size)
 	var outer := Wc3Theme.hex(r, TIP)
 	if hover and main:
 		# Glühen um den roten Knopf
 		for i in 4:
 			draw_polyline(Wc3Theme.closed(Wc3Theme.hex(r.grow(1.5 + i * 1.5), TIP + 1 + i)), Color(1.0, 0.45, 0.2, 0.12 - i * 0.025), 2.0, true)
-	draw_colored_polygon(outer, Wc3Theme.GOLD_HI if hover else Wc3Theme.GOLD)
-	draw_line(Vector2(TIP, 1), Vector2(size.x - TIP, 1), Wc3Theme.GOLD_HI, 2.0)
+	if chosen:
+		for i in 4:
+			draw_polyline(Wc3Theme.closed(Wc3Theme.hex(r.grow(1.5 + i * 1.5), TIP + 1 + i)), Color(1.0, 0.45, 0.2, 0.1 - i * 0.02), 2.0, true)
+	var rim := Wc3Theme.GOLD_HI if hover or chosen else Wc3Theme.GOLD
+	if disabled:
+		rim = Wc3Theme.GOLD_LO
+	draw_colored_polygon(outer, rim)
+	draw_line(Vector2(TIP, 1), Vector2(size.x - TIP, 1), Wc3Theme.GOLD_LO if disabled else Wc3Theme.GOLD_HI, 2.0)
 	draw_line(Vector2(TIP, size.y - 1), Vector2(size.x - TIP, size.y - 1), Wc3Theme.GOLD_LO, 2.0)
 	var fr := r.grow(-3)
 	var face := Wc3Theme.hex(fr, TIP - 2)
 	var tint: Color
-	if main:
+	if red:
 		tint = Wc3Theme.RED_HOVER if hover else Wc3Theme.RED
 	else:
 		tint = Wc3Theme.DARK_HOVER if hover else Wc3Theme.DARK
+	if disabled:
+		tint = Wc3Theme.DISABLED
 	if down:
 		tint = tint.darkened(0.25)
-	Wc3Theme.fill_textured(self, face, _tex, 180.0 if main else 200.0, tint)
+	Wc3Theme.fill_textured(self, face, _rock if red else _tex, 180.0 if red else 200.0, tint)
 	# Innenschatten: nach innen dunkler werdende Ränder, oben ein schwacher Lichtstreif, unten Schatten
 	for i in 5:
 		draw_polyline(Wc3Theme.closed(Wc3Theme.hex(fr.grow(-1.5 - i * 2.0), TIP - 2 - i)), Color(0, 0, 0, 0.22 - i * 0.04), 2.0, true)
@@ -83,7 +98,7 @@ func _draw() -> void:
 	var inner := PackedVector2Array([Vector2(tip + i * 0.6, i), Vector2(w - tip - i * 0.6, i), Vector2(w - i * 1.3, h / 2),
 		Vector2(w - tip - i * 0.6, h - i), Vector2(tip + i * 0.6, h - i), Vector2(i * 1.3, h / 2)])
 	draw_polyline(Wc3Theme.closed(inner), Color(Wc3Theme.GOLD_HI, 0.45), 1.0, true)
-	_draw_text(hover, down)
+	_draw_text(hover or chosen, down)
 
 
 func _draw_text(hover: bool, down: bool) -> void:
@@ -92,11 +107,19 @@ func _draw_text(hover: bool, down: bool) -> void:
 	var f := Wc3Theme.font(2 if main else 1)
 	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var pos := Vector2((size.x - tw) / 2, (size.y + f.get_ascent(fs) - f.get_descent(fs)) / 2)
+	if side_text != "":
+		pos.x = TIP + 16
+		var sf := Wc3Theme.font(1)
+		var sfs := 14
+		var sw := sf.get_string_size(side_text, HORIZONTAL_ALIGNMENT_LEFT, -1, sfs).x
+		var sp := Vector2(size.x - TIP - 16 - sw, (size.y + sf.get_ascent(sfs) - sf.get_descent(sfs)) / 2)
+		sf.draw_string(get_canvas_item(), sp + Vector2(0, 2), side_text, HORIZONTAL_ALIGNMENT_LEFT, -1, sfs, Color.BLACK)
+		sf.draw_string(get_canvas_item(), sp, side_text, HORIZONTAL_ALIGNMENT_LEFT, -1, sfs, Wc3Theme.DISABLED_TEXT if disabled else Wc3Theme.CREAM)
 	if down:
 		pos += Vector2(0, 1)
 	var col := Wc3Theme.HOT if hover else Wc3Theme.TEXT
 	if disabled:
-		col = Wc3Theme.MUTED
+		col = Wc3Theme.DISABLED_TEXT
 	# Schatten, dann Text in drei Teilen, damit der Hotkey-Buchstabe heller sein kann
 	f.draw_string(get_canvas_item(), pos + Vector2(0, 2), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.BLACK)
 	if hotkey < 0 or hotkey >= text.length():

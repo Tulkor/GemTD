@@ -2,22 +2,26 @@ class_name Wc3Pillar
 extends MarginContainer
 ## Steinsäule rechts im Hauptmenü (Wc3Theme): Steintextur mit abgeschnittenen Ecken, doppelter Messingrahmen,
 ## Messing-Eckbeschläge mit Schrauben, oben ein blauer Kristall in Messingfassung. Die Knöpfe kommen in box.
+## Ohne Kristall (with_gem false) auch als Steintafel der Einzelspieler-Seite.
 
 const CUT := 30.0
 const GEM := "res://assets/textures/menu/kristall_blau.png"
 
 var box: VBoxContainer
+## Kristall oben (Hub-Säule); die Tafeln der Einzelspieler-Seite haben keinen.
+var gem := true
 var _stone: Texture2D
 var _gem: Texture2D
 
 
-func _init() -> void:
+func _init(with_gem := true, width := 420.0) -> void:
+	gem = with_gem
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	add_theme_constant_override("margin_left", 44)
-	add_theme_constant_override("margin_right", 44)
-	add_theme_constant_override("margin_top", 64)
-	add_theme_constant_override("margin_bottom", 54)
-	custom_minimum_size.x = 420
+	add_theme_constant_override("margin_left", 44 if gem else 36)
+	add_theme_constant_override("margin_right", 44 if gem else 36)
+	add_theme_constant_override("margin_top", 64 if gem else 40)
+	add_theme_constant_override("margin_bottom", 54 if gem else 40)
+	custom_minimum_size.x = width
 	box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	add_child(box)
@@ -69,7 +73,8 @@ func _draw() -> void:
 	Wc3Theme.corner(self, Vector2(w, 0), Vector2.DOWN, Vector2.LEFT)
 	Wc3Theme.corner(self, Vector2(w, h), Vector2.LEFT, Vector2.UP)
 	Wc3Theme.corner(self, Vector2(0, h), Vector2.UP, Vector2.RIGHT)
-	_draw_gem()
+	if gem:
+		_draw_gem()
 
 
 ## Blauer Kristall oben in einer Messingfassung (Trapez), dahinter ein blaues Leuchten.

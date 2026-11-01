@@ -3,7 +3,7 @@ extends RefCounted
 ## Hauptmenü (Hub) im Warcraft-III-Stil (Lukas, 2026-10-30, Mockup v10 unter /mnt/project-files/mockups/wc3-menu/):
 ## Steinsäule mit doppeltem Messingrahmen und verschraubten Eckbeschlägen, spitze Knöpfe mit Stein- bzw.
 ## Felstextur, Cinzel als Schrift. Messington wie die Linien in Shopping Maul, kaum Farbverlauf.
-## Die Unterseiten (Einzelspieler, Lobby, Laden …) bleiben Art déco (DecoTheme).
+## Seit 2026-11 auch die Einzelspieler-Seite (Modus und Map wählen); Lobby, Laden usw. bleiben Art déco (DecoTheme).
 
 const GOLD := Color("c9a36a")
 const GOLD_HI := Color("d8b97f")
@@ -24,6 +24,12 @@ const RED := Color(0.42, 0.086, 0.055, 0.8)
 const RED_HOVER := Color(0.63, 0.157, 0.07, 0.8)
 const DARK := Color(0.133, 0.118, 0.102, 0.72)
 const DARK_HOVER := Color(0.25, 0.2, 0.16, 0.72)
+## Map-Karte (Einzelspieler) über der Steintextur und Grund der Map-Vorschau.
+const CARD := Color(0.09, 0.08, 0.07, 0.78)
+const PREVIEW_BG := Color("15110c")
+## Gesperrter Knopf: grauer Stein, graue Schrift.
+const DISABLED := Color(0.16, 0.16, 0.16, 0.85)
+const DISABLED_TEXT := Color("77736b")
 ## Abdunklung der Steinsäule.
 const PILLAR_SHADE := Color(0.07, 0.055, 0.047, 0.66)
 
