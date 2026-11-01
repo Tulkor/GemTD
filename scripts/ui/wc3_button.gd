@@ -17,6 +17,9 @@ var side_text := ""
 
 var _tex: Texture2D
 var _rock: Texture2D
+## Messingrahmen (3D-Render) auf eigener Ebene mit Glanz.
+var _brass: Wc3Theme.BrassLayer
+static var _frame: StyleBoxTexture
 
 
 func _init(text_de: String, is_main: bool) -> void:
@@ -34,6 +37,28 @@ func _init(text_de: String, is_main: bool) -> void:
 	mouse_exited.connect(queue_redraw)
 	button_down.connect(queue_redraw)
 	button_up.connect(queue_redraw)
+	_brass = Wc3Theme.BrassLayer.new(_draw_frame)
+	add_child(_brass)
+	resized.connect(_brass.queue_redraw)
+
+
+## Rahmen als Neunteiler aus dem Render (300 × 56, Spitze 14), Spitzen bleiben bei jeder Breite gleich.
+static func frame_box() -> StyleBoxTexture:
+	if _frame == null:
+		_frame = StyleBoxTexture.new()
+		_frame.texture = Wc3Theme.brass("knopf_rahmen")
+		_frame.draw_center = false
+		_frame.texture_margin_left = 20
+		_frame.texture_margin_right = 20
+		_frame.texture_margin_top = 10
+		_frame.texture_margin_bottom = 10
+		for side in [SIDE_LEFT, SIDE_RIGHT, SIDE_TOP, SIDE_BOTTOM]:
+			_frame.set_expand_margin(side, 2)
+	return _frame
+
+
+func _draw_frame(ci: CanvasItem) -> void:
+	ci.draw_style_box(frame_box(), Rect2(Vector2.ZERO, size))
 
 
 func _notification(what: int) -> void:
@@ -66,12 +91,9 @@ func _draw() -> void:
 	if chosen:
 		for i in 4:
 			draw_polyline(Wc3Theme.closed(Wc3Theme.hex(r.grow(1.5 + i * 1.5), TIP + 1 + i)), Color(1.0, 0.45, 0.2, 0.1 - i * 0.02), 2.0, true)
-	var rim := Wc3Theme.GOLD_HI if hover or chosen else Wc3Theme.GOLD
-	if disabled:
-		rim = Wc3Theme.GOLD_LO
-	draw_colored_polygon(outer, rim)
-	draw_line(Vector2(TIP, 1), Vector2(size.x - TIP, 1), Wc3Theme.GOLD_LO if disabled else Wc3Theme.GOLD_HI, 2.0)
-	draw_line(Vector2(TIP, size.y - 1), Vector2(size.x - TIP, size.y - 1), Wc3Theme.GOLD_LO, 2.0)
+	# Rahmen kommt aus dem Messing-Render (_draw_frame); heller beim Überfahren, grau wenn gesperrt
+	_brass.modulate = Color(0.55, 0.55, 0.55) if disabled else (Color(1.25, 1.2, 1.1) if hover or chosen else Color.WHITE)
+	draw_colored_polygon(outer, Wc3Theme.INK)
 	var fr := r.grow(-3)
 	var face := Wc3Theme.hex(fr, TIP - 2)
 	var tint: Color

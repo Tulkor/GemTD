@@ -33,11 +33,32 @@ const DISABLED_TEXT := Color("77736b")
 ## Abdunklung der Steinsäule.
 const PILLAR_SHADE := Color(0.07, 0.055, 0.047, 0.66)
 
+## Messingteile als 3D-Renders aus Blender (tools/menu/messing_blender.py), metallisch spiegelnd.
+const BRASS_DIR := "res://assets/textures/menu/messing/"
+## Glanz, der langsam über alles Messing läuft (Material für Wc3Theme.BrassLayer).
+const GLOSS := preload("res://scripts/ui/wc3_glanz.gdshader")
 const STONE := "res://assets/models/scenery/church_Stone.png"
 const ROCK := "res://assets/models/scenery/mine_rocks_1_rock1.png"
 const FONT := "res://assets/fonts/Cinzel-Bold.ttf"
 
 static var _fonts: Dictionary = {}
+static var _tex: Dictionary = {}
+
+
+## Messing-Render aus BRASS_DIR (ecke, schraube, kante_h, kante_v, raute, rubin, knopf_rahmen).
+static func brass(name: String) -> Texture2D:
+	if not _tex.has(name):
+		_tex[name] = load(BRASS_DIR + name + ".png")
+	return _tex[name]
+
+
+## Glanz-Material für Messing; ein gemeinsames, damit der Lichtstreif über alle Teile gleich läuft.
+static var _gloss_mat: ShaderMaterial
+static func gloss_material() -> ShaderMaterial:
+	if _gloss_mat == null:
+		_gloss_mat = ShaderMaterial.new()
+		_gloss_mat.shader = GLOSS
+	return _gloss_mat
 
 
 ## Cinzel Bold mit Buchstabenabstand; Zeichen, die Cinzel nicht hat (◆, ·), kommen aus Federo bzw. DejaVu.
@@ -97,32 +118,53 @@ static func closed(pts: PackedVector2Array) -> PackedVector2Array:
 	return out
 
 
-## Geschlitzte Messingschraube.
-static func screw(ci: CanvasItem, pos: Vector2, angle: float) -> void:
-	ci.draw_circle(pos, 6.5, INK)
-	ci.draw_circle(pos, 5.5, SCREW)
-	ci.draw_circle(pos - Vector2(0.8, 0.8), 4.0, Color(GOLD_HI, 0.55))
-	var d := Vector2.from_angle(angle) * 4.2
-	ci.draw_line(pos - d, pos + d, INK, 1.8)
+## Messingschraube (3D-Render), d = Durchmesser.
+static func screw(ci: CanvasItem, pos: Vector2, angle: float, d := 14.0) -> void:
+	ci.draw_set_transform(pos, angle)
+	ci.draw_texture_rect(brass("schraube"), Rect2(-d / 2, -d / 2, d, d), false)
+	ci.draw_set_transform(Vector2.ZERO)
 
 
-## Eckbeschlag mit drei Schrauben an der abgeschnittenen Ecke (80 × 80, Ursprung = Ecke, x/y zeigen nach innen).
-static func corner(ci: CanvasItem, origin: Vector2, x: Vector2, y: Vector2) -> void:
-	var t := func(p: Vector2) -> Vector2: return origin + x * p.x + y * p.y
-	var plate := PackedVector2Array()
-	for p in [Vector2(0, 30), Vector2(30, 0), Vector2(80, 0), Vector2(80, 17), Vector2(39, 17), Vector2(17, 39), Vector2(17, 80), Vector2(0, 80)]:
-		plate.append(t.call(p))
-	ci.draw_colored_polygon(plate, GOLD)
-	ci.draw_polyline(closed(plate), INK, 2.0, true)
-	ci.draw_polyline(PackedVector2Array([t.call(Vector2(3, 31)), t.call(Vector2(31, 3)), t.call(Vector2(77, 3))]), GOLD_HI, 2.0, true)
-	ci.draw_polyline(PackedVector2Array([t.call(Vector2(77, 14)), t.call(Vector2(38, 14)), t.call(Vector2(14, 38)), t.call(Vector2(14, 77))]), GOLD_LO, 2.0, true)
-	var faint := Color(GOLD_LO, 0.7)
-	ci.draw_line(t.call(Vector2(8, 36)), t.call(Vector2(36, 8)), faint, 1.0, true)
-	ci.draw_line(t.call(Vector2(8, 44)), t.call(Vector2(8, 72)), faint, 1.0, true)
-	ci.draw_line(t.call(Vector2(44, 8)), t.call(Vector2(72, 8)), faint, 1.0, true)
-	screw(ci, t.call(Vector2(21, 21)), deg_to_rad(35))
-	screw(ci, t.call(Vector2(62, 8.5)), deg_to_rad(-20))
-	screw(ci, t.call(Vector2(8.5, 62)), deg_to_rad(70))
+## Eckbeschlag mit drei Schrauben (3D-Render, 80 × 80, Ursprung = Ecke, x/y zeigen nach innen).
+static func corner(ci: CanvasItem, origin: Vector2, x: Vector2, _y: Vector2) -> void:
+	ci.draw_set_transform(origin, x.angle())
+	ci.draw_texture_rect(brass("ecke"), Rect2(-2, -2, 84, 84), false)
+	ci.draw_set_transform(Vector2.ZERO)
+
+
+## Messingleiste (Rundstab) waagrecht oder senkrecht von a nach b, Dicke t.
+static func edge(ci: CanvasItem, a: Vector2, b: Vector2, t := 10.0) -> void:
+	# Die Textur ist 20 px dick und kachelt in Längsrichtung; skaliert auf die Dicke t
+	var k := t / 20.0
+	if is_equal_approx(a.y, b.y):
+		ci.draw_set_transform(Vector2(minf(a.x, b.x), a.y - t / 2), 0.0, Vector2(k, k))
+		ci.draw_texture_rect(brass("kante_h"), Rect2(0, 0, absf(b.x - a.x) / k, 20), true)
+	else:
+		ci.draw_set_transform(Vector2(a.x - t / 2, minf(a.y, b.y)), 0.0, Vector2(k, k))
+		ci.draw_texture_rect(brass("kante_v"), Rect2(0, 0, 20, absf(b.y - a.y) / k), true)
+	ci.draw_set_transform(Vector2.ZERO)
+
+
+## Messingrahmen um r: vier Leisten, Ecken offen für die Beschläge (inset = wie weit die Leisten vor der Ecke enden).
+static func frame(ci: CanvasItem, r: Rect2, t := 10.0, inset := 30.0) -> void:
+	var h := t / 2
+	edge(ci, Vector2(r.position.x + inset, r.position.y + h), Vector2(r.end.x - inset, r.position.y + h), t)
+	edge(ci, Vector2(r.position.x + inset, r.end.y - h), Vector2(r.end.x - inset, r.end.y - h), t)
+	edge(ci, Vector2(r.position.x + h, r.position.y + inset), Vector2(r.position.x + h, r.end.y - inset), t)
+	edge(ci, Vector2(r.end.x - h, r.position.y + inset), Vector2(r.end.x - h, r.end.y - inset), t)
+
+
+## Ebene über einer Fläche, die nur das Messing zeichnet, mit dem Glanz-Material (Node2D, damit Container sie
+## nicht verschieben). painter(ci) zeichnet; redraw() nach Größenänderung.
+class BrassLayer extends Node2D:
+	var painter: Callable
+
+	func _init(p: Callable) -> void:
+		painter = p
+		material = Wc3Theme.gloss_material()
+
+	func _draw() -> void:
+		painter.call(self)
 
 
 ## Trennlinie mit Raute in der Mitte (zwischen den Knopfgruppen der Säule).
@@ -130,10 +172,11 @@ class Divider extends Control:
 	func _init() -> void:
 		custom_minimum_size.y = 20
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		material = Wc3Theme.gloss_material()
 
 	func _draw() -> void:
 		var y := size.y / 2
 		var m := size.x / 2
-		draw_line(Vector2(0, y), Vector2(m - 12, y), GOLD_LO, 2.0)
-		draw_line(Vector2(m + 12, y), Vector2(size.x, y), GOLD_LO, 2.0)
-		draw_colored_polygon(PackedVector2Array([Vector2(m, y - 6), Vector2(m + 6, y), Vector2(m, y + 6), Vector2(m - 6, y)]), GOLD)
+		Wc3Theme.edge(self, Vector2(0, y), Vector2(m - 12, y), 5.0)
+		Wc3Theme.edge(self, Vector2(m + 12, y), Vector2(size.x, y), 5.0)
+		draw_texture_rect(Wc3Theme.brass("raute"), Rect2(m - 10, y - 10, 20, 20), false)

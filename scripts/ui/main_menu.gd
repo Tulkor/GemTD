@@ -6,7 +6,7 @@ extends Control
 var maps: Array = []   ## alle Maps (Database.list_maps())
 var shown_maps: Array = []   ## Maps des gewählten Modus, in der Einzelspieler-Auswahl
 var selected := 0   ## Index in shown_maps
-var cards_box: HFlowContainer
+var cards_box: GridContainer
 var play_button: Button
 var cards: Array[Button] = []
 var mode_cards: Array[Wc3Button] = []
@@ -373,7 +373,9 @@ func _build_single() -> void:
 	no_map_hint = _body_label("Dieser Modus wählt seine Karte selbst vor dem Start.", mid.box, 18, Wc3Theme.MUTED)
 	no_map_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	no_map_hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cards_box = HFlowContainer.new()
+	# Zwei Spalten Map-Karten (Lukas 2026-11-01), die Karten teilen sich die Breite
+	cards_box = GridContainer.new()
+	cards_box.columns = 2
 	cards_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cards_box.add_theme_constant_override("h_separation", 18)
 	cards_box.add_theme_constant_override("v_separation", 18)
@@ -527,6 +529,7 @@ func _map_card(i: int) -> Button:
 	var md := MapData.load_file(shown_maps[i].path)
 	var b := Wc3Card.new()
 	b.custom_minimum_size = Vector2(250, 0)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cards_box.add_child(b)
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -538,7 +541,7 @@ func _map_card(i: int) -> Button:
 	v.add_theme_constant_override("separation", 6)
 	b.add_child(v)
 	var preview := MapPreview.new()
-	preview.custom_minimum_size = Vector2(218, 146)
+	preview.custom_minimum_size = Vector2(218, 190)
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview.bg = Wc3Theme.PREVIEW_BG
 	preview.map = md
@@ -567,7 +570,7 @@ func _map_card(i: int) -> Button:
 	l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	l.clip_text = true
 	b.set_meta("info", info.replace(" · ", "\n").replace("\n\n", "\n"))
-	var base_h := 146 + 24 + 6 * 2 + 22 + 30
+	var base_h := 190 + 24 + 6 * 2 + 22 + 30
 	b.custom_minimum_size.y = base_h
 	v.minimum_size_changed.connect(func():
 		b.custom_minimum_size.y = maxf(base_h, v.get_combined_minimum_size().y + 30))
