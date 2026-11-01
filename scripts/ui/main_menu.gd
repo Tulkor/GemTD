@@ -6,10 +6,10 @@ extends Control
 var maps: Array = []   ## alle Maps (Database.list_maps())
 var shown_maps: Array = []   ## Maps des gewählten Modus, in der Einzelspieler-Auswahl
 var selected := 0   ## Index in shown_maps
-var cards_box: HFlowContainer
+var cards_box: GridContainer
 var play_button: Button
 var cards: Array[Button] = []
-var mode_cards: Array[ModeCard] = []
+var mode_cards: Array[Wc3Button] = []
 var settings: Control
 var lobby: LobbyPanel
 var loader: LoadPanel
@@ -18,7 +18,8 @@ var net_tile_text: Label
 var history: RunHistoryPanel
 var map_caption: Label
 var map_info: Label
-var play_label: Label
+var map_title: Label
+var mode_hint: Label
 var map_scroll: ScrollContainer
 var no_map_hint: Label
 var single_page: Control
@@ -39,8 +40,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = DecoTheme.get_theme()
 	_build_hub()
-	single_page = _page()
-	_build_single(single_page.get_meta("box"))
+	_build_single()
 	history_page = _page()
 	var hv: VBoxContainer = history_page.get_meta("box")
 	_back_button(hv.get_child(0), func(): show_page(""))
@@ -73,6 +73,9 @@ func _ready() -> void:
 	add_child(lobby)
 	lobby.hide()
 	lobby.start_requested.connect(_start_session)
+	# Die Lobby liegt über dem Hub (auch direkt geöffnet nach einer Sitzung): Säule und Logo dann ausblenden
+	lobby.visibility_changed.connect(func(): hub.visible = not lobby.visible and not single_page.visible and not history_page.visible \
+		and not profile_page.visible and not credits_page.visible)
 	loader = LoadPanel.new()
 	add_child(loader)
 	loader.hide()
@@ -93,7 +96,8 @@ func _ready() -> void:
 ## "credits" = Mitwirkende, "lobby" = Mehrspieler.
 func show_page(page: String) -> void:
 	hub.visible = page == ""
-	hub_bg.visible = page == ""
+	# Die 3D-Nachtszene bleibt auch hinter Einzelspieler und Lobby (WC3-Stil)
+	hub_bg.visible = page == "" or page == "single" or page == "lobby"
 	hub_bg.process_mode = Node.PROCESS_MODE_INHERIT if hub_bg.visible else Node.PROCESS_MODE_DISABLED
 	single_page.visible = page == "single"
 	credits_page.visible = page == "credits"
@@ -300,84 +304,141 @@ func _back_button(head: Node, on_pressed: Callable) -> Button:
 	return b
 
 
-## Einzelspieler in drei Spalten: I. Modus, II. Map, III. Start (Angaben zur Map und Spielen).
-func _build_single(v: VBoxContainer) -> void:
-	var head: HBoxContainer = v.get_child(0)
-	_back_button(head, func(): show_page(""))
-	DecoTheme.title(UiUtil.label("Einzelspieler", head, 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	DecoTheme.head_line(head)
+## Einzelspieler im Warcraft-III-Stil wie der Hub (Lukas 2026-11-01): 3D-Nachtszene bleibt im Hintergrund,
+## drei Steintafeln: I. Modus (Knöpfe wie die Säule, gewählter rot), II. Map (Karten mit Messingrahmen),
+## III. Start (Angaben, Spielen und Zurück unten rechts wie in WC3).
+func _build_single() -> void:
+	single_page = Control.new()
+	single_page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	single_page.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(single_page)
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.color = Color(0, 0, 0, 0.45)
+	single_page.add_child(shade)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right"]:
+		margin.add_theme_constant_override("margin_" + side, 40)
+	margin.add_theme_constant_override("margin_top", 22)
+	margin.add_theme_constant_override("margin_bottom", 30)
+	single_page.add_child(margin)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 14)
+	margin.add_child(v)
+	var head := HBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_theme_constant_override("separation", 18)
+	v.add_child(head)
+	head.add_child(_rule_line())
+	Wc3Theme.label("◆", head, 16, Wc3Theme.GOLD).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	Wc3Theme.label(tr("Einzelspieler").to_upper(), head, 40, Wc3Theme.GOLD_HI, 6)
+	Wc3Theme.label("◆", head, 16, Wc3Theme.GOLD).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_rule_line())
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 28)
+	body.add_theme_constant_override("separation", 22)
 	v.add_child(body)
 
-	var left := _column(body, 300)
-	DecoTheme.caption("I · Modus", left)
-	# Nur die gewählte Karte zeigt ihre Beschreibung; reicht die Höhe trotzdem nicht, scrollt die Liste.
-	var mode_scroll := ScrollContainer.new()
-	mode_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	mode_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	left.add_child(mode_scroll)
+	var left := Wc3Pillar.new(false, 450)
+	body.add_child(left)
+	_panel_caption("I · Modus", left.box)
+	# Beschreibung des gewählten Modus direkt unter der Liste
 	var mode_list := VBoxContainer.new()
 	mode_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mode_list.add_theme_constant_override("separation", 12)
-	mode_scroll.add_child(mode_list)
+	mode_list.add_theme_constant_override("separation", 10)
+	left.box.add_child(mode_list)
 	for m in Database.modes:
-		var card := ModeCard.new(m, Vector2(300, 0))
-		card.compact = true
-		var id: String = card.mode_id
-		card.pressed.connect(func():
+		var b := Wc3Button.new(str(m.get("name", m.id)), false)
+		b.toggle_mode = true
+		b.custom_minimum_size.y = 52
+		b.set_meta("mode_id", str(m.id))
+		var id := str(m.id)
+		b.pressed.connect(func():
 			Session.game_kind = id
 			_fill_maps())
-		mode_list.add_child(card)
-		mode_cards.append(card)
+		mode_list.add_child(b)
+		mode_cards.append(b)
+	left.separator()
+	mode_hint = _body_label("", left.box, 17, Wc3Theme.CREAM)
+	mode_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
-	var mid := _column(body, 0)
+	var mid := Wc3Pillar.new(false, 0)
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	map_caption = DecoTheme.caption("II · Map", mid)
+	body.add_child(mid)
+	map_caption = _panel_caption("II · Map", mid.box)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(scroll)
+	mid.box.add_child(scroll)
 	map_scroll = scroll
-	no_map_hint = UiUtil.wrap_label("Dieser Modus wählt seine Karte selbst vor dem Start.", mid, 300)
-	no_map_hint.add_theme_font_size_override("font_size", 16)
-	no_map_hint.add_theme_color_override("font_color", DecoTheme.MUTED)
+	no_map_hint = _body_label("Dieser Modus wählt seine Karte selbst vor dem Start.", mid.box, 18, Wc3Theme.MUTED)
+	no_map_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	no_map_hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cards_box = HFlowContainer.new()
+	# Zwei Spalten Map-Karten (Lukas 2026-11-01), die Karten teilen sich die Breite
+	cards_box = GridContainer.new()
+	cards_box.columns = 2
 	cards_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards_box.add_theme_constant_override("h_separation", 16)
-	cards_box.add_theme_constant_override("v_separation", 16)
-	scroll.add_child(cards_box)
+	cards_box.add_theme_constant_override("h_separation", 18)
+	cards_box.add_theme_constant_override("v_separation", 18)
+	var cards_margin := MarginContainer.new()
+	cards_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right", "top", "bottom"]:
+		cards_margin.add_theme_constant_override("margin_" + side, 10)
+	scroll.add_child(cards_margin)
+	cards_margin.add_child(cards_box)
 
-	var right := _column(body, 320)
-	DecoTheme.caption("III · Start", right)
-	map_info = UiUtil.wrap_label("", right, 320)
-	map_info.add_theme_font_size_override("font_size", 15)
-	map_info.add_theme_color_override("font_color", DecoTheme.BRASS_LIGHT)
-	var hint := UiUtil.wrap_label("Doppelklick auf eine Map startet sie direkt. Schwierigkeit und Wertung wählst du im Spiel vor Runde 1.", right, 320)
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", DecoTheme.MUTED)
+	var right := Wc3Pillar.new(false, 420)
+	body.add_child(right)
+	_panel_caption("III · Start", right.box)
+	map_title = Wc3Theme.label("", right.box, 22, Wc3Theme.GOLD_HI, 2)
+	map_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	map_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	map_title.custom_minimum_size.x = 280
+	map_info = _body_label("", right.box, 17, Wc3Theme.CREAM)
+	map_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	right.separator()
+	var hint := _body_label("Doppelklick auf eine Map startet sie direkt. Schwierigkeit und Wertung wählst du im Spiel vor Runde 1.", right.box, 16, Wc3Theme.MUTED)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(fill)
-	play_button = UiUtil.button("Spielen", right, _play)
-	play_button.custom_minimum_size = Vector2(320, 66)
-	play_button.add_theme_font_size_override("font_size", 30)
-	play_button.clip_text = true
-	DecoTheme.accent_button(play_button)
-	play_label = UiUtil.wrap_label("", right, 320)
-	play_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	play_label.add_theme_color_override("font_color", DecoTheme.BRASS_LIGHT)
+	right.box.add_child(fill)
+	play_button = right.button("Spielen", true, "", _play)
+	play_button.custom_minimum_size.y = 64
+	right.button("Zurück", false, "", func(): show_page(""))
 
 
-## Spalte der Einzelspieler-Seite (width 0 = so breit wie Platz ist).
-func _column(parent: Node, width: float) -> VBoxContainer:
-	var c := VBoxContainer.new()
-	c.add_theme_constant_override("separation", 12)
-	c.custom_minimum_size.x = width
-	parent.add_child(c)
-	return c
+## Überschrift einer Steintafel: Cinzel zwischen Messinglinien.
+func _panel_caption(text_de: String, parent: Node) -> Label:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(row)
+	var a := _rule_line()
+	a.custom_minimum_size.x = 30
+	a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(a)
+	var l := Wc3Theme.label(tr(text_de).to_upper(), row, 18, Wc3Theme.CREAM, 4)
+	var b := _rule_line()
+	b.custom_minimum_size.x = 30
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(b)
+	l.set_meta("row", row)
+	return l
+
+
+## Fließtext auf den Steintafeln: Alegreya (wie Friz Quadrata in WC3 gut lesbar), dunkler Schatten.
+func _body_label(text: String, parent: Node, size: int, color: Color) -> Label:
+	var l := UiUtil.label(text, parent, size)
+	l.add_theme_font_override("font", DruidTheme.font(false))
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 200
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
 
 
 func _update_modes() -> void:
@@ -387,13 +448,18 @@ func _update_modes() -> void:
 				Session.game_kind = str(m.id)
 				break
 	for card in mode_cards:
-		var ok := Database.mode_allows(card.mode_id, 1)
+		var id: String = card.get_meta("mode_id")
+		var ok := Database.mode_allows(id, 1)
 		var tag := ""
-		if not bool(Database.mode(card.mode_id).get("ready", false)):
+		if not bool(Database.mode(id).get("ready", false)):
 			tag = tr("Kommt noch")
 		elif not ok:
 			tag = tr("Nicht solo")
-		card.set_state(card.mode_id == Session.game_kind, ok, tag)
+		card.disabled = not ok
+		card.set_pressed_no_signal(ok and id == Session.game_kind)
+		card.side_text = tag if tag != "" else Database.mode_players_text(id)
+		card.queue_redraw()
+	mode_hint.text = tr(str(Database.mode(Session.game_kind).get("hint", "")))
 
 
 ## Einstellungen: gleiches Fenster wie im Spiel, hier in Art déco.
@@ -464,32 +530,30 @@ func _fill_maps() -> void:
 
 func _map_card(i: int) -> Button:
 	var md := MapData.load_file(shown_maps[i].path)
-	var b := Button.new()
-	b.toggle_mode = true
+	var b := Wc3Card.new()
 	b.custom_minimum_size = Vector2(250, 0)
-	b.focus_mode = Control.FOCUS_NONE
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cards_box.add_child(b)
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 12
-	v.offset_top = 12
-	v.offset_right = -12
-	v.offset_bottom = -12
+	v.offset_left = 16
+	v.offset_top = 16
+	v.offset_right = -16
+	v.offset_bottom = -14
 	v.add_theme_constant_override("separation", 6)
 	b.add_child(v)
 	var preview := MapPreview.new()
-	preview.custom_minimum_size = Vector2(226, 150)
+	preview.custom_minimum_size = Vector2(218, 190)
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.bg = DecoTheme.BG
+	preview.bg = Wc3Theme.PREVIEW_BG
 	preview.map = md
 	v.add_child(preview)
-	var name_label := UiUtil.label(tr(shown_maps[i].name).to_upper(), v, 17)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Lange Namen („Schlucht (zufällige Steine)“) umbrechen statt abkürzen; die Karte wächst mit
+	var name_label := Wc3Theme.label(tr(shown_maps[i].name), v, 17, Wc3Theme.GOLD_HI, 1)
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.custom_minimum_size.x = 226
-	name_label.add_theme_font_override("font", DecoTheme._variant(DecoTheme.FONT, 0.35, 2))
+	name_label.custom_minimum_size.x = 218
 	var info := ""
 	var short := ""
 	if md != null:
@@ -505,14 +569,14 @@ func _map_card(i: int) -> Button:
 			for z in md.zones:
 				seats[z.player] = true
 			info += "\n" + tr("Koop: %d Zonen, %d Bahnen") % [seats.size(), md.lane_count()]
-	var l := UiUtil.label(short, v, 15)
+	var l := _body_label(short, v, 15, Wc3Theme.MUTED)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	l.clip_text = true
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.add_theme_color_override("font_color", DecoTheme.MUTED)
 	b.set_meta("info", info.replace(" · ", "\n").replace("\n\n", "\n"))
-	b.custom_minimum_size.y = 150 + 24 + 6 * 2 + 24 + 20
+	var base_h := 190 + 24 + 6 * 2 + 22 + 30
+	b.custom_minimum_size.y = base_h
 	v.minimum_size_changed.connect(func():
-		b.custom_minimum_size.y = maxf(150 + 24 + 6 * 2 + 24 + 20, v.get_combined_minimum_size().y + 24))
+		b.custom_minimum_size.y = maxf(base_h, v.get_combined_minimum_size().y + 30))
 	b.pressed.connect(func():
 		selected = i
 		_update_selection())
@@ -525,28 +589,24 @@ func _map_card(i: int) -> Button:
 
 func _update_selection() -> void:
 	for i in cards.size():
-		var on := i == selected
-		cards[i].set_pressed_no_signal(on)
-		cards[i].add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.PANEL, DecoTheme.BRASS_LIGHT if on else DecoTheme.BORDER, 0, 2 if on else 1))
-		cards[i].add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.PANEL, DecoTheme.BRASS_LIGHT, 0, 2))
-		cards[i].add_theme_stylebox_override("hover", DecoTheme.box(DecoTheme.PANEL_2, DecoTheme.BRASS_LIGHT if on else DecoTheme.GOLD, 0, 2 if on else 1))
+		cards[i].set_pressed_no_signal(i == selected)
+		cards[i].queue_redraw()
 	var needs_map := _needs_map()
-	map_caption.visible = needs_map
 	map_scroll.visible = needs_map
 	no_map_hint.visible = not needs_map
 	var ok := (not needs_map or not shown_maps.is_empty()) and Database.mode_allows(Session.game_kind, 1)
 	play_button.disabled = not ok
+	play_button.queue_redraw()
 	var mode_name := str(Database.mode(Session.game_kind).get("name", Session.game_kind))
-	play_button.text = tr("Spielen")
 	if not ok:
-		play_label.text = ""
+		map_title.text = ""
 		map_info.text = ""
 	elif needs_map:
-		play_label.text = "%s · %s" % [mode_name, tr(shown_maps[selected].name)]
-		map_info.text = "%s · %s\n%s" % [mode_name, tr(shown_maps[selected].name), cards[selected].get_meta("info", "")]
+		map_title.text = "%s\n%s" % [mode_name, tr(shown_maps[selected].name)]
+		map_info.text = cards[selected].get_meta("info", "")
 	else:
-		play_label.text = mode_name
-		map_info.text = mode_name
+		map_title.text = mode_name
+		map_info.text = ""
 
 
 ## Wählt der Modus eine Map aus data/maps (needs_map in data/modes.json)?
