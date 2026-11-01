@@ -72,7 +72,7 @@ func _draw() -> void:
 func _draw_brass(ci: CanvasItem) -> void:
 	var w := size.x
 	var h := size.y
-	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size), 13.0, 40.0)
+	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size), 15.0, 40.0, 8.5)
 	Wc3Theme.corner(ci, Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN)
 	Wc3Theme.corner(ci, Vector2(w, 0), Vector2.DOWN, Vector2.LEFT)
 	Wc3Theme.corner(ci, Vector2(w, h), Vector2.LEFT, Vector2.UP)

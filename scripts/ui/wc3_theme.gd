@@ -128,6 +128,8 @@ static func screw(ci: CanvasItem, pos: Vector2, angle: float, d := 14.0) -> void
 ## Eckbeschlag mit drei Schrauben (3D-Render, 80 × 80, Ursprung = Ecke, x/y zeigen nach innen).
 static func corner(ci: CanvasItem, origin: Vector2, x: Vector2, _y: Vector2) -> void:
 	ci.draw_set_transform(origin, x.angle())
+	# weicher Schatten unter dem Beschlag, damit er auf der Leiste aufliegt statt zu schweben
+	ci.draw_texture_rect(brass("ecke"), Rect2(0, 1, 84, 84), false, Color(0, 0, 0, 0.45))
 	ci.draw_texture_rect(brass("ecke"), Rect2(-2, -2, 84, 84), false)
 	ci.draw_set_transform(Vector2.ZERO)
 
@@ -146,8 +148,10 @@ static func edge(ci: CanvasItem, a: Vector2, b: Vector2, t := 10.0) -> void:
 
 
 ## Messingrahmen um r: vier Leisten, Ecken offen für die Beschläge (inset = wie weit die Leisten vor der Ecke enden).
-static func frame(ci: CanvasItem, r: Rect2, t := 10.0, inset := 30.0) -> void:
-	var h := t / 2
+## center = Abstand der Leistenmitte vom Rand (-1: t / 2); an Eckbeschlägen die Mitte ihres Arms (8,5 px), damit
+## die Leiste genau unter dem Arm verschwindet (Lukas 2026-11-01: sah schief aus).
+static func frame(ci: CanvasItem, r: Rect2, t := 10.0, inset := 30.0, center := -1.0) -> void:
+	var h := t / 2 if center < 0 else center
 	edge(ci, Vector2(r.position.x + inset, r.position.y + h), Vector2(r.end.x - inset, r.position.y + h), t)
 	edge(ci, Vector2(r.position.x + inset, r.end.y - h), Vector2(r.end.x - inset, r.end.y - h), t)
 	edge(ci, Vector2(r.position.x + h, r.position.y + inset), Vector2(r.position.x + h, r.end.y - inset), t)
