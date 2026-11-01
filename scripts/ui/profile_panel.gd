@@ -1,8 +1,8 @@
 class_name ProfilePanel
 extends Control
 ## Profilseite im Warcraft-III-Stil über der 3D-Nachtszene des Hubs (Lukas 2026-11-01, Mockups unter
-## /mnt/project-files/mockups/wc3-profil/): Übersicht wie Entwurf 6 (Heldenblatt: links Gesamtwerte, rechts Level
-## und eine Karte je Modus), Klick auf einen Modus öffnet die Detailseite wie Entwurf 4 (Reiter, Kacheln, Rekorde,
+## /mnt/project-files/mockups/wc3-profil/): Übersicht wie Entwurf 5 (Spielzeit groß, eine Zeile je Modus mit
+## Balken, Zeit, Runs, S/N, Welle und Level), Klick auf einen Modus öffnet die Detailseite wie Entwurf 4 (Reiter, Kacheln, Rekorde,
 ## Tower, letzte Runs), unten links geht es zur Run-History wie Entwurf 9 (profile_history.gd).
 ## Gezeigt wird das Wichtigste; gespeichert ist viel mehr (profile.gd, jeder Run unter user://profile/runs/).
 
@@ -19,6 +19,11 @@ const RECORDS := [
 	["wave_damage", "Stärkste Welle"],
 	["fastest_win", "Schnellster Sieg"],
 ]
+
+## Bau-Aktionen aus run_stats.gd
+const ACTIONS := {"keep": "Gems behalten", "combine": "Kombiniert", "build": "Gebaut", "upgrade": "Aufgewertet",
+	"trap": "Fallen", "copy": "Kopiert", "special": "Sondertower", "downgrade": "Abgestuft",
+	"move": "Verschoben", "swap": "Getauscht", "take_back": "Zurückgenommen"}
 
 ## "overview", "history" oder ein Modus-Schlüssel (Detailseite)
 var view := "overview"
@@ -129,102 +134,119 @@ func _seal_text() -> String:
 	return tr("PROFIL VON HAND GEÄNDERT · PRÜFSUMME ✗")
 
 
-# --- Übersicht (Entwurf 6) ---------------------------------------------------------------
+# --- Übersicht (Entwurf 5) ---------------------------------------------------------------
 
+## Spielzeit im Mittelpunkt (Lukas 2026-11-01): oben die Gesamtzeit groß mit Runs, Siegen und Kills,
+## darunter eine Zeile je Modus mit Balken (Anteil an der Spielzeit), Zeit, Runs, S/N, höchster Welle und Level.
 func _overview() -> void:
 	var t := Profile.totals()
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 22)
-	body.add_child(row)
+	var p := Wc3Pillar.new(false, 0)
+	body.add_child(p)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 30)
+	p.box.add_child(top)
+	var big := VBoxContainer.new()
+	big.custom_minimum_size.x = 400
+	big.add_theme_constant_override("separation", 0)
+	big.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(big)
+	ProfileWc3.cin(ProfileWc3.tr_up("Spielzeit gesamt"), big, 15, Wc3Theme.MUTED, 3).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var total := ProfileWc3.cin(ProfileWc3.hours(int(t.play_time)), big, 54, Wc3Theme.HOT, 2)
+	total.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var days: int = Profile.data().daily.size()
+	var sub := tr("%s Tage gespielt") % ProfileWc3.num(days)
+	if days > 0:
+		sub += " · " + tr("Ø %s pro Tag") % ProfileWc3.hours(int(t.play_time) / days)
+	ProfileWc3.body(sub, big, 15, Wc3Theme.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var tiles := HBoxContainer.new()
+	tiles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tiles.add_theme_constant_override("separation", 10)
+	top.add_child(tiles)
+	ProfileWc3.tile(tiles, "Runs", ProfileWc3.num(int(t.runs)), tr("%d abgebrochen · %d mit Debug") % [int(t.aborted), int(t.debug_runs)])
+	ProfileWc3.tile(tiles, "Siege / Niederlagen", "%s / %s" % [ProfileWc3.num(int(t.wins)), ProfileWc3.num(int(t.losses))],
+		tr("%s Siegquote") % ProfileWc3.percent(int(t.wins), int(t.runs)))
+	ProfileWc3.tile(tiles, "Kills", ProfileWc3.short(float(t.kills)), tr("%s Tower gebaut") % ProfileWc3.num(int(t.built)))
 
-	var left := Wc3Pillar.new(false, 430)
-	row.add_child(left)
-	var crest := CenterContainer.new()
-	crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	left.box.add_child(crest)
-	var gem := TextureRect.new()
-	gem.texture = load(Wc3Pillar.GEM)
-	gem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	gem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	gem.custom_minimum_size = Vector2(120, 120)
-	crest.add_child(gem)
-	var name_l := ProfileWc3.cin(_player_name(), left.box, 24)
-	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var since := str(Profile.data().get("created", ""))
-	if since.length() >= 10:
-		var sl := ProfileWc3.body(tr("Profil seit %s") % RunHistoryPanel._date({"time": since}, true).get_slice(",", 0), left.box, 15, Wc3Theme.MUTED)
-		sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ProfileWc3.caption("Gesamt", left.box)
-	ProfileWc3.kv(left.box, "Spielzeit", ProfileWc3.hours(int(t.play_time)))
-	ProfileWc3.kv(left.box, "Runs", ProfileWc3.num(int(t.runs)))
-	ProfileWc3.kv(left.box, "Siege", ProfileWc3.num(int(t.wins)), ProfileWc3.WIN)
-	ProfileWc3.kv(left.box, "Niederlagen", ProfileWc3.num(int(t.losses)), ProfileWc3.LOSS)
-	ProfileWc3.kv(left.box, "Siegquote", ProfileWc3.percent(int(t.wins), int(t.runs)))
-	ProfileWc3.kv(left.box, "Abgebrochen", ProfileWc3.num(int(t.aborted)), Wc3Theme.MUTED)
-	ProfileWc3.kv(left.box, "Kills", ProfileWc3.short(float(t.kills)))
-	ProfileWc3.kv(left.box, "Gebaute Tower", ProfileWc3.num(int(t.built)))
-	ProfileWc3.kv(left.box, "Gespielte Tage", ProfileWc3.num(Profile.data().daily.size()))
-	if str(t.last_played) != "":
-		ProfileWc3.kv(left.box, "Zuletzt gespielt", RunHistoryPanel._date({"time": t.last_played}), Wc3Theme.CREAM)
-
-	var right := Wc3Pillar.new(false, 0)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(right)
+	ProfileWc3.caption("Zeit und Runs je Modus", p.box)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	right.box.add_child(scroll)
-	var inner := VBoxContainer.new()
-	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inner.add_theme_constant_override("separation", 12)
-	scroll.add_child(inner)
-	ProfileWc3.caption("Level", inner)
-	for m in ["maul", "youtd"]:
-		ProfileWc3.level_card(inner, m)
-	ProfileWc3.body("GemTD, Roguelike, eeveTD und Randgruppen TD haben kein Spieler-Level, dort zählen Siege und Rekorde. Runs mit Debug-Menü geben keine EP.",
-		inner, 14, Wc3Theme.MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	ProfileWc3.caption("Modi", inner)
-	var g := ProfileWc3.grid(inner, 3)
-	for m in ProfileWc3.MODES:
-		_mode_card(g, m[0])
-	ProfileWc3.body("Klick auf einen Modus zeigt alle Werte.", inner, 14, Wc3Theme.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_footer(right.box, func(): back_requested.emit())
+	p.box.add_child(scroll)
+	var rows := VBoxContainer.new()
+	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rows.add_theme_constant_override("separation", 6)
+	scroll.add_child(rows)
+	for x in ProfileWc3.MODES:
+		_mode_row(rows, x[0], int(t.play_time))
+	ProfileWc3.body("Klick auf einen Modus zeigt alle Werte. Runs mit Debug-Menü geben keine EP.", p.box, 14, Wc3Theme.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_footer(p.box, func(): back_requested.emit())
 
 
-func _mode_card(parent: Node, m: String) -> void:
+## Zeile je Modus: Edelstein und Name, Balken (Anteil an der Spielzeit), Zeit, Runs, S/N, Welle, Level. Klick → Detailseite.
+func _mode_row(parent: Node, m: String, total_time: int) -> void:
 	var md := Profile.mode(m)
-	var card := Wc3Card.new()
-	card.toggle_mode = false
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(220, 122)
-	card.pressed.connect(show_view.bind(m))
-	parent.add_child(card)
-	var pad := MarginContainer.new()
-	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side in ["left", "right"]:
-		pad.add_theme_constant_override("margin_" + side, 20)
-	pad.add_theme_constant_override("margin_top", 14)
-	pad.add_theme_constant_override("margin_bottom", 12)
-	card.add_child(pad)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pad.add_child(v)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 8)
-	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(head)
-	ProfileWc3.gem(head, m, 20)
-	var n := ProfileWc3.cin(ProfileWc3.tr_up(ProfileWc3.mode_name(m)), head, 14, Wc3Theme.MUTED, 2)
-	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	n.clip_text = true
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.custom_minimum_size.y = 58
+	b.add_theme_stylebox_override("normal", ProfileWc3.flat(ProfileWc3.ROW_BG, Color(Wc3Theme.GOLD_LO, 0.5), 0))
+	b.add_theme_stylebox_override("hover", ProfileWc3.flat(Color(Wc3Theme.DARK_HOVER, 0.8), Wc3Theme.GOLD, 0))
+	b.add_theme_stylebox_override("pressed", ProfileWc3.flat(Color(Wc3Theme.DARK_HOVER, 0.9), Wc3Theme.GOLD_HI, 0))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	b.pressed.connect(show_view.bind(m))
+	parent.add_child(b)
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 14
+	row.offset_right = -14
+	row.add_theme_constant_override("separation", 16)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+	ProfileWc3.gem(row, m, 24)
+	var name_l := ProfileWc3.cin(tr(ProfileWc3.mode_name(m)), row, 17)
+	name_l.custom_minimum_size.x = 190
+	name_l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var bar := ProfileWc3.Bar.new()
+	bar.frac = float(md.play_time) / maxf(total_time, 1)
+	bar.color = ProfileWc3.mode_color(m)
+	bar.text = ProfileWc3.percent(int(md.play_time), total_time)
+	bar.custom_minimum_size = Vector2(160, 24)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(bar)
+	var cells := [[ProfileWc3.hours(int(md.play_time)), 130, Wc3Theme.GOLD_HI],
+		[tr("%d Runs") % int(md.runs), 90, Wc3Theme.CREAM],
+		["%d / %d" % [int(md.wins), int(md.losses)], 90, Wc3Theme.CREAM],
+		[tr("Welle %d") % int(md.records.get("best_wave", {}).get("value", 0)), 100, Wc3Theme.CREAM]]
+	for c in cells:
+		var l := ProfileWc3.cin(c[0], row, 16, c[2])
+		l.custom_minimum_size.x = c[1]
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# Level nur, wo der Modus eines hat (Maul-XP, YouTD-Spielerlevel)
 	var lv := ProfileWc3.level_info(m)
+	var lvl_box := HBoxContainer.new()
+	lvl_box.custom_minimum_size.x = 200
+	lvl_box.add_theme_constant_override("separation", 8)
+	lvl_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(lvl_box)
 	if not lv.is_empty():
-		ProfileWc3.cin("%s %s" % [lv.name, lv.value], head, 13, Wc3Theme.CREAM)
-	ProfileWc3.cin(ProfileWc3.hours(int(md.play_time)), v, 24)
-	var best := int(md.records.get("best_wave", {}).get("value", 0))
-	ProfileWc3.body(tr("%d Runs · %d S / %d N · Welle %d") % [int(md.runs), int(md.wins), int(md.losses), best], v, 14, Wc3Theme.MUTED)
+		var d := ProfileWc3.LevelDiamond.new()
+		d.level = int(lv.level)
+		d.tint = ProfileWc3.mode_color(m)
+		d.custom_minimum_size = Vector2(48, 48)
+		lvl_box.add_child(d)
+		var lb := VBoxContainer.new()
+		lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lb.alignment = BoxContainer.ALIGNMENT_CENTER
+		lb.add_theme_constant_override("separation", 3)
+		lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lvl_box.add_child(lb)
+		ProfileWc3.cin("%s %s" % [lv.name, lv.value], lb, 13, Wc3Theme.CREAM)
+		var lbar := ProfileWc3.Bar.new()
+		lbar.frac = float(lv.frac)
+		lbar.color = ProfileWc3.mode_color(m)
+		lbar.custom_minimum_size.y = 8
+		lb.add_child(lbar)
 
 
 # --- Detail je Modus (Entwurf 4) ---------------------------------------------------------
@@ -291,13 +313,54 @@ func _detail(m: String) -> void:
 	_records(right, md.records)
 	ProfileWc3.caption("Stärkste Tower", right)
 	_towers(right, m)
-	ProfileWc3.caption("Letzte Runs", right)
-	var list := Profile.runs(m).slice(0, 6)
-	if list.is_empty():
-		ProfileWc3.body("Noch keine Runs in diesem Modus.", right, 15, Wc3Theme.MUTED)
-	for r in list:
-		ProfileHistory.run_row(right, r, false)
+	ProfileWc3.caption("Statistiken", right)
+	_stats(right, m, md)
+	if not (md.actions as Dictionary).is_empty():
+		ProfileWc3.caption("Bauen", right)
+		var ag := ProfileWc3.grid(right, 3)
+		var keys: Array = md.actions.keys()
+		keys.sort_custom(func(x, y): return int(md.actions[x]) > int(md.actions[y]))
+		for k in keys:
+			ProfileWc3.tile(ag, ACTIONS.get(k, str(k)), ProfileWc3.num(int(md.actions[k])))
 	_footer(p.box, show_view.bind("overview"))
+
+
+## Weitere Werte eines Modus, teils aus der Run-Liste gerechnet (Durchschnitte, längster Run).
+func _stats(parent: Node, m: String, md: Dictionary) -> void:
+	var runs := int(md.runs)
+	var n := maxi(runs, 1)
+	var waves_sum := 0
+	var longest := 0
+	var counted := 0
+	var last20 := 0
+	var last20_wins := 0
+	for r in Profile.runs(m):
+		if r.get("debug", false) or r.get("aborted", false):
+			continue
+		counted += 1
+		waves_sum += int(r.get("wave", 0))
+		longest = maxi(longest, int(r.get("play_time", 0)))
+		if last20 < 20:
+			last20 += 1
+			last20_wins += 1 if r.get("victory", false) else 0
+	var g := ProfileWc3.grid(parent, 3)
+	ProfileWc3.tile(g, "Kills", ProfileWc3.short(float(md.kills)), tr("Ø %s pro Run") % ProfileWc3.num(int(md.kills) / n))
+	ProfileWc3.tile(g, "Schaden", ProfileWc3.short(float(md.damage)), tr("Ø %s pro Run") % ProfileWc3.short(float(md.damage) / n))
+	ProfileWc3.tile(g, "Tower gebaut", ProfileWc3.num(int(md.built)), tr("Ø %s pro Run") % ProfileWc3.num(int(md.built) / n))
+	ProfileWc3.tile(g, "Ø erreichte Welle", String.num(float(waves_sum) / maxi(counted, 1), 1).replace(".", ","),
+		tr("%s Wellen insgesamt") % ProfileWc3.num(int(md.waves)))
+	ProfileWc3.tile(g, "Leben verloren", ProfileWc3.num(int(md.leaks)), tr("Ø %s pro Run") % String.num(float(md.leaks) / n, 1).replace(".", ","))
+	ProfileWc3.tile(g, "Letzte 20 Runs", ProfileWc3.percent(last20_wins, last20), tr("%d von %d gewonnen") % [last20_wins, last20])
+	ProfileWc3.tile(g, "Längster Run", ProfileWc3.duration(longest) if longest > 0 else "–", "")
+	ProfileWc3.tile(g, "Siegesserie", str(int(md.streak)), tr("Beste Siegesserie %d") % int(md.best_streak))
+	ProfileWc3.tile(g, "Zeit mit Debug", ProfileWc3.hours(int(md.debug_time)), tr("%d Runs ohne EP") % int(md.debug_runs))
+	var first := str(md.get("first_played", ""))
+	var last := str(md.get("last_played", ""))
+	ProfileWc3.tile(g, "Zuerst gespielt", RunHistoryPanel._date({"time": first}, true).get_slice(",", 0) if first != "" else "–", "")
+	ProfileWc3.tile(g, "Zuletzt gespielt", RunHistoryPanel._date({"time": last}) if last != "" else "–", "")
+	var best: Dictionary = md.best_run
+	ProfileWc3.tile(g, "Bester Run", tr("Welle %d / %d") % [int(best.get("wave", 0)), int(best.get("waves", 0))] if not best.is_empty() else "–",
+		str(best.get("map", "")))
 
 
 func _groups(parent: Node, groups: Dictionary, caption_de: String, m: String) -> void:
