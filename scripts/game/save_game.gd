@@ -74,6 +74,8 @@ static func capture(game) -> Dictionary:
 		st.rogue = game.rogue.to_dict()
 	st.run_stats = game.run_stats.capture(list)
 	st.debug_used = game.debug_used
+	# Die Zeit bis hier bucht das Profil beim Verlassen (record_profile_abort), nach dem Laden zählt sie nicht noch einmal
+	st.profile_time = roundi(game.play_time)
 	if game.has_method("save_extra"):
 		st.mode = game.save_extra()
 	return st
@@ -161,6 +163,7 @@ static func apply(game, s: Dictionary) -> void:
 		game._update_auras()
 	game.run_stats.restore(s.get("run_stats", {}), made)
 	game.debug_used = bool(s.get("debug_used", false))
+	game.profile_time = int(s.get("profile_time", 0))
 	if game.has_method("load_extra"):
 		game.load_extra(s.get("mode", {}), made)
 	if phase == game.Phase.WAVE:
@@ -223,6 +226,9 @@ static func path_for(id: String) -> String:
 	return DIR.path_join(id + EXT)
 
 
+static var writes := 0  ## Zahl der geschriebenen Spielstände seit Programmstart (Profil: Run gespeichert?)
+
+
 static func write(data: Dictionary) -> bool:
 	DirAccess.make_dir_recursive_absolute(DIR)
 	data["version"] = VERSION
@@ -232,6 +238,7 @@ static func write(data: Dictionary) -> bool:
 		return false
 	f.store_var(data)
 	f.close()
+	writes += 1
 	return true
 
 

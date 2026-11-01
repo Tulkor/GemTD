@@ -3,7 +3,8 @@ extends Node
 ## Start über tools/screenshot.sh (setzt Xvfb und OpenGL), Optionen nach "--":
 ##   --szene=spiel|menu|map_editor|tower_editor|maul   Standard spiel
 ##   --seite=single|history|profile|credits|lobby|einstellungen   im Hauptmenü diese Seite zeigen (Standard Hub)
-##   --reiter=N              (mit --seite=profile) Reiter N: 0 Übersicht, 1 GemTD, 2 eeveTD, 3 Maul, 4 Tower
+##   --reiter=X              (mit --seite=profile) overview, history oder ein Modus (gemtd, eeve, maul, youtd …);
+##   --beispielprofil        Profil mit ausgedachten Runs aller Modi füllen (Profilseite ansehen)
 ##   --ui=70                 UI-Größe in Prozent (50–100), wird nicht gespeichert
 ##   --lobby=Anna,Ben,Max    (mit --seite=lobby) als Host mit diesen Mitspielern, --felder=0,1,1,2 Feld je Spieler
 ##                           (Host zuerst), --stimme=eevetd Modus vorwählen, --relay=127.0.0.1:24565 über einen Relay
@@ -69,6 +70,41 @@ var opts := {}
 var rng := RandomNumberGenerator.new()
 
 
+## Ausgedachte Runs in allen Modi (--beispielprofil), jedes Mal neu.
+func _example_profile() -> void:
+	var g := ProjectSettings.globalize_path(Profile.dir)
+	for sub in ["runs", "backups", ""]:
+		if not DirAccess.dir_exists_absolute(g.path_join(sub)):
+			continue
+		for f in DirAccess.get_files_at(g.path_join(sub)):
+			DirAccess.remove_absolute(g.path_join(sub).path_join(f))
+	Profile.reset_cache()
+	var r := RandomNumberGenerator.new()
+	r.seed = 7
+	var maps := {"gemtd": ["Classic", "Spirale"], "roguelike": ["Classic"], "eeve": ["Druidenhain"], "maul": ["ikea", "mediamarkt"],
+		"randgruppen": ["Stadtpark"], "youtd": ["Insel"]}
+	var waves := {"gemtd": 50, "roguelike": 50, "eeve": 57, "maul": 40, "randgruppen": 35, "youtd": 120}
+	var towers := {"gemtd": ["ruby", "sapphire", "emerald"], "roguelike": ["ruby"], "eeve": [], "maul": [], "randgruppen": [], "youtd": []}
+	for i in 60:
+		var m: String = ["gemtd", "gemtd", "gemtd", "roguelike", "eeve", "maul", "maul", "randgruppen", "youtd"][r.randi() % 9]
+		var n: int = waves[m]
+		var won := r.randf() < 0.4
+		var wave := n if won else r.randi_range(n / 3, n - 1)
+		var types := {}
+		for id in towers[m]:
+			types[id] = {"built": r.randi_range(2, 9), "tiers": {}, "kills": r.randi_range(50, 900), "damage": r.randf_range(1e5, 9e7),
+				"best_wave_damage": r.randf_range(1e4, 5e6), "best_wave": r.randi_range(1, wave), "alive": 1}
+		var info := {"map": maps[m][r.randi() % maps[m].size()], "difficulty": r.randi_range(0, 2), "victory": won, "wave": wave,
+			"waves": n, "lives": r.randi_range(0, 50), "score": r.randi_range(5000, 48000) if m == "gemtd" else 0,
+			"kills": r.randi_range(400, 5000), "play_time": r.randi_range(900, 5400), "debug": i % 17 == 3}
+		Profile.record_run(m, info, {"types": types, "towers": [], "wave_log": [], "actions": {}})
+		if i % 13 == 5:
+			Profile.record_abort(m, {"map": info.map, "wave": wave / 2, "waves": n, "play_time": 600})
+	MaulXp.save_xp(314)
+	YoutdProgress.prog().xp = 4820.0
+	Profile.save()
+
+
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--"):
@@ -77,6 +113,8 @@ func _ready() -> void:
 	rng.seed = int(opts.get("seed", "1"))
 	RunHistory.path = "user://screenshot_run_history.json"
 	Profile.dir = "user://screenshot_profile"
+	if opts.has("beispielprofil"):
+		_example_profile()
 	Session.skip_setup = not opts.has("einstellungen")
 	if opts.has("rasse"):
 		Session.rg_choice = {"race": str(opts.rasse)}
@@ -132,7 +170,7 @@ func _ready() -> void:
 	elif scene == "menu" and opts.has("seite"):
 		node.show_page(opts.seite)
 		if opts.has("reiter") and opts.seite == "profile":
-			node.profile.show_tab(int(opts.reiter))
+			node.profile.show_view(str(opts.reiter))
 		await _frames(3)
 	if scene == "menu" and opts.has("lobby"):
 		await _fake_lobby(node)

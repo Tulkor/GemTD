@@ -103,7 +103,9 @@ var enemies_killed := 0
 var leaks_per_wave := {}  ## Welle (Index) -> verlorene Leben (Punkte-Modus: durchgelassene Gegner), für die Run-History
 var play_time := 0.0      ## gespielte Sekunden in Echtzeit, ohne Pause
 var run_stats := RunStats.new()  ## Statistik fürs Profil (profile.gd)
-var debug_used := false   ## Debug-Menü geöffnet: der Run zählt nicht für Summen und Rekorde im Profil
+var debug_used := false   ## Debug-Menü geöffnet: der Run zählt nicht für Summen und Rekorde im Profil, keine EP
+var profile_time := 0      ## Sekunden dieses Runs, die schon im Profil stehen (Verlassen und später Laden)
+var _saves_at_start := 0
 var spawn_timer := 0.0
 var debug_tower := ""
 var rng := RandomNumberGenerator.new()
@@ -129,6 +131,7 @@ var _probe: Enemy = null   ## Messpunkt für free_stretch
 
 
 func _ready() -> void:
+	_saves_at_start = SaveGame.writes
 	rng.randomize()
 	# Spielstand fortsetzen (save_game.gd) oder neues Spiel
 	var saved: Dictionary = Session.load_state
@@ -244,6 +247,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	record_profile_abort()
 	if _probe != null:
 		_probe.free()
 		_probe = null
@@ -1888,9 +1892,31 @@ func record_profile(victory: bool) -> Dictionary:
 	info.erase("top")
 	info.coop = coop != null
 	info.players = players.size()
-	info.debug = debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0
+	info.debug = debug_run()
+	info.time_counted = profile_time
 	info.merge(profile_extra(), true)
+	profile_time = roundi(play_time)
 	return Profile.record_run(profile_mode(), info, run_stats.result(all_towers().filter(func(t): return not t.is_new)))
+
+
+## Hilft hier eine Debug-Hilfe? Dann gibt der Run keine EP und zählt nicht für Siege und Rekorde (nur die
+## Zeit). Gilt für den ganzen Run, auch nach Speichern und Laden (debug_used steht im Spielstand).
+func debug_run() -> bool:
+	return debug_used or Session.debug_immortal or Session.debug_gems_per_round > 0 or Session.return_scene != Session.MAIN_MENU
+
+
+## Spiel verlassen, bevor der Run zu Ende ist: Zeit ins Profil, ohne Speichern auch als abgebrochen.
+func record_profile_abort() -> void:
+	if phase >= Phase.GAME_OVER or roundi(play_time) - profile_time < 10:
+		return
+	var info := RunHistory.entry_from(self, false)
+	info.erase("top")
+	info.debug = debug_run()
+	info.time_counted = profile_time
+	info.saved = SaveGame.writes > _saves_at_start
+	info.merge(profile_extra(), true)
+	Profile.record_abort(profile_mode(), info)
+	profile_time = roundi(play_time)
 
 
 ## Modus im Profil (eeve_game.gd überschreibt das, die Variante Roguelike zählt eigen).

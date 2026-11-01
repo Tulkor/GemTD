@@ -1059,7 +1059,7 @@ func _finish(p: Phase) -> void:
 	if phase >= Phase.GAME_OVER:
 		return
 	phase = p
-	if not debug_used:
+	if not debug_run():
 		xp_result = YoutdProgress.record(my_score(), waves_done, p == Phase.VICTORY, enemies_killed)
 	record_profile(p == Phase.VICTORY)
 	Engine.time_scale = 1.0

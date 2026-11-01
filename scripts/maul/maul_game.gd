@@ -79,7 +79,9 @@ var levels_done := 0
 var debug_free := false
 var debug_xp := false
 var xp_start := 0           ## XP beim Start (Endbildschirm zeigt den Zuwachs)
-var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd)
+var debug_used := false     ## Debug-Menü geöffnet: die Partie zählt nicht fürs Profil (maul_profile.gd), keine XP
+var profile_time := 0       ## Sekunden dieser Partie, die schon im Profil stehen (Verlassen und später Laden)
+var _saves_at_start := 0
 var profile_news := {}      ## Neue Rekorde dieser Partie für den Endbildschirm
 var run_stats := RunStats.new()  ## Statistik der eigenen Tower fürs Profil (profile.gd)
 var level_save := {}        ## Einzelspiel: Stand vom Beginn des laufenden Levels (maul_save.gd)
@@ -140,6 +142,7 @@ var _hud_timer := 0.0
 
 
 func _ready() -> void:
+	_saves_at_start = SaveGame.writes
 	# Art déco für Oberfläche und Spielfeld (Petrol, Messing), vor dem Bau von HUD und Board
 	UiTheme.use_skin(UiTheme.DECO)
 	rules = MaulData.rules()
@@ -629,7 +632,7 @@ func _finish(p: Phase) -> void:
 ## Partie ins eigene Profil schreiben (auch Koop-Mitspieler, jeder auf seinem Rechner).
 func _record_profile(won: bool) -> void:
 	profile_news = {}
-	if sandbox or debug_used or Session.debug_immortal:
+	if debug_run():
 		return
 	profile_news = MaulProfile.record(shop_of(local_player), difficulty, levels_done, won, enemies_killed, play_time)
 
@@ -641,8 +644,24 @@ func _record_run(won: bool) -> void:
 		"wave": levels_done, "waves": levels.size(), "lives": lives, "max_lives": max_lives, "kills": enemies_killed,
 		"play_time": roundi(play_time), "coop": players.size() > 1, "players": players.size(),
 		"xp": me.xp, "xp_gain": me.xp - xp_start, "gold": me.gold, "sandbox": sandbox,
-		"debug": sandbox or debug_used or Session.debug_immortal}
+		"debug": debug_run(), "time_counted": profile_time}
+	profile_time = roundi(play_time)
 	Profile.record_run("maul", info, run_stats.result(_my_towers()))
+
+
+## Debug-Menü, Sandbox oder Unsterblich in diesem Run: keine XP, zählt nicht für Siege und Rekorde (nur die Zeit).
+func debug_run() -> bool:
+	return sandbox or debug_used or Session.debug_immortal
+
+
+## Spiel verlassen, bevor die Partie zu Ende ist: Zeit ins Profil, ohne Speichern auch als abgebrochen.
+func _record_abort() -> void:
+	if phase >= Phase.GAME_OVER or phase == Phase.SETUP and levels_done == 0 or roundi(play_time) - profile_time < 10:
+		return
+	Profile.record_abort("maul", {"map": shop_of(local_player), "shop": shop_of(local_player), "difficulty": difficulty,
+		"wave": levels_done, "waves": levels.size(), "lives": lives, "kills": enemies_killed, "play_time": roundi(play_time),
+		"debug": debug_run(), "time_counted": profile_time, "saved": SaveGame.writes > _saves_at_start})
+	profile_time = roundi(play_time)
 
 
 func _my_towers() -> Array:
@@ -1724,7 +1743,7 @@ func _end_level_pro(n: int) -> void:
 		if p.shop == "aok" and level_lost > 0:
 			p.gold += mini(n * floori(float(aok.gold_factor) * level_lost), n * int(aok.gold_cap))
 	var x := MaulXp.cfg()
-	if sandbox or debug_xp or players.size() < int(x.get("min_players", 1)):
+	if sandbox or debug_xp or debug_run() or players.size() < int(x.get("min_players", 1)):
 		return
 	var ke := float(MaulData.difficulty(difficulty).get("xp", 1.0))
 	for i in players.size():
@@ -1991,6 +2010,7 @@ func _refresh_hud() -> void:
 
 
 func _exit_tree() -> void:
+	_record_abort()
 	UiTheme.use_skin(UiTheme.ARCADE)
 	Engine.time_scale = 1.0
 	if Net.game == self:

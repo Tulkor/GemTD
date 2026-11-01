@@ -24,7 +24,7 @@ FAILED=0
 # Zeilen, die headless immer kommen und nichts bedeuten.
 NOISE='Parameter "m" is null|^Godot Engine|^\s*at: |^$'
 # Von Tests absichtlich ausgelöst (Smoke: veränderte Spielstand-Datei wird abgelehnt; Boss: fehlendes Gegner-Modell).
-EXPECTED='MD5 sum of the decrypted file|Modell nicht gefunden: res://gibt/es/nicht.glb'
+EXPECTED='MD5 sum of the decrypted file|Modell nicht gefunden: res://gibt/es/nicht.glb|Profil-Siegel passt nicht|Profil beschädigt, nehme Sicherung'
 
 summary() {  # name log exit start
   local name=$1 log=$2 code=$3 ok fail secs warn

@@ -283,7 +283,7 @@ func apply_state(s: Dictionary) -> void:
 	if not host and not _got_state and int(s.get("phase", 0)) != MaulGame.Phase.SETUP and me.shop != "" and not g.sandbox:
 		me.xp = xp_before
 		send({"type": "xp", "xp": xp_before})
-	elif me.xp != xp_before and _got_state and not g.sandbox:
+	elif me.xp != xp_before and _got_state and not g.debug_run():
 		MaulXp.save_xp(me.xp)
 		g._announce_unlocks(xp_before, me.xp)
 	_got_state = true
