@@ -102,6 +102,7 @@ var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
+const ICON_UP := "up"    ## Pfeil-Symbol aus UiTheme.icon (kein Text)
 var info_oils: TooltipHost     ## „▲ Öle“ neben dem Namen, Hover zeigt die Werte durch Öle (info.oils)
 var _oils_icon: TextureRect
 var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
@@ -931,7 +932,7 @@ func set_selection(info: Dictionary) -> void:
 		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
 	info_oils.visible = not (info.get("oils", []) as Array).is_empty()
 	if info_oils.visible:
-		_oils_icon.texture = UiTheme.icon("up", 24)  # erst hier: Farbe nach dem Stil des Modus
+		_oils_icon.texture = UiTheme.icon(ICON_UP, 24)  # erst hier: Farbe nach dem Stil des Modus
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
