@@ -26,70 +26,77 @@ var _offline: VBoxContainer
 var _online: VBoxContainer
 var _addresses: Label
 var _internet: Label
-var _copy_button: Button
+var _copy_button: Wc3Button
 var _session_text: Label
 var _players_caption: Label
 var _list: VBoxContainer
-var _start_button: Button
+var _start_button: Wc3Button
 var _host_box: VBoxContainer
-var _map_option: OptionButton
 var _map_paths: Array = []
+var _map_names: Array = []
 var _map_path := ""
-var _mode_buttons: Array[Button] = []
-var _vote_caption: Label
-const VOTE_CARD_W := 270.0  ## längster Modusname (Randgruppen) passt bei 28 px ohne Trennung
-var _vote_row: GridContainer
-var _vote_cards: Array[ModeCard] = []
+var _mode_buttons: Array[Wc3Button] = []
+var _vote_cards: Array[Wc3Button] = []
 var _summary: Label
-var _summary_panel: PanelContainer
-var _play_button: Button
-var _leave_button: Button
+var _play_button: Wc3Button
+var _leave_button: Wc3Button
+## Mitte: große Vorschau der Map, darunter Angaben und (Host) Pfeile zum Blättern.
+var _map_caption: Label
+var _map_frame: Wc3Card
+var _preview: MapPreview
+var _map_info: Label
+var _no_map_hint: Label
+var _map_row: HBoxContainer
+var _map_prev: Wc3Button
+var _map_next: Wc3Button
+var _map_count: Label
 
 
+## Lobby im Warcraft-III-Stil (Entwurf 8, Lukas 2026-11-01): Nachtszene des Hubs dahinter, drei Steintafeln:
+## links Spieler und Verbindung, in der Mitte die Map groß, rechts Modus-Abstimmung und Start.
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(DecoBackdrop.new())
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.color = Color(0, 0, 0, 0.45)
+	add_child(shade)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 72)
-	for side in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 52)
+		margin.add_theme_constant_override("margin_" + side, 30)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_bottom", 26)
 	add_child(margin)
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 18)
+	page.add_theme_constant_override("separation", 8)
 	margin.add_child(page)
 	var head := HBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_theme_constant_override("separation", 18)
 	page.add_child(head)
-	var back := UiUtil.button("◂ " + tr("Zurück").to_upper(), head, hide)
-	back.custom_minimum_size.y = 40
-	back.add_theme_font_override("font", DecoTheme.font(true))
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back.tooltip_text = "Zurück zum Hauptmenü, die Verbindung bleibt bestehen"
-	DecoTheme.title(UiUtil.label("Lobby", head, 44)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_status = UiUtil.label("", head, 15)
-	_status.add_theme_color_override("font_color", DecoTheme.BRASS_LIGHT)
-	_status.add_theme_font_override("font", DecoTheme.font(true))
-	_status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_status.custom_minimum_size.x = 380
-	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	DecoTheme.head_line(head)
+	head.add_child(_rule())
+	Wc3Theme.label("◆", head, 16, Wc3Theme.GOLD).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	Wc3Theme.label(tr("Lobby").to_upper(), head, 40, Wc3Theme.GOLD_HI, 6)
+	Wc3Theme.label("◆", head, 16, Wc3Theme.GOLD).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_rule())
+	_status = _text("", page, 16, Wc3Theme.CREAM)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 28)
+	body.add_theme_constant_override("separation", 20)
 	page.add_child(body)
 
-	# Links: Verbindung, Spieler, Host-Einstellungen
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", DecoTheme.box(DecoTheme.PANEL, DecoTheme.GOLD, 0, 1, 22))
-	panel.custom_minimum_size.x = 420
-	body.add_child(panel)
+	# Links: Name, Verbindung, Spieler, Feldwahl des Hosts
+	var left := Wc3Pillar.new(false, 440)
+	body.add_child(left)
+	_players_caption = _caption("Spieler", left.box)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.box.add_child(scroll)
 	var v := VBoxContainer.new()
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 10)
@@ -98,13 +105,11 @@ func _ready() -> void:
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 10)
 	v.add_child(name_row)
-	UiUtil.label("Name", name_row, 15).custom_minimum_size.x = 70
-	_name_edit = LineEdit.new()
+	_text("Name", name_row, 16, Wc3Theme.MUTED).custom_minimum_size.x = 70
+	_name_edit = _edit(name_row)
 	_name_edit.text = Net.my_name
 	_name_edit.max_length = 24
-	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_edit.text_changed.connect(func(t): Net.set_my_name(t))
-	name_row.add_child(_name_edit)
 
 	# Ohne Verbindung: hosten oder beitreten
 	_offline = VBoxContainer.new()
@@ -113,138 +118,137 @@ func _ready() -> void:
 	var server_row := HBoxContainer.new()
 	server_row.add_theme_constant_override("separation", 10)
 	_offline.add_child(server_row)
-	UiUtil.label("Server", server_row, 15).custom_minimum_size.x = 70
-	_server_edit = LineEdit.new()
+	_text("Server", server_row, 16, Wc3Theme.MUTED).custom_minimum_size.x = 70
+	_server_edit = _edit(server_row)
 	_server_edit.text = Net.relay_server
 	_server_edit.placeholder_text = tr("leer = direkt per IP")
 	_server_edit.tooltip_text = "Relay-Server: Host und Mitspieler verbinden sich nur mit ihm, niemand muss einen Port freigeben"
-	_server_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_server_edit.text_changed.connect(func(_t): _update_join_hint())
 	_server_edit.text_submitted.connect(func(_t): _save_server())
 	_server_edit.focus_exited.connect(_save_server)
-	server_row.add_child(_server_edit)
-	var host := UiUtil.button("Neue Sitzung hosten", _offline, func(): _save_server(); Net.host_default())
-	host.custom_minimum_size.y = 44
-	_muted(UiUtil.wrap_label("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 370)).add_theme_font_size_override("font_size", 15)
+	_button("Neue Sitzung hosten", true, _offline, func(): _save_server(); Net.host_default())
+	_text("Eine gespeicherte Sitzung setzt du über „Spiel laden“ im Hauptmenü fort.", _offline, 15, Wc3Theme.MUTED)
+	_offline.add_child(Wc3Theme.Divider.new())
 	var join_row := HBoxContainer.new()
 	join_row.add_theme_constant_override("separation", 10)
 	_offline.add_child(join_row)
-	_ip_edit = LineEdit.new()
+	_ip_edit = _edit(join_row)
 	_ip_edit.text = Net.last_ip
-	_ip_edit.placeholder_text = "Code oder IP-Adresse des Hosts"
-	_ip_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_ip_edit.placeholder_text = tr("Code oder IP-Adresse des Hosts")
 	_ip_edit.text_submitted.connect(func(_t): _join())
-	join_row.add_child(_ip_edit)
-	UiUtil.button("Beitreten", join_row, _join).custom_minimum_size.x = 120
-	_port_hint = _muted(UiUtil.wrap_label("", _offline, 370))
-	_port_hint.add_theme_font_size_override("font_size", 15)
+	var jb := _button("Beitreten", false, join_row, _join)
+	jb.custom_minimum_size.x = 150
+	jb.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_port_hint = _text("", _offline, 15, Wc3Theme.MUTED)
 	_update_join_hint()
 
-	# Verbunden: Adresse, Spieler, Host-Einstellungen
+	# Verbunden: Adresse, Spieler, Feldwahl
 	_online = VBoxContainer.new()
 	_online.add_theme_constant_override("separation", 10)
 	v.add_child(_online)
 	var net_row := HBoxContainer.new()
 	net_row.add_theme_constant_override("separation", 10)
 	_online.add_child(net_row)
-	_internet = UiUtil.label("", net_row, 15)
+	_internet = _text("", net_row, 16, Wc3Theme.CREAM)
 	_internet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_internet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_copy_button = UiUtil.button("Kopieren", net_row, func(): DisplayServer.clipboard_set(Net.room_code() if Net.room_code() != "" else Net.public_ip))
+	_copy_button = _button("Kopieren", false, net_row, func(): DisplayServer.clipboard_set(Net.room_code() if Net.room_code() != "" else Net.public_ip))
+	_copy_button.custom_minimum_size = Vector2(140, 40)
 	_copy_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_copy_button.tooltip_text = "Adresse in die Zwischenablage kopieren, um sie den Mitspielern zu schicken"
-	_addresses = _muted(UiUtil.label("", _online, 15))
-	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_addresses.custom_minimum_size.x = 370
-	_players_caption = DecoTheme.caption("Spieler", _online)
+	_addresses = _text("", _online, 15, Wc3Theme.MUTED)
 	_list = VBoxContainer.new()
-	_list.add_theme_constant_override("separation", 6)
+	_list.add_theme_constant_override("separation", 4)
 	_online.add_child(_list)
 
 	_host_box = VBoxContainer.new()
-	_host_box.add_theme_constant_override("separation", 6)
+	_host_box.add_theme_constant_override("separation", 8)
 	_online.add_child(_host_box)
-	_host_box.add_child(_gap(6))
-	DecoTheme.caption("Host-Einstellungen", _host_box)
-	_muted(UiUtil.label("Map", _host_box, 15))
-	_map_option = OptionButton.new()
-	_map_option.focus_mode = Control.FOCUS_NONE
-	_map_option.custom_minimum_size.y = 38
-	_map_option.item_selected.connect(func(i): _map_path = str(_map_paths[i]) if i < _map_paths.size() else "")
-	_host_box.add_child(_map_option)
-	_muted(UiUtil.label("Spielfeld", _host_box, 15))
+	_host_box.add_child(Wc3Theme.Divider.new())
+	_text("Spielfeld", _host_box, 16, Wc3Theme.MUTED)
 	var modes := HBoxContainer.new()
-	modes.add_theme_constant_override("separation", 6)
+	modes.add_theme_constant_override("separation", 8)
 	_host_box.add_child(modes)
-	var group := ButtonGroup.new()
 	for coop in [false, true]:
 		var on: bool = coop
-		var b := UiUtil.button("Koop" if coop else "Eigene Felder", modes, func():
+		var b := _button("Koop" if coop else "Eigene Felder", false, modes, func():
 			coop_mode = on
 			fields = {}
 			_refresh())
 		b.toggle_mode = true
-		b.button_group = group
-		b.focus_mode = Control.FOCUS_NONE
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size.y = 36
 		b.tooltip_text = tr("Alle bauen zusammen ein Labyrinth: jeder setzt und wählt seine eigenen Gems, hat eigenes Gold und kombiniert nur eigene Tower. Die Leben sind gemeinsam.") if coop \
 			else tr("Jeder spielt sein eigenes Feld, über „Zuschauen“ sieht man die anderen.")
-		b.add_theme_stylebox_override("pressed", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2))
-		b.add_theme_color_override("font_pressed_color", DecoTheme.GOLD_DARK)
 		b.set_pressed_no_signal(coop == coop_mode)
 		_mode_buttons.append(b)
 
-	# Rechts: Abstimmung und Start
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 16)
+	# Mitte: die Map groß, darunter Angaben und Blättern (nur der Host wählt)
+	var mid := Wc3Pillar.new(false, 0)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(mid)
+	_map_caption = _caption("Map", mid.box)
+	_map_frame = Wc3Card.new()
+	_map_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_map_frame.set_pressed_no_signal(true)
+	_map_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mid.box.add_child(_map_frame)
+	_preview = MapPreview.new()
+	_preview.bg = Wc3Theme.PREVIEW_BG
+	_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_preview.offset_left = 18
+	_preview.offset_top = 18
+	_preview.offset_right = -18
+	_preview.offset_bottom = -18
+	_map_frame.add_child(_preview)
+	_no_map_hint = _text("", mid.box, 18, Wc3Theme.MUTED)
+	_no_map_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_no_map_hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_no_map_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_map_info = _text("", mid.box, 16, Wc3Theme.CREAM)
+	_map_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_map_row = HBoxContainer.new()
+	_map_row.add_theme_constant_override("separation", 14)
+	mid.box.add_child(_map_row)
+	_map_prev = _button("«", false, _map_row, func(): _step_map(-1))
+	_map_prev.custom_minimum_size.x = 100
+	_map_count = Wc3Theme.label("", _map_row, 17, Wc3Theme.CREAM, 2)
+	_map_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_map_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_map_count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_map_next = _button("»", false, _map_row, func(): _step_map(1))
+	_map_next.custom_minimum_size.x = 100
+
+	# Rechts: Abstimmung über den Modus und Start
+	var right := Wc3Pillar.new(false, 440)
 	body.add_child(right)
-	_vote_caption = DecoTheme.caption("Modus abstimmen · Klick = deine Stimme", right)
-	# Raster statt Reihe: fünf Karten passen bei 16:9 nicht nebeneinander, ohne dass die Namen brechen.
-	# Spaltenzahl folgt der Breite, Zeilen gleichmäßig gefüllt (3 + 2 statt 4 + 1).
-	_vote_row = GridContainer.new()
-	_vote_row.add_theme_constant_override("h_separation", 14)
-	_vote_row.add_theme_constant_override("v_separation", 14)
-	right.add_child(_vote_row)
-	right.resized.connect(func(): _fit_vote_columns(right.size.x))
+	_caption("Modus · deine Stimme", right.box)
 	for m in Database.modes:
-		var card := ModeCard.new(m, Vector2(VOTE_CARD_W, 150))
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # breite Fenster: Karten teilen sich die Breite
-		var id: String = card.mode_id
-		card.pressed.connect(func(): Net.vote("" if Net.my_vote() == id else id))
-		_vote_row.add_child(card)
+		var id := str(m.id)
+		var card := _button(str(m.get("name", id)), false, right.box, func(): Net.vote("" if Net.my_vote() == id else id))
+		card.toggle_mode = true
+		card.custom_minimum_size.y = 50
+		card.set_meta("mode_id", id)
 		_vote_cards.append(card)
-	_summary_panel = PanelContainer.new()
-	_summary_panel.add_theme_stylebox_override("panel", DecoTheme.box(Color.TRANSPARENT, DecoTheme.GOLD, 0, 1, 16))
-	right.add_child(_summary_panel)
-	_summary = UiUtil.label("", _summary_panel, 15)
-	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.custom_minimum_size.x = 400
-	_session_text = UiUtil.label("", right, 15)
-	_session_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_session_text.custom_minimum_size.x = 400
-	_session_text.add_theme_color_override("font_color", DecoTheme.DIM)
+	right.separator()
+	_summary = _text("", right.box, 16, Wc3Theme.CREAM)
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_session_text = _text("", right.box, 15, Wc3Theme.MUTED)
+	_session_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(fill)
-	var buttons := HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", 10)
-	right.add_child(buttons)
-	_leave_button = UiUtil.button("Trennen", buttons, func(): Net.leave())
-	_leave_button.custom_minimum_size = Vector2(130, 46)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buttons.add_child(gap)
-	_start_button = UiUtil.button("Starten", buttons, func(): start_requested.emit())
-	_start_button.custom_minimum_size = Vector2(560, 62)
-	_start_button.add_theme_font_size_override("font_size", 28)
-	_start_button.clip_text = true
-	DecoTheme.accent_button(_start_button, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
-	_play_button = UiUtil.button("Mitspielen", buttons, func(): Net.join_session())
-	_play_button.custom_minimum_size = Vector2(300, 62)
-	_play_button.add_theme_font_size_override("font_size", 28)
-	DecoTheme.accent_button(_play_button, DecoTheme.GOLD, DecoTheme.GOLD_DARK)
+	right.box.add_child(fill)
+	_start_button = _button("Starten", true, right.box, func(): start_requested.emit())
+	_start_button.custom_minimum_size.y = 62
+	_play_button = _button("Mitspielen", true, right.box, func(): Net.join_session())
+	_play_button.custom_minimum_size.y = 62
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	right.box.add_child(row)
+	_leave_button = _button("Trennen", false, row, func(): Net.leave())
+	_leave_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var back := _button("Zurück", false, row, hide)
+	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back.tooltip_text = "Zurück zum Hauptmenü, die Verbindung bleibt bestehen"
 
 	Net.players_changed.connect(_refresh)
 	Net.connection_changed.connect(_refresh)
@@ -253,12 +257,83 @@ func _ready() -> void:
 	_refresh()
 
 
-## Spalten der Abstimmungskarten für die verfügbare Breite, Zeilen möglichst gleich voll.
-func _fit_vote_columns(width: float) -> void:
-	var n := _vote_cards.size()
-	var most := clampi(int((width + 14.0) / (VOTE_CARD_W + 14.0)), 1, maxi(n, 1))
-	var rows := ceili(float(n) / most)
-	_vote_row.columns = ceili(float(n) / rows)
+func _rule() -> Control:
+	var line := ColorRect.new()
+	line.color = Wc3Theme.GOLD
+	line.custom_minimum_size = Vector2(150, 2)
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return line
+
+
+## Überschrift einer Steintafel: Cinzel zwischen Linien.
+func _caption(text_de: String, parent: Node) -> Label:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	parent.add_child(row)
+	var a := _rule()
+	a.custom_minimum_size.x = 30
+	a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(a)
+	var l := Wc3Theme.label(tr(text_de).to_upper(), row, 18, Wc3Theme.CREAM, 4)
+	var b := _rule()
+	b.custom_minimum_size.x = 30
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(b)
+	return l
+
+
+## Fließtext auf den Tafeln (Alegreya, dunkler Schatten), bricht um.
+func _text(text: String, parent: Node, size: int, color: Color) -> Label:
+	var l := UiUtil.label(text, parent, size)
+	l.add_theme_font_override("font", DruidTheme.font(false))
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 60
+	return l
+
+
+func _button(text_de: String, main: bool, parent: Node, on_pressed: Callable) -> Wc3Button:
+	var b := Wc3Button.new(text_de, main)
+	b.pressed.connect(on_pressed)
+	parent.add_child(b)
+	return b
+
+
+## Eingabefeld: dunkler Grund, Messingrand, Alegreya.
+func _edit(parent: Node) -> LineEdit:
+	var e := LineEdit.new()
+	e.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	e.custom_minimum_size.y = 38
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.03, 0.025, 0.02, 0.75)
+	box.border_color = Wc3Theme.GOLD_LO
+	box.set_border_width_all(1)
+	box.content_margin_left = 10
+	box.content_margin_right = 10
+	var focus := box.duplicate()
+	focus.border_color = Wc3Theme.GOLD_HI
+	e.add_theme_stylebox_override("normal", box)
+	e.add_theme_stylebox_override("focus", focus)
+	e.add_theme_stylebox_override("read_only", box)
+	e.add_theme_font_override("font", DruidTheme.font(false))
+	e.add_theme_font_size_override("font_size", 17)
+	e.add_theme_color_override("font_color", Wc3Theme.HOT)
+	e.add_theme_color_override("font_placeholder_color", Wc3Theme.DISABLED_TEXT)
+	e.add_theme_color_override("caret_color", Wc3Theme.GOLD_HI)
+	parent.add_child(e)
+	return e
+
+
+## Host: Map weiterblättern.
+func _step_map(d: int) -> void:
+	if _map_paths.is_empty():
+		return
+	var i := (_map_paths.find(_map_path) + d + _map_paths.size()) % _map_paths.size()
+	_map_path = str(_map_paths[i])
+	_refresh()
 
 
 ## Wählt der Modus, der gerade vorne liegt, seine Karte selbst (needs_map false, z. B. Shopping Maul)?
@@ -325,11 +400,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _muted(l: Label) -> Label:
-	l.add_theme_color_override("font_color", DecoTheme.MUTED)
-	return l
-
-
 func _join() -> void:
 	var ip := _ip_edit.text.strip_edges()
 	if ip != "":
@@ -372,6 +442,8 @@ func _refresh() -> void:
 		_show_votes(false, false)
 		_summary.text = tr("Erst eine Sitzung hosten oder beitreten, dann stimmt ihr hier gemeinsam über den Modus ab.")
 		_session_text.text = ""
+		_players_caption.text = tr("Spieler").to_upper()
+		_show_map("", "", false)
 		return
 
 	var started := false
@@ -417,7 +489,8 @@ func _refresh() -> void:
 		else:
 			_session_text.text = tr("Neue Sitzung auf %s: „Starten“ startet alle Verbundenen gleichzeitig.") % map_name
 		_start_button.visible = not started
-		_start_button.text = (tr("Starten: %s") % mode_name if no_map else tr("Starten: %s · %s") % [mode_name, map_name]) if voting else tr("Starten")
+		_start_button.label_text = tr("Starten: %s") % mode_name if voting else tr("Starten")
+		_start_button.queue_redraw()
 		_start_button.disabled = voting and ((_map_path == "" and not no_map) or Net.vote_tally().is_empty())
 		_play_button.visible = started
 	else:
@@ -454,32 +527,79 @@ func _refresh() -> void:
 	var v := Net.votes()
 	for slot in Net.session_slots():
 		_slot_row(slot, str(v.get(str(slot.get("uid", "")), "")) if not (started or loaded) else "")
+	# Mitte: Host zeigt seine Wahl (blättern nur vor dem Start), Mitspieler die Map der Sitzung
+	if Net.is_host():
+		var s := Net.session
+		var voting := not bool(s.get("started", false)) and not bool(s.get("loaded", false))
+		var path := _map_path if voting else ""
+		var shown := str(s.get("map_name", "")) if not voting else _map_name()
+		_show_map(path if path != "" else _path_of(shown), shown, voting and not no_map_mode(), no_map_mode() and voting)
+	else:
+		var shown := str(Net.session_info.get("map", ""))
+		_show_map(_path_of(shown), shown, false)
 
 
-## Abstimmungskarten: sichtbar nur, solange abgestimmt wird; active false = grau (nicht verbunden).
+## Pfad einer Map über ihren Namen ("" = unbekannt, z. B. Mitspieler mit anderer Map-Liste).
+func _path_of(map_name: String) -> String:
+	for m in maps:
+		if str(m.name) == map_name or tr(str(m.name)) == map_name:
+			return str(m.path)
+	return ""
+
+
+## Mitte füllen: Vorschau, Name, Angaben; browse = Pfeile für den Host; own_map = Modus wählt seine Karte selbst.
+func _show_map(path: String, map_name: String, browse: bool, own_map := false) -> void:
+	var md: MapData = MapData.load_file(path) if path != "" else null
+	_map_frame.visible = md != null and not own_map
+	_no_map_hint.visible = not _map_frame.visible
+	_map_row.visible = browse and _map_paths.size() > 1
+	_map_count.text = tr("Map %d von %d") % [_map_paths.find(_map_path) + 1, _map_paths.size()]
+	if own_map:
+		_no_map_hint.text = tr("Dieser Modus wählt seine Karte selbst vor dem Start.")
+	elif not Net.is_active():
+		_no_map_hint.text = tr("Noch keine Sitzung.")
+	else:
+		_no_map_hint.text = tr(map_name) if map_name != "" else tr("Warte auf den Host …")
+	if md == null or own_map:
+		_map_caption.text = tr("Map").to_upper()
+		_map_info.text = ""
+		return
+	_preview.map = md
+	_preview.queue_redraw()
+	_map_caption.text = ("%s · %d×%d" % [tr(map_name), md.width, md.height]).to_upper()
+	var waves: int = (Database.wave_sets.get(md.wave_set, {}).get("waves", []) as Array).size()
+	_map_info.text = tr("%d Wellen · %d Leben · %d Checkpoints") % [waves, md.lives, md.checkpoints.size()] \
+		+ "\n" + tr("Weg ohne Labyrinth: %d Felder") % _preview.path_length()
+
+
+## Abstimmungsknöpfe: Stimmen als Rubine; active false = grau (nicht verbunden). Nach dem Start bleibt
+## der Modus der Sitzung rot, die übrigen grau.
 func _show_votes(voting: bool, active: bool) -> void:
-	_vote_caption.visible = voting or not active
-	_vote_row.visible = voting or not active
 	var n := Net.player_count()
 	var mine := Net.my_vote()
 	var counts := {}
 	for e in Net.vote_tally():
 		counts[e.id] = e
+	var fixed := str(Net.session.get("mode", "") if Net.is_host() else Net.session_info.get("mode", ""))
 	for card in _vote_cards:
-		var m := Database.mode(card.mode_id)
-		var ok := active and Database.mode_allows(card.mode_id, n)
-		var tag := ""
+		var id: String = card.get_meta("mode_id")
+		var m := Database.mode(id)
+		var ok := active and voting and Database.mode_allows(id, n)
+		card.disabled = not ok
+		card.set_pressed_no_signal(mine == id if voting else id == fixed)
 		if not bool(m.get("ready", false)):
-			tag = tr("Kommt noch")
-		elif active and not ok:
-			tag = Database.mode_players_text(card.mode_id)
-		card.set_state(mine == card.mode_id, ok, tag)
-		if ok and counts.has(card.mode_id):
-			card.set_votes(int(counts[card.mode_id].count), n, counts[card.mode_id].names)
-		elif active and bool(m.get("ready", false)):
-			card.set_votes(0, n, [], tr("nicht für %d Spieler") % n)
+			card.side_text = tr("Kommt noch")
+		elif active and voting and not Database.mode_allows(id, n):
+			card.side_text = tr("nicht für %d Spieler") % n
+		elif ok:
+			# Stimmen als Rubine rechts; die erlaubte Spielerzahl steht im Tooltip
+			card.side_text = ""
 		else:
-			card.hide_votes()
+			card.side_text = Database.mode_players_text(id)
+		card.tooltip_text = Database.mode_players_text(id) + "\n" + tr(str(m.get("hint", "")))
+		card.pip_max = n if ok else 0
+		card.pips = int(counts[id].count) if ok and counts.has(id) else 0
+		card.queue_redraw()
 
 
 func _vote_text() -> String:
@@ -514,18 +634,14 @@ func _fill_maps(mode_id: String) -> void:
 	if paths == _map_paths:
 		return
 	_map_paths = paths
-	_map_option.clear()
-	for m in list:
-		_map_option.add_item(tr(str(m.name)))
+	_map_names = list.map(func(m): return str(m.name))
 	if not paths.has(_map_path):
 		_map_path = Session.map_path if paths.has(Session.map_path) else (str(paths[0]) if not paths.is_empty() else "")
-	if _map_path != "":
-		_map_option.select(paths.find(_map_path))
 
 
 func _map_name() -> String:
 	var i := _map_paths.find(_map_path)
-	return _map_option.get_item_text(i) if i >= 0 else ""
+	return tr(_map_names[i]) if i >= 0 else ""
 
 
 ## Host: Adresse fürs Internet (öffentliche IP, Portfreigabe per UPnP) und fürs eigene Netzwerk.
@@ -533,7 +649,7 @@ func _show_addresses() -> void:
 	_internet.get_parent().visible = true
 	if Net.via_relay():
 		_internet.text = tr("Code: %s") % Net.room_code()
-		_internet.add_theme_color_override("font_color", DecoTheme.GOLD)
+		_internet.add_theme_color_override("font_color", Wc3Theme.GOLD_HI)
 		_internet.add_theme_font_size_override("font_size", 20)
 		_copy_button.visible = true
 		_copy_button.tooltip_text = tr("Code in die Zwischenablage kopieren, um ihn den Mitspielern zu schicken")
@@ -546,7 +662,7 @@ func _show_addresses() -> void:
 		_internet.text = tr("Internet: %s") % Net.public_ip
 	else:
 		_internet.text = tr("Internet: Adresse nicht ermittelbar") if Net.public_ip_failed else tr("Internet: Adresse wird ermittelt …")
-	_internet.add_theme_color_override("font_color", DecoTheme.TEXT)
+	_internet.add_theme_color_override("font_color", Wc3Theme.CREAM)
 	_copy_button.visible = Net.public_ip != ""
 	var port := Net.host_port
 	var lines := []
@@ -568,46 +684,55 @@ func _show_addresses() -> void:
 
 
 ## Zeile in der Spielerliste; vote: Modus, für den der Spieler gestimmt hat ("" = keine Stimme).
+## Name in Cinzel, Raute in der Farbe seines Feldes; offline grau.
 func _slot_row(slot: Dictionary, vote: String) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	var online: bool = slot.get("online", false)
+	var row := PanelContainer.new()
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0, 0, 0, 0.3)
+	bg.border_color = Color(Wc3Theme.GOLD_LO, 0.5)
+	bg.border_width_bottom = 1
+	bg.content_margin_left = 10
+	bg.content_margin_right = 6
+	bg.content_margin_top = 4
+	bg.content_margin_bottom = 4
+	row.add_theme_stylebox_override("panel", bg)
 	_list.add_child(row)
-	var dot := ColorRect.new()
-	dot.custom_minimum_size = Vector2(10, 10)
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.color = DecoTheme.HAVE if slot.get("online", false) else DecoTheme.BORDER_2
-	row.add_child(dot)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	row.add_child(h)
+	var field := int(slot.get("field", -1))
+	var col: Color = Board3D.PLAYER_COLORS[maxi(field, 0) % Board3D.PLAYER_COLORS.size()] if online else Wc3Theme.DISABLED_TEXT
+	Wc3Theme.label("◆", h, 18, col).size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var peer := int(slot.get("peer", -1))
 	var me := peer == Net.my_id()
-	var n := UiUtil.label(str(slot.get("name", "?")) + ("  " + tr("(du)") if me else ""), row, 14)
-	n.custom_minimum_size.x = 170
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 0)
+	h.add_child(info)
+	var n := Wc3Theme.label(str(slot.get("name", "?")) + ("  " + tr("(du)") if me else ""), info, 17, Wc3Theme.GOLD_HI if online else Wc3Theme.DISABLED_TEXT, 1)
 	n.clip_text = true
 	var parts := []
-	if not slot.get("online", false):
+	if not online:
 		parts.append(tr("nicht verbunden"))
 	elif Net.players.has(peer):
 		parts.append(NetPanel.status_text(Net.player_status(peer)))
 	if slot.get("has_state", false):
 		parts.append(tr("gespeichert: Welle %d") % int(slot.get("wave", 0)))
-	var info := UiUtil.label(" · ".join(parts), row, 15)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.add_theme_color_override("font_color", DecoTheme.MUTED)
-	var field := int(slot.get("field", -1))
-	if field >= 0 and slot.get("online", false):
+	if vote != "":
+		parts.append("▸ " + _mode_name(vote))
+	_text(" · ".join(parts), info, 14, Wc3Theme.MUTED)
+	if field >= 0 and online:
 		var u := str(slot.get("uid", ""))
-		var fb := UiUtil.button(tr("Feld %d") % (field + 1), row, func(): _next_field(u))
-		fb.focus_mode = Control.FOCUS_NONE
-		fb.custom_minimum_size = Vector2(84, 28)
+		var fb := Wc3Button.new(tr("Feld %d") % (field + 1), false)
+		fb.pressed.connect(func(): _next_field(u))
+		fb.custom_minimum_size = Vector2(110, 40)
+		fb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		fb.disabled = not Net.is_host()
 		fb.tooltip_text = tr("Gleiche Feldnummer = zusammen auf einem Feld (Koop). Klick = nächstes Feld.") if Net.is_host() \
 			else tr("Der Host teilt die Felder ein.")
+		# Mehrere auf demselben Feld (Koop-Gruppe): rot wie ein gewählter Knopf
 		var same: int = Net.session_slots().filter(func(sl): return int(sl.get("field", -1)) == field and sl.get("online", false)).size()
-		if same > 1:
-			fb.add_theme_stylebox_override("normal", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2, 4))
-			fb.add_theme_stylebox_override("disabled", DecoTheme.box(DecoTheme.CYAN, DecoTheme.CYAN, 0, 2, 4))
-			fb.add_theme_color_override("font_color", DecoTheme.GOLD_DARK)
-			fb.add_theme_color_override("font_disabled_color", DecoTheme.GOLD_DARK)
-	if vote != "":
-		var vl := UiUtil.label(_mode_name(vote), row, 15)
-		vl.add_theme_color_override("font_color", DecoTheme.GOLD)
+		fb.toggle_mode = true
+		fb.set_pressed_no_signal(same > 1)
+		h.add_child(fb)

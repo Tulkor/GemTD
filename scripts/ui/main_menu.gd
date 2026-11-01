@@ -73,6 +73,9 @@ func _ready() -> void:
 	add_child(lobby)
 	lobby.hide()
 	lobby.start_requested.connect(_start_session)
+	# Die Lobby liegt über dem Hub (auch direkt geöffnet nach einer Sitzung): Säule und Logo dann ausblenden
+	lobby.visibility_changed.connect(func(): hub.visible = not lobby.visible and not single_page.visible and not history_page.visible \
+		and not profile_page.visible and not credits_page.visible)
 	loader = LoadPanel.new()
 	add_child(loader)
 	loader.hide()
@@ -93,8 +96,8 @@ func _ready() -> void:
 ## "credits" = Mitwirkende, "lobby" = Mehrspieler.
 func show_page(page: String) -> void:
 	hub.visible = page == ""
-	# Die 3D-Nachtszene bleibt auch hinter der Einzelspieler-Seite (WC3-Stil)
-	hub_bg.visible = page == "" or page == "single"
+	# Die 3D-Nachtszene bleibt auch hinter Einzelspieler und Lobby (WC3-Stil)
+	hub_bg.visible = page == "" or page == "single" or page == "lobby"
 	hub_bg.process_mode = Node.PROCESS_MODE_INHERIT if hub_bg.visible else Node.PROCESS_MODE_DISABLED
 	single_page.visible = page == "single"
 	credits_page.visible = page == "credits"

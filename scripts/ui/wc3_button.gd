@@ -14,6 +14,9 @@ var hotkey := -1
 var description := ""
 ## Kleiner Text rechts im Knopf (z. B. Spielerzahl); dann steht der Name links.
 var side_text := ""
+## Stimmen als kleine Rubine links vom side_text (Lobby): pips leuchten, von pip_max; pip_max 0 = keine.
+var pips := 0
+var pip_max := 0
 
 var _tex: Texture2D
 var _rock: Texture2D
@@ -123,13 +126,26 @@ func _draw() -> void:
 	_draw_text(hover or chosen, down)
 
 
+## Rubine rechtsbündig bis x: leuchtend für Stimmen, dunkel für die übrigen Spieler.
+func _draw_pips(right_x: float) -> void:
+	if pip_max <= 0:
+		return
+	var tex := Wc3Theme.brass("rubin")
+	var h := 18.0
+	var w := h * tex.get_width() / tex.get_height()
+	var x := right_x - pip_max * (w + 2)
+	for i in pip_max:
+		var col := Color.WHITE if i < pips else Color(0.22, 0.2, 0.2, 0.9)
+		draw_texture_rect(tex, Rect2(x + i * (w + 2), (size.y - h) / 2, w, h), false, col)
+
+
 func _draw_text(hover: bool, down: bool) -> void:
 	var text := shown_text()
 	var fs := font_size()
 	var f := Wc3Theme.font(2 if main else 1)
 	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var pos := Vector2((size.x - tw) / 2, (size.y + f.get_ascent(fs) - f.get_descent(fs)) / 2)
-	if side_text != "":
+	if side_text != "" or pip_max > 0:
 		pos.x = TIP + 16
 		var sf := Wc3Theme.font(1)
 		var sfs := 14
@@ -137,6 +153,7 @@ func _draw_text(hover: bool, down: bool) -> void:
 		var sp := Vector2(size.x - TIP - 16 - sw, (size.y + sf.get_ascent(sfs) - sf.get_descent(sfs)) / 2)
 		sf.draw_string(get_canvas_item(), sp + Vector2(0, 2), side_text, HORIZONTAL_ALIGNMENT_LEFT, -1, sfs, Color.BLACK)
 		sf.draw_string(get_canvas_item(), sp, side_text, HORIZONTAL_ALIGNMENT_LEFT, -1, sfs, Wc3Theme.DISABLED_TEXT if disabled else Wc3Theme.CREAM)
+		_draw_pips(sp.x - 10)
 	if down:
 		pos += Vector2(0, 1)
 	var col := Wc3Theme.HOT if hover else Wc3Theme.TEXT

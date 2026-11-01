@@ -2493,5 +2493,9 @@
 	"Anzeige, Grafik und Sprache einstellen.": "Set up display, graphics and language.",
 	"Wer am Spiel mitgewirkt hat, mit allen Lizenzen.": "Who worked on the game, with all licenses.",
 	"Das Spiel beenden.": "Quit the game.",
-	"Nachthimmel im Hauptmenü (Skybox), Mondtextur": "Night sky in the main menu (skybox), moon texture"
+	"Nachthimmel im Hauptmenü (Skybox), Mondtextur": "Night sky in the main menu (skybox), moon texture",
+	"Map %d von %d": "Map %d of %d",
+	"Noch keine Sitzung.": "No session yet.",
+	"%d Wellen · %d Leben · %d Checkpoints": "%d waves · %d lives · %d checkpoints",
+	"Modus · deine Stimme": "Mode · your vote"
 }
