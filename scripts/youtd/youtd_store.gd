@@ -187,28 +187,24 @@ func _refresh_items() -> void:
 	var n: int = game.item_stash.size()
 	var total := maxi(COLS * ROWS_ITEMS, ceili((n + 1) / float(COLS)) * COLS)
 	for i in total:
-		var s: YoutdSlot
+		var s := InvSlot.new(SLOT)
+		var loc := {"stash": -1}
 		if i < n:
 			var it: YtItem = game.item_stash[i]
 			var d := YoutdData.item(str(it.get_id()))
-			s = YoutdSlot.new(YoutdData.item_icon(str(it.get_id())), YoutdData.rarity_color(str(d.get("rarity", "common"))), SLOT)
+			loc = {"stash": it.get_uid()}
+			s.show_item(YoutdData.item_icon(str(it.get_id())), YoutdData.rarity_color(str(d.get("rarity", "common"))), it.is_consumable() or it.is_oil())
 			s.set_count(str(it.get_charges()) if it.uses_charges() else "")
 			s.set_marked(game.picked_item == i, it.horadric_lock)
-			s.drag_data = {"yt_item": it.get_uid()}
-			s.tooltip_text = YoutdPanel.item_tip_for(it) + "\n" + (tr("Klick: benutzen") if it.is_consumable() else tr("Auf einen Tower ziehen oder anklicken und dann den Tower")) \
+			s.drag_data = {"inv": true, "from": loc}
+			var use := tr("Klick: benutzen (wird verbraucht)") if it.is_consumable() \
+					else (tr("Auf einen Tower ziehen: Öl wirkt dauerhaft und wird verbraucht") if it.is_oil()
+					else tr("Auf einen Tower ziehen oder anklicken und dann den Tower"))
+			s.tooltip_text = YoutdPanel.item_tip_for(it) + "\n" + use + "\n" + tr("Auf ein anderes Item ziehen: tauschen") \
 					+ "\n" + (tr("Rechtsklick: für Rezepte freigeben") if it.horadric_lock else tr("Rechtsklick: für Rezepte sperren"))
 			s.clicked.connect(func(button): _item_clicked(it, button))
-		else:
-			s = YoutdSlot.new(null, Color.TRANSPARENT, SLOT)
-			s.mouse_default_cursor_shape = Control.CURSOR_ARROW
-		s.on_drop = func(data): _drop_back(data)
-		s.accepts = func(data): return data is Dictionary and data.has("tower_item")
+		s.on_drop = func(data): game.submit({"type": "item_move", "from": data.from, "to": loc})
 		_items.add_child(s)
-
-
-## Ein Item aus einem Tower (Plätze der Auswahlkarte) zurück ins Lager.
-func _drop_back(data: Dictionary) -> void:
-	game.submit({"type": "item_take", "tower": data.tower, "index": int(data.tower_item)})
 
 
 func _item_clicked(it: YtItem, button: int) -> void:

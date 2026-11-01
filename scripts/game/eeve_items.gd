@@ -4,8 +4,8 @@ extends RefCounted
 ##
 ## Jeder Spieler hat ein Lager (ep().items) und Marktplatz-Stufen (ep().market). Items fallen von Gegnern
 ## (ab Level 11 vielleicht beim ersten Kill eines Levels, Golems immer zwei) oder kommen vom Marktplatz.
-## Tower ab Elementstufe 3 haben Item-Plätze (EeveTower.items); eingesetzte Items bleiben im Tower, nur der
-## Läuterungstrank wirft sie zurück ins Lager. Verbrauchs-Items ("use") wirken einmal auf einen Tower.
+## Tower ab Elementstufe 3 haben Item-Plätze (EeveTower.items); Items zieht man wie in WC3 zwischen Lager und
+## Towern hin und her, auf ein anderes Item gezogen tauschen sie (move, Lukas 2026-11-01). Verbrauchs-Items ("use") wirken einmal auf einen Tower.
 ## Der Marktplatz ist ein Gebäude (Barrikade aufwerten), einer je Spieler: dort kauft und verkauft man Items
 ## und kauft die Upgrades für Schaden, Reichweite und Tempo aller eigenen Tower.
 ## Alles, was den Stand ändert, läuft als Befehl über eeve_game.gd (_execute) und rechnet im Koop der Host.
@@ -55,8 +55,6 @@ static func effect_text(id: String) -> String:
 			lines.append(TranslationServer.translate("zieht %d Kills aus einem Tower und wird zum Erfahrungstrank") % int(it.amount))
 		"slot":
 			lines.append(TranslationServer.translate("+1 Item-Platz (höchstens %d)") % int(data().get("max_slots", 6)))
-		"purge":
-			lines.append(TranslationServer.translate("wirft alle Items eines Towers zurück ins Lager"))
 		"lumber":
 			lines.append(TranslationServer.translate("+1 Holz"))
 	return "\n".join(lines)
@@ -224,9 +222,6 @@ func use_reason(index: int, t: Tower) -> String:
 				return TranslationServer.translate("nur für Tower mit Item-Plätzen")
 			if slots(t) >= int(data().get("max_slots", 6)):
 				return TranslationServer.translate("Tower hat schon %d Item-Plätze") % int(data().get("max_slots", 6))
-		"purge":
-			if t.items.is_empty():
-				return TranslationServer.translate("Tower hat keine Items")
 		"xp":
 			if not t.can_attack():
 				return TranslationServer.translate("Tower greift nicht an")
@@ -253,15 +248,75 @@ func use(index: int, t: Tower) -> bool:
 		"slot":
 			t.extra_slots += 1
 			inv.remove_at(index)
-		"purge":
-			inv.remove_at(index)
-			var back: Array = t.items.duplicate()
-			t.items.clear()
-			for b in back:
-				give(game.acting, b)
 		"lumber":
 			game.lumber += 1
 			inv.remove_at(index)
+	game._update_auras()
+	return true
+
+
+## Ort im Inventar: {"stash": i} (i ab Lagergröße = freies Feld) oder {"tower": ref, "slot": k} (k über den belegten
+## Plätzen oder -1 = freier Platz). Ergebnis {list, index, tower, id} oder {} wenn ungültig.
+func _place(loc: Dictionary) -> Dictionary:
+	if loc.has("stash"):
+		var inv := inventory(game.acting)
+		var i := int(loc.stash)
+		if i < 0 or i >= int(data().get("inventory_size", 8)):
+			return {}
+		return {"list": inv, "index": i, "tower": null, "id": inv[i] if i < inv.size() else ""}
+	var t: Tower = game.tower_from_ref(loc.get("tower", {}))
+	if t == null or not t is EeveTower or t.owner_player != game.acting:
+		return {}
+	var k := int(loc.get("slot", -1))
+	if k >= 0 and k >= slots(t):
+		return {}
+	return {"list": t.items, "index": k, "tower": t, "id": t.items[k] if k >= 0 and k < t.items.size() else ""}
+
+
+## Warum das Item an from nicht nach to geht ("" = geht). Verbrauchs-Items wirken auf den Tower (use_reason).
+func move_reason(from: Dictionary, to: Dictionary) -> String:
+	var a := _place(from)
+	var b := _place(to)
+	if a.is_empty() or a.id == "":
+		return TranslationServer.translate("kein Item gewählt")
+	if b.is_empty():
+		return TranslationServer.translate("eigenen Tower wählen") if to.has("tower") else TranslationServer.translate("kein Platz")
+	if a.list == b.list and a.index == b.index:
+		return TranslationServer.translate("liegt schon dort")
+	if b.tower != null and is_consumable(a.id):
+		return use_reason(a.index, b.tower) if a.tower == null else TranslationServer.translate("kein Platz")
+	if b.tower != null and slots(b.tower) <= 0:
+		return TranslationServer.translate("Tower hat keine Item-Plätze (ab Elementstufe 3)")
+	if b.id != "":
+		# Tausch: das andere Item muss an den alten Platz passen (Verbrauchs-Items nicht in Tower)
+		return TranslationServer.translate("Verbrauchs-Items können nicht in einen Tower") if a.tower != null and is_consumable(b.id) else ""
+	if b.tower != null and b.tower != a.tower and (b.list as Array).size() >= slots(b.tower):
+		return TranslationServer.translate("Inventar voll")
+	if b.tower == null and a.tower != null and (b.list as Array).size() >= int(data().get("inventory_size", 8)):
+		return TranslationServer.translate("Lager voll")
+	return ""
+
+
+## Item verschieben wie in WC3: auf ein anderes Item = tauschen, auf einen freien Platz = verschieben,
+## Verbrauchs-Items auf einen Tower = benutzen (werden verbraucht).
+func move(from: Dictionary, to: Dictionary) -> bool:
+	if move_reason(from, to) != "":
+		return false
+	var a := _place(from)
+	var b := _place(to)
+	if b.tower != null and is_consumable(a.id):
+		return use(a.index, b.tower)
+	var la: Array = a.list
+	var lb: Array = b.list
+	if b.id != "":
+		la[a.index] = b.id
+		lb[b.index] = a.id
+	elif la == lb:
+		la.remove_at(a.index)
+		la.append(a.id)
+	else:
+		la.remove_at(a.index)
+		lb.append(a.id)
 	game._update_auras()
 	return true
 

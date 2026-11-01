@@ -167,6 +167,7 @@ func _ready() -> void:
 
 	hud = Hud.new()
 	add_child(hud)
+	_setup_inv_drop()
 	hud.option_chosen.connect(_on_option_chosen)
 	hud.preview_range_requested.connect(func(r): if selected != null and is_instance_valid(selected): selected.show_preview_range(r))
 	hud.round_gem_selected.connect(func(i): if i < round_towers.size(): _select(round_towers[i]))
@@ -435,6 +436,42 @@ func active_lanes() -> Array:
 	return range(map.lane_count()).filter(func(i): return map.lane_player(i) < players.size())
 
 
+# --- Inventar: Items auf Tower in der Welt ziehen (Modi mit Items überschreiben inv_drop_*) ---
+
+var inv_drop: InvWorldDrop
+
+
+func _setup_inv_drop() -> void:
+	inv_drop = InvWorldDrop.new()
+	inv_drop.tower_at = func():
+		var a: Vector2i = occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL)
+		return towers.get(a)
+	inv_drop.reason = inv_drop_reason
+	inv_drop.hint = inv_drop_hint
+	inv_drop.drop = inv_drop_on_tower
+	inv_drop.mark = func(t, ok: bool):
+		board.hover_cell = t.cell if t != null else NO_CELL
+		board.hover_size = Board3D.TOWER_CELLS
+		board.hover_ok = ok
+		board.refresh_hover()
+	inv_drop.tell = func(text: String): hud.show_message(text)
+	add_child(inv_drop)
+
+
+## Warum Tower t das gezogene Item (data aus InvSlot) nicht nimmt; "" = nimmt es.
+func inv_drop_reason(_t: Tower, _data: Dictionary) -> String:
+	return tr("Dieser Tower hat kein Inventar")
+
+
+## Schild an der Maus, wenn Tower t das Item nimmt.
+func inv_drop_hint(_t: Tower, _data: Dictionary) -> String:
+	return "+ " + tr("Einlegen")
+
+
+func inv_drop_on_tower(_t: Tower, _data: Dictionary) -> void:
+	pass
+
+
 # --- Eingabe -----------------------------------------------------------------
 
 func _process(delta: float) -> void:
@@ -451,6 +488,8 @@ func _process(delta: float) -> void:
 
 
 func _update_hover() -> void:
+	if inv_drop != null and inv_drop.active():
+		return  # beim Ziehen eines Items markiert inv_drop den Tower unter der Maus
 	var c := NO_CELL
 	var size := Board3D.TOWER_CELLS
 	if moving != null and not moving.is_trap():
