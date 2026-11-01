@@ -1358,9 +1358,11 @@ func _apply_option(t: Tower, o: Dictionary) -> bool:
 		round_towers.clear()
 		t.is_new = false
 	t.kills += o.consume.reduce(func(acc, c): return acc + c.kills, 0)
+	var ep_sum: float = t.ep + o.consume.reduce(func(acc, c): return acc + c.ep, 0.0)
 	var old_id := t.tower_id
 	_unregister(t)
 	t.set_tower(o.id, o.tier)
+	t.set_ep(ep_sum)
 	_register(t)
 	run_stats.built(t, o.action, wave_index + 1)
 	if t.is_trap() and (o.id != old_id or o.action == "keep"):

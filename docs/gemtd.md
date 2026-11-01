@@ -57,7 +57,7 @@ Weitere Regeln:
   Fehlklicks: der nächste gesetzte Gem ist genau der zurückgenommene (kein Neuwürfeln, auch nicht über
   Speichern/Laden), ein ersetzter Stein kommt zurück und seine Kosten werden erstattet.
 - **Gem-Qualität** gegen Gold steigern (8 Stufen, 20–230 Gold), danach kommen bessere Gems.
-- **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %).
+- **Kill-Ränge:** +10 % Schaden pro 10 Kills (max. +120 %), umgesetzt über das Level-System (`data/leveling.json`, Profil gemtd: 1 EP je Kill, 10 EP je Level, bis Level 12).
 - **Schadensarten gegen Rüstungsarten** wie in WC3 (Tabelle in `data/balance.json`).
 
 **Schwierigkeit** im Einstellungsfenster vor Runde 1: Einfach (Leben und Rüstung der Gegner ×0,8), Normal (×0,9), Schwer (×1,15).

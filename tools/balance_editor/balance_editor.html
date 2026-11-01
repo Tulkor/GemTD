@@ -242,6 +242,7 @@ const MODES = [
   { id: "rogue", name: "GemTD Roguelike" },
   { id: "eeve", name: "eeveTD" },
   { id: "maul", name: "Shopping Maul" },
+  { id: "level", name: "Level & EP" },
 ];
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 const ELEMENTS = { nature: "Natur", fire: "Feuer", water: "Wasser", earth: "Erde", storm: "Sturm", magic: "Magie", "": "Grundtürme, Dual-Tower, Fallen" };
@@ -275,6 +276,12 @@ function enemyName(id) { const f = FILES[enemyFile(id)]; return f ? f.cur.name :
 function entries(mode, kind) {
   if (mode === "rogue") mode = "gemtd";
   const out = [];
+  if (mode === "level") {
+    const f = FILES[LEVEL_FILE]; if (!f) return out;
+    if (kind === "modes") return [{ key: "modes", label: "Modus → Profil", group: "" }];
+    for (const [id, p] of Object.entries(f.cur.profiles || {})) out.push({ key: id, label: id + " – " + (p.name || ""), group: "" });
+    return out;
+  }
   if (mode === "gemtd" && kind === "tower") {
     for (const p of towerFiles(false)) {
       const t = FILES[p].cur;
@@ -593,6 +600,179 @@ function viewMaulLevel(i) {
 
 // ---------------------------------------------------------------- Zeichnen
 let rendering = false;
+// ---- Level & EP (data/leveling.json, scripts/game/leveling.gd)
+const LEVEL_FILE = "data/leveling.json";
+const CURVE_TYPES = { konstant: "Konstant (jede Stufe base)", linear: "Linear (base + step × (Level − 1))", exponentiell: "Exponentiell (base × growth^(Level − 1))", formel: "Eigene Formel", tabelle: "Tabelle (EP je Stufe)" };
+const CURVE_FORMULAS = { konstant: "base", linear: "base + step * (level - 1)", exponentiell: "base * pow(growth, level - 1)" };
+const LEVEL_STATS = { damage: "Schaden", speed: "Tempo", range: "Reichweite" };
+const LEVEL_LABELS = {
+  max_level: "Höchstes Level", base: "base", step: "step", growth: "growth", factor: "Faktor auf alle Stufen",
+  kill: "EP je Kill", boss: "Faktor Boss", air: "Faktor Flieger", hp: "EP je Lebenspunkt des Gegners",
+  damage: "Schaden je Level (Anteil)", speed: "Tempo je Level (Anteil)", range: "Reichweite je Level (Anteil)",
+  ep_factor: "Faktor auf EP dieses Towers", level: "ab Level", value: "Wert (Anteil, 0.1 = +10 %)",
+};
+const MODE_NAMES = { gemtd: "GemTD", roguelike: "GemTD Roguelike", eeve: "eeveTD", randgruppen: "Randgruppen TD", youtd: "YouTD", shoppingmaul: "Shopping Maul" };
+const CURVE_DEFAULT = { type: "konstant", base: 10, step: 0, growth: 1.0, formula: "", table: [], factor: 1.0 };
+
+// Formel wie in Godot (Expression) im Browser ausrechnen: nur Zahlen, + - * / ( ), Variablen und Math-Funktionen.
+const FORMULA_FUNCS = ["pow", "max", "min", "floor", "ceil", "sqrt", "round", "abs", "log", "exp"];
+function formulaFn(src) {
+  const bad = (src.match(/[A-Za-z_]\w*/g) || []).filter((w) => !["level", "base", "step", "growth"].includes(w) && !FORMULA_FUNCS.includes(w));
+  if (bad.length) throw new Error("unbekannt: " + bad.join(", "));
+  if (/[^\w\s+\-*/().,]/.test(src)) throw new Error("nur Zahlen, + − × / ( ) und Funktionen");
+  const body = src.replace(/\b(pow|max|min|floor|ceil|sqrt|round|abs|log|exp)\b/g, "Math.$1");
+  return new Function("level", "base", "step", "growth", "return (" + body + ");");
+}
+function levelProfile(id, depth = 0) {
+  const all = FILES[LEVEL_FILE].cur.profiles || {}, own = all[id];
+  if (!own || depth > 8) return {};
+  const p = own.extends ? clone(levelProfile(own.extends, depth + 1)) : {};
+  for (const [k, v] of Object.entries(own)) {
+    if (["curve", "ep", "per_level", "towers"].includes(k) && v && typeof v === "object" && p[k] && typeof p[k] === "object") Object.assign(p[k], clone(v));
+    else p[k] = clone(v);
+  }
+  return p;
+}
+// EP je Stufe und gesamt wie Leveling.table(): [{level, cost, total}], dazu Fehler der Formel.
+function levelTable(p) {
+  const c = Object.assign({}, CURVE_DEFAULT, p.curve || {}), rows = [];
+  let fn = null, err = "";
+  if (c.type === "tabelle") fn = (n) => (c.table && c.table.length ? c.table[Math.min(Math.max(n - 1, 0), c.table.length - 1)] : c.base);
+  else { try { fn = formulaFn(c.type === "formel" ? c.formula : CURVE_FORMULAS[c.type] || "base"); } catch (e) { err = e.message; fn = () => c.base; } }
+  let total = 0;
+  for (let n = 1; n <= (p.max_level || 0); n++) {
+    let v = Number(fn(n, Number(c.base), Number(c.step), Number(c.growth)));
+    if (!isFinite(v)) { err = err || "Formel ergibt bei Level " + n + " keine Zahl"; v = Number(c.base); }
+    const cost = Math.max(Math.round(v * Number(c.factor)), 1);
+    total += cost;
+    rows.push({ level: n, cost, total });
+  }
+  return { rows, err };
+}
+// Zahlenfelder für vorhandene Schlüssel, fehlende als Knopf „+ …“ (Anzeigen ändert nichts an der Datei).
+function optFields(obj, path, keys, defaults) {
+  const have = keys.filter((k) => k in obj), miss = keys.filter((k) => !(k in obj));
+  return el("div", {},
+    el("div", { class: "stats" }, have.map((k) => statField(LEVEL_LABELS[k] || k, { file: LEVEL_FILE, path: path.concat(k) }))),
+    miss.length ? el("div", { class: "row", style: "margin-top:8px" }, miss.map((k) => el("button", { class: "btn", onclick: () => {
+      obj[k] = defaults[k]; if (!Number.isInteger(defaults[k])) markFloat(obj, k); render(); } }, "+ " + (LEVEL_LABELS[k] || k)))) : null);
+}
+function numInput(obj, key, onset) {
+  return el("input", { type: "number", step: "any", value: fmtNum(obj[key]), style: "width:90px", onchange: (ev) => {
+    const n = Number(String(ev.target.value).replace(",", ".")); if (!isFinite(n)) return; obj[key] = n; if (onset) onset(); render(); } });
+}
+// Freischaltungen einer Liste (path) bearbeiten: Wert ab Level oder Fähigkeit ab Level.
+function unlockPanel(path, title) {
+  const f = FILES[LEVEL_FILE], list = getAt(f.cur, path), orig = getAt(f.orig, path) || [];
+  const box = el("div", { class: "panel", style: "margin:16px 0 0" }, el("h2", {}, title || "Freischaltungen"));
+  if (!Array.isArray(list)) {
+    box.append(el("div", { class: "empty" }, "Noch keine eigenen. ", el("button", { class: "btn", onclick: () => { setAt(f.cur, path, []); render(); } }, "Liste anlegen")));
+    return box;
+  }
+  const types = abilityTypes();
+  list.forEach((u, i) => {
+    const up = path.concat(i), changed = !same(u, orig[i]);
+    const kind = u.ability ? "ability:" + u.ability.type : "stat:" + (u.stat || "damage");
+    const sel = el("select", { onchange: (ev) => {
+      const [k, t] = ev.target.value.split(":");
+      list[i] = k === "stat" ? { level: u.level, stat: t, value: 0.1 } : { level: u.level, ability: abilityTemplate(t) };
+      render();
+    } },
+      el("optgroup", { label: "Wert" }, Object.entries(LEVEL_STATS).map(([s, n]) => el("option", { value: "stat:" + s, selected: kind === "stat:" + s }, "+ " + n))),
+      el("optgroup", { label: "Fähigkeit" }, types.map((t) => el("option", { value: "ability:" + t, selected: kind === "ability:" + t }, t + (SCHEMA[t] ? " – " + SCHEMA[t].label : "")))));
+    const card = el("div", { class: "card" + (changed ? " changed" : "") },
+      el("div", { class: "row", style: "margin-bottom:8px" }, el("span", { class: "muted small" }, "AB LEVEL"), numInput(u, "level"), sel,
+        el("span", { class: "spacer" }), el("button", { class: "btn", title: "Freischaltung entfernen", onclick: () => { list.splice(i, 1); render(); } }, "✕")));
+    if (u.ability) {
+      const nums = Object.keys(u.ability).filter((k) => k !== "type" && isNumLike(u.ability[k]));
+      card.append(el("div", { class: "stats" }, nums.map((k) => statField(LABELS[k] || k, { file: LEVEL_FILE, path: up.concat("ability", k) }))));
+    } else card.append(el("div", { class: "stats" }, statField(LEVEL_LABELS.value, { file: LEVEL_FILE, path: up.concat("value") })));
+    box.append(card);
+  });
+  const nextLv = list.reduce((m, u) => Math.max(m, u.level || 0), 0) + 1;
+  box.append(el("div", { class: "row" },
+    el("button", { class: "btn", onclick: () => { const u = { level: nextLv, stat: "range", value: 0.1 }; markFloat(u, "value"); list.push(u); render(); } }, "+ Wert"),
+    el("button", { class: "btn", onclick: () => { list.push({ level: nextLv, ability: abilityTemplate("crit") }); render(); } }, "+ Fähigkeit")));
+  return box;
+}
+function viewLevelModes() {
+  const f = FILES[LEVEL_FILE], modes = f.cur.modes, ids = Object.keys(f.cur.profiles || {});
+  $("sub").replaceChildren();
+  return el("div", {}, el("div", { class: "note" }, "Welches Profil ein Modus für seine Tower nutzt. „keine“ = Tower steigen in diesem Modus nicht im Level (Shopping Maul wie im Original). YouTD rechnet Level und Boni selbst, nimmt aber die EP-Kurve von hier."),
+    el("div", { class: "stats" }, Object.keys(modes).map((m) => el("div", { class: "stat" + (modes[m] !== f.orig.modes[m] ? " changed" : "") },
+      el("div", { class: "lbl" }, MODE_NAMES[m] || m),
+      el("select", { onchange: (ev) => { modes[m] = ev.target.value; render(); } },
+        el("option", { value: "", selected: !modes[m] }, "keine"),
+        ids.map((id) => el("option", { value: id, selected: modes[m] === id }, id + " – " + (f.cur.profiles[id].name || ""))))))));
+}
+function viewLevelProfile(id) {
+  const f = FILES[LEVEL_FILE], own = f.cur.profiles[id], p = levelProfile(id), base = ["profiles", id];
+  $("sub").replaceChildren();
+  if (!own) return el("div", { class: "empty" }, "Profil fehlt.");
+  const out = el("div", {});
+  const users = Object.entries(f.cur.modes).filter(([, v]) => v === id).map(([m]) => MODE_NAMES[m] || m);
+  out.append(el("div", { class: "note" }, "Profil " + id + (users.length ? " · genutzt von " + users.join(", ") : " · von keinem Modus genutzt") + (own.extends ? " · erbt von " + own.extends : "") + (own.system ? " · Boni und Freischaltungen rechnet der Modus selbst, hier nur die EP-Kurve" : "")));
+  out.append(el("div", { class: "stat" }, el("div", { class: "lbl" }, "Name"), el("input", { type: "text", value: own.name || "", style: "width:100%", onchange: (ev) => { own.name = ev.target.value; render(); } })));
+  // Geerbte Teile: erst eigene Kopie anlegen
+  const section = (key, title, build) => {
+    const panel = el("div", { class: "panel", style: "margin:16px 0 0" }, el("h2", {}, title));
+    if (!(key in own) && own.extends) {
+      panel.append(el("div", { class: "empty" }, "Geerbt von " + own.extends + ". ", el("button", { class: "btn", onclick: () => { own[key] = clone(p[key] !== undefined ? p[key] : (key === "unlocks" ? [] : {})); render(); } }, "Eigene Werte anlegen")));
+    } else build(panel);
+    out.append(panel);
+  };
+  section("max_level", "Level", (panel) => panel.append(el("div", { class: "stats" }, statField(LEVEL_LABELS.max_level, { file: LEVEL_FILE, path: base.concat("max_level") }))));
+  section("curve", "Benötigte EP (Kurve)", (panel) => {
+    const c = own.curve, ct = c.type || "konstant";
+    panel.append(el("div", { class: "row", style: "margin-bottom:10px" }, el("span", { class: "muted small" }, "ART"),
+      el("select", { class: "curve-type", onchange: (ev) => { c.type = ev.target.value; if (c.type === "formel" && !c.formula) c.formula = CURVE_FORMULAS.linear; render(); } },
+        Object.entries(CURVE_TYPES).map(([t, n]) => el("option", { value: t, selected: ct === t }, n)))));
+    const keys = ct === "tabelle" ? ["factor"] : ct === "konstant" ? ["base", "factor"] : ct === "linear" ? ["base", "step", "factor"] : ct === "exponentiell" ? ["base", "growth", "factor"] : ["base", "step", "growth", "factor"];
+    panel.append(optFields(c, base.concat("curve"), keys, CURVE_DEFAULT));
+    if (ct === "formel") {
+      let err = ""; try { formulaFn(c.formula); } catch (e) { err = e.message; }
+      panel.append(el("div", { class: "stat", style: "margin-top:10px" }, el("div", { class: "lbl" }, "Formel: EP für die Stufe auf „level“ (Variablen level, base, step, growth; Funktionen " + FORMULA_FUNCS.join(", ") + ")"),
+        el("input", { type: "text", value: c.formula || "", style: "width:100%", onchange: (ev) => { c.formula = ev.target.value; render(); } }),
+        err ? el("div", { class: "msg err" }, "Formel: " + err) : null));
+    }
+    if (ct === "tabelle") {
+      panel.append(el("div", { class: "stat", style: "margin-top:10px" }, el("div", { class: "lbl" }, "EP je Stufe, mit Komma getrennt (die letzte gilt für alle weiteren)"),
+        el("input", { type: "text", value: (c.table || []).join(", "), style: "width:100%", onchange: (ev) => {
+          c.table = ev.target.value.split(/[,;\s]+/).filter(Boolean).map(Number).filter(isFinite); render(); } })));
+    }
+    const t = levelTable(p);
+    if (t.err) panel.append(el("div", { class: "msg err" }, t.err));
+    const show = t.rows.length > 40 ? t.rows.filter((r) => r.level <= 30 || r.level % 10 === 0) : t.rows;
+    panel.append(el("div", { class: "note", style: "margin-top:10px" }, "Vorschau (so rechnet das Spiel, jede Stufe mindestens 1 EP):"),
+      el("table", { class: "level-table" }, el("tr", {}, ["Level", "EP für die Stufe", "EP gesamt"].map((h) => el("th", {}, h))),
+        show.map((r) => el("tr", {}, el("td", {}, r.level), el("td", {}, r.cost), el("td", {}, r.total)))));
+  });
+  if (!own.system) {
+    section("ep", "EP bekommen", (panel) => panel.append(optFields(own.ep, base.concat("ep"), ["kill", "boss", "air", "hp"], { kill: 1.0, boss: 1.0, air: 1.0, hp: 0.01 })));
+    section("per_level", "Boni je Level", (panel) => panel.append(optFields(own.per_level, base.concat("per_level"), Object.keys(LEVEL_STATS), { damage: 0.1, speed: 0.05, range: 0.05 })));
+    if (!("unlocks" in own) && own.extends) section("unlocks", "Freischaltungen", () => {});
+    else out.append(unlockPanel(base.concat("unlocks"), "Freischaltungen (alle Tower)"));
+    // Abweichungen je Tower
+    const tw = own.towers || {};
+    const tp = el("div", { class: "panel", style: "margin:16px 0 0" }, el("h2", {}, "Abweichungen je Tower"),
+      el("div", { class: "note" }, "Eigene Freischaltungen kommen zu denen des Profils dazu; Faktor und höchstes Level ersetzen die des Profils."));
+    for (const tid of Object.keys(tw)) {
+      const tf = Object.keys(FILES).find((x) => x === "data/towers/" + tid + ".json");
+      const card = el("div", { class: "card" + (same(tw[tid], ((f.orig.profiles[id] || {}).towers || {})[tid]) ? "" : " changed") },
+        el("div", { class: "row" }, el("h3", {}, tf ? FILES[tf].cur.name + " (" + tid + ")" : tid), el("span", { class: "spacer" }),
+          el("button", { class: "btn", title: "Abweichung entfernen", onclick: () => { delete tw[tid]; render(); } }, "✕")));
+      card.append(optFields(tw[tid], base.concat("towers", tid), ["ep_factor", "max_level"], { ep_factor: 1.5, max_level: p.max_level || 10 }));
+      card.append(unlockPanel(base.concat("towers", tid, "unlocks"), "Freischaltungen nur für diesen Tower"));
+      tp.append(card);
+    }
+    const towersIds = Object.keys(FILES).filter((x) => x.startsWith("data/towers/")).map((x) => [x.slice(12, -5), FILES[x].cur.name]).filter(([t]) => !(t in tw));
+    const addSel = el("select", {}, towersIds.sort((a, b) => String(a[1]).localeCompare(b[1])).map(([t, n]) => el("option", { value: t }, n + " (" + t + ")")));
+    tp.append(el("div", { class: "row" }, addSel, el("button", { class: "btn", onclick: () => { own.towers = own.towers || {}; own.towers[addSel.value] = { unlocks: [] }; render(); } }, "+ Tower")));
+    out.append(tp);
+  }
+  return out;
+}
+
 function render() {
   // Ein Eingabefeld meldet beim Entfernen (blur) noch "change": dann danach neu zeichnen statt mittendrin.
   if (rendering) { queueMicrotask(render); return; }
@@ -601,13 +781,13 @@ function render() {
 }
 function draw() {
   const changes = allChanges();
-  const perMode = { gemtd: 0, rogue: 0, eeve: 0, maul: 0 };
+  const perMode = { gemtd: 0, rogue: 0, eeve: 0, maul: 0, level: 0 };
   for (const c of changes) perMode[modeOf(c.datei)]++;
   $("tabs").replaceChildren(...MODES.map((m) => el("div", {
     class: "tab" + (m.id === state.mode ? " on" : ""), onclick: () => { state.mode = m.id; state.tier = 0; remember(); render(); },
   }, m.name, perMode[m.id] ? el("span", { class: "badge" }, perMode[m.id]) : null)));
   $("kind").replaceChildren(
-    ...[["enemies", "Enemies"], ["tower", "Tower"]].concat(state.mode === "eeve" ? [["items", "Items"]] : []).map(([k, n]) => el("button", {
+    ...(state.mode === "level" ? [["profile", "Profile"], ["modes", "Modi"]] : [["enemies", "Enemies"], ["tower", "Tower"]].concat(state.mode === "eeve" ? [["items", "Items"]] : [])).map(([k, n]) => el("button", {
       class: "btn" + (state.kind === k ? " on" : ""), onclick: () => { state.kind = k; state.tier = 0; remember(); render(); },
     }, n)));
   $("pct").replaceChildren(el("span", { class: "muted small" }, "SCHRITT"),
@@ -617,6 +797,8 @@ function draw() {
       onchange: (ev) => { state.custom = Number(ev.target.value) || 0; state.useCustom = true; remember(); render(); } }), el("span", {}, "%"));
 
   if (state.kind === "items" && state.mode !== "eeve") state.kind = "tower";
+  if (state.mode === "level" && !["profile", "modes"].includes(state.kind)) state.kind = "profile";
+  if (state.mode !== "level" && ["profile", "modes"].includes(state.kind)) state.kind = "tower";
   const list = entries(state.mode, state.kind);
   const k = state.mode + "/" + state.kind;
   if (!list.some((e) => e.key === state.sel[k])) state.sel[k] = list.length ? list[0].key : undefined;
@@ -631,6 +813,7 @@ function draw() {
   let view;
   if (!Object.keys(FILES).length) view = el("div", { class: "empty" }, "Keine Daten geladen. „Ordner öffnen“ und den Repo-Ordner wählen.");
   else if (key === undefined) view = el("div", { class: "empty" }, "Keine Einträge.");
+  else if (state.mode === "level") view = state.kind === "modes" ? viewLevelModes() : viewLevelProfile(key);
   else if (state.kind === "items") view = viewEeveItem(key);
   else if (state.kind === "tower") view = state.mode === "maul" ? viewMaulTower(key) : viewTowerFile(key);
   else if (state.mode === "gemtd" || state.mode === "rogue") view = viewGemWave(Number(key), state.mode === "rogue");
@@ -648,6 +831,7 @@ function draw() {
   if (!window.showDirectoryPicker) $("b-open").title = "Geht nur in Edge oder Chrome";
 }
 function modeOf(p) {
+  if (p === LEVEL_FILE) return "level";
   if (p === ROGUE_FILE) return "rogue";
   if (p === ITEMS_FILE) return "eeve";
   if (p.startsWith("data/maul/")) return "maul";
@@ -662,6 +846,8 @@ function changeLabel(c) {
   } else if (c.datei === "data/maul/waves.json" && rest[0] === "levels") { name = "Level " + (rest[1] + 1); rest = rest.slice(2); }
   else if (c.datei === ITEMS_FILE && rest[0] === "items") { name = (root.items[rest[1]] || {}).name || rest[1]; rest = rest.slice(2); }
   else if (c.datei === ITEMS_FILE) { name = "Marktplatz"; }
+  else if (c.datei === LEVEL_FILE && rest[0] === "profiles") { name = "Level-Profil " + rest[1]; rest = rest.slice(2); }
+  else if (c.datei === LEVEL_FILE) { name = "Level: Modi"; rest = rest.slice(1); }
   else if (c.datei === ROGUE_FILE && rest[0] === "enemies") { name = enemyName(rest[1]) + " (Roguelike)"; rest = rest.slice(2); }
   else if (rest[0] === "waves") { name = "Welle " + (rest[1] + 1); rest = rest.slice(2); }
   else if (rest[0] === "tiers") { name += " " + ((root.tiers[rest[1]] || {}).name || "Stufe " + (ROMAN[rest[1]] || rest[1] + 1)); rest = rest.slice(2); }
@@ -688,7 +874,7 @@ function renderChanges(changes) {
 }
 
 // ---------------------------------------------------------------- Laden und Speichern
-const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE, ITEMS_FILE].includes(p);
+const WANTED = (p) => /^data\/(towers|enemies)\/[^/]+\.json$/.test(p) || ["data/waves/classic.json", "data/maul/shops.json", "data/maul/waves.json", ROGUE_FILE, ITEMS_FILE, LEVEL_FILE].includes(p);
 
 // Liest die Fähigkeiten-Liste aus scripts/game/abilities.gd (Zeilen wie "splash": {"label": …, "params": {…}},)
 function parseAbilitiesGd(text) {

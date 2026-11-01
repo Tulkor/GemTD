@@ -122,7 +122,7 @@ func snapshot() -> Dictionary:
 	var stats := []
 	for t in list:
 		ts.append([t.cell.x, t.cell.y, t.is_trap(), t.tower_id, t.tier, t.is_new, t.owner_player, t.moves_left])
-		stats.append([t.kills, t.total_damage])
+		stats.append([t.kills, t.total_damage, snappedf(t.ep, 0.01)])
 	var rs := PackedInt32Array()
 	for c in game.rocks:
 		rs.append(c.x)
@@ -240,6 +240,8 @@ func apply_state(s: Dictionary) -> void:
 		t.moves_left = int(d[7])
 		t.kills = int(st[0])
 		t.total_damage = float(st[1])
+		if st.size() > 2 and not is_equal_approx(float(st[2]), t.ep):
+			t.set_ep(float(st[2]))
 	# Spieler
 	var ps: Array = s.get("players", [])
 	while g.players.size() < ps.size():

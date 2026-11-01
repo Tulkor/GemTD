@@ -27,7 +27,7 @@ static func capture(game) -> Dictionary:
 	var list: Array = game.all_towers()
 	var ts := []
 	for t in list:
-		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills,
+		ts.append({"cell": t.cell, "id": t.tower_id, "tier": t.tier, "new": t.is_new, "kills": t.kills, "ep": t.ep,
 			"dmg": t.total_damage, "cd": t.cooldown_left, "moves": t.moves_left, "on_rock": t.get_meta("on_rock", false),
 			"owner": t.owner_player})
 	var es := []
@@ -121,6 +121,8 @@ static func apply(game, s: Dictionary) -> void:
 		game.board.add_child(t)
 		t.setup(game, d.cell, str(d.id), int(d.tier))
 		t.kills = int(d.get("kills", 0))
+		# Ältere Spielstände ohne EP: ein Kill = EP eines normalen Kills
+		t.set_ep(float(d.get("ep", t.kills * Leveling.kill_ep(t.level_profile(), null))))
 		t.total_damage = float(d.get("dmg", 0.0))
 		t.cooldown_left = float(d.get("cd", 0.0))
 		t.moves_left = int(d.get("moves", 0))
