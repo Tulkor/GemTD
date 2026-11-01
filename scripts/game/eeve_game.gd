@@ -296,6 +296,8 @@ func _execute(cmd: Dictionary) -> bool:
 			return debug_place(str(cmd.get("id", "")), cmd.get("cell", NO_CELL))
 		"item_use":
 			return _after(eitems.use(int(cmd.get("index", -1)), tower_from_ref(cmd.get("tower", {}))))
+		"item_move":
+			return _after(eitems.move(cmd.get("from", {}), cmd.get("to", {})))
 		"item_sell":
 			return _after(eitems.sell(int(cmd.get("index", -1))))
 		"market_buy":
@@ -672,8 +674,27 @@ func profile_extra() -> Dictionary:
 # --- Koop (coop_sync.gd) -------------------------------------------------------------
 
 ## Befehle, die Mitspieler zusätzlich zu denen von GemTD schicken dürfen.
+# --- Inventar: Items auf Tower in der Welt ziehen (InvWorldDrop in game.gd) ---
+
+func inv_drop_reason(t: Tower, data: Dictionary) -> String:
+	return eitems.move_reason(data.get("from", {}), {"tower": tower_ref(t), "slot": -1})
+
+
+func inv_drop_hint(t: Tower, data: Dictionary) -> String:
+	var from: Dictionary = data.get("from", {})
+	var inv: Array = ep(local_player).items
+	var i := int(from.get("stash", -1))
+	if i >= 0 and i < inv.size() and EeveItems.is_consumable(inv[i]):
+		return "+ " + tr("%s benutzen (wird verbraucht)") % EeveItems.item_name(inv[i])
+	return "+ " + tr("Einlegen · %d frei") % (EeveItems.slots(t) - t.items.size())
+
+
+func inv_drop_on_tower(t: Tower, data: Dictionary) -> void:
+	submit({"type": "item_move", "from": data.get("from", {}), "to": {"tower": tower_ref(t), "slot": -1}})
+
+
 func coop_commands() -> Array:
-	return ["build", "trap", "element", "start_level", "item_use", "item_sell", "market_buy", "market_upgrade"]
+	return ["build", "trap", "element", "start_level", "item_use", "item_move", "item_sell", "market_buy", "market_upgrade"]
 
 
 ## Mitspieler legen Tower vom Host als EeveTower an.

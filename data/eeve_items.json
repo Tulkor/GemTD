@@ -1,5 +1,5 @@
 {
-	"_comment": "Items und Marktplatz in eeveTD (Vorbild: eeve! TD v1.01, Werte aus der Kartendatei: w3t I000–I00W, Drops in script.j). Logik in scripts/game/eeve_items.gd. Erfahrung gibt es bei uns nur als Kills (Kill-Rang), deshalb zählen Trank und Phiole in Kills. Zauberschild (I00C) bewusst weggelassen (Lukas, 2026-10-26): Gegner verzaubern bei uns keine Tower.",
+	"_comment": "Items und Marktplatz in eeveTD (Vorbild: eeve! TD v1.01, Werte aus der Kartendatei: w3t I000–I00W, Drops in script.j). Logik in scripts/game/eeve_items.gd. Erfahrung gibt es bei uns nur als Kills (Kill-Rang), deshalb zählen Trank und Phiole in Kills. Zauberschild (I00C) bewusst weggelassen (Lukas, 2026-10-26): Gegner verzaubern bei uns keine Tower. Läuterungstrank entfernt (Lukas, 2026-11-01): eingesetzte Items lassen sich frei aus dem Tower tauschen.",
 	"inventory_size": 8,
 	"sell_ratio": 0.5,
 	"max_slots": 6,
@@ -18,8 +18,7 @@
 			[
 				"xp_potion",
 				"lumber",
-				"expansion",
-				"purge"
+				"expansion"
 			],
 			[
 				"razorblades",
@@ -325,14 +324,6 @@
 			"value": 150,
 			"use": "slot"
 		},
-		"purge": {
-			"name": "Läuterungstrank",
-			"name_original": "Purging Potion",
-			"icon": "potion",
-			"stage": 0,
-			"value": 150,
-			"use": "purge"
-		},
 		"lumber": {
 			"name": "Holz",
 			"name_original": "Lumber",
@@ -352,10 +343,6 @@
 			{
 				"item": "expansion",
 				"price": 650
-			},
-			{
-				"item": "purge",
-				"price": 350
 			},
 			{
 				"item": "xp_vial",

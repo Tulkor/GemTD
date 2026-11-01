@@ -30,7 +30,7 @@ func _ready() -> void:
 		if EeveItems.item(str(s.item)).is_empty():
 			missing.append(s.item)
 	check(missing.is_empty(), "alle Drops und Marktplatz-Items haben Daten %s" % [missing])
-	check((d.items as Dictionary).size() == 24, "24 Items wie im Original (ohne Zauberschild und Doppel der Marktplatz-Versionen): %d" % (d.items as Dictionary).size())
+	check((d.items as Dictionary).size() == 23, "23 Items wie im Original (ohne Zauberschild, Läuterungstrank und Doppel der Marktplatz-Versionen): %d" % (d.items as Dictionary).size())
 	check(EeveItems.sell_price("razorblades") == 100 and EeveItems.shop_price("lumber") == 900, "Verkauf zum halben Wert, Holz 900 Gold")
 	check(EeveItems.effect_text("killer_claws").contains("+50") and EeveItems.effect_text("killer_claws").contains("15%"), "Wirkung als Text: %s" % EeveItems.effect_text("killer_claws"))
 
@@ -118,7 +118,7 @@ func _ready() -> void:
 	game.lumber = 0
 	check(not game.submit({"type": "market_upgrade", "kind": "damage"}), "ohne Holz kein Upgrade")
 
-	# Verbrauchs-Items, Läuterung, Verkauf
+	# Verbrauchs-Items, Verkauf
 	game.eitems.give(0, "xp_potion")
 	t.kills = 0
 	check(game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)}) and t.kills == 10, "Erfahrungstrank: +10 Kills")
@@ -127,12 +127,38 @@ func _ready() -> void:
 		"Phiole zieht die Kills ab und wird zum Erfahrungstrank")
 	g = game.gold
 	check(game.submit({"type": "item_sell", "index": 0}) and game.gold == g + 75 and game.ep().items.is_empty(), "Trank verkauft für 75 Gold")
-	game.eitems.give(0, "purge")
-	check(game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)}) and t.items.is_empty() and game.ep().items.size() == 2,
-		"Läuterungstrank: Items zurück ins Lager %s" % [game.ep().items])
-	check(is_zero_approx(t.flat_damage), "ohne Items kein Zusatzschaden mehr")
-	game.submit({"type": "item_use", "index": 0, "tower": game.tower_ref(t)})
+	# WC3-Inventar: ziehen und tauschen (item_move), Verbrauchs-Items auf Tower werden verbraucht
+	var ref: Dictionary = game.tower_ref(t)
+	check(t.items == ["razorblades", "orb_fire"], "Ausgang: zwei Items im Tower %s" % [t.items])
+	check(game.submit({"type": "item_move", "from": {"tower": ref, "slot": 0}, "to": {"stash": 0}}) and t.items == ["orb_fire"]
+		and game.ep().items == ["razorblades"], "Tower-Item ins Lager gezogen")
+	check(game.submit({"type": "item_move", "from": {"tower": ref, "slot": 0}, "to": {"stash": 0}}) and t.items == ["razorblades"]
+		and game.ep().items == ["orb_fire"], "Tower-Item auf Lager-Item: getauscht")
+	check(game.submit({"type": "item_move", "from": {"stash": 0}, "to": {"tower": ref, "slot": 0}}) and t.items == ["orb_fire"]
+		and game.ep().items == ["razorblades"], "Lager-Item auf Tower-Item: getauscht")
+	check(game.submit({"type": "item_move", "from": {"tower": ref, "slot": 0}, "to": {"stash": 3}}) and t.items.is_empty()
+		and game.ep().items == ["razorblades", "orb_fire"], "auf freies Lagerfeld")
+	check(is_zero_approx(t.flat_damage) and t.ability("orb").is_empty(), "ohne Items kein Zusatzschaden und keine Kugel mehr")
+	check(game.submit({"type": "item_move", "from": {"stash": 1}, "to": {"stash": 0}}) and game.ep().items == ["orb_fire", "razorblades"],
+		"im Lager getauscht")
+	var bar: Tower = game.towers.get(Vector2i(10, 60))
+	check(game.inv_drop_reason(bar, {"inv": true, "from": {"stash": 0}}) != "", "Barrikade nimmt kein Item: %s" % game.inv_drop_reason(bar, {"inv": true, "from": {"stash": 0}}))
+	game.eitems.give(0, "xp_potion")
+	t.kills = 0
+	var potion := {"inv": true, "from": {"stash": 2}}
+	check(game.inv_drop_reason(t, potion) == "", "Trank auf Tower in der Welt ziehbar")
+	game.inv_drop_on_tower(t, potion)
+	check(t.kills == 10 and game.ep().items == ["orb_fire", "razorblades"], "Trank verbraucht: +10 Kills")
+	game.inv_drop_on_tower(t, {"inv": true, "from": {"stash": 1}})
+	check(t.items == ["razorblades"] and is_equal_approx(t.flat_damage, 50.0), "Item auf Tower in der Welt gezogen wirkt")
 	check(t.items.size() == 1, "Item wieder einsetzen")
+	for k in 3:
+		game.eitems.give(0, "razorblades")
+		game.submit({"type": "item_move", "from": {"stash": 1}, "to": {"tower": ref, "slot": -1}})
+	check(t.items.size() == EeveItems.slots(t), "Tower voll (%d)" % t.items.size())
+	check(game.inv_drop_reason(t, {"inv": true, "from": {"stash": 0}}) == TranslationServer.translate("Inventar voll"), "voller Tower: „Inventar voll“")
+	check(game.submit({"type": "item_move", "from": {"stash": 0}, "to": {"tower": ref, "slot": 3}}) and t.items[3] == "orb_fire",
+		"auf ein Item im vollen Tower ziehen tauscht")
 
 	# Lager voll: wird verkauft
 	while game.ep().items.size() < 8:

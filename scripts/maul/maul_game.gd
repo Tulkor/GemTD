@@ -194,6 +194,7 @@ func _ready() -> void:
 	hud = MaulHud.new()
 	hud.game = self
 	add_child(hud)
+	_setup_inv_drop()
 	_refresh_paths()
 	camera_rig.look_at_point(map.zone_center(players[local_player].zone), 42.0)
 	hud.show_setup()
@@ -1350,6 +1351,8 @@ func _execute(cmd: Dictionary) -> bool:
 			players[p].gold += floori(int(MaulData.item(str(t.items[i])).get("cost", 0)) * float(rules.sell_refund))
 			t.items.remove_at(i)
 			return true
+		"item_move":
+			return move_item(p, cmd.get("from", {}), cmd.get("to", {}))
 		"move_items":
 			var from := _tower(p, cmd.get("from"))
 			var to := _tower(p, cmd.get("to"))
@@ -1530,6 +1533,51 @@ func _buy_item(p: int, t: MaulTower, id: String) -> bool:
 	t.items.append(id)
 	_combine(t)
 	return true
+
+
+## Item wie in WC3 ziehen: von {"tower": Anker, "slot": k} nach {"tower": Anker, "slot": j} (j über den belegten
+## Plätzen oder -1 = freier Platz). Auf ein Item = tauschen, sonst verschieben; danach greifen die IKEO-Kombis.
+func move_item(p: int, from: Dictionary, to: Dictionary) -> bool:
+	if move_reason(p, from, to) != "":
+		return false
+	var a := _tower(p, from.get("tower"))
+	var b := _tower(p, to.get("tower"))
+	var k := int(from.get("slot", -1))
+	var j := int(to.get("slot", -1))
+	var id: String = a.items[k]
+	if j >= 0 and j < b.items.size():
+		a.items[k] = b.items[j]
+		b.items[j] = id
+	else:
+		a.items.remove_at(k)
+		b.items.append(id)
+	a._item_cd.clear()
+	b._item_cd.clear()
+	_combine(a)
+	if b != a:
+		_combine(b)
+	return true
+
+
+## Warum das Item nicht dorthin geht ("" = geht).
+func move_reason(p: int, from: Dictionary, to: Dictionary) -> String:
+	var a := _tower(p, from.get("tower"))
+	var b := _tower(p, to.get("tower"))
+	var k := int(from.get("slot", -1))
+	var j := int(to.get("slot", -1))
+	if a == null or k < 0 or k >= a.items.size():
+		return tr("Item nicht mehr da")
+	if b == null:
+		return tr("Nicht dein Tower")
+	if b.slots() <= 0:
+		return tr("Dieser Tower hat keine Item-Slots")
+	if j >= b.slots():
+		return tr("Diesen Slot hat der Tower nicht")
+	if a == b and (j == k or j < 0 or j >= b.items.size()):
+		return tr("Liegt schon in diesem Tower") if j != k else tr("Liegt schon dort")
+	if (j < 0 or j >= b.items.size()) and b.items.size() >= b.slots():
+		return tr("Inventar voll")
+	return ""
 
 
 ## IKEO: zwei passende Teile im selben Show House werden zu einem besseren (auch mehrstufig).
@@ -1826,7 +1874,32 @@ func choose_build(id: String) -> void:
 	hud.refresh_shop()
 
 
+# --- Inventar: Items auf einen anderen Tower in der Welt ziehen (InvWorldDrop) ---
+
+var inv_drop: InvWorldDrop
+
+
+func _setup_inv_drop() -> void:
+	inv_drop = InvWorldDrop.new()
+	inv_drop.tower_at = func():
+		return towers.get(occupied.get(board.mouse_cell(camera_rig.camera), NO_CELL))
+	inv_drop.reason = func(t: MaulTower, data: Dictionary) -> String:
+		return move_reason(local_player, data.get("from", {}), {"tower": t.cell, "slot": -1})
+	inv_drop.hint = func(t: MaulTower, _data: Dictionary) -> String:
+		return "+ " + tr("Einlegen · %d frei") % (t.slots() - t.items.size())
+	inv_drop.drop = func(t: MaulTower, data: Dictionary) -> void:
+		submit({"type": "item_move", "from": data.get("from", {}), "to": {"tower": t.cell, "slot": -1}})
+	inv_drop.mark = func(t, ok: bool) -> void:
+		board.hover_cell = t.cell if t != null else NO_CELL
+		board.hover_ok = ok
+		board.refresh_hover()
+	inv_drop.tell = func(text: String) -> void: show_message(text)
+	add_child(inv_drop)
+
+
 func _update_hover() -> void:
+	if inv_drop != null and inv_drop.active():
+		return  # beim Ziehen eines Items markiert inv_drop den Tower unter der Maus
 	var c := NO_CELL
 	if build_id != "" and camera_rig.camera != null:
 		c = board.mouse_anchor(camera_rig.camera)

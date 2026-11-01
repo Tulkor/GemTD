@@ -102,6 +102,9 @@ var info_title: Label
 var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
+const ICON_UP := "up"    ## Pfeil-Symbol aus UiTheme.icon (kein Text)
+var info_oils: TooltipHost     ## „▲ Öle“ neben dem Namen, Hover zeigt die Werte durch Öle (info.oils)
+var _oils_icon: TextureRect
 var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
 var info_tier_label: Label
 var info_kills_label: Label
@@ -516,6 +519,24 @@ func _build_bottom() -> void:
 	head.add_child(info_kills)
 	info_kills_label = UiUtil.label("", info_kills, 12)
 	info_kills_label.add_theme_color_override("font_color", UiTheme.COIN)
+	# Öle neben dem Namen (YouTD): nur ein Kästchen, Hover zeigt, welche Werte der Tower durch Öle hat
+	info_oils = TooltipHost.new()
+	info_oils.add_theme_stylebox_override("panel", UiTheme.box(UiTheme.PANEL_2, UiTheme.HAVE, 0, 2, 4))
+	info_oils.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_oils.make = _oils_tooltip
+	info_oils.visible = false
+	head.add_child(info_oils)
+	var oils_row := HBoxContainer.new()
+	oils_row.add_theme_constant_override("separation", 3)
+	oils_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_oils.add_child(oils_row)
+	_oils_icon = TextureRect.new()
+	_oils_icon.custom_minimum_size = Vector2(12, 12)
+	_oils_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_oils_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_oils_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	oils_row.add_child(_oils_icon)
+	UiUtil.label(tr("Öle"), oils_row, 12).add_theme_color_override("font_color", UiTheme.HAVE)
 	# Breite gleich mitgeben: ohne sie misst Godot umbrechende Labels im ersten Frame ein Zeichen breit
 	# und damit tausende Pixel hoch, die Auswahlkarte sprang dann kurz auf volle Bildschirmhöhe
 	info_sub = UiUtil.wrap_label("", info_left, INFO_W)
@@ -909,6 +930,9 @@ func set_selection(info: Dictionary) -> void:
 	if info_tier.visible:
 		info_tier_label.text = QualityBadge.roman(int(info.tier))
 		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
+	info_oils.visible = not (info.get("oils", []) as Array).is_empty()
+	if info_oils.visible:
+		_oils_icon.texture = UiTheme.icon(ICON_UP, 24)  # erst hier: Farbe nach dem Stil des Modus
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
@@ -922,6 +946,7 @@ func _fit_title() -> void:
 	var font := info_title.get_theme_font("font")
 	var text := info_title.text.to_upper() if info_title.uppercase else info_title.text
 	var room := INFO_W - 32.0 - (info_kills.get_combined_minimum_size().x + 10.0 if info_kills.visible else 0.0) \
+			- (info_oils.get_combined_minimum_size().x + 10.0 if info_oils.visible else 0.0) \
 			- (info_tier.get_combined_minimum_size().x + 10.0 if info_tier.visible else 0.0)
 	var size := _title_size
 	while size > _title_size - 5 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
@@ -1164,6 +1189,19 @@ func _stat_tooltip(i: int) -> Control:
 		_tip_row(v, d.total[0], d.total[1], UiTheme.HAVE, UiTheme.TEXT)
 	else:
 		_tip_note(v, tr("Gerade verändert ihn nichts."), 280)
+	return v
+
+
+## Öle: welche Werte der Tower durch eingesetzte Öle hat (info.oils = [[Wert, Betrag], …]).
+func _oils_tooltip() -> Control:
+	var rows: Array = _selection.get("oils", [])
+	if rows.is_empty():
+		return null
+	var v := _tip_box(tr("Durch Öle"), 300)
+	for r in rows:
+		_tip_row(v, str(r[0]), str(r[1]), UiTheme.HAVE)
+	_tip_line(v)
+	_tip_note(v, tr("Öle werden beim Einsetzen verbraucht und wirken dauerhaft."), 300)
 	return v
 
 

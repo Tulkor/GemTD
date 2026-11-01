@@ -111,12 +111,12 @@ gemeinsamer Stand. Der Zeitbonus des Speed-Modus fehlt, solange es den Modus nic
 Werte in `data/eeve_items.json` (im Balance-Editor unter eeveTD → Items), wie in der Originalkarte.
 
 - **Marktplatz:** eine Barrikade für 38 Gold zum Marktplatz aufwerten (zusammen 40 Gold und 1 Food), einer je Spieler.
-  Anklicken öffnet das Fenster: Holz (900), Erweiterungstrank (650), Läuterungstrank (350), Leere Erfahrungsphiole (140),
+  Anklicken öffnet das Fenster: Holz (900), Erweiterungstrank (650), Leere Erfahrungsphiole (140),
   Items verkaufen (halber Wert) und Upgrades für alle eigenen Tower: Schaden +10 %, Reichweite +40, Tempo +8 %,
   je 4 Stufen zu 300/600/900/1.200 Gold und 1 Holz.
 - **Lager** (rechts unten, 8 Plätze): Item anklicken, eigenen Tower wählen, „einsetzen“ bzw. „benutzen“.
 - **Item-Plätze:** ab Elementstufe 3 einer, je Stufe einer mehr, Dual-Tower 2, Fallen keine; Erweiterungstrank bis 6.
-  Eingesetzte Items bleiben im Tower, nur der Läuterungstrank holt sie zurück. Abreißen gibt sie ins Lager.
+  Items zieht man wie in WC3 zwischen Lager und Towern hin und her, auf ein anderes Item gezogen tauschen sie (Läuterungstrank deshalb entfernt, Lukas 2026-11-01). Abreißen gibt sie ins Lager.
 - **Items:** Klingen (+50 bis +300 Schaden), Ärmel (+10 bis +40 % Tempo), Klauen (Schaden + 15 % Krit), Hämmer
   (Schaden + Betäubung mit Zusatzschaden), Glühende Kette der Macht, Kugeln (Zauberschaden auf zufällige Gegner),
   Erfahrungstrank (+10 Kills). Den Zauberschild des Originals gibt es nicht, weil Gegner keine Tower verzaubern.

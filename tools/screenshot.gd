@@ -696,6 +696,13 @@ func _prepare_youtd(game: Node) -> void:
 	var sel = game.towers.get(Vector2i(12, 12))
 	if sel != null and not game.item_stash.is_empty():
 		game.put_item(sel, game.item_stash.size() - 1)
+		# zwei Öle (verbraucht, „▲ Öle“ neben dem Namen) und eines im Lager
+		var oils: Array = YoutdData.items().keys().filter(func(id): return YoutdData.item(id).type == "oil")
+		for k in 3:
+			var o := YtItem.make(int(oils[k * 3]), game.yp())
+			game.stash_add(o)
+			if k < 2:
+				game.put_item(sel, game.item_stash.size() - 1)
 	game._note(game.tr("Gewürfelt: %s") % "Tiny Shrub, Small Cactus")
 	game.submit({"type": "next_wave"})
 	Engine.time_scale = 8.0

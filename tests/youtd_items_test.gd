@@ -326,6 +326,7 @@ func _store() -> void:
 	check(game.submit({"type": "item_take", "tower": game.tower_ref(t), "index": 0}), "Item herausnehmen")
 	await get_tree().create_timer(1.0).timeout
 	check(t.items.is_empty() and game.item_stash.size() == 1, "Item wieder im Lager")
+	await _inventory(t)
 	for it in game.item_stash.duplicate():
 		game.stash_remove(it)
 		it.queue_free()
@@ -345,6 +346,67 @@ func _store() -> void:
 
 
 ## Baumeister: Wirkung auf den Spieler und auf Tower.
+## WC3-Inventar: Tauschen per Ziehen (item_move), Öle werden verbraucht, volles Inventar nimmt nichts.
+func _inventory(t: YoutdTower) -> void:
+	var p: YtPlayer = game.yp()
+	var all := YoutdData.items()
+	for it in game.item_stash.duplicate():
+		game.stash_remove(it)
+		it.queue_free()
+	var regular: Array = all.keys().filter(func(id): return all[id].type == "regular" and all[id].rarity == "common")
+	var a := YtItem.make(int(regular[0]), p)
+	var b := YtItem.make(int(regular[1]), p)
+	var c := YtItem.make(int(regular[2]), p)
+	for it in [a, b, c]:
+		game.stash_add(it)
+	var ref: Dictionary = game.tower_ref(t)
+	check(game.submit({"type": "item_move", "from": {"stash": c.get_uid()}, "to": {"stash": a.get_uid()}}) and game.item_stash == [c, b, a],
+			"Lager: Item auf Item gezogen tauscht die Plätze")
+	check(game.submit({"type": "item_move", "from": {"stash": a.get_uid()}, "to": {"tower": ref, "slot": 0}}) and t.items == [a],
+			"Lager → freier Tower-Platz")
+	check(game.submit({"type": "item_move", "from": {"stash": b.get_uid()}, "to": {"tower": ref, "slot": 0}}) and t.items == [b]
+			and game.item_stash == [c, a], "Lager-Item auf Tower-Item: getauscht, altes Item auf dem Platz des neuen (%s)" % [game.item_stash])
+	check(game.submit({"type": "item_move", "from": {"tower": ref, "slot": 0}, "to": {"stash": c.get_uid()}}) and t.items == [c]
+			and game.item_stash == [b, a], "Tower-Item auf Lager-Item: getauscht")
+	var t2: YoutdTower = _place([_carrier_ids()[1]])[0]
+	var ref2: Dictionary = game.tower_ref(t2)
+	check(game.submit({"type": "item_move", "from": {"stash": a.get_uid()}, "to": {"tower": ref2, "slot": -1}}) and t2.items == [a], "Item auf zweiten Tower")
+	check(game.submit({"type": "item_move", "from": {"tower": ref, "slot": 0}, "to": {"tower": ref2, "slot": 0}}) and t.items == [a] and t2.items == [c],
+			"Tower ↔ Tower getauscht")
+	check(c.get_carrier() == t2.core and a.get_carrier() == t.core, "Wirkung wandert mit (Träger)")
+	# Öl: wird beim Anwenden verbraucht, braucht keinen Platz; Verbrauchsgegenstände gehen nicht in Tower
+	var oil_id: String = all.keys().filter(func(id): return all[id].type == "oil")[0]
+	var oil := YtItem.make(int(oil_id), p)
+	game.stash_add(oil)
+	var data := {"inv": true, "from": {"stash": oil.get_uid()}}
+	check(game.inv_drop_reason(t, data) == "", "Öl auf Tower in der Welt erlaubt")
+	game.inv_drop_on_tower(t, data)
+	check(t.oils.has(oil) and not game.item_stash.has(oil), "Öl verbraucht: nicht mehr im Lager, wirkt im Tower")
+	game._select(t)
+	await get_tree().process_frame
+	check(not (game.oil_rows(t) as Array).is_empty() and game.hud.info_oils.visible, "▲ Öle neben dem Namen mit Werten im Tooltip (%s)" % [game.oil_rows(t)])
+	# volles Inventar
+	for _n in 6:
+		if t.items.size() >= t.slots():
+			break
+		var f := YtItem.make(int(regular[3 + t.items.size()]), p)
+		game.stash_add(f)
+		game.submit({"type": "item_move", "from": {"stash": f.get_uid()}, "to": {"tower": ref, "slot": -1}})
+	game.stash_add(YtItem.make(int(regular[2]), p))
+	var last: YtItem = game.item_stash[-1]
+	check(game.inv_drop_reason(t, {"inv": true, "from": {"stash": last.get_uid()}}) == tr("Inventar voll"), "voller Tower: „Inventar voll“")
+	check(not game.submit({"type": "item_move", "from": {"stash": last.get_uid()}, "to": {"tower": ref, "slot": -1}}), "voller Tower nimmt nichts")
+	check(game.submit({"type": "item_move", "from": {"stash": last.get_uid()}, "to": {"tower": ref, "slot": 1}}) and t.items[1] == last,
+			"auf ein Item im vollen Tower ziehen tauscht trotzdem")
+	game._select(null)
+	for it in t.items.duplicate() + t2.items.duplicate():
+		it.drop()
+		it.fly_to_stash(0.0)
+	for it in game.item_stash.duplicate():
+		game.stash_remove(it)
+		it.queue_free()
+
+
 func _builders() -> void:
 	var ok := []
 	for b in YoutdData.builders():

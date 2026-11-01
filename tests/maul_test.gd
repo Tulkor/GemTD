@@ -181,6 +181,20 @@ func _pro_tests() -> void:
 	check(not game.submit({"type": "item", "cell": office.cell, "item": "I000"}), "Slots voll")
 	check(game.sell_value(office) > floori(office.value * 0.75), "Verkaufswert enthält die Items")
 	check(game.submit({"type": "item_sell", "cell": office.cell, "slot": 0}) and office.items.size() == 1, "Item verkauft")
+	# WC3-Inventar: Items zwischen Towern ziehen, auf ein Item = tauschen, voller Tower nimmt nichts
+	check(game.submit({"type": "build", "tower": "h01O", "cell": spots[4]}), "zweites Postamt gebaut")
+	var office2: MaulTower = game.towers[spots[4]]
+	check(game.submit({"type": "item", "cell": office2.cell, "item": "I000"}), "Werbesendung ins zweite Postamt")
+	check(game.submit({"type": "item_move", "from": {"tower": office.cell, "slot": 0}, "to": {"tower": office2.cell, "slot": 0}})
+		and office.items == ["I000"] and office2.items == ["I002"], "Item auf Item in anderem Tower: getauscht")
+	check(game.submit({"type": "item_move", "from": {"tower": office.cell, "slot": 0}, "to": {"tower": office2.cell, "slot": -1}})
+		and office.items.is_empty() and office2.items == ["I002", "I000"], "auf freien Slot verschoben")
+	check(game.move_reason(0, {"tower": office2.cell, "slot": 0}, {"tower": office2.cell, "slot": -1}) != "", "im selben Tower auf freien Slot: nichts zu tun")
+	game.submit({"type": "item", "cell": office.cell, "item": "I000"})
+	check(game.move_reason(0, {"tower": office.cell, "slot": 0}, {"tower": office2.cell, "slot": -1}) == game.tr("Inventar voll"), "voller Tower: „Inventar voll“")
+	check(game.submit({"type": "item_move", "from": {"tower": office2.cell, "slot": 1}, "to": {"tower": office2.cell, "slot": 0}})
+		and office2.items == ["I000", "I002"], "im selben Tower umsortiert")
+	check(game.submit({"type": "sell", "cell": office2.cell}), "zweites Postamt verkauft")
 	# XPert: ein XP-Tower erlaubt
 	check(game.submit({"type": "build", "tower": "h00S", "cell": spots[2]}), "XP-Tower Haystack gebaut")
 	check(game.build_problem("h01L", spots[3], 0) != "", "zweiter XP-Tower gesperrt")
