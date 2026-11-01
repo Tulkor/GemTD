@@ -16,7 +16,7 @@ const ENEMY_INTERVAL := 1.0 / 15.0
 const MAX_BEAMS := 96
 ## Befehle, die ein Mitspieler schicken darf (maul_game.gd → _execute)
 const COMMANDS := ["shop", "build", "sell", "upgrade", "speed", "reveal", "bonus", "research", "item", "item_sell",
-	"move_items", "copy", "summon", "drone", "module", "module_sell", "post", "deposit", "withdraw", "auto_deposit", "bank_upgrade", "team", "xp"]
+	"move_items", "item_move", "copy", "summon", "drone", "module", "module_sell", "post", "deposit", "withdraw", "auto_deposit", "bank_upgrade", "team", "xp"]
 ## Werte, die sich laufend ändern und allein keinen sofortigen Stand auslösen
 const LIVE_KEYS := ["live", "gt", "countdown"]
 

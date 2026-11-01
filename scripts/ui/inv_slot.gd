@@ -14,6 +14,7 @@ enum State { FREE, ITEM, LOCKED }
 var state := State.FREE
 var texture: Texture2D           ## Bild des Items (oder icon_node für gezeichnete Symbole)
 var icon_node: Control           ## eigenes Symbol statt Bild (eeveTD: ItemIcon)
+var abbr := ""                   ## Kürzel statt Bild (Items ohne Icon, z. B. Shopping Maul)
 var border := Color.TRANSPARENT  ## Rahmen in Seltenheitsfarbe, transparent = Standard
 var consumable := false
 var count := ""                  ## Zahl unten rechts (Ladungen)
@@ -51,6 +52,16 @@ func show_node(node: Control, is_consumable := false) -> InvSlot:
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	node.position = Vector2(3, 3)
 	add_child(node)
+	queue_redraw()
+	return self
+
+
+## Belegtes Feld ohne Bild: Kürzel des Namens (z. B. „WS“ für Werbesendung) in der Randfarbe.
+func show_abbr(item_name: String, edge := Color.TRANSPARENT) -> InvSlot:
+	state = State.ITEM
+	border = edge
+	var words := item_name.split(" ", false)
+	abbr = (words[0].left(1) + words[1].left(1)) if words.size() > 1 else item_name.left(2)
 	queue_redraw()
 	return self
 
@@ -100,6 +111,12 @@ func _draw() -> void:
 			if texture != null:
 				var m := 3.0
 				draw_texture_rect(texture, Rect2(m, m, size.x - 2 * m, size.y - 2 * m), false, Color(1, 1, 1, 0.45 if dimmed else 1.0))
+			elif abbr != "":
+				var f := UiTheme.font(true)
+				var fs := int(size.y * 0.38)
+				var w := f.get_string_size(abbr, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+				draw_string(f, Vector2((size.x - w) / 2.0, size.y / 2.0 + fs * 0.36), abbr, HORIZONTAL_ALIGNMENT_LEFT, -1, fs,
+						UiTheme.BG if marked else (border if border.a > 0.0 else UiTheme.TEXT))
 	var edge := border if border.a > 0.0 else Color(UiTheme.BORDER, 0.7)
 	if _drop_hover:
 		edge = UiTheme.CYAN

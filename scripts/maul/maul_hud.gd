@@ -662,20 +662,36 @@ func _pro_info(t: MaulTower, mine: bool) -> void:
 		var l := UiUtil.wrap_label(line, _sel_box, 316)
 		l.add_theme_font_size_override("font_size", 13)
 		l.add_theme_color_override("font_color", UiTheme.CYAN)
-	# Eingelegte Items
-	for i in t.items.size():
+	# Eingelegte Items als Inventarfelder wie in WC3: ziehen auf andere Slots oder Tower (auch in der Welt) tauscht
+	# bzw. verschiebt, Rechtsklick verkauft; Slots, die der Tower nicht hat, ausgegraut
+	if t.slots() > 0:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
+		row.add_theme_constant_override("separation", 4)
 		_sel_box.add_child(row)
-		var it := MaulData.item(str(t.items[i]))
-		var l := UiUtil.label(MaulData.item_name(str(t.items[i])), row, 13)
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		l.tooltip_text = item_text(it)
-		l.mouse_filter = Control.MOUSE_FILTER_PASS
-		if mine:
-			var slot := i
-			var refund := floori(int(it.get("cost", 0)) * float(MaulData.rules().sell_refund))
-			UiUtil.button(tr("Verkaufen +%s") % MaulHud.big(refund), row, func(): game.submit({"type": "item_sell", "cell": t.cell, "slot": slot})).add_theme_font_size_override("font_size", 12)
+		for i in maxi(6, t.slots()):
+			var s := InvSlot.new(40.0)
+			row.add_child(s)
+			if i >= t.slots():
+				s.set_locked()
+				s.tooltip_text = tr("Dieser Tower hat nur %d Slots") % t.slots()
+				continue
+			var loc := {"tower": t.cell, "slot": i}
+			if i < t.items.size():
+				var it := MaulData.item(str(t.items[i]))
+				var refund := floori(int(it.get("cost", 0)) * float(MaulData.rules().sell_refund))
+				s.show_abbr(MaulData.item_name(str(t.items[i])), UiTheme.GOLD)
+				s.tooltip_text = item_text(it)
+				if mine:
+					s.tooltip_text += "\n" + tr("Ziehen: auf einen anderen Slot oder Tower") + "\n" + tr("Rechtsklick: verkaufen +%s") % MaulHud.big(refund)
+					s.drag_data = {"inv": true, "from": loc}
+					var slot := i
+					s.clicked.connect(func(b):
+						if b == MOUSE_BUTTON_RIGHT:
+							game.submit({"type": "item_sell", "cell": t.cell, "slot": slot}))
+			else:
+				s.tooltip_text = tr("Freier Slot: Item hierher ziehen oder unten kaufen")
+			if mine:
+				s.on_drop = func(data): game.submit({"type": "item_move", "from": data.from, "to": loc})
 
 
 ## Knöpfe der Profi-Filialen für einen eigenen Tower: Items, Doping, Kopieren, Beschwören, Drohnen.
@@ -683,11 +699,6 @@ func _pro_actions(t: MaulTower, gold: int) -> void:
 	var pro := MaulData.pro()
 	var p := game.local_player
 	if t.slots() > 0:
-		if not t.items.is_empty():
-			var mv := UiUtil.button("Items verschieben", _sel_box, func():
-				game.pending = {"type": "move_items", "from": t.cell}
-				game.show_message(tr("Klick auf den Tower, der die Items bekommen soll")))
-			mv.tooltip_text = "Alle Items in einen anderen eigenen Tower mit freien Slots legen"
 		_item_grid(game.items_for(p, "weapon"), gold, func(id): game.submit({"type": "item", "cell": t.cell, "item": id}),
 			t.items.size() >= t.slots(), "Items kaufen", "Erst einen Laden bauen (Post: Package Store, IKEO: Store)")
 	if pro.fitness.upkeep.has(t.tower_id):

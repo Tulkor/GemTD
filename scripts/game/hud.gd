@@ -103,6 +103,7 @@ var info_swatch: ColorRect
 var info_body: Label
 var info_kills: TooltipHost
 var info_oils: TooltipHost     ## „▲ Öle“ neben dem Namen, Hover zeigt die Werte durch Öle (info.oils)
+var _oils_icon: TextureRect
 var info_tier: PanelContainer  ## Gem-Stufe als römische Zahl neben dem Namen
 var info_tier_label: Label
 var info_kills_label: Label
@@ -524,7 +525,17 @@ func _build_bottom() -> void:
 	info_oils.make = _oils_tooltip
 	info_oils.visible = false
 	head.add_child(info_oils)
-	UiUtil.label("▲ " + tr("Öle"), info_oils, 12).add_theme_color_override("font_color", UiTheme.HAVE)
+	var oils_row := HBoxContainer.new()
+	oils_row.add_theme_constant_override("separation", 3)
+	oils_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_oils.add_child(oils_row)
+	_oils_icon = TextureRect.new()
+	_oils_icon.custom_minimum_size = Vector2(12, 12)
+	_oils_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_oils_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_oils_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	oils_row.add_child(_oils_icon)
+	UiUtil.label(tr("Öle"), oils_row, 12).add_theme_color_override("font_color", UiTheme.HAVE)
 	# Breite gleich mitgeben: ohne sie misst Godot umbrechende Labels im ersten Frame ein Zeichen breit
 	# und damit tausende Pixel hoch, die Auswahlkarte sprang dann kurz auf volle Bildschirmhöhe
 	info_sub = UiUtil.wrap_label("", info_left, INFO_W)
@@ -919,6 +930,8 @@ func set_selection(info: Dictionary) -> void:
 		info_tier_label.text = QualityBadge.roman(int(info.tier))
 		info_tier.tooltip_text = tr("Stufe %d von %d") % [int(info.tier) + 1, QualityBadge.spawn_tiers()]
 	info_oils.visible = not (info.get("oils", []) as Array).is_empty()
+	if info_oils.visible:
+		_oils_icon.texture = UiTheme.icon("up", 24)  # erst hier: Farbe nach dem Stil des Modus
 	info_body.text = info.get("body", "")
 	info_body.visible = info_body.text != ""
 	_show_stats(info.get("stats", {}))
@@ -1181,7 +1194,7 @@ func _oils_tooltip() -> Control:
 	var rows: Array = _selection.get("oils", [])
 	if rows.is_empty():
 		return null
-	var v := _tip_box("▲ " + tr("Durch Öle"), 300)
+	var v := _tip_box(tr("Durch Öle"), 300)
 	for r in rows:
 		_tip_row(v, str(r[0]), str(r[1]), UiTheme.HAVE)
 	_tip_line(v)
