@@ -207,12 +207,7 @@ func _notification(what: int) -> void:
 
 
 func _rule_line() -> Control:
-	var line := ColorRect.new()
-	line.color = Wc3Theme.GOLD
-	line.custom_minimum_size = Vector2(110, 2)
-	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return line
+	return Wc3Theme.Rule.new(110, 6.0, false)
 
 
 func _reset_tip() -> void:
@@ -403,15 +398,9 @@ func _panel_caption(text_de: String, parent: Node) -> Label:
 	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(row)
-	var a := _rule_line()
-	a.custom_minimum_size.x = 30
-	a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(a)
+	row.add_child(Wc3Theme.Rule.new())
 	var l := Wc3Theme.label(tr(text_de).to_upper(), row, 18, Wc3Theme.CREAM, 4)
-	var b := _rule_line()
-	b.custom_minimum_size.x = 30
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(b)
+	row.add_child(Wc3Theme.Rule.new())
 	l.set_meta("row", row)
 	return l
 

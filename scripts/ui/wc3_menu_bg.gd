@@ -18,6 +18,13 @@ var _flames: Array = []   ## [OmniLight3D, MeshInstance3D, Phase]
 var _core_light: OmniLight3D
 var _core_mat: StandardMaterial3D
 var _time := 0.0
+var _tex_cache := {}
+
+const FOG_WALL := preload("res://scripts/ui/wc3_nebelwand.gdshader")
+const DETAIL := preload("res://assets/textures/ground/concrete.jpg")
+const DETAIL_NORMAL := preload("res://assets/textures/ground/concrete_normal.jpg")
+const DETAIL2 := preload("res://assets/textures/ground/dirt.jpg")
+const DETAIL2_NORMAL := preload("res://assets/textures/ground/dirt_normal.jpg")
 
 
 func _ready() -> void:
@@ -26,6 +33,7 @@ func _ready() -> void:
 	_ground()
 	_shrine()
 	_surroundings()
+	_fog_wall()
 	camera = Camera3D.new()
 	camera.fov = 45
 	add_child(camera)
@@ -81,6 +89,9 @@ func _environment() -> void:
 	env.fog_light_color = Color("2a3050")
 	env.fog_density = 0.045
 	env.fog_sky_affect = 0.12
+	# Bodennebel: unterhalb der Baumkronen dichter (Lukas 2026-11-02), darüber klar für Mond und Sterne
+	env.fog_height = 7.0
+	env.fog_height_density = 0.08
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -192,10 +203,67 @@ func _surroundings() -> void:
 		_place("nature/%s.glb" % plants[i % plants.size()], p, rng.randf_range(0.5, 1.2), rng.randf() * TAU)
 
 
+## Nebelwand hinter dem Wald: ein Ring, unten dicht, bis Baumhöhe auslaufend. Die Skybox scheint dort nicht mehr
+## voll durch, oben bleiben Mond und Sterne klar (Lukas 2026-11-02).
+func _fog_wall() -> void:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 52.0
+	mesh.bottom_radius = 52.0
+	mesh.height = 34.0
+	mesh.cap_top = false
+	mesh.cap_bottom = false
+	mesh.radial_segments = 48
+	var mat := ShaderMaterial.new()
+	mat.shader = FOG_WALL
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = Vector3(-3, 17.0 - 1.0, -6)
+	add_child(mi)
+
+
+## Mehr Oberfläche für die schlichten Modelle (Lukas 2026-11-02): Materialien ohne eigene Textur bekommen eine
+## graue Detailtextur und eine Normalmap, beide triplanar, die Farbe des Modells bleibt.
+func _texturize(n: Node, scale: float) -> void:
+	for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(i)
+			if not (src is StandardMaterial3D) or (src as StandardMaterial3D).albedo_texture != null:
+				continue
+			var key := "%d|%.2f" % [src.get_instance_id(), scale]
+			if not _tex_cache.has(key):
+				var m: StandardMaterial3D = src.duplicate()
+				m.albedo_texture = DETAIL
+				m.normal_enabled = true
+				m.normal_texture = DETAIL_NORMAL
+				m.normal_scale = 2.4
+				# zweite, gröbere Lage (Erde) multipliziert: Flecken und Verwitterung statt glatter Farbe
+				m.detail_enabled = true
+				m.detail_albedo = DETAIL2
+				m.detail_normal = DETAIL2_NORMAL
+				m.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+				m.detail_uv_layer = BaseMaterial3D.DETAIL_UV_1
+				# die Erde ist dunkel, damit das Modell seine Helligkeit behält
+				var c: Color = src.albedo_color
+				m.albedo_color = Color(c.r * 2.3, c.g * 2.3, c.b * 2.3, c.a)
+				m.uv1_triplanar = true
+				m.uv1_world_triplanar = true
+				m.uv1_scale = Vector3.ONE * scale
+				m.roughness = maxf(m.roughness, 0.8)
+				_tex_cache[key] = m
+			mi.set_surface_override_material(i, _tex_cache[key])
+
+
 ## Modell auf Höhe h skaliert, mit der Unterkante auf pos.
 func _place(path: String, pos: Vector3, h: float, rot := 0.0) -> Node3D:
 	var n: Node3D = load(M + path).instantiate()
 	add_child(n)
+	if not path.begins_with("crystals/"):
+		# Bäume feiner gekachelt als Kirche, Säulen und Steine
+		_texturize(n, 0.45 if path.begins_with("nature/pine") or path.begins_with("nature/common_tree") else 0.2)
 	var ab := _aabb(n)
 	var s: float = h / maxf(ab.size.y, 0.001)
 	n.scale = Vector3.ONE * s
