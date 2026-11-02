@@ -54,7 +54,7 @@ def softbox_plane(sc, cx, cy, size):
     pl.data.materials.append(m)
 
 
-def reset():
+def reset(zenith=0.0):
     """Dunkle Umgebung mit wenigen Softboxen: flache Flächen spiegeln fast nur Dunkel (Messing bleibt satt und
     nicht flächig hell), Wölbungen und Fasen fangen die Lichter als Glanzkanten (Lukas 2026-11-01)."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -71,10 +71,12 @@ def reset():
     bg = n["Background"]
     tc = n.new("ShaderNodeTexCoord")
     parts = [
-        _spot(n, l, tc, (0, 0, 1), 3, 0.0, (1.0, 0.92, 0.8)),            # von oben kommt das Licht aus softbox_plane()
-        _spot(n, l, tc, (-0.7, 0.55, 0.45), 40, 14.0, (1.0, 0.88, 0.68)),  # warme Softbox links oben: harte Glanzkante
-        _spot(n, l, tc, (-0.35, 0.85, 0.6), 25, 1.6, (1.0, 0.9, 0.75)),   # breiter, schwächer daneben
-        _spot(n, l, tc, (0.75, -0.55, 0.3), 50, 3.0, (0.65, 0.75, 1.0)),  # kühles Gegenlicht rechts unten
+        _spot(n, l, tc, (0, 0, 1), 3, zenith, (1.0, 0.92, 0.8)),         # von oben: sonst softbox_plane(), bei Leisten/Ecken gleichmäßig
+        _spot(n, l, tc, (-0.62, 0.62, 0.48), 40, 14.0, (1.0, 0.88, 0.68)),  # warme Softbox links oben (symmetrisch zur Diagonale,
+        # damit Ecke und Leisten an allen vier Ecken gleich beleuchtet zusammenpassen): harte Glanzkante
+        _spot(n, l, tc, (-0.3, 0.8, 0.55), 25, 0.9, (1.0, 0.9, 0.75)),     # breiter, schwächer daneben (beidseits)
+        _spot(n, l, tc, (-0.8, 0.3, 0.55), 25, 0.9, (1.0, 0.9, 0.75)),
+        _spot(n, l, tc, (0.6, -0.6, 0.4), 50, 3.0, (0.65, 0.75, 1.0)),    # kühles Gegenlicht rechts unten
     ]
     acc = parts[0]
     for p in parts[1:]:
@@ -91,7 +93,7 @@ def reset():
     return sc
 
 
-def brass(name="brass", dark=False):
+def brass(name="brass", dark=False, heavy=False):
     """Messing mit feiner Bürstung (Rauschen auf Rauheit und Bump), damit der Glanz nicht wie Plastik wirkt."""
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; n = nt.nodes; l = nt.links
@@ -109,6 +111,24 @@ def brass(name="brass", dark=False):
     l.new(nz.outputs["Fac"], rr.inputs[0]); l.new(rr.outputs[0], p.inputs["Roughness"])
     bump = n.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.08; bump.inputs["Distance"].default_value = 0.02
     l.new(nz.outputs["Fac"], bump.inputs["Height"]); l.new(bump.outputs["Normal"], p.inputs["Normal"])
+    if heavy:
+        # Ecken: deutlich mehr Metall-Struktur (gehämmert + Kratzer), Lukas 2026-11-02
+        hz = n.new("ShaderNodeTexNoise"); hz.inputs["Scale"].default_value = 9.0; hz.inputs["Detail"].default_value = 4.0
+        l.new(tc.outputs["Object"], hz.inputs["Vector"])
+        vo = n.new("ShaderNodeTexVoronoi"); vo.inputs["Scale"].default_value = 14.0
+        l.new(tc.outputs["Object"], vo.inputs["Vector"])
+        mix = n.new("ShaderNodeMath"); mix.operation = 'ADD'
+        l.new(hz.outputs["Fac"], mix.inputs[0]); l.new(vo.outputs["Distance"], mix.inputs[1])
+        mix2 = n.new("ShaderNodeMath"); mix2.operation = 'ADD'
+        l.new(mix.outputs[0], mix2.inputs[0]); l.new(nz.outputs["Fac"], mix2.inputs[1])
+        bump.inputs["Strength"].default_value = 0.35
+        l.new(mix2.outputs[0], bump.inputs["Height"])
+        rr.inputs[3].default_value = 0.16; rr.inputs[4].default_value = 0.48
+        l.new(hz.outputs["Fac"], rr.inputs[0])
+        # leichte Farbschwankung (Patina in den Vertiefungen)
+        cr = n.new("ShaderNodeValToRGB")
+        cr.color_ramp.elements[0].color = (0.40, 0.27, 0.10, 1); cr.color_ramp.elements[1].color = (0.66, 0.47, 0.21, 1)
+        l.new(hz.outputs["Fac"], cr.inputs[0]); l.new(cr.outputs[0], p.inputs["Base Color"])
     return m
 
 def ink():
@@ -118,8 +138,11 @@ def ink():
     p.inputs["Roughness"].default_value = 0.6
     return m
 
-def cam(sc, cx, cy, w, h, px):
-    softbox_plane(sc, cx, cy, max(w, h))
+def cam(sc, cx, cy, w, h, px, plane=True):
+    """plane False: nur Umgebungslicht, das ist ortho überall gleich; nötig für Leiste und Ecke, die im Spiel
+    nahtlos aneinanderstoßen (die Leuchtfläche hängt vom Ort ab und gäbe eine Kante)."""
+    if plane:
+        softbox_plane(sc, cx, cy, max(w, h))
     cd = bpy.data.cameras.new("c"); cd.type = 'ORTHO'; cd.ortho_scale = max(w, h)
     co = bpy.data.objects.new("c", cd); sc.collection.objects.link(co)
     co.location = (cx, cy, 50); sc.camera = co
@@ -158,21 +181,56 @@ def render(path):
 
 # 1) Schraube allein (für Ecken der Tafeln, Karten)
 sc = reset(); screw(0, 0, math.radians(35)); cam(sc, 0, 0, 1.6, 1.6, 64); render(OUT + "/schraube.png")
-# 2) Eckbeschlag wie Wc3Theme.corner (80x80 px -> 8 Einheiten), y nach unten gespiegelt
-sc = reset()
-P = [(0, 30), (30, 0), (80, 0), (80, 17), (39, 17), (17, 39), (17, 80), (0, 80)]
-poly_obj([(x / 10, -y / 10) for x, y in P], 0.4, 0.22, brass("b"))
-for (x, y, a) in [(21, 21, 35), (62, 8.5, -20), (8.5, 62, 70)]:
-    screw(x / 10, -y / 10, math.radians(a), 0.55, z=0.3)
-cam(sc, 4, -4, 8.4, 8.4, 168); render(OUT + "/ecke.png")
-# 3) Kantenleiste (waagrecht, Mitte kachelbar): Rundstab mit Kehle
-sc = reset()
-bpy.ops.mesh.primitive_cylinder_add(radius=0.35, depth=40, rotation=(0, math.radians(90), 0), location=(0, 0, 0), vertices=48)
-o = bpy.context.object; o.scale.z = 1; o.data.materials.append(brass("k")); bpy.ops.object.shade_smooth()
-for dy in (-0.52, 0.52):
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.13, depth=40, rotation=(0, math.radians(90), 0), location=(0, dy, 0), vertices=32)
-    bpy.context.object.data.materials.append(brass("k2", dark=True)); bpy.ops.object.shade_smooth()
-cam(sc, 0, 0, 8, 1.4, 512); render(OUT + "/kante_h.png")
+# Rahmenprofil (Lukas 2026-11-02): flaches Band, 17 px breit, in der Mitte eine halbrunde Erhöhung (Wulst).
+# Ecke und Leiste haben dasselbe Profil und dasselbe Licht, die Ecke ist damit wie angeschweißt statt aufgelegt.
+BAND_W = 1.7      # 17 px
+BAND_H = 0.12     # Dicke des flachen Bands
+WULST_R = 0.5     # Halbrund in der Mitte
+
+
+def wulst(points, mat):
+    """Halbrunder Wulst entlang einer Linie (Punkte in Einheiten), Mitte auf der Bandoberfläche."""
+    cu = bpy.data.curves.new("w", 'CURVE'); cu.dimensions = '3D'
+    sp = cu.splines.new('POLY'); sp.points.add(len(points) - 1)
+    for i, (x, y) in enumerate(points):
+        sp.points[i].co = (x, y, BAND_H, 1)
+    cu.bevel_depth = WULST_R; cu.bevel_resolution = 8; cu.use_fill_caps = True
+    o = bpy.data.objects.new("w", cu); bpy.context.scene.collection.objects.link(o)
+    o.data.materials.append(mat)
+    return o
+
+
+def schweissnaht(a, b, n=14):
+    """Kleine Schweißraupe zwischen a und b (Punkte in Einheiten)."""
+    m = brass("naht", dark=True, heavy=True)
+    for i in range(n + 1):
+        t = i / n
+        x = a[0] + (b[0] - a[0]) * t; y = a[1] + (b[1] - a[1]) * t
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.075, location=(x, y, BAND_H + 0.02), segments=12, ring_count=8)
+        o = bpy.context.object; o.scale.z = 0.6; o.data.materials.append(m)
+
+
+# 2) Ecke (80x80 px -> 8 Einheiten, y nach unten gespiegelt): Band wie die Leisten mit abgeschrägter Ecke, Wulst
+#    läuft um die Ecke herum, innen ein angeschweißtes Knotenblech mit zwei Schrauben.
+sc = reset(zenith=0.24)
+P = [(0, 30), (30, 0), (84, 0), (84, 17), (39, 17), (17, 39), (17, 84), (0, 84)]
+f = lambda pts: [(x / 10, -y / 10) for x, y in pts]
+poly_obj(f(P), BAND_H, 0.03, brass("b", dark=True, heavy=True))
+wulst(f([(8.5, 90), (8.5, 34.5), (34.5, 8.5), (90, 8.5)]), brass("bw", heavy=True))
+poly_obj(f([(39, 17), (60, 17), (17, 60), (17, 39)]), 0.24, 0.06, brass("g", heavy=True))
+schweissnaht((3.9, -1.7), (1.7, -3.9))
+schweissnaht((6.0, -1.7), (1.7, -6.0), 20)
+# Nähte quer über das Band, wo die Ecke an die Leisten geschweißt ist
+schweissnaht((8.0, 0.0), (8.0, -1.7), 9)
+schweissnaht((0.0, -8.0), (1.7, -8.0), 9)
+for (x, y, a) in [(44, 22, 35), (22, 44, -20)]:
+    screw(x / 10, -y / 10, math.radians(a), 0.45, z=0.2)
+cam(sc, 4, -4, 8.4, 8.4, 168, plane=False); render(OUT + "/ecke.png")
+# 3) Kantenleiste (waagrecht, kachelbar): dasselbe Profil, gleiches Licht
+sc = reset(zenith=0.24)
+poly_obj([(-20, BAND_W / 2), (20, BAND_W / 2), (20, -BAND_W / 2), (-20, -BAND_W / 2)], BAND_H, 0.03, brass("k", dark=True))
+wulst([(-20, 0), (20, 0)], brass("kw"))
+cam(sc, 0, 0, 8, BAND_W, 512, plane=False); render(OUT + "/kante_h.png")
 # 4) Raute (Trenner)
 sc = reset()
 poly_obj([(0, 0.7), (0.7, 0), (0, -0.7), (-0.7, 0)], 0.3, 0.2, brass("r"))

@@ -67,17 +67,10 @@ func _draw() -> void:
 	# Messing (Leisten, innerer Rand, Beschläge) auf der Glanz-Ebene (_draw_brass)
 
 
-## Rundstab-Leisten an den Kanten und die vier Eckbeschläge (3D-Renders, Wc3Theme.BrassLayer).
+## Rahmen aus Messingband mit Wulst und verschweißten Ecken (3D-Renders, Wc3Theme.BrassLayer).
 func _draw_brass(ci: CanvasItem) -> void:
-	var w := size.x
-	var h := size.y
-	# innerer Rand als dünner Rundstab, dann die dicken Leisten und Beschläge darüber
-	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size).grow(-18), 4.0, 22.0)
-	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size), 15.0, 40.0, 8.5)
-	Wc3Theme.corner(ci, Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN)
-	Wc3Theme.corner(ci, Vector2(w, 0), Vector2.DOWN, Vector2.LEFT)
-	Wc3Theme.corner(ci, Vector2(w, h), Vector2.LEFT, Vector2.UP)
-	Wc3Theme.corner(ci, Vector2(0, h), Vector2.UP, Vector2.RIGHT)
+	# Band mit Wulst und verschweißte Ecken; der innere Rand ist weg (Lukas 2026-11-02)
+	Wc3Theme.panel_frame(ci, Rect2(Vector2.ZERO, size))
 	if gem:
 		_draw_gem(ci)
 
