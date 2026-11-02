@@ -186,3 +186,7 @@ inner = poly_obj(hexp(29.2, 4.8, 1.25), 0.6, 0.0, brass("x"), z=-0.1)
 m = o.modifiers.new("d", 'BOOLEAN'); m.object = inner; m.operation = 'DIFFERENCE'; inner.hide_render = True
 o.modifiers.move(1, 0)
 cam(sc, 0, 0, 30.4, 6, 608); render(OUT + "/knopf_rahmen.png")
+# 6) Fassung des Kristalls oben an der Hub-Säule: Trapez 74 x 16 px (oben 54 breit), 2x gerendert
+sc = reset()
+poly_obj([(-2.7, 0.8), (2.7, 0.8), (3.7, -0.8), (-3.7, -0.8)], 0.5, 0.18, brass("f"))
+cam(sc, 0, 0, 7.8, 2.0, 156); render(OUT + "/fassung.png")

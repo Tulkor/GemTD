@@ -64,14 +64,15 @@ func _draw() -> void:
 	# Innenschatten zum Rand hin
 	for i in 10:
 		draw_polyline(Wc3Theme.closed(Wc3Theme.cut_rect(r.grow(-10 - i * 4), maxf(CUT - 4 - i * 2, 4))), Color(0, 0, 0, 0.13 - i * 0.012), 4.0, true)
-	# Feine Linie innen, dann Messing auf der Glanz-Ebene (_draw_brass)
-	draw_rect(r.grow(-19.5), Color(Wc3Theme.GOLD_LO, 0.9), false, 1.0)
+	# Messing (Leisten, innerer Rand, Beschläge) auf der Glanz-Ebene (_draw_brass)
 
 
 ## Rundstab-Leisten an den Kanten und die vier Eckbeschläge (3D-Renders, Wc3Theme.BrassLayer).
 func _draw_brass(ci: CanvasItem) -> void:
 	var w := size.x
 	var h := size.y
+	# innerer Rand als dünner Rundstab, dann die dicken Leisten und Beschläge darüber
+	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size).grow(-18), 4.0, 22.0)
 	Wc3Theme.frame(ci, Rect2(Vector2.ZERO, size), 15.0, 40.0, 8.5)
 	Wc3Theme.corner(ci, Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN)
 	Wc3Theme.corner(ci, Vector2(w, 0), Vector2.DOWN, Vector2.LEFT)
@@ -94,7 +95,8 @@ func _draw_gem(ci: CanvasItem) -> void:
 	var gr := Rect2(cx - gw / 2, mount.position.y + 6 - gh, gw, gh)
 	ci.draw_texture_rect(_gem, Rect2(gr.position + Vector2(0, 3), gr.size), false, Color(0, 0, 0, 0.8))
 	ci.draw_texture_rect(_gem, gr, false)
-	ci.draw_polyline(Wc3Theme.closed(trap), Wc3Theme.INK, 4.0, true)
-	ci.draw_colored_polygon(trap, Wc3Theme.GOLD)
-	ci.draw_line(trap[0] + Vector2(0, 1), trap[1] + Vector2(0, 1), Wc3Theme.GOLD_HI, 2.0)
-	ci.draw_line(trap[3] - Vector2(0, 1), trap[2] - Vector2(0, 1), Wc3Theme.GOLD_LO, 2.0)
+	# Fassung als 3D-Render (Trapez 74 × 16 im Bild 78 × 20), mit Schatten nach rechts unten
+	var fr := Rect2(cx - 39, mount.position.y - 2, 78, 20)
+	for o in Wc3Theme.SHADOW_STEPS:
+		ci.draw_texture_rect(Wc3Theme.brass("fassung"), Rect2(fr.position + o, fr.size), false, Wc3Theme.SHADOW)
+	ci.draw_texture_rect(Wc3Theme.brass("fassung"), fr, false)
